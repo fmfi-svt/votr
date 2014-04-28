@@ -240,7 +240,7 @@ class Application:
                     (update.target, update.dialog))
 
             try:
-                method = getattr(component, 'ais_' + update.method)
+                method = getattr(component, '_ais_' + update.method)
             except AttributeError:
                 raise AISParseError("Method %r of %s is not yet implemented." %
                     (update.method, component.__class__.__name__))

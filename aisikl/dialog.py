@@ -29,7 +29,7 @@ class Dialog:
         self.app = app
 
         self.components = {}
-        self.changed_components = set()
+        self.changed_components = None
 
     def init(self, url):
         '''Load the dialog body.
@@ -44,9 +44,18 @@ class Dialog:
         if body.get('jsct') != 'body' or body.get('id') != self.name:
             raise AISParseError("Unexpected dialog body response")
 
+        elements = {}
         for element in dialog_soup.find_all(jsct=True):
             if element.get('isTemporary') == 'true': continue
-            id = element['id']
+            elements.setdefault(element['id'], []).append(element)
+
+        for id in elements:
+            # AIS can have multiple components with the same id.
+            # That means we can't tell which one an Update is referring to.
+            # We discard both so that accessing them will fail loudly.
+            if len(elements[id]) != 1: continue
+
+            element = elements[id][0]
             jsct = element['jsct']
 
             if jsct not in component_classes:
@@ -54,6 +63,7 @@ class Dialog:
             component = component_classes[jsct](dialog_soup, element, self)
 
             self.components[id] = component
+
             if hasattr(self, id):
                 raise Exception(
                     'Component id conflicts with Dialog attribute: %r' % id)
@@ -67,7 +77,7 @@ class Dialog:
         '''Return the <changedProperties> string for this dialog.'''
         # We ignore width, height, x, y, focusedComponent and dtSelection.
         # So there are no <nameValue> pairs, only <embObjChProps>.
-        if not self.changed_components: return ''
+        if self.changed_components is None: return ''
         result = (
             '<changedProperties><objName>' + dialogName + '</objName>\n' +
             '<embObjChProps>\n' +
@@ -75,6 +85,24 @@ class Dialog:
                     for id in self.changed_components) +
             '</embObjChProps>\n' +
             '</changedProperties>\n')
-        self.changed_properties.clear()
+        self.changed_components = None
         return result
+
+    def try_interactive(self, component, type):
+        # Moved from DocumentBody. TODO: document that.
+
+        pass # TODO
+
+    def component_changes(self, component, is_minor):
+        # Moved from DocumentBody. TODO: document that.
+
+        # TODO: Eventual support for ChangeGuardInteractive goes here.
+        # (is_minor decides whether to set elementsChanged or not.)
+
+        if self.changed_components is None:
+            self.changed_components = set()
+
+        if component:
+            self.changed_components.insert(component.id)
+            self.try_interactive(component, 'change')
 
