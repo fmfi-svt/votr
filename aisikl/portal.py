@@ -1,20 +1,13 @@
 
 from collections import namedtuple
-from bs4 import BeautifulSoup
 
 __all__ = ['get_modules', 'get_apps']
-
-
-def soup(response):
-    # TODO: move to some utility module.
-    response.raise_for_status()
-    return BeautifulSoup(response.text)
 
 
 PortalApp = namedtuple('PortalApp', ['id', 'title', 'url', 'description'])
 
 
-def get_modules(conn):
+def get_modules(ctx):
     '''Download the main menu of AIS2 and return the list of modules.
 
     The separate pages of the main menu are called "modules", and the sections
@@ -25,11 +18,10 @@ def get_modules(conn):
     tuple, and every app is an object with `id`, `url`, `title` and
     `description`.
 
-    :param conn: the connection to use.
+    :param ctx: the :class:`~aisikl.context.Context` to use.
     :return: the list of modules.
     '''
-    front_soup = soup(conn.get(
-        conn.base_url + '/ais/portal/changeTab.do?tab=0'))
+    front_soup = ctx.request_html('/ais/portal/changeTab.do?tab=0')
 
     results = []
 
@@ -38,8 +30,8 @@ def get_modules(conn):
         _, _, module = menu_link['href'].partition('changeModul.do?modul=')
         if not module: continue
 
-        applist_soup = soup(conn.get(
-            conn.base_url + '/ais/portal/changeModul.do?modul=' + module))
+        applist_soup = ctx.request_html(
+            '/ais/portal/changeModul.do?modul=' + module)
 
         submodules = []
         for submodule in applist_soup.find_all(class_='submodul'):
@@ -61,18 +53,18 @@ def get_modules(conn):
     return results
 
 
-def get_apps(conn):
+def get_apps(ctx):
     '''Download the main menu of AIS2 and return the visible applications.
 
     This function doesn't preserve the menu structure and returns a dictionary
     with all applications. The keys are their IDs and the values are objects
     with `id`, `url`, `title` and `description`.
 
-    :param conn: the connection to use.
+    :param ctx: the :class:`~aisikl.context.Context` to use.
     :return: the dict of applications.
     '''
     result = {}
-    modules = get_modules(conn)
+    modules = get_modules(ctx)
     for module_name, submodules in modules:
         for submodule_name, apps in submodules:
             for app in apps:
