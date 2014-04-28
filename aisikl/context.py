@@ -4,9 +4,9 @@ import requests
 from urllib.parse import urljoin
 
 class Context:
-    '''Context contains the things we need to store about an AIS2 session. When
+    '''Context contains the things we need to store about an AIS session. When
     one user makes multiple Votr requests, they have the same Context. It
-    contains our AIS2 cookie jar, and will later also include the open AIS2
+    contains our AIS cookie jar, and will later also include the open AIS
     applications and the Votr logs. (Most of Votr's logging will probably be
     per-session instead of per-request, because a Votr request can heavily
     depend on the previous ones.)
@@ -25,9 +25,9 @@ class Context:
             self.connection.cookies.set(key, cookies[key])
 
     def request_html(self, url, *, method='GET', **kwargs):
-        '''Sends a request to AIS2 and parses the response as HTML.
+        '''Sends a request to AIS and parses the response as HTML.
 
-        :param url: the URL, either absolute or relative to the AIS2 server.
+        :param url: the URL, either absolute or relative to the AIS server.
         :param method: HTTP method for the request.
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
         :return: a :class:`~BeautifulSoup` object.

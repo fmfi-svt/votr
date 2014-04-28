@@ -14,4 +14,12 @@ if not (n and n.get_text()): raise Exception('login neuspesny, asi zly cookie')
 
 if __name__ == '__main__':
     import aisikl.portal
-    print(aisikl.portal.get_modules(ctx))
+    apps = aisikl.portal.get_apps(ctx)
+    print(apps)
+
+    from aisikl.app import Application, assert_ops
+    app = Application(ctx)
+    ops = app.init(apps['VSES017'].url)
+    print(ops)
+    assert_ops(ops, 'openMainDialog')
+    app.open_main_dialog(*ops[0].args)

@@ -8,7 +8,7 @@ PortalApp = namedtuple('PortalApp', ['id', 'title', 'url', 'description'])
 
 
 def get_modules(ctx):
-    '''Download the main menu of AIS2 and return the list of modules.
+    '''Download the main menu of AIS and return the list of modules.
 
     The separate pages of the main menu are called "modules", and the sections
     shown on one page are "submodules".
@@ -54,7 +54,7 @@ def get_modules(ctx):
 
 
 def get_apps(ctx):
-    '''Download the main menu of AIS2 and return the visible applications.
+    '''Download the main menu of AIS and return the visible applications.
 
     This function doesn't preserve the menu structure and returns a dictionary
     with all applications. The keys are their IDs and the values are objects
