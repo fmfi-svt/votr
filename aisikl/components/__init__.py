@@ -1,19 +1,25 @@
 
-from .base import Component as TODO
+from .action import Action
+from .actionlist import ActionList
+from .button import Button
 from .dialogbody import DialogBody
+from .htmlarea import HtmlArea
+
+from .component import Component as TODO
+
 
 component_classes = {
-    'action': TODO,
-    'actionList': TODO,
+    'action': Action,
+    'actionList': ActionList,
     'body': DialogBody,
-    'button': TODO,
+    'button': Button,
     'changeGuardInteractive': TODO,
     'checkBox': TODO,
     'checkList': TODO,
     'comboBox': TODO,
     'dateControl': TODO,
     'eventInteractive': TODO,
-    'htmlArea': TODO,
+    'htmlArea': HtmlArea,
     'image': TODO,
     'label': TODO,
     'list': TODO,

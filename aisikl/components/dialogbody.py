@@ -1,6 +1,6 @@
 
 from aisikl.exceptions import AISParseError
-from .base import Component
+from .component import Component
 
 
 class DialogBody(Component):

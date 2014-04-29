@@ -2,7 +2,7 @@
 from aisikl.exceptions import AISParseError
 
 
-# TODO: Document everything.
+# TODO: Document Component and all subclasses.
 
 class Component:
     def __init__(self, dialog_soup, element, dialog):
@@ -15,7 +15,7 @@ class Component:
         self.visible = element.get('visible', 'true') == 'true'
         self.visible_in_ui = element.get('visibleinui', 'true') == 'true'
         self.title = element.get('_title')
-        self.popup_menu = element.get('popup_menu')
+        self.popup_menu = element.get('popupmenu')
 
         if element.get('state', '1') != '1':
             raise AISParseError('STATE_DT is not supported')
@@ -47,31 +47,3 @@ class Component:
         self.title = value
     def _ais_setPopupMenu(self, value):
         self.popup_menu = value
-
-
-class Control(Component):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
-        self.read_only = element.get('_readonly', 'false') == 'true'
-        self.tab_order = int(element.get('tabindex', '0'))
-        self.tool_tip_text = element.get('title')
-
-    def is_really_enabled(self):
-        return super().is_really_enabled() and self.parent.is_really_enabled()
-
-    def _ais_setReadOnly(self, value):
-        self.read_only = (value == 'true')
-    def _ais_setTabOrder(self, value):
-        self.tab_order = int(value)
-    def _ais_setToolTipText(self, value):
-        self.tool_tip_text = value
-
-    def changed_properties(self):
-        return ''
-
-    def update_value_interactives(self):
-        pass # TODO
-
-    # TODO: We need a method to explicitly request firing a blur event.
-    # (Find out which classes can fire it in webui.)
-

@@ -22,4 +22,6 @@ if __name__ == '__main__':
     ops = app.init(apps['VSES017'].url)
     print(ops)
     assert_ops(ops, 'openMainDialog')
-    app.open_main_dialog(*ops[0].args)
+    dlg = app.open_main_dialog(*ops[0].args)
+
+    dlg.detailStudentaButton.click()
