@@ -577,3 +577,15 @@ COMPLETE
 
 
 
+# Label
+
+COMPLETE
+
+Added `self.text` which is the actual text content.
+
+- replaceBrackets()
+    - Removed. `self.title` should be handled as plaintext, and escaped when
+      shown in a HTML document.
+- setTitle() is inherited
+- getTitleLikeText(), setTitleLikeText() -> self.title_like_text
+- getFor(), setFor() -> self.for_

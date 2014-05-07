@@ -6,6 +6,7 @@ from .checkbox import CheckBox
 from .dialogbody import DialogBody
 from .htmlarea import HtmlArea
 from .image import Image
+from .label import Label
 from .separator import Separator
 
 from .component import Component as TODO
@@ -24,7 +25,7 @@ component_classes = {
     'eventInteractive': TODO,
     'htmlArea': HtmlArea,
     'image': Image,
-    'label': TODO,
+    'label': Label,
     'list': TODO,
     'listBox': TODO,
     'menuItem': TODO,
