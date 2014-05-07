@@ -49,6 +49,7 @@ ComponentEventMethods = {
 }
 
 def component_event(source, method, command=None):
+    source.dialog.try_interactive(source, 'ComponentEvent')
     return Event(source, ComponentEventMethods[method],
         "<event class='avc.ui.event.AVCComponentEvent'>" +
         tag("command", command, True) +
@@ -59,18 +60,21 @@ def component_event(source, method, command=None):
 FocusEventMethods = { 'focus': 0, 'blur': EVENT_BLUR }
 
 def focus_event(source, method, state=None):
+    source.dialog.try_interactive(source, 'FocusEvent')
     return Event(source, FocusEventMethods[method],
         "<event class='avc.ui.event.AVCFocusEvent'>" +
         tag("state", state, True) +
         "</event>")
 
 def change_action_event(source, index=-1):
+    source.dialog.try_interactive(source, 'ChangeActionEvent')
     return Event(source, EVENT_STATECHANGE,
         "<event class='avc.ui.event.AVCChangeActionEvent'>" +
         tag("command", "CHANGE") + tag("tabIndex", index) +
         "</event>")
 
 def cell_edited_event(source, command, alias, row_index):
+    source.dialog.try_interactive(source, 'CellEditedEvent')
     return Event(source, EVENT_ACTION,
         "<event class='avc.ui.event.AVCCellEditedEvent'>" +
         tag("command", command, True) +
@@ -78,6 +82,7 @@ def cell_edited_event(source, command, alias, row_index):
         "</event>")
 
 def row_edited_event(source, command, row_index):
+    source.dialog.try_interactive(source, 'RowEditedEvent')
     return Event(source, EVENT_ACTION,
         "<event class='avc.ui.event.AVCRowEditedEvent'>" +
         tag("command", command, True) + tag("rowIndex", rowIndex) +
@@ -85,6 +90,7 @@ def row_edited_event(source, command, row_index):
 
 def action_event(source, command=None, original_source_name=None,
                  cancel=False):
+    source.dialog.try_interactive(source, 'ActionEvent')
     # Note that <origSrcName> goes outside of <event>.
     return Event(source, EVENT_CANCEL if cancel else EVENT_ACTION,
         tag("origSrcName", original_source_name, True) +
@@ -93,6 +99,7 @@ def action_event(source, command=None, original_source_name=None,
         "</event>")
 
 def selection_event(source, index=-1, selected=True):
+    source.dialog.try_interactive(source, 'SelectionEvent')
     return Event(source, EVENT_SELCHANGE,
         "<event class='avc.ui.event.AVCSelectionActionEvent'>" +
         tag("command", "SELECT" if selected else "UNSELECT") +
@@ -100,18 +107,21 @@ def selection_event(source, index=-1, selected=True):
         "</event>")
 
 def tree_expansion_event(source, path, expand):
+    source.dialog.try_interactive(source, 'TreeExpansionEvent')
     return Event(source, EVENT_EXPAND_COLLAPSE,
         "<event class='avc.ui.tree.AVCTreeExpansionEvent'>" +
         tag("type", "2" if expand else "1") + tag("path", path) +
         "</event>")
 
 def tree_expansion_action_event(source, path):
+    source.dialog.try_interactive(source, 'TreeExpansionActionEvent')
     return Event(source, EVENT_LOAD_CHILDREN,
         "<event class='avc.ui.tree.AVCTreeExpansionActionEvent'>" +
         tag("command", "LOAD_CHILDREN") + tag("path", path) +
         "</event>")
 
 def tree_selection_event(source, path, command):
+    source.dialog.try_interactive(source, 'TreeSelectionEvent')
     return Event(source, EVENT_TSELCHANGE,
         "<event class='avc.ui.tree.AVCTreeSelectionActionEvent'>" +
         tag("command", command) + tag("path", path) +
@@ -120,6 +130,7 @@ def tree_selection_event(source, path, command):
 CursorEventMethods = { 'pageup': EVENT_PAGEUP, 'pagedown': EVENT_PAGEDOWN }
 
 def cursor_event(source, method, command=None):
+    source.dialog.try_interactive(source, 'CursorEvent')
     return Event(source, CursorEventMethods[method],
         "<event class='avc.ui.event.AVCCursorEvent'>" +
         tag("command", command, True) +
@@ -127,6 +138,7 @@ def cursor_event(source, method, command=None):
 
 def table_header_event(
         source, column_alias, after_column_alias, modifiers, type):
+    source.dialog.try_interactive(source, 'TableHeaderEvent')
     return Event(source, EVENT_HEADER,
         "<event class='avc.ui.table.AVCTableHeaderEvent'>" +
         tag("type", type) + tag("columnAlias", columnAlias) +
@@ -135,5 +147,6 @@ def table_header_event(
         "</event>")
 
 def item_event(source):
+    source.dialog.try_interactive(source, 'ItemEvent')
     return Event(source, EVENT_ITEMCHANGE,
         "<event class='avc.ui.event.AVCItemEvent'/>")

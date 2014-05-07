@@ -100,6 +100,9 @@ class Dialog:
         # (is_minor decides whether to set elementsChanged or not.)
 
         if self.changed_components is None:
+            # Note that there's a difference between None and an empty set().
+            # set() means the dialog itself has changed, while None means there
+            # has been no change at all.
             self.changed_components = set()
 
         if component:

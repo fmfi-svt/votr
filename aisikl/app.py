@@ -255,10 +255,6 @@ class Application:
 
         :param \*events: the events to send.
         '''
-
-        # TODO: tryInteractive() for all events (whether listening or not)
-        # (originally happened in DialogBody.createEvent())
-
         body = ''.join(e.xml for e in events if e.listening)
         if not body: return
         self._do_request('<events>' + body + '</events>' +
