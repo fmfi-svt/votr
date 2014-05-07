@@ -589,3 +589,394 @@ Added `self.text` which is the actual text content.
 - setTitle() is inherited
 - getTitleLikeText(), setTitleLikeText() -> self.title_like_text
 - getFor(), setFor() -> self.for_
+
+
+
+# Panel
+
+COMPLETE
+
+- getChildrenElements(), getOverflowElement(), getHasTmpPanel(),
+  startChromeOverflowPatch(), endChromeOverflowPatch()
+    - IRRELEVANT, because all functions that use it are IRRELEVANT.
+- getTabId() -> self.tab_id
+- getTitle(), setTitle() -> self.title (`_ais_setTitle()` is inherited)
+- blur()
+    - The call to componentChanges() might be TODO.
+- getAutoscrolls() -> self.autoscrolls
+- getOverflowed(), setOverflowed()
+    - Removed. We should add `_ais_setOverflowed()` no-op if webui uses it.
+- getStacked() -> self.stacked
+- getCollapsed(), setCollapsed() -> self.collapsed
+    - In webui, setCollapsed() calls realizeCollapsed() which can send an
+      event. This was removed in votr so that it won't loop infinitely.
+      (Webui shouldn't loop, because events that happen while processing
+      the last event are probably discarded.)
+    - Instead, toggle_collapsed() calls _fire_event().
+- getCollapsable() -> self.collapsable
+- getCollapsedHeight(), getExpandedHeight(), getExpandCollapseButton()
+    - IRRELEVANT
+- click() -> self.toggle_collapsed()
+- getFirstFocusableComponent()
+    - IRRELEVANT
+- realizeCollapsed()
+    - Reduces to this.fireUIChangesEvent().
+- fireUIChangesEvent() -> self._fire_event()
+- changedProperties() -> self.changed_properties()
+- setMoveDueToOtherExpCol()
+    - IRRELEVANT
+- IRRELEVANT methods of superclasses are still IRRELEVANT.
+
+
+
+# SplitPane
+
+COMPLETE
+
+orientation and lastDividerLocation are UNSUPPORTED. This makes everything else
+IRRELEVANT, including fireUIChangesEvent() and changedProperties().
+
+
+
+# ProgressBar
+
+COMPLETE
+
+- getMaximum(), setMaximum() -> self.maximum
+- getValue(), setValue() -> self.value
+
+
+
+# TabbedPaneSelector
+
+IRRELEVANT
+
+Everything interesting is stored in TabbedPane. TabbedPaneSelector is just
+an UI. The `title`, `enabled` and `visible` of a tab is always the same as
+in the corresponding panel, so we don't store them in TabbedPane at all.
+
+setEnabledForPanelTab(), setVisibleForPanelTab() and setTitleForPanelTab()
+are thus IRRELEVANT.
+
+
+
+# TabbedPane
+
+COMPLETE
+
+- getSelector(), setSelector()
+    - IRRELEVANT, see TabbedPaneSelector above.
+- getSelectedIndex(), setSelectedIndex() -> self.selected_index
+- setSelectedIndexWithFire() -> self.select()
+- getSelectedPanel() -> self.get_selected_panel()
+- panels -> self.get_panels()
+    - This is to avoid issues with component initialization order.
+- arena -> local variable in `__init__`
+- resizeContent(), showSelectedPanel()
+    - IRRELEVANT
+- changedProperties() -> self.changed_properties()
+- fireUIChangesEvent() -> self._fire_event()
+- setEnabledForPanelTab(), setVisibleForPanelTab() and setTitleForPanelTab()
+    - IRRELEVANT, see TabbedPaneSelector above.
+
+
+
+# UpDown
+
+COMPLETE
+
+- getUpDownedComponent() -> self.up_downed_component
+- udc -> local variable in `click`
+- click() -> self.click(), self.click_up(), self.click_down()
+- up(), down()
+    - Inlined in click()
+
+
+
+# ComboBox
+
+COMPLETE
+
+- tf
+    - Webui replaces the `<select>` with a TextField when it's read only.
+    - IRRELEVANT
+- refreshBackgroundColor()
+    - IRRELEVANT
+- getReadOnly(), setReadOnly() is inherited
+- getToolTipLikeData() -> self.tool_tip_like_data
+- select() -> self.select()
+- selectId(), selectTitle()
+    - Removed. Find the right index in self.options, then use select(index).
+- getSelectedTitle() -> self.selected_option.title
+- getSelectedIndex() -> self.selected_index
+- getSelectedId() -> self.selected_option.id
+- getSelectedToolTipText() -> self.selected_option.tool_tip_text
+- focus(), mousedown(), keydown(), keypress()
+    - IRRELEVANT
+- change() -> self.select() (kind of)
+- fireUIChangesEvent() -> self._fire_event()
+- changedProperties() -> self.changed_properties()
+- setDataView(), setDataViewEx() -> self._ais_setDataView()
+- ComboBox_updateOptions() -> self._parse_options()
+
+
+
+# List
+
+UNSUPPORTED
+
+We've only seen empty lists so far, so we don't know how to parse items.
+
+
+
+# RadioBox
+
+COMPLETE
+
+- setTitle()
+    - The code doesn't make sense, so we just use the inherited method.
+- init() -> `__init__`
+- allwaysSelected -> self.always_selected (fixed webui typo)
+- mousedown(), mouseup(), mouseout(), refocus(), focus(), realizeEnability(),
+  realizeReadOnly(), realizeEnabilityAndReadOnly()
+    - IRRELEVANT
+- click(), changeSelection(), select() -> self.select() (kind of)
+    - The calculations in select() just convert index to td element (the table
+      can have multiple rows and columns). We don't need that.
+- selectedItem -> self.selected_option
+- getSelectedIndex() -> self.selected_index
+- getSelectedId() -> self.selected_option.id
+- findItem() -> `element.find_parent("td")`
+- findRadioInput() -> `element.radio`
+- fireUIChangesEvent() -> self._fire_event()
+- setDataView() -> self._ais_setDataView()
+- changedProperties() -> self.changed_properties()
+
+
+
+# CheckList
+
+COMPLETE
+
+- mode, MSELECT, MMOVE
+    - Removed. `this.mode` should've been just an argument to up() and down().
+- getUpDownEnabled(), setUpDownEnabled() -> self.up_down_enabled
+- upDownRow() -> self.up_down_row()
+- up(), down()
+    - Inlined in self.up_down_row(), because keydown() is IRRELEVANT.
+    - Thus, mode is always MMOVE, and can be removed.
+    - Use self.select() directly instead of up()/down() with MSELECT.
+- swapNode()
+    - Inlined in self.up_down_row()
+    - Note that it swaps id, title, checked, innerHTML and rid, but not sid.
+- initSelectedRow()
+    - IRRELEVANT
+- selectUnselectAll() -> self.select_unselect_all()
+- getSelectedIndex() -> self.selected_index
+- refocus(), focus(), blur(), mousedown(), keydown(), scrollToVisible()
+    - IRRELEVANT
+- click() -> self.select(index), self.toggle(index)
+- markRowSelection(), select() -> self.select(index)
+    - This doesn't call fireUIChangesEvent(), which is weird and might be
+      a bug, but we preserve it.
+- getSelectionAsString(), resetSelection()
+    - Inlined in self.changed_properties()
+- findItem() -> `element.find_parent("tr")`
+- recolorTable() -> no-op
+- setDataView() -> self._ais_setDataView()
+- fireUIChangesEvent() -> self._mark_changed()
+- changedProperties() -> self.changed_properties()
+
+
+
+# RadioButton, RadioGroup
+
+UNSUPPORTED
+
+We need a markup example, and all known dialogs just use RadioBoxes.
+
+Note that getAccessibleRadioButtons() is IRRELEVANT, because it only concerns
+focus. (This is written here to show that getVisibleForUser() is IRRELEVANT.)
+
+
+
+# TextControl
+
+COMPLETE
+
+- getReadOnly(), setReadOnly() is inherited
+- getMaxLength(), setMaxLength() -> self.max_length
+- getToolTipLikeText(), setToolTipLikeText() -> self.tool_tip_like_text
+- getEnterToNext(), setEnterToNext() -> self.enter_to_next
+- getPlaceHolder(), setPlaceHolder() -> self.placeholder
+- getIsEditable() -> self.is_editable()
+- getDefaultBackground(), setDefaultBackground(), getReadOnlyBackground(),
+  setReadOnlyBackground(), initPlaceHolder(), hidePlaceHolder(),
+  showPlaceHolder(), realizeComponentStyle(), realizeEnability(),
+  refreshBackgroundColor()
+    - IRRELEVANT
+- contextmenu(), regActualSelectionIE(), regActualSelection(), setPosition(),
+  removeReplaceSelectedText(), removeReplaceCharacter()
+    - Deals with selection. Very likely IRRELEVANT.
+
+
+
+# TextInput
+
+COMPLETE
+
+- changingKeyPressEvent()
+    - IRRELEVANT
+- changeHandler, setChangeHandler()
+    - IRRELEVANT, because:
+    - Used for editable fields in tables. The changeHandler is a TableModel.
+    - Two methods are called on it: tryToAutoFocusNext(), valueChange().
+    - tryToAutoFocusNext() is IRRELEVANT.
+    - valueChange() does not exist in webui.js.
+- propertychange(), fixMaskOnDelete(), paste(), afterPaste(), cut(), afterCut()
+    - Removed. Their goal seems to be to preserve the mask after various
+      text editing operations. In Votr, the user is responsible for that.
+
+
+
+# TextArea
+
+COMPLETE
+
+- getText(), setText() -> self.value
+- focus(), blur(), keydown(), keypress(), drop(), dragstart()
+    - IRRELEVANT
+- countNewLines(), regActualSelectionIE(), setPosition(), paste(),
+  afterPaste(), cut()
+    - IRRELEVANT to Votr. But the strange thing is, it should be irrelevant to
+      webui as well. Why is all this code in there?
+    - It handles getMaxLength() and fireUIChangesEvent(), but you could do that
+      without dealing with selections, cut and paste, etc. I just don't get it.
+- change(), fireUIChangesEvent()
+    - Inlined in self.write()
+- changedProperties() -> self.changed_properties()
+
+
+
+# DateControl
+
+TODO
+
+
+
+# CalendarSelector
+
+UNSUPPORTED
+
+
+
+# HtmlArea
+
+COMPLETE
+
+- setHtml() -> self._ais_setHtml()
+- getBorderWidth(), initIframeWindow(), resizeComponent(), realizeEnability()
+    - IRRELEVANT
+- initFromDataView() -> self._parse_content()
+- fireUIChangesEvent()
+    - IRRELEVANT, because canClose is UNSUPPORTED
+- changedProperties() -> self.changed_properties()
+- bodyContextMenu(), bodyMouseDown()
+    - IRRELEVANT
+- getCanClose()
+    - UNSUPPORTED, because we don't actually parse or execute the content.
+
+
+
+# NumberControl
+
+PARTIAL
+
+NumberControl operates on BigDecimal values with arbitrary precision, usually
+stored as strings. But webui shows this value in two different formats, and
+unfortunately, it uses one `<input>` for both, depending on if it's focused or
+not. See setShowValue() and setEditValue().
+
+- getBDValue(), setBDValue()
+    - Gets and sets the raw BigDecimal value (as a string).
+- getValue(), setValue()
+    - getValue() is the same as getBDValue()
+    - setValue() can convert *some* locale values to raw BigDecimal values. It
+      removes leading zeroes, replaces `decimalPoint` with a dot, and adds up
+      to `scale` zeroes in the fractional part. But it doesn't handle the
+      thousands separator, or check whether a fractional part is even allowed.
+      Then it also calls componentChanges() and updates the visible text field.
+    - The above is also true for other users of fillBdvalue().
+- getText(), setText()
+    - getText() returns the locale formatted number.
+    - setText() converts the locale formatted number to bdvalue. Probably.
+
+And that's just the beginning. Untangling this mess seems like a waste of time
+for Votr, so our NumberControl only implements the easy parts and the bare
+minimum needed to send requests and receive responses.
+
+- getSeparator1000(), setSeparator1000() -> self.separator_1000
+- getDecimalPoint(), setDecimalPoint() -> self.decimal_point
+- getScale(), setScale() -> self.scale
+- getNegativeEnabled(), setNegativeEnabled() -> self.negative_enabled
+- getMinValue(), setMinValue() -> self.min_value
+- getMaxValue(), setMaxValue() -> self.max_value
+- getShowMaxLength(), setShowMaxLength() -> self.show_max_length
+- getEditMaxLength(), setEditMaxLength() -> self.edit_max_length
+- setLengths() -> self.show_max_length, self.edit_max_length
+- getBDValue(), setBDValue() -> self.bdvalue
+- getValue(), setValue(), getText(), setText()
+    - UNSUPPORTED for now, see above
+- switchMode(), stopEdit(), removeSeparators1000(), fillDecimalByNulls(),
+  toBdValue(), fillBdvalue(), getBDValueAsText(), setShowValue(),
+  setEditValue(),  focus(), isPreparedToBlur(), getValueNotInRangeMessage(),
+  blur(), checkValueOnBlur(), checkValue(), keydown(), isCodeSignum(),
+  isCharSignum(), keypress(), drop(), dragstart(), afterPaste(), paste(),
+  parseTextToBigDecimal(), cut(), change()
+    - UNSUPPORTED for now
+- fireUIChangesEvent()
+    - Inlined in self.write()
+- changedProperties() -> self.changed_properties()
+
+If NumberControl is supposed to call updateValueInteractives() or
+tryInteractive(), that's also TODO.
+
+
+
+# TextField
+
+PARTIAL
+
+Like with NumberControl, it's just not worth it to reimplement more than the
+bare minimum. In particular, masks and suggestion requests are not supported.
+
+- getLabelDisplay(), setLabelDisplay() -> self.label_display
+- getText(), setText() -> self.value
+- setRawText()
+    - UNSUPPORTED for now
+- getType(), setType() -> self.type
+- getSelStart(), setSelStart()
+    - IRRELEVANT, only used in focus()
+- getSuggestionsEnabled(), setSuggestionsEnabled() -> self.suggestions_enabled
+- getSuggestionsMultiValueEnabled(), setSuggestionsMultiValueEnabled() ->
+  self.suggestions_multi_value_enabled
+- fireUIChangesEvent() -> self._mark_changed()
+- changedProperties() -> self.changed_properties()
+- getInvalidMaskInputMsg(), setInvalidMaskInputMsg(), getMask(), setMask(),
+  init(), focus(), blur(), canFocusNext(), isPreparedToBlur(),
+  getNextEditablePartPos(), getPreviousEditablePartPos(), keydown(),
+  keypress(), keyup(), getPatternForSuggestionRequest(),
+  setTextFromSuggestion(), setSuggestions(), suggestionClick(), drop(),
+  dragstart(), change(), getSubstituteMask(), afterPaste(), afterCut(),
+  checkMask(), fireSuggestionConfirm()
+    - UNSUPPORTED for now
+
+
+
+# MaskChar, Mask, Suggestions
+
+UNSUPPORTED
+
+They probably aren't that hard to port, but TextField's usage of them is.
+
+

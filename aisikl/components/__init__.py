@@ -3,11 +3,23 @@ from .action import Action
 from .actionlist import ActionList
 from .button import Button
 from .checkbox import CheckBox
+from .checklist import CheckList
+from .combobox import ComboBox
 from .dialogbody import DialogBody
 from .htmlarea import HtmlArea
 from .image import Image
 from .label import Label
+from .list import List
+from .numbercontrol import NumberControl
+from .panel import Panel
+from .progressbar import ProgressBar
+from .radiobox import RadioBox
 from .separator import Separator
+from .splitpane import SplitPane
+from .tabbedpane import TabbedPane
+from .textarea import TextArea
+from .textfield import TextField
+from .updown import UpDown
 
 from .component import Component as TODO
 
@@ -19,31 +31,31 @@ component_classes = {
     'button': Button,
     'changeGuardInteractive': TODO,
     'checkBox': CheckBox,
-    'checkList': TODO,
-    'comboBox': TODO,
+    'checkList': CheckList,
+    'comboBox': ComboBox,
     'dateControl': TODO,
     'eventInteractive': TODO,
     'htmlArea': HtmlArea,
     'image': Image,
     'label': Label,
-    'list': TODO,
+    'list': List,
     'listBox': TODO,
     'menuItem': TODO,
-    'numberControl': TODO,
-    'panel': TODO,
+    'numberControl': NumberControl,
+    'panel': Panel,
     'popupMenu': TODO,
-    'progressBar': TODO,
-    'radioBox': TODO,
+    'progressBar': ProgressBar,
+    'radioBox': RadioBox,
     'radioButton': TODO,
     'radioGroup': TODO,
     'separator': Separator,
-    'splitPane': TODO,
-    'tabbedPane': TODO,
+    'splitPane': SplitPane,
+    'tabbedPane': TabbedPane,
     'table': TODO,
-    'textArea': TODO,
-    'textField': TODO,
+    'textArea': TextArea,
+    'textField': TextField,
     'tree': TODO,
-    'upDown': TODO,
+    'upDown': UpDown,
     'valueInteractive': TODO,
     'view': TODO,
 }

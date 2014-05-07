@@ -49,7 +49,7 @@ class Control(Component):
 
         return ''.join(result)
 
-    def update_value_interactives(self):
+    def update_value_interactives(self, type):
         pass # TODO
 
     # TODO: We need a method to explicitly request firing a blur event.

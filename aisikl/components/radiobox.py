@@ -1,0 +1,67 @@
+
+from collections import namedtuple
+from .control import Control
+from aisikl.events import selection_event
+from aisikl.exceptions import AISParseError
+
+
+Option = namedtuple('Option', ['title', 'id'])
+
+
+class RadioBox(Control):
+    def __init__(self, dialog_soup, element, dialog):
+        super().__init__(dialog_soup, element, dialog)
+
+        items = element.find(id='radioBox_items')
+        self.always_selected = items.get('allwaysselected', 'false') == 'true'
+
+        self._parse_options(items)
+
+    def _parse_options(self, items):
+        self.selected_index = -1
+        self.options = []
+        for index, td in enumerate(items.find_all('td')):
+            if td['index'] != str(index):
+                raise AISParseError(
+                    "RadioBox '{}' item #{} "
+                    "has unexpected index attribute.".format(self.id, index))
+            self.options.append(Option(
+                title=td.label.get_text(),
+                id=td.radio['sid'],
+            ))
+            if td.radio.has_attr('checked'):
+                self.selected_index = index
+
+    @property
+    def selected_option():
+        if self.selected_index == -1: return None
+        return self.options[self.selected_index]
+
+    # If self.always_selected == False, select(-1) unselects the current item.
+    # (Votr always allows select(-1), but AIS might not like it.)
+    def select(index):
+        self.selected_index = index
+        self._fire_event()
+
+    def _fire_event(self):
+        self.dialog.component_changes(self, False)
+        ev = selection_event(self, self.selected_index)
+        self.dialog.app.send_events(ev)
+
+    def changed_properties(self):
+        index = '' if self.selected_index == -1 else self.selected_index
+        cdata = ('<root><selection>'
+            '<selectedIndexes>{}</selectedIndexes>'
+            '</selection></root>').format(self.selected_index)
+        return self._build_changed_properties(dataView=(True, True, cdata))
+
+    def _ais_setDataView(self, id, body):
+        data_view = body.find(id=id)
+        container = data_view.contents[0]
+        if container.get('id') != 'radioBox_container':
+            raise AISParseError("Expected radioBox_container")
+        if container.name == 'span':
+            self.selected_index = int(container['selectedindex'])
+        else:
+            self._parse_options(container.find(id='radioBox_items'))
+    _ais_setDataView.wants_body = True
