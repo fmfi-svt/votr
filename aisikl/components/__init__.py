@@ -2,8 +2,11 @@
 from .action import Action
 from .actionlist import ActionList
 from .button import Button
+from .checkbox import CheckBox
 from .dialogbody import DialogBody
 from .htmlarea import HtmlArea
+from .image import Image
+from .separator import Separator
 
 from .component import Component as TODO
 
@@ -14,13 +17,13 @@ component_classes = {
     'body': DialogBody,
     'button': Button,
     'changeGuardInteractive': TODO,
-    'checkBox': TODO,
+    'checkBox': CheckBox,
     'checkList': TODO,
     'comboBox': TODO,
     'dateControl': TODO,
     'eventInteractive': TODO,
     'htmlArea': HtmlArea,
-    'image': TODO,
+    'image': Image,
     'label': TODO,
     'list': TODO,
     'listBox': TODO,
@@ -32,7 +35,7 @@ component_classes = {
     'radioBox': TODO,
     'radioButton': TODO,
     'radioGroup': TODO,
-    'separator': TODO,
+    'separator': Separator,
     'splitPane': TODO,
     'tabbedPane': TODO,
     'table': TODO,
