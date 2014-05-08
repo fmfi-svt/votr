@@ -263,7 +263,7 @@ Most of DialogBody is useless, and most of the rest was moved to Dialog.
 Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
 
 - popupMenuManager
-    - TODO
+    - Removed, see PopupMenuManager below.
 - actionManager
     - Removed, see ActionManager below.
 - suspendedTableJSO
@@ -307,7 +307,7 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
   keydownPopupMenus(), mouseupPopupMenus(), isMenuActivated()
     - IRRELEVANT
     - STATE_DT and dtSelection is UNSUPPORTED.
-    - Showing popup menus is UNSUPPORTED. Just access menu items directly.
+    - Votr doesn't keep track of open popup menus. See PopupMenu below.
     - Multiple dialog stacks are UNSUPPORTED, so setActiveDialog() is a no-op.
 - close()
     - TODO
@@ -541,18 +541,17 @@ COMPLETE (removed)
 COMPLETE
 
 - setPopupMenu()
-    - Webui version doesn't work, because they don't call the super method.
+    - Webui version doesn't work, because it doesn't call the super method.
       (And they actually define the method twice.) Votr just uses superclass.
-- getAccessKey(), setAccessKey()
-    - Used nowhere in webui.
+- getAccessKey(), setAccessKey() -> self.access_key
+    - Webui doesn't use it directly, it's a standard HTML attribute.
 - getImage(), setImage() -> self.image
 - setTitle(), updateTitleImageElements()
     - IRRELEVANT
 - getConfirmQuestion(), setConfirmQuestion() -> self.confirm_question
 - click()
     - self.click()
-    - showPopupMenus() is UNSUPPORTED. Instead of clicking a button to show
-      a menu, use the menu items directly.
+    - showPopupMenus() is IRRELEVANT. See PopupMenu below.
 - getMainClassName(), mousedown(), mouseover(), mouseout()
     - IRRELEVANT
 
@@ -978,5 +977,195 @@ bare minimum. In particular, masks and suggestion requests are not supported.
 UNSUPPORTED
 
 They probably aren't that hard to port, but TextField's usage of them is.
+
+
+
+# Table..., CellEditor..., Column...
+
+TODO
+
+
+
+# Synchronizer, ExpansionSynchronizer, CheckedSynchronizer
+
+TODO
+
+
+
+# TreeModel, Tree
+
+TODO
+
+
+
+# MenuItem
+
+COMPLETE
+
+- getLid() -> self.lid
+- realizeEnability(), realizeVisibility()
+    - IRRELEVANT
+- getRightArrowElement(), select(), unselect()
+    - IRRELEVANT (visual only)
+- isPopupTitle() -> `self.popup_menu_id != None`
+- getPopupMenuId() -> self.popup_menu_id
+- getTitle(), setTitle() -> self.title (`_ais_setTitle()` is inherited)
+- getConfirmQuestion(), setConfirmQuestion() -> self.confirm_question
+- getImage(), setImage() -> self.image
+- onAction() -> self.click()
+    - menuItemAction() is IRRELEVANT, so we don't need to call it.
+
+
+
+# PopupMenu
+
+COMPLETE
+
+Votr doesn't keep track of which PopupMenus are open, or what item is selected.
+The user can just access the wanted MenuItem directly in dialog.components,
+there's no need to simulate opening the right menu first.
+
+Some menus emit an "init" event when opened. Votr supports that, but you have
+to do it manually.
+
+- selectedItemJSObject, hasVisibleItems(), focus(), doShow(), hide(),
+  showHideSeparators(), getSelectedItemJSObject(), setSelectedItemJSObject(),
+  isVisible(), resizeComponent(), realizeEnability(), realizeVisibility()
+    - IRRELEVANT
+- show() -> self.show()
+- getMenuItem() -> `self.dialog.components[id]`
+- setComponents()
+    - UNSUPPORTED. Dynamically adding and removing components? No thanks.
+
+
+
+# PopupMenuManager
+
+IRRELEVANT
+
+See PopupMenu above.
+
+
+
+# Interactive, EventInteractive, ValueInteractive, ChangeGuardInteractive
+
+TODO
+
+
+
+# WebUI
+
+PARTIAL
+
+Mostly covered by Application. No longer global.
+
+- fillResultFrame()
+    - Called from `request.html` (the request frame). Roughly corresponds to
+      Application._process_response().
+- appId -> app.app_id
+- appContext -> "ais"
+- webuiContext -> "ais/webui2"
+- getAppBody(), getRequestFrame(), getResultFrame(), getDownloadFrame(),
+  getLogFrame(), getDisableDialogsGlass(), webuiVersion, useAria
+    - IRRELEVANT
+- getHost(), getPort(), getProtocol() -> context.base_url
+- webuiVersion, useAria
+    - IRRELEVANT
+- controlerUrl -> "/ais/servlets/WebUIServlet" (currently hardcoded)
+- initializedByRefresh -> False (because initScript is UNSUPPORTED)
+- windowInFrame, isWindowInFrame(), isWindowInModalWindow() -> False
+    - UNSUPPORTED until we actually see it in use.
+- getWindowFrame() -> None
+    - Because isWindowInFrame() is False.
+- timeDifference
+    - IRRELEVANT
+- noteLastDoneRequest(), lastDoneRequest
+    - IRRELEVANT (probably related to retrying failed requests)
+- historyBack() -> no-op
+- initApplication() -> app.init()
+    - Non-empty initScript is UNSUPPORTED.
+- initScriptDialogsDataView, getInitScriptDialogContent()
+    - UNSUPPORTED, because non-empty initScript is UNSUPPORTED.
+- startRestoreConnectionCountdown(), stopRestoringConnection()
+    - TODO (IRRELEVANT?)
+- wasKilled, wasWindowClose, wasClosedOnServer, serverCloseApplication(),
+  closeApplication(), clear(), onAppClosedOnServer(), killApplication()
+    - TODO
+- beforeUnload(), unload()
+    - IRRELEVANT
+- setReturnValue()
+    - IRRELEVANT
+- sendingEvent, getSendingEvent(), setSendingEvent()
+    - IRRELEVANT (everything is synchronous)
+- sendEvent()
+    - Covered by app.send_events(*events)
+    - `<ev>` is constructed in Event, including `<origSrcName>`.
+- sendRequest(), _sendRequest()
+    - Merged, because everything in Votr is synchronous.
+    - Calls to sendRequest() can be mostly replaced with app._do_request().
+    - Application._send_request() composes and sends the request, while
+      Application._process_response() processes the result frame.
+- sendFileUploadSubmit()
+    - TODO
+- onSomeDialogBodyInitialized()
+    - IRRELEVANT, because everything is synchronous, so requests never have to
+      wait until some dialog is loaded.
+- sendWhatsUp(), whatsUpGetLastOutput(), whatsUpGetLastRequest(),
+  startWhatsUpTimer(), setIdleEventInterval(), getPingOrIdleInterval()
+    - TODO
+- sendEmptyRequest()
+    - Wasn't needed yet. Could be implemented as:
+      `self._do_request(self.collect_component_changes())`
+- currentTimeMillis() -> time.time()
+    - Used only in `antiCache`, so nobody cares whether it's a float.
+- popupMenuToShowAfterEnableJSO, setPopupMenuToShowAfterEnable()
+    - IRRELEVANT, because Votr is synchronous, and PopupMenuManager is removed.
+- isDisabledApplication(), disableApplication(), enableApplication()
+    - IRRELEVANT. An Application is disabled when _do_request is on the stack.
+- showDisableDialogsGlass(), refreshDisableDialogsGlass(),
+  showHideOneDisableDialogsGlass(), showHideMultiDisableDialogsGlass(),
+  prepareGlasses(), resizeGlass(), createGlass()
+    - IRRELEVANT
+- panicMode()
+    - IRRELEVANT
+    - No need to implement it. We will throw because it's not in
+      known_operations.
+- changesToXML(), resetComponentChanges()
+    - Merged into Application.collect_component_changes()
+- onComponentChanges()
+    - Merged into Dialog.component_changes(), because Dialog.componentChanges()
+      was the only caller.
+    - Webui uses an array of tuples instead of a normal hash table. In essence,
+      we want a list of changed dialogs, and for each dialog, a set of changed
+      components. Our Dialog simply uses a set().
+    - `value` is completely unused. `propertyName` is almost unused, except
+      that most properties set hasRefreshImportantChange to true, and a few
+      don't. hasRefreshImportantChange is almost useless, so we just say it's
+      always true, and remove both `propertyName` and `value` arguments.
+- isRegisteredComponentChange(), getAppReferrer()
+    - IRRELEVANT (unused in webui)
+- hasRefreshImportantChanges() -> True
+    - See onComponentChanges() above. Only used in clear().
+- messageBox(), confirmBox(), fileUpload(), fileXUpload(), editDoc(),
+  abortBox(), shellExec(), showHelp(), startApp()
+    - Listed in known_operations.
+    - Specific support (especially sending proper responses) is TODO.
+- abort()
+    - IRRELEVANT. Votr is synchronous, so a request can't be aborted.
+- sendSuggestionsRequest(), sendSuggestionsRequest_()
+    - Suggestions are UNSUPPORTED
+- prepareUpdatingDialogs()
+    - IRRELEVANT
+- setShellExecResult(), initCustomFrame(), setCustomFrameWindow()
+    - UNSUPPORTED
+- dblClick(), keyDown(), workspaceResize(), setUpdateInterval(), setWidth(),
+  setHeight(), resizeBrowserByApp(), cancelEvent(), getSrcElement()
+    - IRRELEVANT
+- readCustomization(), getProperty(), getPropertyAsBoolean(),
+  getPropertyAsInt()
+    - Wasn't needed yet, except for reading initScript in Application.init(),
+      which is hardcoded.
+- WebUI_init
+    - Parsed in Application.init()
 
 

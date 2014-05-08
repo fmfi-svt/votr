@@ -10,8 +10,10 @@ from .htmlarea import HtmlArea
 from .image import Image
 from .label import Label
 from .list import List
+from .menuitem import MenuItem
 from .numbercontrol import NumberControl
 from .panel import Panel
+from .popupmenu import PopupMenu
 from .progressbar import ProgressBar
 from .radiobox import RadioBox
 from .separator import Separator
@@ -40,10 +42,10 @@ component_classes = {
     'label': Label,
     'list': List,
     'listBox': TODO,
-    'menuItem': TODO,
+    'menuItem': MenuItem,
     'numberControl': NumberControl,
     'panel': Panel,
-    'popupMenu': TODO,
+    'popupMenu': PopupMenu,
     'progressBar': ProgressBar,
     'radioBox': RadioBox,
     'radioButton': TODO,
