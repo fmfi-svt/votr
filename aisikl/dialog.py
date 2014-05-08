@@ -44,19 +44,16 @@ class Dialog:
         if body.get('jsct') != 'body' or body.get('id') != self.name:
             raise AISParseError("Unexpected dialog body response")
 
-        elements = {}
         for element in dialog_soup.find_all(jsct=True):
             if element.get('isTemporary') == 'true': continue
-            elements.setdefault(element['id'], []).append(element)
-
-        for id in elements:
-            # AIS can have multiple components with the same id.
-            # That means we can't tell which one an Update is referring to.
-            # We discard both so that accessing them will fail loudly.
-            if len(elements[id]) != 1: continue
-
-            element = elements[id][0]
+            id = element['id']
             jsct = element['jsct']
+
+            # Webui can have multiple components with the same id. Nobody can
+            # tell them apart, not even result frame scripts, but they still
+            # try to. This code arbitrarily picks the first one we find. But
+            # getElementById() is undefined in this case, so any choice is OK.
+            if id in self.components: continue
 
             if jsct not in component_classes:
                 raise AISParseError("Unsupported component type: %r" % jsct)

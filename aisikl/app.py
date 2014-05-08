@@ -231,20 +231,22 @@ class Application:
             try:
                 dialog = self.dialogs[update.dialog]
             except KeyError:
-                raise AISParseError("Dialog %r doesn't exist." % update.dialog)
+                raise AISParseError("Dialog %r doesn't exist." %
+                    update.dialog) from None
 
             try:
                 component = dialog.components[update.target]
             except KeyError:
                 raise AISParseError("Component %r doesn't exist in %r." %
-                    (update.target, update.dialog))
+                    (update.target, update.dialog)) from None
 
             try:
                 method = getattr(component, '_ais_' + update.method)
             except AttributeError:
                 raise AISParseError("Method %r of %s is not yet implemented." %
-                    (update.method, component.__class__.__name__))
+                    (update.method, component.__class__.__name__)) from None
 
+            args = update.args
             if getattr(method, 'wants_body', False):
                 args = args + [body]
 
