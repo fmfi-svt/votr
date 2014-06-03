@@ -18,6 +18,8 @@ class Button(ActionableControl):
         self.confirm_question = value
 
     def click(self):
+        self.log('action', 'Clicking {}'.format(self.id))
+
         if self.try_execute_action(): return
 
         ev = action_event(self, None, self.id)

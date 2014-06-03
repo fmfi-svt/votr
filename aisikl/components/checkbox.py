@@ -30,10 +30,14 @@ class CheckBox(Control):
     def toggle(self):
         self.selected = not self.selected
         self.smoked = False
+        self.log('action', '{} {}'.format(
+            'Checking' if self.selected else 'Unchecking', self.id))
         self._fire_event()
 
     def set_to(self, value):
         if self.smoked or self.selected != bool(value):
             self.selected = bool(value)
             self.smoked = False
+            self.log('action', '{} {}'.format(
+                'Checking' if self.selected else 'Unchecking', self.id))
             self._fire_event()

@@ -8,6 +8,7 @@ class TextArea(TextControl):
         self.value = element.get_text()
 
     def write(self, value):
+        self.log('action', 'Writing {} in {}'.format(repr(value), self.id))
         self.value = value
         self.dialog.component_changes(self, False)
 

@@ -45,6 +45,7 @@ class NumberControl(TextInput):
         self.bdvalue = value
 
     def write(self, value):
+        self.log('action', 'Writing {} in {}'.format(repr(value), self.id))
         self.bdvalue = value
         self.dialog.component_changes(self, False)
 

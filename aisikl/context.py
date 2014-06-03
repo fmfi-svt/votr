@@ -1,5 +1,6 @@
 
 from bs4 import BeautifulSoup
+import json
 import requests
 from urllib.parse import urljoin
 
@@ -37,3 +38,15 @@ class Context:
         response = self.connection.request(method, url, **kwargs)
         response.raise_for_status()
         return BeautifulSoup(response.text)
+
+    def log(self, type, message, data=None):
+        '''Logs a message.
+
+        Args:
+            type: String used to group similar messages together.
+            message: The log message. Should be a single line.
+            data: A JSON-serializable object containing more details.
+        '''
+        # For now, just print it.
+        print('\033[1;36m{} \033[1;33m{} \033[0m{}'.format(
+            type, message, '' if data is None else json.dumps(data)))

@@ -9,6 +9,8 @@ class UpDown(Control):
         self.up_downed_component = element.get('updownedcomponent')
 
     def click(self, is_up):
+        self.log('action', 'Clicking {} {}'.format(
+            self.id, 'up' if is_up else 'down'))
         udc = self.dialog.components.get(self.up_downed_component)
         if udc and udc.up_down_row:
             udc.up_down_row(is_up)

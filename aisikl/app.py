@@ -184,6 +184,10 @@ class Application:
         self.dialog_stack = []
         self.collector = None
 
+        match = re.search(r'appClassName=([a-zA-Z0-9_\.]*)', url)
+        self.ctx.log('operation', 'Opening application {}'.format(
+            match.group(1) if match else '(unknown)'), url)
+
         app_soup = self.ctx.request_html(url)
         if not app_soup.find(id='webuiProperties'):
             raise AISParseError("AIS2 application didn't open")
@@ -251,14 +255,21 @@ class Application:
         data = params.copy()
         data['xml_spec'] = xml_spec
 
+        self.ctx.log('http', 'Sending WebUIServlet request', xml_spec)
         return self.ctx.request_html('/ais/servlets/WebUIServlet',
             method='POST', params=params, data=data)
 
     def _process_response(self, soup):
+        self.ctx.log('http', 'Received response', str(soup))
         operations, updates = parse_response(soup)
         body = soup.body
 
         if operations:
+            for operation in operations:
+                self.ctx.log('operation',
+                    'Received operation {}'.format(operation.method),
+                    operation)
+
             if self.collector is None:
                 exc = AISBehaviorError(
                     "AIS did an unexpected operation: {}".format(operations))
@@ -268,6 +279,9 @@ class Application:
             self.collector.extend(operations)
 
         for update in updates:
+            self.ctx.log('update',
+                'Updating component {}'.format(update.target), update)
+
             try:
                 dialog = self.dialogs[update.dialog]
             except KeyError:
@@ -370,6 +384,8 @@ class Application:
             # Multiple stacks seem to be uncommon in practice, so we ignore the
             # whole thing for the moment to make the code simpler.
             raise AISParseError("Multiple dialog stacks are not supported yet")
+
+        self.ctx.log('operation', 'Opening dialog {} "{}"'.format(name, title))
 
         # Ignore arguments that only affect position and size: x, y, width,
         # height, resizeable, min_width, min_height, and for_control_of_parent.

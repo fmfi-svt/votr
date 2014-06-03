@@ -41,6 +41,7 @@ class TextField(TextInput):
             self.tool_tip_text = ''
 
     def write(self, value):
+        self.log('action', 'Writing {} in {}'.format(repr(value), self.id))
         self.value = value
         self._mark_changed()
 

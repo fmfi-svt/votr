@@ -26,6 +26,9 @@ class Action(Component):
                 self.visible and self.visible_in_ui):
             return
 
+        if not original_source_name:
+            self.log('action', 'Executing {}'.format(self.id))
+
         ev = action_event(self, None, original_source_name or self.id)
         # TODO: We should technically ask confirm_question before firing
         # (if ev.listening is True), but we probably don't care.

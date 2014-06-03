@@ -19,6 +19,8 @@ class Panel(Control):
     def toggle_collapsed(self):
         if not self.collapsable: return
         if not self.parent.is_really_enabled(): return
+        self.log('action', '{} {}'.format(
+            'Opening' if self.collapsed else 'Closing', self.id))
         self.collapsed = not self.collapsed
         self._fire_event()
 

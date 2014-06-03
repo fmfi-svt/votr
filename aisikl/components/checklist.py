@@ -44,15 +44,22 @@ class CheckList(Control):
     def select_unselect_all(self):
         if not self.items: return
         new_value = not self.items[0].checked
+        self.log('action', '{} all items in {}'.format(
+            'Selecting' if new_value else 'Unselecting', self.id))
         for item in self.items:
             item.checked = new_value
         self._mark_changed()
 
     def select(self, index):
+        self.log('action', 'Selecting item "{}" {}'.format(
+            self.items[index].title, self.id))
         self.selected_index = index
 
     def toggle(self, index):
         self.items[index].checked = not self.items[index].checked
+        self.log('action', '{} item "{}" in {}'.format(
+            'Checking' if self.items[index].checked else 'Unchecking',
+            self.items[index].title, self.id))
         self.selected_index = index
         self._mark_changed()
 

@@ -24,6 +24,9 @@ class Component:
         parent = element.find_parent(jsct=True)
         self.parent_id = parent['id'] if parent else None
 
+    def log(self, *args, **kwargs):
+        self.dialog.app.ctx.log(*args, **kwargs)
+
     @property
     def parent(self):
         return self.dialog.components[self.parent_id]

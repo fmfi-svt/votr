@@ -31,6 +31,8 @@ class ComboBox(Control):
         return self.options[self.selected_index]
 
     def select(index):
+        self.log('action', 'Selecting "{}" in {}'.format(
+            self.options[index].title, self.id))
         self.selected_index = index
         self._fire_event()
 
