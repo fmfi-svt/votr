@@ -11,8 +11,9 @@ class Context:
     per-session instead of per-request, because a Votr request can heavily
     depend on the previous ones.)
 
-    :param base_url: the server to connect to, e.g. "https://ais2.uniba.sk/".
-    :param cookies: A dictionary of initial cookies.
+    Arguments:
+        base_url: The server to connect to, e.g. "https://ais2.uniba.sk/".
+        cookies: A dictionary of initial cookies.
     '''
 
     # TODO: Make sure this class is pickle-able.

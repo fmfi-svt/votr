@@ -8,18 +8,18 @@ PortalApp = namedtuple('PortalApp', ['id', 'title', 'url', 'description'])
 
 
 def get_modules(ctx):
-    '''Download the main menu of AIS and return the list of modules.
+    '''Downloads the main menu of AIS and return the list of modules.
 
     The separate pages of the main menu are called "modules", and the sections
     shown on one page are "submodules".
 
-    This function returns the list of modules. Every module is returned as a
-    `(name, submodules)` tuple, every submodule is returned as a `(name, apps)`
-    tuple, and every app is an object with `id`, `url`, `title` and
-    `description`.
-
-    :param ctx: the :class:`~aisikl.context.Context` to use.
-    :return: the list of modules.
+    Args:
+        ctx: The :class:`~aisikl.context.Context` to use.
+    Returns:
+        The list of modules. Every module is returned as a
+        ``(name, submodules)`` tuple, every submodule is returned as a
+        ``(name, apps)`` tuple, and every app is an object with ``id``,
+        ``url``, ``title`` and ``description``.
     '''
     front_soup = ctx.request_html('/ais/portal/changeTab.do?tab=0')
 
@@ -54,14 +54,14 @@ def get_modules(ctx):
 
 
 def get_apps(ctx):
-    '''Download the main menu of AIS and return the visible applications.
+    '''Downloads the main menu of AIS and returns the visible applications.
 
-    This function doesn't preserve the menu structure and returns a dictionary
-    with all applications. The keys are their IDs and the values are objects
-    with `id`, `url`, `title` and `description`.
-
-    :param ctx: the :class:`~aisikl.context.Context` to use.
-    :return: the dict of applications.
+    Args:
+        ctx: The :class:`~aisikl.context.Context` to use.
+    Returns:
+        The dict of applications. Keys are applications IDs and values are
+        objects with ``id``, ``url``, ``title`` and ``description``. The menu
+        structure is not preserved.
     '''
     result = {}
     modules = get_modules(ctx)

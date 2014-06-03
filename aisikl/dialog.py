@@ -5,15 +5,21 @@ from .components import component_classes
 class Dialog:
     '''An opened AIS dialog.
 
-    :param name: the identifier of this dialog instance.
-    :param title: the user-visible dialog title.
-    :param code: the identifier of the AIS dialog class (probably).
-    :param parent_dialog_name: name of the dialog that opened us.
-    :param modal: whether the dialog prevents access to others while opened.
-    :param is_main_dialog: whether it's the top level body of the application.
-    :param closeable: whether the dialog can be closed.
-    :param hide_title_bar: whether AIS would show the title row.
-    :param app: the :class:`aisikl.app.Application` this dialog belong to.
+    The dialog's components can be accessed as items of the ``components``
+    dict, or directly as attributes of the dialog object. That is, ``dlg.x ==
+    dlg.components["x"]``.
+
+    Attributes:
+        name: The identifier of this dialog instance.
+        title: The user-visible dialog title.
+        code: The identifier of the AIS dialog class (probably).
+        parent_dialog_name: Name of the dialog that opened us.
+        modal: Whether the dialog prevents access to others while opened.
+        is_main_dialog: whether it's the top level body of the application.
+        closeable: Whether the dialog can be closed.
+        hide_title_bar: Whether AIS would show the title row.
+        app: The :class:`aisikl.app.Application` this dialog belong to.
+        components: The dict of components present in the dialog.
     '''
 
     def __init__(self, name, title, code, parent_dialog_name, modal,

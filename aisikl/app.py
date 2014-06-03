@@ -9,19 +9,12 @@ from .dialog import Dialog
 
 
 Operation = namedtuple('Operation', ('target', 'method', 'args'))
-Operation.__doc__ = (
-    '''Record of a "big" action done by AIS that isn't handled automatically
-    and requires the user's (or in Votr's case, program's) reaction, such as:
 
-    - Opening a new application or browser window
-    - Showing a message box or another modal dialog
-    - Opening and closing dialogs
-    ''')
 
 Update = namedtuple('Update', ('dialog', 'target', 'method', 'args'))
-Update.__doc__ = '''Record of AIS calling a setter on some component.'''
 
 
+#: The known :class:`Operation` methods.
 known_operations = {
     'webui': { 'startApp', 'confirmBox', 'messageBox', 'abortBox',
                'fileUpload', 'fileXUpload', 'editDoc', 'shellExec',
@@ -54,10 +47,13 @@ _update_re = re.compile(r'^f\(\)\.getEnsuredJSOById\("(\w+)", *(\w+)\)\.(\w+)\((
 
 
 def parse_response(soup):
-    '''Parse the resultFrame content (the response to a POST request).
+    '''Parses the resultFrame content (the response to a POST request).
 
-    :param soup: the HTML structure.
-    :return: an (operations, updates) tuple.
+    Args:
+        soup: The HTML structure.
+    Returns:
+        An ``(operations, updates)`` tuple. ``operations`` is a list of
+        :class:`Operation`\ s. ``updates`` is a list of :class:`Update`\ s.
     '''
     operations = []
     updates = []
@@ -118,12 +114,16 @@ def parse_response(soup):
 
 
 def assert_ops(operations, *expected_methods):
-    '''Ensure the list of operations contains the methods we expect.
+    '''Ensures the list of collected operations contains the methods we expect.
 
-    This is a helper method you can use after calling collect_operations.
+    This is a helper method you can use after calling
+    :meth:`~Application.collect_operations`. It just looks at each operation's
+    :attr:`~Operation.method` and checks if they match.
 
-    :param operations: the collected operations.
-    :param \*expected_methods: a list of method names.
+    :param operations: The collected operations.
+    :param \*expected_methods: A list of method names.
+    Raises:
+        AISBehaviorError: Raised if the methods don't match.
     '''
     real_methods = [op.method for op in operations]
     expected_methods = list(expected_methods)
@@ -136,11 +136,36 @@ def assert_ops(operations, *expected_methods):
 class Application:
     '''An opened AIS application. (That is, a "browser window".)
 
-    :param ctx: the :class:`~aisikl.context.Context` to use.
+    Instances cannot be created directly. Use :meth:`open` if you know the full
+    URL (e.g. from the :mod:`~aisikl.portal`), or :meth:`start_app` when
+    opening an application from another one.
+
+    Attributes:
+        ctx: The :class:`~aisikl.context.Context`.
+        dialogs: The dict of open :class:`~aisikl.dialog.Dialog`\ s.
+        dialog_stack:
+            The ordered list of open :class:`~aisikl.dialog.Dialog`\ s. Its
+            last item is the currently active dialog.
     '''
 
     @classmethod
     def open(cls, ctx, url):
+        '''Opens a new application.
+
+        Returns an ``(app, ops)`` tuple containing the new Application instance
+        and the initial list of operations caused by the "INIT" event. This
+        list must be processed as usual -- see :meth:`collect_operations`. For
+        example, if the application should only open a main dialog, use ``dlg =
+        app.awaited_open_main_dialog(ops)``. (If the user isn't authorized,
+        ``ops`` will probably contain a message box saying so.)
+
+        Args:
+            ctx: The :class:`~aisikl.context.Context` to use.
+            url: The main app URL. Can be relative to the server root.
+        Returns:
+            An `(app, ops)` tuple with the new instance and the initial list of
+            operations.
+        '''
         app = super().__new__(cls)
         ops = app._open(ctx, url)
         return app, ops
@@ -180,18 +205,26 @@ class Application:
 
     @contextmanager
     def collect_operations(self):
-        '''Collect operations done by AIS -- big actions like opening new
-        applications, dialogs, browser windows or modal boxes. These usually
-        require a reaction from your part, or signify an error of some sort.
-        By calling this, you're expressing you expected it to happen. If an
-        :class:`Operation` happens but isn't collected, an error is thrown.
+        '''Collects :class:`Operation`\ s done by AIS.
 
-        Use it with the ``with`` keyword as a context manager::
+        Calling this function means that you are expecting an Operation to
+        happen and are prepared to handle it. Operations happens during this
+        function will be returned in a list instead of throwing exceptions.
 
-            with my_app.collect_operations() as ops:
-                my_dialog.someButton.click()
+        You are responsible for checking that the operations are what you
+        expected, and responding appropriately. This is usually done by
+        calling :func:`assert_ops` and then using the relevant
+        :class:`Application` methods. If you're only expecting one Operation,
+        you can use one of the ``awaited_*`` methods.
 
-            print(ops[0])   # TODO: replace with better example
+        This function is used with the ``with`` keyword as a context manager::
+
+            with app.collect_operations() as ops:
+                dlg.someButton.click()
+
+            assert_ops(ops, 'closeDialog', 'messageBox')
+            app.close_dialog(*ops[0].args)
+            message_text = ops[1].args[0]
         '''
         if self.collector is not None:
             raise Exception("Already inside another collect_operations()")
@@ -202,7 +235,7 @@ class Application:
             self.collector = None
 
     def _do_request(self, body):
-        '''Send a POST request to AIS and process the response.
+        '''Sends a POST request to AIS and process the response.
 
         Usually called from :meth:`send_events`.
         '''
@@ -260,7 +293,7 @@ class Application:
             method(*args)
 
     def send_events(self, *events):
-        '''Send the given events to AIS, if AIS is listening to them.
+        '''Sends the given events to AIS, if AIS is listening to them.
 
         :param \*events: the events to send.
         '''
@@ -270,7 +303,7 @@ class Application:
                          self.collect_component_changes())
 
     def collect_component_changes(self):
-        '''Return the <changedProps> string that goes into POST requests.'''
+        '''Returns the <changedProps> string that goes into POST requests.'''
         app_changes = ''
         if self.dialog_stack:
             app_changes = (
@@ -286,6 +319,12 @@ class Application:
             '</changedProps>\n')
 
     def start_app(self, url, params):
+        '''Opens a new application in response to the startApp
+        :class:`Operation`.
+
+        Returns:
+            An `(app, ops)` tuple, just like :meth:`open`.
+        '''
         url = ('/ais/servlets/WebUIServlet?appClassName={}{}&'
                'antiCache={}').format(url, params, time.time())
         return self.open(self.ctx, url)
@@ -293,7 +332,12 @@ class Application:
     def open_main_dialog(self, name, title, code, x, y, min_width, min_height,
                          width, height, resizeable, minimizeable, closeable,
                          hide_title_bar):
-        '''Do the dm().openMainDialog() operation and open the main dialog.'''
+        '''Opens the main dialog in response to the openMainDialog
+        :class:`Operation`.
+
+        Returns:
+            The opened :class:`aisikl.dialog.Dialog`.
+        '''
         # We ignore webui's useDialogFrame, so we just call open_dialog.
         return self.open_dialog(
             name, title, code, None, False, True, 0, 0, width, height,
@@ -304,7 +348,11 @@ class Application:
                     is_main_dialog, x, y, width, height, resizeable,
                     minimizeable, closeable, hide_title_bar, min_width,
                     min_height, for_control_of_parent, purl, is_native):
-        '''Do the dm().openDialog() operation and open a dialog.'''
+        '''Opens a new dialog in response to the openDialog :class:`Operation`.
+
+        Returns:
+            The opened :class:`aisikl.dialog.Dialog`.
+        '''
         if is_native:
             # Current theory: isNative probably means the dialog body contains
             # custom HTML instead of Components. We haven't seen one yet.
@@ -340,14 +388,30 @@ class Application:
     # TODO: Closing dialogs (from DialogManager)
 
     def awaited_start_app(self, ops):
+        '''Combines :func:`assert_ops` and :meth:`start_app` in one step.
+
+        If ``ops`` really contains a single startApp :class:`Operation` as
+        expected, opens the application. Throws otherwise.
+        '''
         assert_ops(ops, 'startApp')
         return self.start_app(*ops[0].args)
 
     def awaited_open_dialog(self, ops):
+        '''Combines :func:`assert_ops` and :meth:`open_dialog` in one step.
+
+        If ``ops`` really contains a single openDialog :class:`Operation` as
+        expected, opens the new dialog. Throws otherwise.
+        '''
         assert_ops(ops, 'openDialog')
         return self.open_dialog(*ops[0].args)
 
     def awaited_open_main_dialog(self, ops):
+        '''Combines :func:`assert_ops` and :meth:`open_main_dialog` in one
+        step.
+
+        If ``ops`` really contains a single openMainDialog :class:`Operation`
+        as expected, opens the main dialog. Throws otherwise.
+        '''
         assert_ops(ops, 'openMainDialog')
         return self.open_main_dialog(*ops[0].args)
 

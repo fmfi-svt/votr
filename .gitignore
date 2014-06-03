@@ -7,3 +7,4 @@ dist
 .*
 !.git*
 /*env
+docs/_build

@@ -7,6 +7,17 @@ __all__ = ['component_event', 'focus_event', 'change_action_event',
 
 
 class Event:
+    '''A WebUI event that might be sent to the server.
+
+    Events should be created using the functions below instead of using the
+    constructor directly.
+
+    Attributes:
+        source: The component that fired the event.
+        listening: Whether the server actually wants the event. If false,
+            :meth:`aisikl.app.Application.send_events` will ignore it.
+        xml: The XML payload.
+    '''
     def __init__(self, source, mask_bit, xml):
         comp_name = source.id
         dlg_name = source.dialog.name
