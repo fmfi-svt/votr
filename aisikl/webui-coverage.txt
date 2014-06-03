@@ -25,7 +25,7 @@ COMPLETE (removed)
 
 In AIS, each "component" consists of two object: the actual DOM node, and an
 `JSObject` that is created when it's needed. Current state is stored in DOM
-attributes. Votr creates all components in `Dialog.init()`, and only uses DOM
+attributes. Votr creates all components in `Dialog._init()`, and only uses DOM
 nodes for initial parsing.
 
 A component can be accessed with `my_dialog.components['compName']` or simply
@@ -275,7 +275,7 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
 - resized, getResized()
     - UNSUPPORTED. Votr doesn't send dialog size to AIS.
 - init(), DialogBody_init()
-    - Component initialization is done by Dialog.init().
+    - Component initialization is done by Dialog._init().
     - dtSelectionDiv is UNSUPPORTED.
     - Everything else done by init() is IRRELEVANT, including the call to
       onDialogBodyInit().
@@ -510,7 +510,7 @@ buttons and menu items.
 - getToolTipText(), setToolTipText() -> self.tool_tip_text
 - getConfirmQuestion(), setConfirmQuestion() -> self.confirm_question
 - init() -> `__init__`
-- onExecute() -> self.on_execute()
+- onExecute() -> self.execute()
     - The first argument was removed. Setting it to True is UNSUPPORTED,
       because DialogBody.keydownTryAction() is UNSUPPORTED.
 - getFirstFocusableComponent()
@@ -1082,7 +1082,7 @@ Mostly covered by Application. No longer global.
 - noteLastDoneRequest(), lastDoneRequest
     - IRRELEVANT (probably related to retrying failed requests)
 - historyBack() -> no-op
-- initApplication() -> app.init()
+- initApplication() -> app._open()
     - Non-empty initScript is UNSUPPORTED.
 - initScriptDialogsDataView, getInitScriptDialogContent()
     - UNSUPPORTED, because non-empty initScript is UNSUPPORTED.
@@ -1163,9 +1163,9 @@ Mostly covered by Application. No longer global.
     - IRRELEVANT
 - readCustomization(), getProperty(), getPropertyAsBoolean(),
   getPropertyAsInt()
-    - Wasn't needed yet, except for reading initScript in Application.init(),
+    - Wasn't needed yet, except for reading initScript in Application._open(),
       which is hardcoded.
 - WebUI_init
-    - Parsed in Application.init()
+    - Parsed in Application._open()
 
 

@@ -16,7 +16,7 @@ class ActionableControl(Control):
         # TODO: This isn't used in webui, but we might replace
         # tryExecuteActionForElement() with it.
         if self.action:
-            self.action.on_execute(self.id)
+            self.action.execute(self.id)
             return True
         return False
 

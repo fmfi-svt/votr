@@ -20,7 +20,7 @@ class Action(Component):
         return [o for o in self.get_components()
                 if o.jsct in ('button', 'menuItem')]
 
-    def on_execute(self, original_source_name=None):
+    def execute(self, original_source_name=None):
         '''Executes the action and emits the appropriate event.'''
         if not (self.accessible and self.enabled and self.enabled_in_ui and
                 self.visible and self.visible_in_ui):

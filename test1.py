@@ -6,6 +6,10 @@ cookie = os.getenv('AIS_COOKIE')
 if not cookie: sys.exit('musis dat export AIS_COOKIE="hodnota cosign-filteru"')
 origin = os.getenv('AIS_ORIGIN', 'ais2.uniba.sk')
 
+name, _, cookie = cookie.rpartition('=')
+if name and name != 'cosign-filter-'+origin:
+    raise Exception('cookie by sa mal volat cosign-filter-'+origin)
+
 from aisikl.context import Context
 ctx = Context('https://'+origin+'/', { 'cosign-filter-'+origin: cookie })
 
@@ -18,10 +22,14 @@ if __name__ == '__main__':
     print(apps)
 
     from aisikl.app import Application, assert_ops
-    app = Application(ctx)
-    ops = app.init(apps['VSES017'].url)
-    print(ops)
-    assert_ops(ops, 'openMainDialog')
-    dlg = app.open_main_dialog(*ops[0].args)
+    app, ops = Application.open(ctx, apps['VSES017'].url)
+    dlg = app.awaited_open_main_dialog(ops)
 
-    dlg.detailStudentaButton.click()
+    #dlg.detailStudentaButton.click()
+    #dlg.nacitatButton.click()
+
+    with app.collect_operations() as ops:
+        dlg.terminyHodnoteniaAction.execute()
+    app2, ops = app.awaited_start_app(ops)
+    dlg2 = app2.awaited_open_main_dialog(ops)
+    print(dlg2.components.keys())

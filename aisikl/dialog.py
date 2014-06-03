@@ -31,12 +31,10 @@ class Dialog:
         self.components = {}
         self.changed_components = None
 
-    def init(self, url):
+    def _init(self, url):
         '''Load the dialog body.
 
         Called from :meth:`aisikl.app.Application.open_dialog`.
-
-        :internal:
         '''
         dialog_soup = self.app.ctx.request_html(url)
 

@@ -34,6 +34,7 @@ class Control(Component):
         for name, value in kwargs.items():
             is_xml = use_cdata = False
             if isinstance(value, tuple): is_xml, use_cdata, value = value
+            if isinstance(value, bool): value = 'true' if value else 'false'
 
             if use_cdata: value = "<![CDATA[" + value + "]]>"
             write("<nameValue>")

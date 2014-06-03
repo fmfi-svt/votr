@@ -23,10 +23,10 @@ Update.__doc__ = '''Record of AIS calling a setter on some component.'''
 
 
 known_operations = {
-    'webui': set(('startApp', 'confirmBox', 'messageBox', 'abortBox',
-                  'fileUpload', 'fileXUpload', 'editDoc', 'shellExec',
-                  'showHelp')),
-    'dm': set(('openMainDialog', 'openDialog', 'closeDialog')),
+    'webui': { 'startApp', 'confirmBox', 'messageBox', 'abortBox',
+               'fileUpload', 'fileXUpload', 'editDoc', 'shellExec',
+               'showHelp' },
+    'dm': { 'openMainDialog', 'openDialog', 'closeDialog' },
 }
 
 
@@ -128,8 +128,9 @@ def assert_ops(operations, *expected_methods):
     real_methods = [op.method for op in operations]
     expected_methods = list(expected_methods)
     if real_methods != expected_methods:
-        raise AISBehaviorError("AIS did %r but we thought it would do %r" %
-            (real_methods, expected_methods))
+        raise AISBehaviorError(
+            "We expected %r but AIS did something different: %r" %
+            (expected_methods, operations))
 
 
 class Application:
@@ -138,19 +139,25 @@ class Application:
     :param ctx: the :class:`~aisikl.context.Context` to use.
     '''
 
-    def __init__(self, ctx):
+    @classmethod
+    def open(cls, ctx, url):
+        app = super().__new__(cls)
+        ops = app._open(ctx, url)
+        return app, ops
+
+    def __init__(self):
+        # This is because open() needs to return two values, and __init__ can't
+        # change the return value. __new__ could, but we want normal pickling.
+        raise Exception(
+            "The Application constructor is private, use open() instead")
+
+    def _open(self, ctx, url):
+        '''Actually opens the new instance created by :meth:`open`.'''
         self.ctx = ctx
         self.serial = 0
         self.dialogs = {}
         self.dialog_stack = []
         self.collector = None
-
-    def init(self, url):
-        '''Open the application. This must be the first thing you do.
-
-        :param url: the main app URL. Can be relative to the server root.
-        :return: the initial list of operations.
-        '''
 
         app_soup = self.ctx.request_html(url)
         if not app_soup.find(id='webuiProperties'):
@@ -197,8 +204,8 @@ class Application:
     def _do_request(self, body):
         '''Send a POST request to AIS and process the response.
 
-        Usually called from :meth:`send_events`.'''
-
+        Usually called from :meth:`send_events`.
+        '''
         response = self._send_request(body)
         self._process_response(response)
 
@@ -278,6 +285,11 @@ class Application:
             ''.join(d.changed_properties() for d in self.dialog_stack) +
             '</changedProps>\n')
 
+    def start_app(self, url, params):
+        url = ('/ais/servlets/WebUIServlet?appClassName={}{}&'
+               'antiCache={}').format(url, params, time.time())
+        return self.open(self.ctx, url)
+
     def open_main_dialog(self, name, title, code, x, y, min_width, min_height,
                          width, height, resizeable, minimizeable, closeable,
                          hide_title_bar):
@@ -311,7 +323,6 @@ class Application:
             # whole thing for the moment to make the code simpler.
             raise AISParseError("Multiple dialog stacks are not supported yet")
 
-
         # Ignore arguments that only affect position and size: x, y, width,
         # height, resizeable, min_width, min_height, and for_control_of_parent.
         # (And minimizeable, which actually isn't used in webui at all.)
@@ -322,9 +333,21 @@ class Application:
 
         url = purl or ('/ais/servlets/WebUIServlet?appId={}&form={}&'
                        'antiCache={}').format(self.app_id, name, time.time())
-        dialog.init(url)
+        dialog._init(url)
 
         return dialog
 
     # TODO: Closing dialogs (from DialogManager)
+
+    def awaited_start_app(self, ops):
+        assert_ops(ops, 'startApp')
+        return self.start_app(*ops[0].args)
+
+    def awaited_open_dialog(self, ops):
+        assert_ops(ops, 'openDialog')
+        return self.open_dialog(*ops[0].args)
+
+    def awaited_open_main_dialog(self, ops):
+        assert_ops(ops, 'openMainDialog')
+        return self.open_main_dialog(*ops[0].args)
 
