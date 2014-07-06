@@ -39,6 +39,19 @@ class Context:
         response.raise_for_status()
         return BeautifulSoup(response.text)
 
+    def request_json(self, url, *, method='GET', **kwargs):
+        '''Sends a request to AIS and parses the response as HTML.
+
+        :param url: the URL, either absolute or relative to the AIS server.
+        :param method: HTTP method for the request.
+        :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
+        :return: a :class:`~BeautifulSoup` object.
+        '''
+        url = urljoin(self.base_url, url)
+        response = self.connection.request(method, url, verify=False, **kwargs)
+        response.raise_for_status()
+        return response.text
+
     def log(self, type, message, data=None):
         '''Logs a message.
 
