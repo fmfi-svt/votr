@@ -3,8 +3,11 @@ from bs4 import BeautifulSoup
 import json
 import requests
 from urllib.parse import urljoin
+from .exceptions import RESTServerError
+
 
 class Context:
+
     '''Context contains the things we need to store about an AIS session. When
     one user makes multiple Votr requests, they have the same Context. It
     contains our AIS cookie jar, and will later also include the open AIS
@@ -40,17 +43,26 @@ class Context:
         return BeautifulSoup(response.text)
 
     def request_json(self, url, *, method='GET', **kwargs):
-        '''Sends a request to AIS and parses the response as HTML.
+        '''Sends a request to REST API and parses the response as JSON.
 
         :param url: the URL, either absolute or relative to the AIS server.
         :param method: HTTP method for the request.
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
-        :return: a :class:`~BeautifulSoup` object.
+        :return: a dictionary.
         '''
         url = urljoin(self.base_url, url)
         response = self.connection.request(method, url, verify=False, **kwargs)
         response.raise_for_status()
-        return response.text
+
+        response = json.loads(response.text)
+
+        if response['status'] != 'OK':
+            raise RESTServerError(
+                "Status: {} Error:{}".format(
+                    response['status'],
+                    response['error']))
+
+        return response['response']
 
     def log(self, type, message, data=None):
         '''Logs a message.

@@ -17,3 +17,15 @@ class AISParseError(AISError):
 
 class AISBehaviorError(AISError):
     '''AIS did something we didn't expect.'''
+
+
+class RESTError(Exception):
+    '''The base class for REST-related exceptions.'''
+
+
+class RESTNotFoundError(RESTError):
+    '''Expected data was not found in REST response.'''
+
+
+class RESTServerError(RESTError):
+    '''Server returned error after our request.'''

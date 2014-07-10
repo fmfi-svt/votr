@@ -20,3 +20,19 @@ Priemer = namedtuple('Priemer', [
     'akademicky_rok', 'nazov', 'semester', 'ziskany_kredit', 'predmetov',
     'neabsolvovanych', 'studijny_priemer', 'vazeny_priemer', 'pokusy_priemer',
     'datum_vypoctu'])
+
+Termin = namedtuple('Termin',
+                    ['datum',
+                     'cas',
+                     'miestnost',
+                     'pocet_prihlasenych',
+                     'maximalne_prihlasenych',
+                     'hodnotiaci',
+                     'prihlasovanie_od',
+                     'prihlasovanie_do',
+                     'poznamka',
+                     'moznost_prihlasit'])
+
+Prihlasena_osoba = namedtuple(
+    'Prihlasena_osoba', [
+        'skratka', 'datum_prihlasenia', 'plne_meno', 'rocnik'])

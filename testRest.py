@@ -1,31 +1,31 @@
 # Docasny testovaci skript.
 # Spusti ho priamo, alebo sprav "from test1 import ctx".
 
-import os, sys
+import os
+import sys
 import json
 cookie = os.getenv('AIS_COOKIE')
-if not cookie: sys.exit('musis dat export AIS_COOKIE="hodnota cosign-filteru"')
+if not cookie:
+    sys.exit('musis dat export AIS_COOKIE="hodnota cosign-filteru"')
 origin = os.getenv('AIS_ORIGIN', 'int-dev.uniba.sk')
 
 name, _, cookie = cookie.rpartition('=')
-if name and name != 'cosign-filter-'+origin:
-    raise Exception('cookie by sa mal volat cosign-filter-'+origin)
+if name and name != 'cosign-filter-' + origin:
+    raise Exception('cookie by sa mal volat cosign-filter-' + origin)
 
 from aisikl.context import Context
-ctx = Context('https://'+origin+':8443/', { 'cosign-filter-'+origin: cookie })
+ctx = Context('https://' + origin + ':8443/',
+              {'cosign-filter-' + origin: cookie})
 
-n = ctx.request_json('/')
 try:
-    json_object = json.loads(n)
+    initial = ctx.request_json('/')
 except ValueError:
     raise Exception('login neuspesny, asi zly cookie')
 else:
-    if not json_object['response']['authenticated']:
+    if not initial['authenticated']:
         raise Exception('login neuspesny, asi zly cookie')
 
 if __name__ == '__main__':
-    
-   
 
     from fladgejt.rest import RestClient
 
@@ -33,6 +33,26 @@ if __name__ == '__main__':
 
     studia = rest.get_studia()
 
-    print(rest.get_zapisne_listy(studia[0]))
+    zapisne_listy = rest.get_zapisne_listy(
+        studia[0].sp_skratka,
+        studia[0].zaciatok)
+    print(zapisne_listy)
 
-    print(rest.get_prehlad_kreditov(studia[0]))
+    terminy = rest.get_vypisane_terminy(
+        studia[0].sp_skratka,
+        studia[0].zaciatok,
+        zapisne_listy[2].akademicky_rok)
+    print(terminy)
+
+    print()
+
+    print(
+        rest.get_prihlaseny_studenti(
+            studia[0].sp_skratka,
+            studia[0].zaciatok,
+            zapisne_listy[2].akademicky_rok,
+            "FMFI.KAI/1-AIN-636/00",
+            "2014-01-22",
+            "09:00",
+            "FMFI I 007,FMFI I 009",
+            "RNDr. Martin Homola, PhD."))
