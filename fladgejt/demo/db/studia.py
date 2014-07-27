@@ -1,5 +1,6 @@
-from fladgejt.structures import Studium
 from datetime import datetime
+from fladgejt.structures import Studium
+
 
 def get_studia():
     return [Studium(id=1,
