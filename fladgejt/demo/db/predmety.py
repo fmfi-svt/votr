@@ -1,5 +1,6 @@
 from fladgejt.structures import Predmet
 
+
 def get_predmety(zapisnyList_id):
     if zapisnyList_id == 1:
         return [Predmet(id=1,
@@ -107,7 +108,7 @@ def get_predmety(zapisnyList_id):
                         typ_vyucby='C',
                         semester='Z',
                         kredit=2),
-                Predmet(id=17,
+                Predmet(id=18,
                         skratka='FMFI.KI/2-INF-921/00',
                         nazov='Demo seminár (2)',
                         typ_vyucby='A',

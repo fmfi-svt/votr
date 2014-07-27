@@ -22,10 +22,11 @@ Priemer = namedtuple('Priemer', [
     'datum_vypoctu'])
 
 # moznost_prihlasit = 'A'/'N'
+# prihlaseny = 'A'/'N'
 Termin = namedtuple('Termin', [
     'id', 'predmet_id', 'datum', 'cas', 'miestnost', 'pocet_prihlasenych',
     'maximalne_prihlasenych', 'hodnotiaci', 'prihlasovanie_od', 'prihlasovanie_do',
-    'poznamka', 'moznost_prihlasit'])
+    'poznamka', 'moznost_prihlasit', 'prihlaseny'])
 
 # skratka -> skratka studijneho programu
 Prihlasena_osoba = namedtuple('Prihlasena_osoba', [
