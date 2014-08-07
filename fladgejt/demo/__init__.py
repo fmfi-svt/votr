@@ -1,6 +1,6 @@
 
-from .studium import RestStudiumMixin
-from .terminy import RestTerminyMixin
+from .studium import DemoStudiumMixin
+from .terminy import DemoTerminyMixin
 
 
 class DemoClient(DemoStudiumMixin, DemoTerminyMixin):
