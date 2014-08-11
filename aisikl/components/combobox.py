@@ -30,7 +30,7 @@ class ComboBox(Control):
         if self.selected_index == -1: return None
         return self.options[self.selected_index]
 
-    def select(index):
+    def select(self, index):
         self.selected_index = index
         self._fire_event()
 

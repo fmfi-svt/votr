@@ -76,7 +76,7 @@ class Dialog:
         # So there are no <nameValue> pairs, only <embObjChProps>.
         if self.changed_components is None: return ''
         result = (
-            '<changedProperties><objName>' + dialogName + '</objName>\n' +
+            '<changedProperties><objName>' + self.name + '</objName>\n' +
             '<embObjChProps>\n' +
             ''.join(self.components[id].changed_properties()
                     for id in self.changed_components) +
@@ -103,6 +103,6 @@ class Dialog:
             self.changed_components = set()
 
         if component:
-            self.changed_components.insert(component.id)
+            self.changed_components.add(component.id)
             self.try_interactive(component, 'change')
 

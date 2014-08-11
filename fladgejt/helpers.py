@@ -14,3 +14,9 @@ def memoized(original_method):
             my_results[args] = original_method(self, *args)
         return my_results[args]
     return wrapper
+
+def find_row(rows, title):
+    for index, row in enumerate(rows):
+        if row.title == title:
+            return index
+    return -1

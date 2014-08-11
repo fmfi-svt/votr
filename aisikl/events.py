@@ -21,7 +21,7 @@ class Event:
 
 def tag(name, value, optional=False):
     if optional and not value: return ''
-    return '<'+name+'>' + value + '</'+name+'>'
+    return '<'+name+'>' + str(value) + '</'+name+'>'
 
 
 EVENT_INIT = 1
