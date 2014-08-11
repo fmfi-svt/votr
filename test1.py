@@ -24,4 +24,8 @@ if __name__ == '__main__':
     assert_ops(ops, 'openMainDialog')
     dlg = app.open_main_dialog(*ops[0].args)
 
-    dlg.detailStudentaButton.click()
+    from fladgejt.webui import WebuiClient
+
+    webui = WebuiClient(ctx)
+
+    print(webui.vyhladaj_predmety(skratka_predmetu="2-FBM-123", akademicky_rok="2013/2014"))

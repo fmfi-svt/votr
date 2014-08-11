@@ -1,14 +1,17 @@
 
 from aisikl.app import Application, assert_ops
 from fladgejt.helpers import memoized, find_row
+from fladgejt.structures import Predmet
 
 class WebuiPredmetyMixin:
     @memoized
     def _open_register_predmetov(self):
         url = '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST060App&kodAplikacie=VSST060&uiLang=SK'
-        app, ops = Application.open(self.context, url)
-        app.awaited_open_main_dialog(ops)
-        return app
+        app = Application(self.context)
+        ops = app.init(url)
+
+        dlg = app.open_main_dialog(*ops[0].args)
+        return dlg
 
     def get_informacny_list(self, kod_predmetu, akademicky_rok=None):
         app = self._open_register_predmetov()
@@ -56,3 +59,60 @@ class WebuiPredmetyMixin:
         # Otvori sa vysledne PDF.
         url = app.awaited_shell_exec(ops)
         return app.context.request_text(url)
+
+    def vyhladaj_predmety(self, fakulta = None, stredisko = None, skratka_sp = None, skratka_predmetu = None, nazov_predmetu = None, akademicky_rok = None, semester = None, stupen = None):
+        dlg = self._open_register_predmetov()
+
+        if fakulta is None:
+            index = 0
+        else:
+            index = find_row(dlg.fakultaUniverzitaComboBox.options, title=fakulta)
+        dlg.fakultaUniverzitaComboBox.select(index)
+
+        if semester is None:
+            index = 0
+        else:
+            index = find_row(dlg.semesterComboBox.options, title=semester)
+        dlg.semesterComboBox.select(index)
+
+        if akademicky_rok is None:
+            index = 0
+        else:
+            index = find_row(dlg.akRokComboBox.options, title=akademicky_rok)
+        dlg.akRokComboBox.select(index)
+
+        if stredisko is not None:
+            dlg.strediskoTextField.write(stredisko)
+            dlg.vybratStrediskoAction.execute()
+            # TODO: osetrit ak sa zada nevhodny text, v tom pripade sa otvori dialog...
+
+        if skratka_sp is not None:
+            dlg.skratkaStudProgramuTextField.write(skratka_sp)
+            dlg.vybratStudProgramAction.execute()
+            # TODO: osetrit ak sa zada nevhodny text, v tom pripade sa otvori dialog...
+
+        if skratka_predmetu is not None:
+            dlg.skratkaPredmetuTextField.write(skratka_predmetu)
+
+        if nazov_predmetu is not None:
+            dlg.nazovPredmetuTextField.write(nazov_predmetu)
+
+        if stupen is None:
+            index = 0
+        else:
+            index = find_row(dlg.stupenPredmetuComboBox.options, title=stupen)
+        dlg.stupenPredmetuComboBox.select(index)
+
+        dlg.zobrazitPredmetyButton.click()
+
+        if not dlg.zoznamPredmetovTable.loaded_rows:
+            return None
+
+        result = [Predmet(skratka=row['skratka'],
+                          nazov=row['nazov'],
+                          typ_vyucby=row['kodTypPredmetu'],
+                          semester=row['kodSemester'],
+                          kredit=row['kredit'])
+                  for row in dlg.zoznamPredmetovTable.all_rows()]
+        
+        return result
