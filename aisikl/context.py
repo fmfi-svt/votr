@@ -50,3 +50,32 @@ class Context:
         # For now, just print it.
         print('\033[1;36m{} \033[1;33m{} \033[0m{}'.format(
             type, message, '' if data is None else json.dumps(data)))
+
+
+try:
+    __IPYTHON__
+except NameError:
+    pass
+else:
+    from urllib.parse import quote
+    from jinja2 import Markup
+    from IPython.display import display, HTML
+    from base64 import b64encode
+
+    def data_link(title, content):
+        return Markup(' <a href="{}" target="_blank">{}</a>').format(
+            'data:text/plain;charset=UTF-8,' + quote(content), title)
+
+    def ipython_log(self, type, message, data=None):
+        parts = []
+        parts.append(Markup('<span style="background:#FF8">'))
+        parts.append(Markup('<b>{}</b> {}').format(type, message))
+        if data is not None:
+            parts.append(data_link('JSON', json.dumps(data)))
+        if isinstance(data, str):
+            parts.append(data_link('Plain', data))
+        parts.append(Markup('</span>'))
+        display(HTML(''.join(parts)))
+
+    Context.log = ipython_log
+    # TODO: Do not use HTML logs when running command line ipython.
