@@ -401,7 +401,21 @@ class Application:
 
         return dialog
 
-    # TODO: Closing dialogs (from DialogManager)
+    def close_dialog(self, name, is_native=False):
+        if is_native:
+            raise AISParseError("closeDialog() with isNative is not supported")
+
+        dialog = self.dialogs.get(name)
+        if not dialog:
+            return True
+        if dialog != self.dialog_stack[-1]:
+            return False
+
+        self.ctx.log('operation', 'Closing dialog {}'.format(name))
+
+        self.dialog_stack.pop()
+        del self.dialogs[name]
+        return True
 
     def awaited_start_app(self, ops):
         '''Combines :func:`assert_ops` and :meth:`start_app` in one step.
@@ -430,4 +444,13 @@ class Application:
         '''
         assert_ops(ops, 'openMainDialog')
         return self.open_main_dialog(*ops[0].args)
+
+    def awaited_close_dialog(self, ops):
+        '''Combines :func:`assert_ops` and :meth:`close_dialog` in one step.
+
+        If ``ops`` really contains a single closeDialog :class:`Operation` as
+        expected, closes the dialog. Throws otherwise.
+        '''
+        assert_ops(ops, 'closeDialog')
+        return self.close_dialog(*ops[0].args)
 

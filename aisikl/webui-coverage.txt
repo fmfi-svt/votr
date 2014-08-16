@@ -310,7 +310,7 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
     - Votr doesn't keep track of open popup menus. See PopupMenu below.
     - Multiple dialog stacks are UNSUPPORTED, so setActiveDialog() is a no-op.
 - close()
-    - TODO
+    - Inlined into Dialog.click_close_button().
 - isStyleUnknown(), unknowStyles
     - Why would you ever do such a thing?! IRRELEVANT.
 - tryInteractive()
@@ -355,6 +355,13 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
 PARTIAL
 
 TODO: document it.
+
+- closeButtonClick() -> self.click_close_button()
+- close()
+    - Mostly IRRELEVANT, as it only destroys the DOM. The only interesting
+      information is that only the top dialog can be closed.
+    - Inlined into DialogManager.closeDialog() which is in
+      Application.close_dialog().
 
 
 
@@ -434,7 +441,11 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
 - getActiveDialog() -> `app.dialog_stack[-1]`
 - getMainDialog()
     - Removed. Store the result of open_main_dialog() in a variable.
-- closeDialog(), closeAllDialogs(), canKillApplication()
+- closeDialog()
+    - Application.close_dialog()
+    - Note that `isNative` is an optional argument.
+    - Calling `webui.clean(true)` when no dialogs remain is TODO.
+- closeAllDialogs(), canKillApplication()
     - TODO
 - disableAllDialogs() -> no-op
 - setActiveDialogName() -> no-op (we have a single dialog stack)

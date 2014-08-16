@@ -1,6 +1,7 @@
 
 from .exceptions import AISParseError, AISBehaviorError
 from .components import component_classes
+from aisikl.events import component_event
 
 class Dialog:
     '''An opened AIS dialog.
@@ -109,4 +110,14 @@ class Dialog:
         if component:
             self.changed_components.insert(component.id)
             self.try_interactive(component, 'change')
+
+    def click_close_button(self):
+        if not self.closeable:
+            raise ValueError("Dialog {} has no close button".format(self.name))
+        # TODO: Return unless "self.enabled" is True.
+
+        self.app.ctx.log('action',
+            'Pressing close button of {}'.format(self.name))
+        ev = component_event(self.body, 'close', 'CLOSE')
+        self.app.send_events(ev)
 
