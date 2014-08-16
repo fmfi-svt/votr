@@ -81,7 +81,7 @@ def change_action_event(source, index=-1):
     source.dialog.try_interactive(source, 'ChangeActionEvent')
     return Event(source, EVENT_STATECHANGE,
         "<event class='avc.ui.event.AVCChangeActionEvent'>" +
-        tag("command", "CHANGE") + tag("tabIndex", index) +
+        tag("command", "CHANGE") + tag("tabIndex", str(index)) +
         "</event>")
 
 def cell_edited_event(source, command, alias, row_index):
@@ -89,14 +89,14 @@ def cell_edited_event(source, command, alias, row_index):
     return Event(source, EVENT_ACTION,
         "<event class='avc.ui.event.AVCCellEditedEvent'>" +
         tag("command", command, True) +
-        tag("alias", alias) + tag("rowIndex", row_index) +
+        tag("alias", alias) + tag("rowIndex", str(row_index)) +
         "</event>")
 
 def row_edited_event(source, command, row_index):
     source.dialog.try_interactive(source, 'RowEditedEvent')
     return Event(source, EVENT_ACTION,
         "<event class='avc.ui.event.AVCRowEditedEvent'>" +
-        tag("command", command, True) + tag("rowIndex", rowIndex) +
+        tag("command", command, True) + tag("rowIndex", str(rowIndex)) +
         "</event>")
 
 def action_event(source, command=None, original_source_name=None,
@@ -114,7 +114,7 @@ def selection_event(source, index=-1, selected=True):
     return Event(source, EVENT_SELCHANGE,
         "<event class='avc.ui.event.AVCSelectionActionEvent'>" +
         tag("command", "SELECT" if selected else "UNSELECT") +
-        tag("index", index) +
+        tag("index", str(index)) +
         "</event>")
 
 def tree_expansion_event(source, path, expand):

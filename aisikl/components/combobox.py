@@ -26,11 +26,11 @@ class ComboBox(Control):
                 self.selected_index = index
 
     @property
-    def selected_option():
+    def selected_option(self):
         if self.selected_index == -1: return None
         return self.options[self.selected_index]
 
-    def select(index):
+    def select(self, index):
         self.log('action', 'Selecting "{}" in {}'.format(
             self.options[index].title, self.id))
         self.selected_index = index

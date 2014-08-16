@@ -43,7 +43,9 @@ class Dialog:
 
         Called from :meth:`aisikl.app.Application.open_dialog`.
         '''
+        self.app.ctx.log('http', 'Sending dialog body request', url)
         dialog_soup = self.app.ctx.request_html(url)
+        self.app.ctx.log('http', 'Received response', str(dialog_soup))
 
         body = dialog_soup.body
         if body.get('jsct') != 'body' or body.get('id') != self.name:
@@ -81,7 +83,7 @@ class Dialog:
         # So there are no <nameValue> pairs, only <embObjChProps>.
         if self.changed_components is None: return ''
         result = (
-            '<changedProperties><objName>' + dialogName + '</objName>\n' +
+            '<changedProperties><objName>' + self.name + '</objName>\n' +
             '<embObjChProps>\n' +
             ''.join(self.components[id].changed_properties()
                     for id in self.changed_components) +
@@ -108,7 +110,7 @@ class Dialog:
             self.changed_components = set()
 
         if component:
-            self.changed_components.insert(component.id)
+            self.changed_components.add(component.id)
             self.try_interactive(component, 'change')
 
     def click_close_button(self):

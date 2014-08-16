@@ -28,6 +28,9 @@ _onload_re = re.compile(r'^window\.setTimeout\("WebUI_init\(\\"([^"\\]+)\\", \\"
 _functions_re = re.compile(r'\nfunction (\w+)')
 _var_re = re.compile(r'^var \w+;\s*')
 _trycatch_re = re.compile(r'^try {\s*|\s*} *catch *\(e\) *{ *(return;)? *}$')
+_multiline_res = [
+    re.compile(r'if *\( *dm\(\) *!= *null *\) *{ *\n *dm\(\)\.checkDialogStacksEmpty\(\);? *\n *}'),
+]
 _useless_res = [
     re.compile(r'^function [^{]*\{[^}]*\}$'),
     re.compile(r'^if \(isResponseIdle\(\d+\)\) { return; }$'),
@@ -68,6 +71,9 @@ def parse_response(soup):
         raise AISParseError("Unexpected script in result frame response")
 
     in_main = False
+
+    for r in _multiline_res:
+        script = r.sub('', script)
 
     for line in script.split('\n'):
         line = line.strip()
@@ -285,10 +291,11 @@ class Application:
 
             self.collector.extend(operations)
 
-        for update in updates:
+        if updates:
             self.ctx.log('update',
-                'Updating component {}'.format(update.target), update)
+                'Updating {} components'.format(len(updates)), updates)
 
+        for update in updates:
             try:
                 dialog = self.dialogs[update.dialog]
             except KeyError:

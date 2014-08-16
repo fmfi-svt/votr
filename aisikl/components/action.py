@@ -24,7 +24,9 @@ class Action(Component):
         '''Executes the action and emits the appropriate event.'''
         if not (self.accessible and self.enabled and self.enabled_in_ui and
                 self.visible and self.visible_in_ui):
-            return
+            # TODO: we should return here, but we can only do that once we
+            # properly support interactives. for now, the developer knows best.
+            pass
 
         if not original_source_name:
             self.log('action', 'Executing {}'.format(self.id))
