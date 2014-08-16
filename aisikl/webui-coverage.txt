@@ -991,9 +991,436 @@ They probably aren't that hard to port, but TextField's usage of them is.
 
 
 
-# Table..., CellEditor..., Column...
+# TableService
 
-TODO
+See Table for an overview. TableService mostly deals with the DOM and what's
+visible, so it's largely IRRELEVANT. The rest was moved directly to Table.
+
+- init(), destroy(), getTM(), getSM(), cacheElements(), getRowByRowElement(),
+  getHeaderRow(), getRow(), getFixedRow(), getCellByEvent()
+    - IRRELEVANT
+- doHeaderRowInDataTabExist()
+    - UNSUPPORTED for now. It seems the first row of dataTab might be a header
+      that doesn't count as a data row, but we've never seen it happen.
+- getDataRowsCount() -> len(self.loaded_rows)
+- getDataRowByIndex() -> self.loaded_rows[i]
+- getDataRowByIdFromTable(), getDataRowById(), getFixedDataRowById() -> TODO
+- setDataTabTopPosition(), resizeAreaHeight(), resizeDataArea(),
+  showRowControlRowCountButton(), showControlButtons(),
+  updateStatusControlSortButton(), setRowNumberLabel(), updateRowNumberLabel(),
+  setRowIndexLabel(), updateStatusSelection(), updateDataAndCursorWidth(),
+  setScrollAreaTop(), resize(), resizeContainerWidth(), manageScrollBars()
+    - IRRELEVANT
+    - TODO: look at showControlButtons() and ensure their visibility is in the API.
+- setCursorRow()
+    - Inlined into select(), along with onDataTabActiveIndexChange().
+- scrollTopContentTo(), adjustScroll()
+    - IRRELEVANT
+- onTableContainerScroll()
+    - Inlined in scroll_down(), along with onScrollVerticaly() and
+      loadDataOnScrollDown(). Commonly used from all_rows().
+- onVerticalScrollBarScroll(), onHorizontalScrollBarScroll(),
+  scrollCellToVisible(), showHideNoDataLoadedMessage(),
+  showLoadingDataMessage(), showNoDataLoadedMessage(), showMessageArea(),
+  onBodyDeactivate(), focusFrameContent(), doesTableLookAsFocused(),
+  ensureTableLooksAndIsKnownAsFocused(), ensureTableLooksAsBlured()
+    - IRRELEVANT
+- getInvertedSelection(), setInvertedSelection() -> self.inverted_selection
+- manageTab(), isControlButtonDisabledOrHidden(), realizeDisable(),
+  onToolsButtonClick(), onToolsButtonContextMenu()
+    - IRRELEVANT
+- menuItemAction(), updateInternalPopupMenu()
+    - TODO
+- onHeaderSpanMouseDown(), onHeaderSpanMouseUp(), onHeaderSpanClick(),
+  onHeaderSpanContextMenu()
+    - IRRELEVANT
+- startResize(), moveSeparator(), resizeColumn(), startMove(), moveColumn(),
+  insertColumn(), sort()
+    - TODO (expose in API nicely)
+
+
+
+# TableSelectionModel
+
+See Table for an overview. The actual storage of what's selected has been moved
+to Table. The row and cell coloring code is IRRELEVANT.
+
+- init(), getTM(), getTS(), destroy(), getComputeColorForSelection(),
+  getSelectionCellsIncluding()
+    - IRRELEVANT
+- rowSelectionContains() -> `row.id in self.selected_row_indexes`
+- getSelectedRowsCount() -> `len(self.selected_row_indexes)`
+- getSelectedRowsAsString() ->
+  `','.join(str(r) for r in self.selected_row_indexes)`
+- getCellSelection()
+    - IRRELEVANT (unused in webui)
+- getCellSelectionAlias() -> self.selected_column_alias
+- selectRow(), selectCell(), selectCellByAlias(), unselectRow(),
+  clearRowSelection(), clearCellSelection()
+    - Only used in TableModel, inlined there.
+- getStartBlockRowElement()
+    - IRRELEVANT (used to remember where we started Shift-selecting rows)
+- highlightRow(), highlightCell(), recolorRow(), recolorRowCells(),
+  recolorCell(), recolorRowSelection(), recolorSelection(), changeImage(),
+  initSelColors(), initCellSelColorsInRow(), initCellSelColors(),
+  ensureContainerFocusBlurColors(), getFgSelectionColor(), getBgSelectionColor()
+    - IRRELEVANT
+
+
+
+# CellEditor, CellEditorManager
+
+WebUI supports editable cells and goes to great lengths to emulate features seen
+in native spreadsheet applications. (Well, except it still works as well as the
+rest...) This makes the code quite complicated in multiple ways.
+
+First, there are many editor types: checkBox, textField, dateControl, comboBox,
+buttonNumCode, numberControl and readOnly. We still haven't seen most of them.
+
+Many of these editor types use WebUI components under the hood (TextField,
+NumberControl etc), but these components are specially created for the cell
+editor and not a normal part of dialogs.
+
+Second, for most editor types, editing is not an instant operation. You start
+editing, and some time later, you stop, at which point WebUI needs to process
+the new value and send an event. And you can only edit one cell at a time. This
+means a lot of WebUI code, even otherwise unrelated to tables, needs to check if
+you're currently editing a cell to make sure nothing is lost.
+
+Votr doesn't need to deal with any of that. It would complicate both the API and
+the implementation. In Votr, an edit is always an instantaneous operation, and
+the various editor types are mostly ignored when possible.
+
+
+
+# Column
+
+- getColElement()
+    - IRRELEVANT
+- getAlias() -> self.alias
+- getIndexInTableElement() -> self.index
+- getSortable() -> self.sortable
+- getFixed() -> self.fixed
+- setCellEditor(), getCellEditor()
+    - IRRELEVANT
+- getVisible() -> self.visible
+- init()
+    - Inlined in aaaaaa.
+
+
+
+# ColumnModel
+
+- init()
+    - Inlined in Table._init_from_data_view().
+- getColumn() -> self.columns[i]
+- getColumnByAlias() -> self.column_map[alias]
+    - No longer case insensitive.
+- getColumnByDataCell()
+    - IRRELEVANT
+- toXML()
+    - Inlined in changed_properties().
+- destroy()
+    - IRRELEVANT
+
+
+
+# TableHandler
+
+IRRELEVANT. Event handlers defined in tableFrameHandler.js call functions in
+TableHandler, which in turn calls real methods in other classes.
+
+
+
+# TableModel
+
+See Table for an overview. TableModel has been merged into Table.
+
+- getDataRowHeight(), getSM(), getTS(), getCM()
+    - IRRELEVANT
+- init()
+    - Inlined into self._init_from_data_view().
+- update(), updateSelection()
+    - IRRELEVANT. These functions are responsible for updating the DOM and
+      TableSelectionModel etc. after selection data is updated from the server
+      in Table. But as described in the Table overview, Votr doesn't store
+      selection twice.
+    - Inlined into _update_selection_model_properties().
+    - All validation of selected indexes and the cursor has been removed. If
+      the server refers to indexes that aren't loaded, Votr won't change the
+      selection and cursor position.
+- getLastTotalRowCount(), getLastScrollTop()
+    - IRRELEVANT
+- getCursorRowIndex() -> self.cursor_row_index
+- reset()
+    - IRRELEVANT (unused)
+    - Equivalent to clearSelection(), see below.
+- onTableContainerSelectStart(), onTableContainerClick()
+    - IRRELEVANT
+- onTableContainerKeyDown()
+    - Aisikl has different methods to produce the same effects.
+    - Cell editor keydown: TODO
+    - Insert (to insert a new row): TODO
+    - Ctrl+Delete (to delete a row): TODO
+    - Enter (to start edit mode): IRRELEVANT, editing is synchronous.
+    - Ctrl+A (to select everything): self.select([], inverted=True)
+    - Ctrl+Up: self.up_down_row(True) (onUpDownRow is TODO)
+    - Ctrl+Down: self.up_down_row(False) (onUpDownRow is TODO)
+    - Home, End, PageUp, PageDown, arrows, etc: self.select(...)
+- onTableContainerKeyPress()
+    - IRRELEVANT
+- onCtrlA() -> self.select([], inverted=True)
+- movePage(), moveTop(), moveBottom()
+    - UNSUPPORTED. See also getScrollBottomEnabled().
+- scrollRowToVisible()
+    - Reduces to TableService.onTableContainerScroll(), see above.
+- getVisibleBuffersAsString(), getLoadedBuffersAsString()
+    - Inlined in changed_properties().
+- manageSelectionOnEvent()
+    - Inlined in select().
+- activateElement()
+    - IRRELEVANT, even if it didn't start with "return;"
+- eventOnRow(), eventOnCell()
+    - Inlined in select(), along with manageSelectionOnEvent() and
+      onDataTabSelectionChange().
+- onDataTabClick()
+    - Mainly calls eventOnCell(). Cell editor parts are IRRELEVANT, since we
+      only support synchronous writing instead of an editing mode.
+- onDataTabDblClick()
+    - See Table.onDataTabDblClick().
+- setCursorRow()
+    - See TableService.setCursorRow().
+- getStartBlockSelection()
+    - IRRELEVANT (used to remember where we started Shift-selecting rows)
+- selectCell(), selectRow(), unselect(), clearSelection()
+    - Inlined into select(). See TableSelectionModel.
+- selectCellByAlias()
+    - IRRELEVANT. We don't have the DOM so we always select columns by alias.
+- selectBlock()
+    - IRRELEVANT. To select a range, use self.select(range(...)).
+- updateStatusSelection()
+    - IRRELEVANT
+- getSelectedRowsAsString()
+    - See TableSelectionModel.getSelectedRowsAsString().
+- getRowTop()
+    - IRRELEVANT
+- getCellValue(), addCellValuesOfSelectedRows()
+    - Sadly used in ValueInteractive. UNSUPPORTED for now.
+- eventOnCheckBox(), addToChangedCells(), getChangedCellsToXML(),
+  getLastChangedCellRowIndex(), resetChangedCellsAddedRows(), getNewValue()
+    - Cell editing is TODO.
+- getCheckBoxFromCell(), getImageFromCell()
+    - IRRELEVANT
+
+- onCellEditorDeactivate(), onCellEditorKeyDown(), onTextFieldEditKeyDown(),
+  tryToAutoFocusNext(), onTextFieldButtonEditKeyDown()
+    - IRRELEVANT
+- onCellEditorClick()
+    - See Table.onButtonNumCodeClick(). Otherwise IRRELEVANT.
+- onComboBoxEditorFocus(), onComboBoxEditorBlur(), onComboBoxEditorChange(),
+  onComboBoxEditorMouseDown(), onComboBoxEditorKeyDown(),
+  onCheckBoxEditorMouseDown(), onCheckBoxEditorMouseOut(),
+  onCheckBoxEditorClick(), prepareArrayForFindingCellToEdit(),
+  moveCellEditorByTab(), startEditRow(), validateCellEditor()
+    - IRRELEVANT
+- startEditCell()
+    - Slightly TODO (such as that you have to select the row or cell first).
+      But mostly IRRELEVANT.
+- stopEditCell()
+    - TODO
+- startEditNewRow()
+    - TODO
+- getInvertedSelection() -> self.inverted_selection
+- switchSelectAll()
+    - Inlined into select().
+- onTableContainerContextMenu(), activateCellEditorOnFocus()
+    - IRRELEVANT
+- getRowsIds(), resetRowsIds(), swapNodes(), swapRows(), upDownRow(), addRow(),
+  deleteRow()
+    - TODO
+- isRowEmpty(), cancelEvent(), destroy()
+    - IRRELEVANT
+
+
+# Table
+
+Tables are the most complicated part of WebUI. Most other components were
+directly written based on their JavaScript equivalents, removing DOM code and
+replacing it with direct methods. For tables, the Aisikl code is much less
+related to the original WebUI classes.
+
+Some methods might not seem IRRELEVANT at first glance, but turn out to be only
+used for positioning, colors and such. The JavaScript code went through multiple
+passes, marking more and more methods as IRRELEVANT until it was manageable.
+
+Several high-level simplifications have also been made:
+
+First, we do not support full scrolling. WebUI tables are divided into buffers
+and loaded one buffer at a time. The visible and loaded buffers can be arbitrary
+intervals. Votr instead pretends the window is very high, so the set of visible
+buffers is always an interval from 0 to n -- that is, the first buffer is always
+visible.
+
+Second, we ignore cell editing as much as possible. See CellEditor above.
+
+Third, the various ways to select rows and cells with the mouse and keyboard
+have been simplified. Users of Aisikl know the exact rows, and there's no reason
+to select "the row below this one" (pressing down) etc.
+
+Fourth, WebUI tables actually store all variable state twice (or more).
+Selection state is stored once in Table and once split around the other classes,
+mainly TableSelectionModel, along with some state only stored in the DOM. And
+they are not the same. Table holds the latest server data, and the others hold
+what the user sees. When the selection changes and an event is sent to the
+server, it gives the new selection to Table, which in turn also updates it in
+TableSelectionModel. We don't see any good reason for this, and so, Votr only
+stores everything once, directly in Table.
+
+- init() -> `__init__`
+- ensureIframe()
+    - IRRELEVANT
+- initFromDataView() -> self._init_from_data_view()
+    - Creating the iframe content is IRRELEVANT, but we still need to parse the
+      data view scripts instead.
+- initPropertiesAndModels()
+    - Called from initTableModel() during iframe onload. Inlined into
+      self._init_from_data_view().
+- doesTableHaveModels() -> True
+- deinitPropertiesAndModel(), destroy(), setWidth(), setHeight(),
+  resizeComponent(), resizeChildren()
+    - IRRELEVANT
+- getSortable(), setSortable() -> self.sortable
+- getAllwaysSelected(), setAllwaysSelected() -> self.always_selected
+    - Note the extra ell in WebUI.
+- getActiveRow(), setActiveRow()
+    - UNSUPPORTED and possibly IRRELEVANT. getActiveRow() is only ever used in
+      EventInteractive, and setActiveRow() is only ever called with the current
+      cursorRowIndex. Probably can be replaced with that.
+- getFixedColumns(), setFixedColumns() -> self.fixed_columns
+- getMinNoFixedColumnsWidth(), setMinNoFixedColumnsWidth()
+    - IRRELEVANT
+- getUpDownEnabled(), setUpDownEnabled() -> self.up_down_enabled
+- getReadOnly(), setReadOnly() -> self.read_only (inherited from Control)
+- getUserAddRemoveRowsEnabled(), setUserAddRemoveRowsEnabled() ->
+  self.user_add_remove_rows_enabled
+- getSupportedEvents(), setSupportedEvents() -> self.supported_events
+    - So much for usedListenersMask... sigh
+- getMultipleSelection(), setMultipleSelection() -> self.multiple_selection
+- getCellSelectionMode(), setCellSelectionMode() -> self.cell_selection_mode
+    - This is whether you select a row (or multiple rows) or a single cell.
+- getScrollBottomEnabled(), setScrollBottomEnabled() ->
+  self.scroll_bottom_enabled
+    - If true, you can send a request to move to the end even if the end isn't
+      loaded yet. Uncommon and UNSUPPORTED, because we need a way to do that for
+      all tables anyway.
+- getSelectAllEnabled(), setSelectAllEnabled() -> self.select_all_enabled
+    - If true, you can select all rows, which also counts as selecting rows that
+      aren't loaded. In that case, the server actually receives a list of rows
+      that *aren't* selected.
+- realizeEnability(), getBorderWidth()
+    - IRRELEVANT
+- getRowNumbersVisible(), setRowNumbersVisible() -> self.row_numbers_visible
+- setRowNumbersVisible_()
+    - IRRELEVANT
+- switchRowNumbersVisible() -> self.switch_row_numbers_visible()
+- getStatusVisible(), setStatusVisible() -> self.status_visible
+- switchStatusVisible() -> self.switch_status_visible()
+- getVisibleStatusButtons(), setVisibleStatusButtons() ->
+  self.visible_status_buttons
+- getTruncatedDataMessage(), getLoadingDataMessage(), getNoDataLoadedMessage(),
+  getSelectionColoringMode(), getSelectionCellsIncludingMode()
+    - IRRELEVANT
+- getIsEndOfData() -> self.is_end_of_data
+- getTruncated() -> self.truncated
+- getRowCount() -> self.row_count
+- getDeclaredRowCount() -> self.declared_row_count
+- getNoDataLoaded() -> self.no_data_loaded
+- getLastTotalRowCount(), getLastScrollTop(), getLastFirstVisibleBuffer()
+    - IRRELEVANT
+- updateDataPositionProperties() -> self._update_data_position_properties()
+- getSelection()
+    - Removed (see Table overview). Use self.selected_row_indexes, which is a
+      list of integers and corresponds to TableSelectionModel.rowSelection.
+- getActiveIndex()
+    - Removed (see Table overview). Use self.cursor_row_index, which corresponds
+      to TableModel.cursorRowIndex.
+- getInvertedSelection()
+    - Removed (see Table overview). Use self.inverted_selection.
+- getCellSelectionAlias()
+    - Removed (see Table overview). Use self.selected_column_alias.
+- setSelectionChanged(true) ->
+  `self.selection_changed = True; self.dialog.component_changes(self, True)`
+- setSelection()
+    - Seems to be unused, and doesn't look like an AIS update function (it
+      calls componentChanges etc). UNSUPPORTED until more is known.
+- getDataSendType()
+    - Used in updateSelection(), but only for scrolling.
+    - dataSendType was changed into a local variable in updateData().
+- getShowSelectionInUpdate()
+    - Seems completely unused. IRRELEVANT.
+- getBufferSize(), setBufferSize() -> self.buffer_size
+- updateDataTabBodiesProperties() -> self._update_data_tab_bodies_properties()
+    - dataSendType was changed into a local variable in _update_data()
+    - showSelectionInUpdate is completely unused and thus IRRELEVANT
+- getEditMode(), setEditMode()
+    - Always False. Editing is instantaneous. See CellEditor above.
+- updateSelectionModelProperties() -> self._update_selection_model_properties()
+- getSelectedRowsCount() -> `len(self.selected_row_indexes)`
+- getTableModelSelection()
+    - See TableSelectionModel.getSelectedRowsAsString() above.
+- getTableService(), getTableModel(), getTableHandler(), getSelectionModel()
+    - IRRELEVANT
+- onColumnHeaderResize() ->
+  `self.headers_changed = True; self.dialog.component_changes(self, True)`
+- onColumnMove() -> self.on_column_move() [TODO?]
+- suspendPossibleEvents(), commitPossibleEvents()
+    - IRRELEVANT, see EventManager above
+- onDataTabSelectionChange()
+    - Inlined into select() under "if selection_changed".
+- onEditRow() -> self._on_edit_row() [TODO?]
+- sort() -> self.sort() [TODO?]
+- switchSingleMultipleSelection() ->
+  `self.dialog.try_interactive(self, "switchMultiple")`
+- onScrollVerticaly() ->
+  `self.scrolled_vertically = True; self.dialog.component_changes(self, True)`
+    - Note the missing ell in WebUI.
+- loadDataOnScrollUp()
+    - IRRELEVANT, see Table overview.
+- loadDataOnScrollDown()
+    - Inlined in scroll_down(). -> self._load_data_on_scroll_down() [TODO?]
+- loadDataOnScrollTop()
+    - IRRELEVANT
+- loadDataOnScrollBottom()
+    - UNSUPPORTED, see getScrollBottomEnabled().
+- onDataTabDblClick() -> self._on_data_tab_dbl_click() [TODO?]
+- fireActionCommand() -> self._fire_action_command()
+- onDataTabActiveIndexChange()
+    - Inlined into select() under "if active_index_changed".
+- deleteRow() -> self._delete_row() [TODO?]
+- insertRow() -> self._insert_row() [TODO?]
+- controlButtonRowCount() -> self._control_button_row_count() [TODO?]
+- controlButtonColumns() -> self._control_button_columns() [TODO?]
+- controlButtonSort() -> self._control_button_sort() [TODO?]
+- controlButtonDebugInfo() -> self._control_button_debug_info() [TODO?]
+, upDownRow() -> self.up_down_row()
+- onUpDownRow() ->
+  `self.up_downed_rows = True; self.dialog.component_changes(self, False)`
+- onDeleteRow() ->
+  `self.deleted_rows = True; self.dialog.component_changes(self, False)`
+- onEditCell() -> self._on_edit_cell() [TODO?]
+- onButtonNumCodeClick() -> self._on_button_num_code_click() [TODO?]
+- canProcessEvent()
+    - Is always True, because isMenuActivated() is IRRELEVANT.
+- onScrollSpanKeyDown(), onScrollSpanKeyDownTryShortCut(), refocus(), focus(),
+  onFocusIsInFrame(), isPreparedToBlur(), deactivateEdit(), onBodyMouseUp(),
+  onBodyMouseDown(), onBodyClick(), onToolsButtonContextMenu(),
+  menuItemAction(), onTableContainerContextMenu()
+    - IRRELEVANT
+- changedProperties() -> self.changed_properties()
+- setDataView() -> self._ais_setDataView()
+- updateData() -> self._update_data()
+    - WebUI calls updateDataPositionProperties() in strange places. That's
+      probably a bug. Votr calls it the same regardless of dataSendType.
 
 
 

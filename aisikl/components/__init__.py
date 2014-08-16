@@ -19,6 +19,7 @@ from .radiobox import RadioBox
 from .separator import Separator
 from .splitpane import SplitPane
 from .tabbedpane import TabbedPane
+from .table import Table
 from .textarea import TextArea
 from .textfield import TextField
 from .updown import UpDown
@@ -53,7 +54,7 @@ component_classes = {
     'separator': Separator,
     'splitPane': SplitPane,
     'tabbedPane': TabbedPane,
-    'table': TODO,
+    'table': Table,
     'textArea': TextArea,
     'textField': TextField,
     'tree': TODO,
