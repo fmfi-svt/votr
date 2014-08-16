@@ -11,6 +11,7 @@ Welcome to the Votr |version| documentation.
    :maxdepth: 2
 
    aisikl
+   fladgejt
 
 .. Indices and tables
 .. ==================
