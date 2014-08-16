@@ -207,6 +207,13 @@ class Application:
             self._do_request(rq)
         return ops
 
+    @property
+    def active_dialog(self):
+        '''The currently active dialog. Equal to `app.dialog_stack[-1]`.'''
+        return self.dialog_stack[-1] if self.dialog_stack else None
+
+    d = active_dialog
+
     @contextmanager
     def collect_operations(self):
         '''Collects :class:`Operation`\ s done by AIS.
@@ -319,11 +326,11 @@ class Application:
     def collect_component_changes(self):
         '''Returns the <changedProps> string that goes into POST requests.'''
         app_changes = ''
-        if self.dialog_stack:
+        if self.active_dialog:
             app_changes = (
                 '<changedProperties><objName>app</objName><propertyValues>\n' +
                 '<nameValue><name>activeDlgName</name><value>' +
-                self.dialog_stack[-1].name +
+                self.active_dialog.name +
                 '</value></nameValue>\n' +
                 '</propertyValues></changedProperties>\n')
 
@@ -408,7 +415,7 @@ class Application:
         dialog = self.dialogs.get(name)
         if not dialog:
             return True
-        if dialog != self.dialog_stack[-1]:
+        if dialog != self.active_dialog:
             return False
 
         self.ctx.log('operation', 'Closing dialog {}'.format(name))
