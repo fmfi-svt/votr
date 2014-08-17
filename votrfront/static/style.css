@@ -1,0 +1,41 @@
+
+html {
+  overflow-y: scroll;
+  position: relative;
+  height: 100%;
+}
+
+body {
+  font: 10pt Arial, sans-serif;
+  margin: 3.5em 0.7em 4em 0.7em;
+}
+
+a, .fakelink {
+  color: #00A;
+  cursor: pointer;
+  text-decoration: underline;
+}
+a:hover, .fakelink:hover {
+  color: #00E;
+}
+
+pre {
+  margin: 0;
+  padding: 0;
+}
+
+pre, code {
+  font: 9pt monospace;
+}
+
+.clearfix:before,
+.clearfix:after {
+  content: "";
+  display: table;
+}
+.clearfix:after {
+  clear: both;
+}
+.clearfix {
+  zoom: 1; /* IE 6/7 */
+}

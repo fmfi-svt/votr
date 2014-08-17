@@ -8,3 +8,8 @@ dist
 !.git*
 /*env
 docs/_build
+*.ipynb
+/sessions
+/logs
+*_settings.py
+!default_settings.py
