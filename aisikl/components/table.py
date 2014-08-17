@@ -24,9 +24,6 @@ class Row(object):
             return self.cells[name]
         return self.cells[self.table.column_map[name].index]
 
-    def __getattr__(self, name):
-        return self[name]
-
     def __len__(self):
         return len(self.cells)
 

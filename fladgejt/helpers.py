@@ -24,17 +24,23 @@ def memoized(original_method):
         return my_results[args]
     return wrapper
 
-def find_row(rows, **attributes):
-    '''Searches the list of objects for one that has all the given attributes.
+def find_row(rows, **conditions):
+    '''Searches the list of objects for one that matches all given conditions.
+
+    Each keyword argument must be either an attribute of the object or an item
+    in the object for the object to match. That is, either ``obj.k == v`` or
+    ``obj["k"] == v`` must be true for all given keyword arguments. The index
+    of the first such object is returned.
 
     :param rows: List of objects.
-    :param \*\*attributes: The attribute values the result must have.
+    :param \*\*conditions: The conditions that the object must match.
     Returns:
-        The index of the first object that had all the given attribute values.
+        The index of the first object that had all the given keys and values.
     Raises:
         KeyError: Raised if no such object is found.
     '''
     for index, row in enumerate(rows):
-        if all(getattr(row, key) == value for key, value in attributes.items()):
+        if all(getattr(row, key, None) == value or row[key] == value
+               for key, value in conditions.items()):
             return index
     raise KeyError("Row not found: {!r}".format(conditions))
