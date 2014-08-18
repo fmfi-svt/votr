@@ -39,6 +39,7 @@ def load_script(data_view, id):
             id, script_element.name))
     text = script_element.get_text()[4:-3]   # always "<!--" and "-->"
     return BeautifulSoup(text)
+    # TODO: document that lxml might wrap the result in <html> and <body>.
 
 
 class Table(Control):
@@ -107,7 +108,7 @@ class Table(Control):
             header_table = load_script(data_view, 'columnModel' + suffix)
             colgroup = load_script(data_view, 'dataTabColGroup' + suffix)
             if not header_table: continue
-            for index, col in enumerate(colgroup):
+            for index, col in enumerate(colgroup.find_all('col')):
                 td = header_table.find(shortname=col['shortname'])
                 sortable = col.get('sortable', 'true') == 'true'
                 width = int(col.get('width', '0').partition('px')[0])
