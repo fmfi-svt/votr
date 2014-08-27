@@ -445,6 +445,32 @@ class Application:
         del self.dialogs[name]
         return True
 
+    def confirm_box(self, option_index):
+        '''Sends an answer after receiving the confirmBox :class:`~Operation`.
+
+        Possible values of `option_index` are:
+
+        =====  ===========
+        Value  Action name
+        =====  ===========
+            4  Yes to all
+            2  Yes
+            1  OK
+           -1  Cancel
+           -2  No
+           -4  No to all
+        =====  ===========
+
+        Args:
+            option_index: webui index of the button to be clicked
+        '''
+        self._do_request(
+            '<changedProps><changedProperties><propertyValues>' +
+            '<nameValue><name>confirmResult</name>' +
+            '<value>' + str(option_index) + '</value>' +
+            '</nameValue></propertyValues></changedProperties></changedProps>'
+        )
+
     def awaited_start_app(self, ops):
         '''Combines :func:`assert_ops` and :meth:`start_app` in one step.
 
