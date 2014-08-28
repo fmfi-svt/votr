@@ -3,8 +3,10 @@ from fladgejt.structures import Hodnotenie, Priemer
 
 
 class WebuiHodnoteniaMixin:
-    def get_hodnotenia(self, studijny_program, akademicky_rok):
-        app = self._open_hodnotenia_priemery_app(studijny_program, akademicky_rok)
+    def get_hodnotenia(self, studium_key, zapisny_list_key):
+        app = self._open_hodnotenia_priemery_app(studium_key, zapisny_list_key)
+
+        (akademicky_rok,) = zapisny_list_key
 
         result = [Hodnotenie(akademicky_rok=akademicky_rok,
                              skratka=row['skratka'],
@@ -20,8 +22,8 @@ class WebuiHodnoteniaMixin:
         return result
         # TODO: Hmm, Fajr mozno pouziva aj 'uznane'
 
-    def get_priemery(self, studijny_program, akademicky_rok):
-        app = self._open_hodnotenia_priemery_app(studijny_program, akademicky_rok)
+    def get_priemery(self, studium_key, zapisny_list_key):
+        app = self._open_hodnotenia_priemery_app(studium_key, zapisny_list_key)
 
         result = [Priemer(akademicky_rok=row['priemerInfoPopisAkadRok'],
                           nazov=row['priemerNazov'],

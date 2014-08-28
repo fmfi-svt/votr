@@ -11,8 +11,8 @@ class WebuiTerminyMixin:
             app.d.semesterComboBox.select(index)
             app.d.filterAction.execute()
 
-    def get_predmety(self, studijny_program, akademicky_rok):
-        app = self._open_terminy_hodnotenia_app(studijny_program, akademicky_rok)
+    def get_predmety(self, studium_key, zapisny_list_key):
+        app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
 
         self.__vyber_oba_semestre(app)
 
@@ -24,8 +24,8 @@ class WebuiTerminyMixin:
                   for row in app.d.predmetyTable.all_rows()]
         return result
 
-    def get_prihlasene_terminy(self, studijny_program, akademicky_rok):
-        app = self._open_terminy_hodnotenia_app(studijny_program, akademicky_rok)
+    def get_prihlasene_terminy(self, studium_key, zapisny_list_key):
+        app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
 
         # V dolnom combo boxe dame "Zobrazit terminy: Vsetkych predmetov".
         app.d.zobrazitTerminyComboBox.select(0)
@@ -38,8 +38,8 @@ class WebuiTerminyMixin:
                   for row in app.d.terminyTable.all_rows()]
         return result
 
-    def get_vypisane_terminy(self, studijny_program, akademicky_rok):
-        app = self._open_terminy_hodnotenia_app(studijny_program, akademicky_rok)
+    def get_vypisane_terminy(self, studium_key, zapisny_list_key):
+        app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
 
         self.__vyber_oba_semestre(app)
 
@@ -48,18 +48,19 @@ class WebuiTerminyMixin:
         for row in app.d.predmetyTable.all_rows():
             if row['pocetAktualnychTerminov'] == '0': continue
             result.extend(self.get_vypisane_terminy_predmetu(
-                studijny_program, akademicky_rok, row['skratka']))
+                studium_key, zapisny_list_key, row['skratka']))
 
         return result
 
-    def __open_vyber_terminu_dialog(self, app, skratka_predmetu):
+    def __open_vyber_terminu_dialog(self, app, predmet_key):
         # Nie je memoized. Caller musi dialog zavriet, aby memoizovana
         # aplikacia bola zase v konzistentnom stave.
 
         self.__vyber_oba_semestre(app)
 
         # Vyberieme spravny riadok v tabulke predmetov.
-        index = find_row(app.d.predmetyTable.all_rows(), skratka=skratka_predmetu)
+        (skratka,) = predmet_key
+        index = find_row(app.d.predmetyTable.all_rows(), skratka=skratka)
         app.d.predmetyTable.select(index)
 
         # Stlacime button "Prihlasit sa na termin" dole.
@@ -69,9 +70,9 @@ class WebuiTerminyMixin:
         # Otvori sa novy dialog.
         app.awaited_open_dialog(ops)
 
-    def get_vypisane_terminy_predmetu(self, studijny_program, akademicky_rok, skratka_predmetu):
-        app = self._open_terminy_hodnotenia_app(studijny_program, akademicky_rok)
-        self.__open_vyber_terminu_dialog(app, skratka_predmetu)
+    def get_vypisane_terminy_predmetu(self, studium_key, zapisny_list_key, predmet_key):
+        app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
+        self.__open_vyber_terminu_dialog(app, predmet_key)
 
         result = [Termin(...) #TODO
                   for row in app.d.zoznamTerminovTable.all_rows()]
@@ -85,22 +86,25 @@ class WebuiTerminyMixin:
 
         return result
 
-    def get_prihlaseni_studenti(self, studijny_program, akademicky_rok, skratka_predmetu, datum, cas):
-        app = self._open_terminy_hodnotenia_app(studijny_program, akademicky_rok)
-        self.__open_vyber_terminu_dialog(app, skratka_predmetu)
+    def get_prihlaseni_studenti(self, studium_key, zapisny_list_key, predmet_key, termin_key):
+        app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
+        self.__open_vyber_terminu_dialog(app, predmet_key)
 
         # Vyberieme spravny riadok. Ak v tabulke nie je, vypneme "Zobrazit len
         # aktualne terminy", stlacime nacitavaci button a skusime znovu.
+        datum, cas, miestnost, poznamka = termin_key
         try:
             index = find_row(
-                app.d.zoznamTerminovTable.all_rows(), dat=datum, cas=cas)
+                app.d.zoznamTerminovTable.all_rows(),
+                dat=datum, cas=cas, miestnosti=miestnost, poznamka=poznamka)
         except KeyError:
             index = None
         if index is None:
             app.d.aktualneTerminyCheckBox.set_to(False)
             app.d.zobrazitTerminyAction.click()
             index = find_row(
-                app.d.zoznamTerminovTable.all_rows(), dat=datum, cas=cas)
+                app.d.zoznamTerminovTable.all_rows(),
+                dat=datum, cas=cas, miestnosti=miestnost, poznamka=poznamka)
         app.d.zoznamTerminovTable.select(index)
 
         # Stlacime "Zobrazit zoznam prihlasenych".
@@ -130,13 +134,15 @@ class WebuiTerminyMixin:
 
         return result
 
-    def prihlas_na_termin(self, studijny_program, akademicky_rok, skratka_predmetu, datum, cas):
-        app = self._open_terminy_hodnotenia_app(studijny_program, akademicky_rok)
-        self.__open_vyber_terminu_dialog(app, skratka_predmetu)
+    def prihlas_na_termin(self, studium_key, zapisny_list_key, predmet_key, termin_key):
+        app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
+        self.__open_vyber_terminu_dialog(app, predmet_key)
 
         # Vyberieme spravny riadok.
+        datum, cas, miestnost, poznamka = termin_key
         app.d.zoznamTerminovTable.select(find_row(
-            app.d.zoznamTerminovTable.all_rows(), dat=datum, cas=cas))
+            app.d.zoznamTerminovTable.all_rows(),
+            dat=datum, cas=cas, miestnosti=miestnost, poznamka=poznamka))
 
         # Stlacime OK.
         with app.collect_operations() as ops:
@@ -146,8 +152,8 @@ class WebuiTerminyMixin:
         # TODO: skontrolovat.
         app.awaited_close_dialog(ops)
 
-    def odhlas_z_terminu(self, studijny_program, akademicky_rok, skratka_predmetu, datum, cas):
-        app = self._open_terminy_hodnotenia_app(studijny_program, akademicky_rok)
+    def odhlas_z_terminu(self, studium_key, zapisny_list_key, predmet_key, termin_key):
+        app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
 
         # V dolnom combo boxe dame "Zobrazit terminy: Vsetkych predmetov".
         app.d.zobrazitTerminyComboBox.select(0)
@@ -156,8 +162,10 @@ class WebuiTerminyMixin:
         app.d.zobrazitTerminyAction.execute()
 
         # Vyberieme spravny riadok.
-        app.d.terminyTable.select(find_row(
-            app.d.terminyTable.all_rows(), dat=datum, cas=cas))
+        datum, cas, miestnost, poznamka = termin_key
+        app.d.zoznamTerminovTable.select(find_row(
+            app.d.zoznamTerminovTable.all_rows(),
+            dat=datum, cas=cas, miestnosti=miestnost, poznamka=poznamka))
 
         # Stlacime "Odhlasit sa z terminu".
         with app.collect_operations() as ops:

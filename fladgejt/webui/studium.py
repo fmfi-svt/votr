@@ -26,10 +26,10 @@ class WebuiStudiumMixin:
                   for row in app.d.studiaTable.all_rows()]
         return result
 
-    def get_zapisne_listy(self, studijny_program):
+    def get_zapisne_listy(self, studium_key):
         app = self._open_administracia_studia()
 
-        self.__vyber_zapisny_list(app, studijny_program, None)
+        self.__vyber_zapisny_list(app, studium_key, None)
         result = [ZapisnyList(akademicky_rok=row['popisAkadRok'],
                               rocnik=row['rokRocnik'],
                               sp_skratka=row['studProgramSkratka'],
@@ -38,28 +38,31 @@ class WebuiStudiumMixin:
                   for row in app.d.zapisneListyTable.all_rows()]
         return result
 
-    def __vyber_zapisny_list(self, app, studijny_program, akademicky_rok):
+    def __vyber_zapisny_list(self, app, studium_key, zapisny_list_key):
         # Ak este nie je vybrate spravne studium, vyberieme ho a stlacime
         # nacitavaci button (sipku dole).
+        sp_skratka, zaciatok = studium_key
         studium_index = find_row(
             app.d.studiaTable.all_rows(),
-            studijnyProgramSkratka=studijny_program)
+            studijnyProgramSkratka=sp_skratka,
+            zaciatokStudia=zaciatok)
         if app.d.studiaTable.selected_row_indexes != [studium_index] or len(app.d.zapisneListyTable.all_rows()) == 0:
             app.d.studiaTable.select(studium_index)
             app.d.nacitatButton.click()
 
         # Vyberieme zapisny list.
-        if akademicky_rok is not None:
+        if zapisny_list_key is not None:
+            (akademicky_rok,) = zapisny_list_key
             zapisny_list_index = find_row(
                 app.d.zapisneListyTable.all_rows(), popisAkadRok=akademicky_rok)
             app.d.zapisneListyTable.select(zapisny_list_index)
 
     @memoized
-    def _open_terminy_hodnotenia_app(self, studijny_program, akademicky_rok):
+    def _open_terminy_hodnotenia_app(self, studium_key, zapisny_list_key):
         app = self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
-        self.__vyber_zapisny_list(app, studijny_program, akademicky_rok)
+        self.__vyber_zapisny_list(app, studium_key, zapisny_list_key)
 
         # Stlacime v menu "Terminy hodnotenia".
         with app.collect_operations() as ops:
@@ -71,11 +74,11 @@ class WebuiStudiumMixin:
         return new_app
 
     @memoized
-    def _open_hodnotenia_priemery_app(self, studijny_program, akademicky_rok):
+    def _open_hodnotenia_priemery_app(self, studium_key, zapisny_list_key):
         app = self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
-        self.__vyber_zapisny_list(app, studijny_program, akademicky_rok)
+        self.__vyber_zapisny_list(app, studium_key, zapisny_list_key)
 
         # Stlacime v menu "Hodnotenia, priemery".
         with app.collect_operations() as ops:
@@ -86,11 +89,11 @@ class WebuiStudiumMixin:
         new_app.awaited_open_main_dialog(new_ops)
         return new_app
 
-    def get_prehlad_kreditov(self, studijny_program):
+    def get_prehlad_kreditov(self, studium_key):
         app = self._open_administracia_studia()
 
         # Vyberieme spravne studium.
-        self.__vyber_zapisny_list(app, studijny_program, None)
+        self.__vyber_zapisny_list(app, studium_key, None)
 
         # Stlacime v menu "Kontrola" -> "Ziskanych kreditov, prehlad hodnotenia".
         with app.collect_operations() as ops:
