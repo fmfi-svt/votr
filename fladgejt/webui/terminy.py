@@ -1,12 +1,12 @@
 
 from aisikl.exceptions import AISBehaviorError
-from fladgejt.helpers import find_row
+from fladgejt.helpers import find_row, find_option
 from fladgejt.structures import Predmet, Termin, PrihlasenyStudent
 
 
 class WebuiTerminyMixin:
     def __vyber_oba_semestre(self, app):
-        index = find_row(app.d.semesterComboBox.options, title='')
+        index = find_option(app.d.semesterComboBox.options, title='')
         if app.d.semesterComboBox.selected_index != index:
             app.d.semesterComboBox.select(index)
             app.d.filterAction.execute()

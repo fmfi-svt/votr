@@ -24,23 +24,40 @@ def memoized(original_method):
         return my_results[args]
     return wrapper
 
-def find_row(rows, **conditions):
+def find_row(objects, **conditions):
     '''Searches the list of objects for one that matches all given conditions.
 
-    Each keyword argument must be either an attribute of the object or an item
-    in the object for the object to match. That is, either ``obj.k == v`` or
-    ``obj["k"] == v`` must be true for all given keyword arguments. The index
-    of the first such object is returned.
+    ``obj['foo'] == bar`` must be true for all ``foo=bar`` keyword arguments
+    for ``obj`` to match. The index of the first matching object is returned.
+    This is useful for table rows and similar mapping-like objects.
 
-    :param rows: List of objects.
+    :param objects: List of objects.
     :param \*\*conditions: The conditions that the object must match.
     Returns:
         The index of the first object that had all the given keys and values.
     Raises:
         KeyError: Raised if no such object is found.
     '''
-    for index, row in enumerate(rows):
-        if all(getattr(row, key, None) == value or row[key] == value
-               for key, value in conditions.items()):
+    for index, obj in enumerate(objects):
+        if all(obj[key] == value for key, value in conditions.items()):
             return index
-    raise KeyError("Row not found: {!r}".format(conditions))
+    raise KeyError("Object not found: {!r}".format(conditions))
+
+def find_option(objects, **conditions):
+    '''Searches the list of objects for one that matches all given conditions.
+
+    ``obj.foo == bar`` must be true for all ``foo=bar`` keyword arguments for
+    ``obj`` to match. The index of the first matching object is returned. This
+    is useful for combo box options and similar objects.
+
+    :param objects: List of objects.
+    :param \*\*conditions: The conditions that the object must match.
+    Returns:
+        The index of the first object that had all the given keys and values.
+    Raises:
+        KeyError: Raised if no such object is found.
+    '''
+    for index, obj in enumerate(objects):
+        if all(getattr(obj, key) == value for key, value in conditions.items()):
+            return index
+    raise KeyError("Object not found: {!r}".format(conditions))

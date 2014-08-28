@@ -1,6 +1,6 @@
 
 from aisikl.app import Application, assert_ops
-from fladgejt.helpers import memoized, find_row
+from fladgejt.helpers import memoized, find_option
 
 class WebuiPredmetyMixin:
     @memoized
@@ -17,7 +17,8 @@ class WebuiPredmetyMixin:
         if akademicky_rok is None:
             index = 0
         else:
-            index = find_row(app.d.akRokComboBox.options, title=akademicky_rok)
+            index = find_option(
+                app.d.akRokComboBox.options, title=akademicky_rok)
         app.d.akRokComboBox.select(index)
 
         # Napiseme kod predmetu.
