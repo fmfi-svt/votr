@@ -1,3 +1,7 @@
+/**
+ * @require jquery.min.js
+ * @require react.min.js
+ */
 
 console.log('hello!');
 
