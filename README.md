@@ -27,8 +27,11 @@ Running the Votrfront web server:
     pip install werkzeug
     mkdir -p sessions logs
     export AIS_COOKIE="your cosign-filter cookie value"
-    ./votrfront/buildstatic.sh --watch &
-    python console.py serve --debug
+    ./votrfront/buildstatic.sh
+    ./console.py serve --debug
+
+    # In another terminal:
+    ./votrfront/buildstatic.sh --watch
 
 Running IPython notebooks:
 

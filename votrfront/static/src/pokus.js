@@ -5,3 +5,9 @@
  */
 
 var x = <Foo />;
+
+var y = <ul>
+  {someArray.map((item) =>
+    <li>{item}</li>
+  )}
+</ul>;
