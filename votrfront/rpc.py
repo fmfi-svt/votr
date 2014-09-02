@@ -5,13 +5,36 @@ import traceback
 from werkzeug.exceptions import BadRequest
 from werkzeug.routing import Rule
 from . import sessions
+from fladgejt.helpers import encode_key, decode_key
+
+
+def decode_args(method, args):
+    spec = getattr(method, 'key_args', None)
+    if not spec: return args
+    return tuple(decode_key(arg) if is_key and isinstance(arg, str) else arg
+                 for arg, is_key in zip(args, spec))
+
+def encode_result(thing):
+    if (isinstance(thing, tuple) and hasattr(thing, '_replace') and
+        hasattr(thing, 'key')):
+        thing = thing._replace(key=encode_key(thing.key))
+    if isinstance(thing, tuple) and hasattr(thing, '_asdict'):
+        thing = thing._asdict()
+
+    if isinstance(thing, (list, tuple)):
+        return [encode_result(item) for item in thing]
+    if isinstance(thing, dict):
+        return { key: encode_result(value) for key, value in thing.items() }
+    return thing
 
 
 def rpc_handle_call(request, session):
     name = request.args['name']
     args = json.loads(request.get_data(as_text=True))
+    method = getattr(session['client'], name)
 
-    return getattr(session['client'], name)(*args)
+    args = decode_args(method, args)
+    return encode_result(method(*args))
 
 
 def rpc_handle_sessions(request, send_json):

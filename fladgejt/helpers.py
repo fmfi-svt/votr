@@ -1,6 +1,7 @@
 
 from collections import namedtuple
 from functools import wraps
+from base64 import urlsafe_b64encode, urlsafe_b64decode
 
 
 def memoized(original_method):
@@ -106,3 +107,34 @@ def keyed_namedtuple(typename, field_names, key_field_names):
         key_args=', '.join(key_field_names)))
 
     return result_class
+
+
+def with_key_args(*spec):
+    '''TODO docs'''
+    def decorator(method):
+        method.key_args = spec
+        return method
+    return decorator
+
+
+def encode_key(tuple):
+    '''TODO docs'''
+    result = []
+    for part in tuple:
+        part = part.encode('utf8')
+        part = urlsafe_b64encode(part)
+        part = part.rstrip(b'=')
+        part = part.decode('ascii')
+        result.append(part)
+    return '.'.join(result)
+
+def decode_key(string):
+    '''TODO docs'''
+    result = []
+    for part in string.split('.'):
+        part = part.encode('ascii')
+        part += b'=' * (-len(part) % 4)
+        part = urlsafe_b64decode(part)
+        part = part.decode('utf8')
+        result.append(part)
+    return tuple(result)

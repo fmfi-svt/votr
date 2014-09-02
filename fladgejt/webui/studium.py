@@ -1,6 +1,6 @@
 
 from aisikl.app import Application
-from fladgejt.helpers import memoized, find_row
+from fladgejt.helpers import memoized, find_row, with_key_args
 from fladgejt.structures import Studium, ZapisnyList, Hodnotenie
 
 
@@ -26,6 +26,7 @@ class WebuiStudiumMixin:
                   for row in app.d.studiaTable.all_rows()]
         return result
 
+    @with_key_args(True)
     def get_zapisne_listy(self, studium_key):
         app = self._open_administracia_studia()
 
@@ -89,6 +90,7 @@ class WebuiStudiumMixin:
         new_app.awaited_open_main_dialog(new_ops)
         return new_app
 
+    @with_key_args(True)
     def get_prehlad_kreditov(self, studium_key):
         app = self._open_administracia_studia()
 

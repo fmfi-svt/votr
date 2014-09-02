@@ -1,6 +1,4 @@
 
-import os
-import json
 from werkzeug.exceptions import BadRequest, InternalServerError
 from werkzeug.routing import Rule
 from werkzeug.utils import redirect
