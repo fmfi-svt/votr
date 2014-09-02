@@ -2,13 +2,12 @@
  * @jsx React.DOM
  * @require base.js
  * @require ajax.js
- * @require structures.js
  * @require react.min.js
  */
 
 (function () {
 
-var {CacheRequester, Loading, convertStudium, convertZapisnyList} = Votr;
+var {CacheRequester, Loading} = Votr;
 
 
 function dateToInteger(date) {
@@ -34,14 +33,14 @@ Votr.ZapisnyListSelector = React.createClass({
     var selectorContent = [];
     var latestDate = -1, latestStudiumKey, latestZapisnyListKey;
 
-    if (studia) studia.map(convertStudium).forEach((studium) => {
+    if (studia) studia.forEach((studium) => {
       var zapisneListy = cache.get('get_zapisne_listy', studium.key);
-      if (zapisneListy) zapisneListy.map(convertZapisnyList).forEach((zapisnyList) => {
+      if (zapisneListy) zapisneListy.forEach((zapisnyList) => {
         selectorContent.push(
-          <span key={zapisnyList.key}
-                className={zapisnyList.key == zapisnyListKey ? "selected" : ""}>
+          <div key={zapisnyList.key}
+               className={zapisnyList.key == zapisnyListKey ? "selected" : ""}>
             {zapisnyList.akademicky_rok} {zapisnyList.sp_skratka}
-          </span>);
+          </div>);
 
         var date = dateToInteger(zapisnyList.datum_zapisu);
         if (date > latestDate) {

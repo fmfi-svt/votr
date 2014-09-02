@@ -6,8 +6,19 @@
 (function () {
 
 
-Votr.t = function (str) {
+Votr.translate = function (str) {
   return str;
+}
+
+var t = Votr.t = function (props, child) {
+  if (arguments.length == 1 && typeof props === 'string') {
+    return Votr.translate(props);
+  }
+
+  if (props !== null) throw Error("<t> cannot have props");
+  if (arguments.length != 2) throw Error("<t> requires a single child");
+  if (typeof child !== 'string') throw Error("<t> requires string content");
+  return Votr.translate(child);
 }
 
 

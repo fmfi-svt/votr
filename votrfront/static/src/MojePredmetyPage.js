@@ -2,13 +2,12 @@
  * @jsx React.DOM
  * @require base.js
  * @require ajax.js
- * @require structures.js
  * @require ZapisnyListSelector.js
  */
 
 (function () {
 
-var {t, PageTitle, PageLayout, CacheRequester, Loading, ZapisnyListSelector, convertHodnotenie} = Votr;
+var {t, PageTitle, PageLayout, CacheRequester, Loading, ZapisnyListSelector} = Votr;
 
 
 Votr.MojePredmetyPageContent = React.createClass({
@@ -51,7 +50,7 @@ Votr.MojePredmetyPageContent = React.createClass({
         <th><t>Dátum hodnotenia</t></th>
         <th><t>Termín hodnotenia</t></th>
       </tr>
-      {hodnotenia.map(convertHodnotenie).map((hodnotenie) =>
+      {hodnotenia.map((hodnotenie) =>
         <tr className={hodnotenie.semester == 'Z' ? 'zima' : 'leto'}>
           <td>{hodnotenie.semester}</td>
           <td>{hodnotenie.skratka}</td>
