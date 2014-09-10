@@ -1,5 +1,6 @@
 
 from aisikl.exceptions import AISBehaviorError
+from aisikl.app import assert_ops
 from fladgejt.helpers import find_row, find_option
 from fladgejt.structures import Predmet, Termin, PrihlasenyStudent
 
@@ -34,8 +35,20 @@ class WebuiTerminyMixin:
         app.d.zobrazitTerminyAction.execute()
 
         # Vytiahneme tabulku terminov.
-        result = [Termin(...) #TODO
-                  for row in app.d.terminyTable.all_rows()]
+        result = [Termin(datum=row['dat'], 
+                         cas=row['cas'], 
+                         miestnost=row['miestnosti'], 
+                         pocet_prihlasenych=row['pocetPrihlasenych'],
+                         maximalne_prihlasenych=row['maxPocet'],
+                         hodnotiaci=row['hodnotiaci'],
+                         prihlasovanie=row['prihlasovanie'],
+                         odhlasovanie=row['odhlasovanie'],
+                         poznamka=row['poznamka'],
+                         skratka_predmetu=row['predmetSkratka'],
+                         nazov_predmetu=row['predmetNazov'],
+                         moznost_prihlasit=row['moznostPrihlasenia'])
+                  for row in app.d.terminyTable.all_rows()
+                  if not row['datumOdhlas']]
         return result
 
     def get_vypisane_terminy(self, studium_key, zapisny_list_key):
@@ -48,20 +61,13 @@ class WebuiTerminyMixin:
         for row in app.d.predmetyTable.all_rows():
             if row['pocetAktualnychTerminov'] == '0': continue
             result.extend(self.get_vypisane_terminy_predmetu(
-                studium_key, zapisny_list_key, row['skratka']))
+                studium_key, zapisny_list_key, (row['skratka'],)))
 
         return result
 
-    def __open_vyber_terminu_dialog(self, app, predmet_key):
+    def __open_vyber_terminu_dialog(self, app):
         # Nie je memoized. Caller musi dialog zavriet, aby memoizovana
         # aplikacia bola zase v konzistentnom stave.
-
-        self.__vyber_oba_semestre(app)
-
-        # Vyberieme spravny riadok v tabulke predmetov.
-        (skratka,) = predmet_key
-        index = find_row(app.d.predmetyTable.all_rows(), skratka=skratka)
-        app.d.predmetyTable.select(index)
 
         # Stlacime button "Prihlasit sa na termin" dole.
         with app.collect_operations() as ops:
@@ -70,11 +76,33 @@ class WebuiTerminyMixin:
         # Otvori sa novy dialog.
         app.awaited_open_dialog(ops)
 
+    def __select_predmet_row(self, app, predmet_key):
+        self.__vyber_oba_semestre(app)
+
+        (skratka,) = predmet_key
+        index = find_row(app.d.predmetyTable.all_rows(), skratka=skratka)
+        app.d.predmetyTable.select(index)
+
+        return app.d.predmetyTable.all_rows()[index]
+
     def get_vypisane_terminy_predmetu(self, studium_key, zapisny_list_key, predmet_key):
         app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
-        self.__open_vyber_terminu_dialog(app, predmet_key)
 
-        result = [Termin(...) #TODO
+        predmet_row = self.__select_predmet_row(app, predmet_key)
+        self.__open_vyber_terminu_dialog(app)
+
+        result = [Termin(datum=row['dat'], 
+                         cas=row['cas'], 
+                         miestnost=row['miestnosti'], 
+                         pocet_prihlasenych=row['pocetPrihlasenych'],
+                         maximalne_prihlasenych=row['maxPocet'],
+                         hodnotiaci=row['hodnotiaci'],
+                         prihlaovanie=row['prihlasovanie'],
+                         odhlasovanie=row['odhlasovanie'],
+                         poznamka=row['poznamka'],
+                         skratka_predmetu=predmet_row['skratka'],
+                         nazov_predmetu=predmet_row['nazov'],
+                         moznost_prihlasit=row['moznostPrihlasenia'])
                   for row in app.d.zoznamTerminovTable.all_rows()]
 
         # Stlacime zatvaraci button.
@@ -88,7 +116,8 @@ class WebuiTerminyMixin:
 
     def get_prihlaseni_studenti(self, studium_key, zapisny_list_key, predmet_key, termin_key):
         app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
-        self.__open_vyber_terminu_dialog(app, predmet_key)
+        predmet_row = self.__select_predmet_row(app, predmet_key)
+        self.__open_vyber_terminu_dialog(app)
 
         # Vyberieme spravny riadok. Ak v tabulke nie je, vypneme "Zobrazit len
         # aktualne terminy", stlacime nacitavaci button a skusime znovu.
@@ -101,7 +130,7 @@ class WebuiTerminyMixin:
             index = None
         if index is None:
             app.d.aktualneTerminyCheckBox.set_to(False)
-            app.d.zobrazitTerminyAction.click()
+            app.d.zobrazitTerminyAction.execute()
             index = find_row(
                 app.d.zoznamTerminovTable.all_rows(),
                 dat=datum, cas=cas, miestnosti=miestnost, poznamka=poznamka)
@@ -115,7 +144,11 @@ class WebuiTerminyMixin:
         app.awaited_open_dialog(ops)
 
         # Vytiahneme data z tabulky.
-        result = [PrihlasenyStudent(...) #TODO
+        result = [PrihlasenyStudent(sp_skratka=row['skratka'],
+                                    datum_prihlasenia=row['datumPrihlas'],
+                                    plne_meno=row['plneMeno'],
+                                    rocnik=row['rocnik'],
+                                    email=row['email'])
                   for row in app.d.prihlaseniTable.all_rows()]
 
         # Stlacime zatvaraci button na zozname prihlasenych.
@@ -136,7 +169,8 @@ class WebuiTerminyMixin:
 
     def prihlas_na_termin(self, studium_key, zapisny_list_key, predmet_key, termin_key):
         app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
-        self.__open_vyber_terminu_dialog(app, predmet_key)
+        predmet_row = self.__select_predmet_row(app, predmet_key)
+        self.__open_vyber_terminu_dialog(app)
 
         # Vyberieme spravny riadok.
         datum, cas, miestnost, poznamka = termin_key
@@ -149,7 +183,6 @@ class WebuiTerminyMixin:
             app.d.enterButton.click()
 
         # Dialog sa zavrie.
-        # TODO: skontrolovat.
         app.awaited_close_dialog(ops)
 
     def odhlas_z_terminu(self, studium_key, zapisny_list_key, predmet_key, termin_key):
@@ -163,8 +196,8 @@ class WebuiTerminyMixin:
 
         # Vyberieme spravny riadok.
         datum, cas, miestnost, poznamka = termin_key
-        app.d.zoznamTerminovTable.select(find_row(
-            app.d.zoznamTerminovTable.all_rows(),
+        app.d.terminyTable.select(find_row(
+            app.d.terminyTable.all_rows(),
             dat=datum, cas=cas, miestnosti=miestnost, poznamka=poznamka))
 
         # Stlacime "Odhlasit sa z terminu".
@@ -173,10 +206,4 @@ class WebuiTerminyMixin:
 
         # Vyskoci confirm box, ci sa naozaj chceme odhlasit. Stlacime "Ano".
         assert_ops(ops, 'confirmBox')
-        with app.collect_operations() as ops:
-            app.confirm_box(2)
-
-        # Vyskoci message box, ze sa podarilo.
-        assert_ops(ops, 'messageBox')
-        if ops[0].args[0] != '\u010cinnos\u0165 \xfaspe\u0161ne dokon\u010den\xe1.':
-            raise AISBehaviorError("AIS displayed an error: {}".format(ops))
+        app.confirm_box(2)

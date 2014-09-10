@@ -28,11 +28,11 @@ Priemer = namedtuple('Priemer', [
 
 Termin = keyed_namedtuple('Termin', [
     'datum', 'cas', 'miestnost', 'pocet_prihlasenych', 'maximalne_prihlasenych',
-    'hodnotiaci', 'prihlasovanie_od', 'prihlasovanie_do', 'poznamka',
-    'moznost_prihlasit', 'key'],
+    'hodnotiaci', 'prihlasovanie', 'odhlasovanie', 'poznamka',
+    'nazov_predmetu', 'skratka_predmetu', 'moznost_prihlasit', 'key'],
     ['datum', 'cas', 'miestnost', 'poznamka'])
 
 PrihlasenyStudent = namedtuple('PrihlasenyStudent', [
-    'skratka', 'datum_prihlasenia', 'plne_meno', 'rocnik'])
+    'sp_skratka', 'datum_prihlasenia', 'plne_meno', 'rocnik', 'email'])
 
 Obdobie = namedtuple('Obdobie', ['obdobie_od', 'obdobie_do', 'id_akcie'])
