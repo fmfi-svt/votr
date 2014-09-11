@@ -31,7 +31,7 @@ Running the Votrfront web server:
     ./console.py serve --debug
 
     # In another terminal:
-    ./votrfront/buildstatic.sh --watch
+    ./votrfront/buildstatic.sh watch
 
 Running IPython notebooks:
 
