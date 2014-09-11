@@ -8,7 +8,7 @@ _require_re = re.compile(r'@require +([\w\-./]+) *[\r\n]')
 
 
 def get_module_dependencies(filename):
-    with open(base_path + filename) as f:
+    with open(base_path + filename, encoding='ascii', errors='replace') as f:
         return [m.group(1) for m in _require_re.finditer(f.read())]
 
 

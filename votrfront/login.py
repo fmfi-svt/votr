@@ -39,7 +39,7 @@ def do_login(request, params):
 
     # TODO: only store real keys in credentials?
     params.pop('to')
-    params.pop('votr_cookie', None)
+    params.pop('cosign_service', None)
 
     session = { 'credentials': params, 'client': client }
     sessid = sessions.create(request, session)
@@ -53,7 +53,7 @@ def login(request, params=None):
 
     if params['type'] == 'cosignproxy':
         response = redirect(request.url_adapter.build(
-            proxylogin, server=params['server'], to=params['to']))
+            proxylogin, values=dict(server=params['server'], to=params['to'])))
 
         # Every login should be a complete reset, since we only do this when we
         # cannot connect. It wouldn't be good if we tried to renew our proxy
@@ -72,7 +72,9 @@ def proxylogin(request):
         raise InternalServerError(
             '/proxylogin is supposed to have "CosignAllowPublicAccess Off"')
 
-    return do_login(request, dict(request.args, type='proxylogin'))
+    params = request.args.to_dict()
+    params['type'] = 'cosignproxy'
+    return do_login(request, params)
 
 
 def reset(request):
