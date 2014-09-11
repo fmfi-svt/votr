@@ -49,6 +49,20 @@ _operation_re = re.compile(r'^(webui|dm)\(\)\.(\w+)\((.*)\)$')
 _update_re = re.compile(r'^f\(\)\.getEnsuredJSOById\("(\w+)", *(\w+)\)\.(\w+)\((.*)\)$')
 
 
+def _parse_args(args_str):
+    # args_str are WebUI's arguments for a JavaScript function call. We want to
+    # parse it with our JSON parser. But WebUI needlessly escapes apostrophes,
+    # and `\'` is not a valid escape in JSON. So we replace `\'` with `'`. But
+    # we don't want to touch `\\'`, because that's a valid escape sequence
+    # followed by a normal apostrophe. We solve this by temporarily replacing
+    # `\\` with an invalid character, ensuring that `\'` is captured correctly.
+    args_str = (args_str
+        .replace('\\\\', '\x00')
+        .replace('\\\'', '\'')
+        .replace('\x00', '\\\\'))
+    return json.loads('[' + args_str + ']')
+
+
 def parse_response(soup):
     '''Parses the resultFrame content (the response to a POST request).
 
@@ -100,7 +114,7 @@ def parse_response(soup):
         match = _operation_re.match(line)
         if match:
             target, method, args_str = match.groups()
-            args = json.loads('[' + args_str + ']')
+            args = _parse_args(args_str)
             if method not in known_operations[target]:
                 raise AISParseError("Unknown method {}().{}()".format(
                     target, method))
@@ -110,7 +124,7 @@ def parse_response(soup):
         match = _update_re.match(line)
         if match:
             target, dialog, method, args_str = match.groups()
-            args = json.loads('[' + args_str + ']')
+            args = _parse_args(args_str)
             updates.append(Update(dialog, target, method, args))
             continue
 
