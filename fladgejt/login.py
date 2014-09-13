@@ -1,8 +1,9 @@
 
 import os
+import requests
+from requests import session
 from aisikl.context import Context
 from fladgejt.webui import WebuiClient
-
 
 
 def parse_cookie_string(cookie, cookie_name):
@@ -20,7 +21,15 @@ def parse_cookie_string(cookie, cookie_name):
 
 def get_cosign_cookies(settings, server, params):
     if params['type'] == 'cosignpassword':
-        raise NotImplementedError("cosignpassword not yet implemented")   # TODO
+        data = {}
+        data['login'] = params['login']
+        data['password'] = params['password']
+        data['ref'] = server['ais_url'] + 'ais/login.do?'
+        name = server['ais_cookie']
+        r = requests.get(server['cosign_url'], data={name:'', server['ais_url'] + 'ais/login.do':''})
+        r = requests.post(server['cosign_url'] + 'cosign.cgi', data=data, cookies=r.cookies)
+        value = r.history[3].cookies[name]
+        return {name: value}
 
     if params['type'] == 'cosignproxy':
         # http://webapps.itcs.umich.edu/cosign/index.php/Using_Proxy_Cookies
