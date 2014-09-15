@@ -1,6 +1,7 @@
 
 from collections import namedtuple
 from functools import wraps
+from base64 import urlsafe_b64encode, urlsafe_b64decode
 
 
 def memoized(original_method):
@@ -106,3 +107,73 @@ def keyed_namedtuple(typename, field_names, key_field_names):
         key_args=', '.join(key_field_names)))
 
     return result_class
+
+
+def with_key_args(*spec):
+    '''Specify which arguments of this fladgejt method are structure keys.
+
+    Structure keys (see :func:`keyed_namedtuple`) are tuples of strings, but we
+    want the client to see plain strings, to simplify client-side code and to
+    enforce the keys' opaqueness. When a keyed namedtuple is sent to the client,
+    we encode the key as a string, and when the client does an RPC call of some
+    client method, we decode the strings back into tuples of strings. Thus, we
+    need to know which arguments should be decoded and which shouldn't (they
+    really are just strings). That can be specified using this decorator::
+
+        @with_key_args(True, True, False)
+        def some_method(self, some_key, another_key, normal_argument):
+            ...
+
+    :param \*spec: For each argument of the method except ``self``, specify
+        ``True`` if it's a key and should be decoded, and ``False`` otherwise.
+    '''
+    def decorator(method):
+        method.key_args = spec
+        return method
+    return decorator
+
+
+def encode_key(tuple):
+    '''Reversibly encode a tuple of strings into a single string.
+
+    See :func:`with_key_args` for the rationale.
+
+    Empty tuples may be decoded incorrectly. You shouldn't have structures with
+    empty keys anyway.
+
+    The current encoding additionally always outputs URL-safe strings. But its
+    reversibility is the more important property.
+
+    Args:
+        tuple: A tuple of strings that is to be encoded.
+    Returns:
+        A string ``s`` such that ``decode_key(s)`` produces the original tuple.
+    '''
+    result = []
+    for part in tuple:
+        part = part.encode('utf8')
+        part = urlsafe_b64encode(part)
+        part = part.rstrip(b'=')
+        part = part.decode('ascii')
+        result.append(part)
+    return '.'.join(result)
+
+
+def decode_key(string):
+    '''Decode the output of :func:`encode_key` back into a tuple of strings.
+
+    See :func:`with_key_args` for the rationale.
+
+    Args:
+        string: A string created with :func:`encode_key`.
+    Returns:
+        The tuple of strings that was originally given to :func:`encode_key`.
+    '''
+    result = []
+    for part in string.split('.'):
+        part = part.encode('ascii')
+        part += b'=' * (-len(part) % 4)
+        part = urlsafe_b64decode(part)
+        part = part.decode('utf8')
+        result.append(part)
+    return tuple(result)

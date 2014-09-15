@@ -1,7 +1,7 @@
 
 from aisikl.exceptions import AISBehaviorError
 from aisikl.app import assert_ops
-from fladgejt.helpers import find_row, find_option
+from fladgejt.helpers import find_row, find_option, with_key_args
 from fladgejt.structures import Predmet, Termin, PrihlasenyStudent
 
 
@@ -12,6 +12,7 @@ class WebuiTerminyMixin:
             app.d.semesterComboBox.select(index)
             app.d.filterAction.execute()
 
+    @with_key_args(True, True)
     def get_predmety(self, studium_key, zapisny_list_key):
         app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
 
@@ -25,6 +26,7 @@ class WebuiTerminyMixin:
                   for row in app.d.predmetyTable.all_rows()]
         return result
 
+    @with_key_args(True, True)
     def get_prihlasene_terminy(self, studium_key, zapisny_list_key):
         app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
 
@@ -51,6 +53,7 @@ class WebuiTerminyMixin:
                   if not row['datumOdhlas']]
         return result
 
+    @with_key_args(True, True)
     def get_vypisane_terminy(self, studium_key, zapisny_list_key):
         app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
 
@@ -85,6 +88,7 @@ class WebuiTerminyMixin:
 
         return app.d.predmetyTable.all_rows()[index]
 
+    @with_key_args(True, True, True)
     def get_vypisane_terminy_predmetu(self, studium_key, zapisny_list_key, predmet_key):
         app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
 
@@ -114,6 +118,7 @@ class WebuiTerminyMixin:
 
         return result
 
+    @with_key_args(True, True, True, True)
     def get_prihlaseni_studenti(self, studium_key, zapisny_list_key, predmet_key, termin_key):
         app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
         predmet_row = self.__select_predmet_row(app, predmet_key)
@@ -167,6 +172,7 @@ class WebuiTerminyMixin:
 
         return result
 
+    @with_key_args(True, True, True, True)
     def prihlas_na_termin(self, studium_key, zapisny_list_key, predmet_key, termin_key):
         app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
         predmet_row = self.__select_predmet_row(app, predmet_key)
@@ -185,6 +191,7 @@ class WebuiTerminyMixin:
         # Dialog sa zavrie.
         app.awaited_close_dialog(ops)
 
+    @with_key_args(True, True, True, True)
     def odhlas_z_terminu(self, studium_key, zapisny_list_key, predmet_key, termin_key):
         app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
 
