@@ -6,6 +6,18 @@ import os
 from werkzeug.contrib.sessions import generate_key
 
 
+def get_cookie(request):
+    return request.cookies.get(request.app.session_name)
+
+
+def set_cookie(request, sessid, response):
+    if sessid:
+        response.set_cookie(request.app.session_name, sessid)
+    else:
+        response.delete_cookie(request.app.session_name)
+    return response
+
+
 def get_filename(request, sessid):
     for ch in sessid:
         if ch not in '0123456789abcdef':
@@ -23,7 +35,8 @@ def create(request, session):
     return sessid
 
 
-def delete(request, sessid):
+def delete(request, sessid=None):
+    if not sessid: sessid = get_cookie(request)
     if not sessid: return
     try:
         os.unlink(get_filename(request, sessid))
@@ -33,7 +46,9 @@ def delete(request, sessid):
 
 
 @contextlib.contextmanager
-def transaction(request, sessid):
+def transaction(request, sessid=None):
+    if not sessid: sessid = get_cookie(request)
+
     with open(get_filename(request, sessid), 'r+b') as f:
         # Use flock instead of fcntl or lockf. flock has sane semantics on
         # close(2), and we don't need fcntl's byte range locks.

@@ -1,54 +1,59 @@
 
-import os
-import json
+import traceback
 from werkzeug.exceptions import BadRequest, InternalServerError
 from werkzeug.routing import Rule
 from werkzeug.utils import redirect
+from fladgejt.login import create_client
 from . import sessions
+from .front import app_response
 
 
-def get_login_types(request, server):
-    if 'cosign' in server:
-        if request.app.settings.cosign_proxy:
-            return ('cosignpassword', 'cosigncookie', 'cosignproxy')
-        return ('cosignpassword', 'cosigncookie')
-    if 'ais_url' in server:
-        return ('plainpassword',)
-    return ('demo',)
+def do_logout(request):
+    try:
+        with sessions.transaction(request) as session:
+            session['client'].logout()
+    except Exception:
+        pass
+
+    sessions.delete(request)
 
 
-def do_login(request):
-    server = request.app.settings.servers[int(request.args['server'])]
-    login_type = request.args['type']
-    destination = request.args['to']
+def do_login(request, params):
+    do_logout(request)
 
-    if login_type not in get_login_types(request, server):
-        raise BadRequest('Unsupported login type')
+    params = dict(params)
 
-    sessions.delete(request, request.cookies.get(request.app.session_name))
+    server = request.app.settings.servers[int(params['server'])]
+    destination = params['to']
 
-    # TODO: create client
-    from test1 import ctx
-    from fladgejt.webui import WebuiClient
-    client = WebuiClient(ctx)
-    success = True
+    if params['type'] == 'cosignproxy':
+        name = request.environ['COSIGN_SERVICE']
+        params['cosign_service'] = (name, request.cookies[name])
 
-    if success:
-        session = { 'client': client }
-        sessid = sessions.create(request, session)
-        response = redirect(request.url_root + '#' + destination)
-        response.set_cookie(request.app.session_name, sessid)
-        return response
-    else:
-        response = redirect(request.url_root + '#failed')
-        response.delete_cookie(request.app.session_name)
-        return response
+    try:
+        client = create_client(request.app.settings, server, params)
+    except Exception:
+        return sessions.set_cookie(request, None,
+            app_response(request, login=True, error=traceback.format_exc(),
+                         destination=destination))
+
+    # TODO: only store real keys in credentials?
+    params.pop('to')
+    params.pop('cosign_service', None)
+
+    session = { 'credentials': params, 'client': client }
+    sessid = sessions.create(request, session)
+    return sessions.set_cookie(request, sessid,
+        app_response(request, destination=destination))
 
 
-def login(request):
-    if request.args['type'] == 'cosignproxy':
-        url = request.url_adapter.build(proxylogin, request.args)
-        response = redirect(url)
+def login(request, params=None):
+    if not params:
+        params = request.values.to_dict()
+
+    if params['type'] == 'cosignproxy':
+        response = redirect(request.url_adapter.build(
+            proxylogin, values=dict(server=params['server'], to=params['to'])))
 
         # Every login should be a complete reset, since we only do this when we
         # cannot connect. It wouldn't be good if we tried to renew our proxy
@@ -59,7 +64,7 @@ def login(request):
 
         return response
 
-    return do_login(request)
+    return do_login(request, params)
 
 
 def proxylogin(request):
@@ -67,22 +72,46 @@ def proxylogin(request):
         raise InternalServerError(
             '/proxylogin is supposed to have "CosignAllowPublicAccess Off"')
 
-    return do_login(request)
+    params = request.args.to_dict()
+    params['type'] = 'cosignproxy'
+    return do_login(request, params)
+
+
+def reset(request):
+    destination = request.args['to']
+    credentials = None
+
+    try:
+        with sessions.transaction(request) as session:
+            credentials = session['credentials']
+    except Exception:
+        pass
+
+    if not credentials:
+        return app_response(request, login=True, invalid_session=True,
+                            destination=destination)
+
+    do_logout(request)
+    # TODO: We should enforce removing the session cookie.
+
+    return login(request, dict(credentials, to=destination))
 
 
 def logout(request):
-    # TODO: should we also log out from AIS?
-
-    sessions.delete(request, request.cookies.get(request.app.session_name))
+    do_logout(request)
 
     cosign_service = request.environ.get('COSIGN_SERVICE')
     if cosign_service and request.cookies.get(cosign_service):
-        response = redirect(cosign_logout_url)   # TODO
+        response = sessions.set_cookie(request, None, redirect(
+            request.app.settings.cosign_url + 'logout.cgi?' + request.url_root))
         response.delete_cookie(cosign_service)
         return response
 
-    return redirect(request.base_url)
+    return sessions.set_cookie(request, None, redirect(request.url_root))
 
 
 def get_routes():
     yield Rule('/login', methods=['POST'], endpoint=login)
+    yield Rule('/proxylogin', methods=['GET'], endpoint=proxylogin)
+    yield Rule('/reset', methods=['POST'], endpoint=reset)
+    yield Rule('/logout', methods=['POST'], endpoint=logout)

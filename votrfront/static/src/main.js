@@ -46,6 +46,53 @@ function sendRpc(name, args, callback) {
   xhr.send(JSON.stringify(args));
 }
 
-// $('<form method="POST" action="login?server=0&type=cosigncookie&to="></form>').appendTo('body').submit()
+// Votr.goPost('logout')
+// Votr.goPost('reset?to=' + encodeURIComponent(location.search))
+// Votr.goPost('login?server=3&type=plainpassword&username=test&password=test&to=')
+
 // sendRpc('get_studia', [])
 // sendRpc('get_zapisne_listy', ['INF'])
+
+(function () {
+
+if (Votr.destination !== undefined && (Votr.destination == '' || Votr.destination.substring(0, 1) == '?')) {
+  try {
+    history.replaceState(null, '', Votr.url_root + Votr.destination);
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+Votr.goPost = function (url) {
+  $('<form method="POST"></form>').attr('action', url).appendTo('body').submit();
+};
+
+if (Votr.login) {
+  var el = document.getElementById('votr');
+  $('<h1/>').text('Login').appendTo(el);
+  if (Votr.invalid_session) $('<p/>').text('Invalid or expired session.').appendTo(el);
+  if (Votr.error) $('<pre/>').text(Votr.error).appendTo(el);
+  $('<form action="login" method="POST" />').appendTo(el).append(
+    $('<input name="to" type="hidden" />').val(location.search),
+    $('<input name="server" value="0" />'),
+    $('<input name="type" value="cosigncookie" />'),
+    $('<input name="cookie" />'),
+    $('<input type="submit" value="OK" />')
+  );
+  return;
+}
+
+if (Votr.error) {
+  var el = document.getElementById('votr');
+  $('<h1/>').text('Error').appendTo(el);
+  $('<pre/>').text(Votr.error).appendTo(el);
+  // TODO HARDRESET button
+  // TODO LOGOUT button
+  return;
+}
+
+sendRpc('get_studia', [], function (result) {
+  document.getElementById('votr').textContent = JSON.stringify(result);
+});
+
+})();

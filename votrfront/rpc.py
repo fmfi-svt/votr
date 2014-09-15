@@ -15,15 +15,14 @@ def rpc_handle_call(request, session):
 
 
 def rpc_handle_sessions(request, send_json):
-    sessid = request.cookies.get(request.app.session_name)
-    if not sessid:
+    if not sessions.get_cookie(request):
         raise BadRequest('Session cookie not found')
 
     def custom_log(type, message, data=None):
         send_json({ 'log': type, 'message': message })
         # TODO: also write to log file.
 
-    with sessions.transaction(request, sessid) as session:
+    with sessions.transaction(request) as session:
         session['client'].context.log = custom_log
         result = rpc_handle_call(request, session)
         del session['client'].context.log
