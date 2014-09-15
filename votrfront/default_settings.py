@@ -15,7 +15,6 @@ servers = [
         cosign=True,
         ais_cookie='cosign-filter-ais2.uniba.sk',
         ais_url='https://ais2.uniba.sk/',
-        cosign_url='https://login.uniba.sk/',
         rest_cookie='cosign-filter-int-dev.uniba.sk',
         rest_url='https://int-dev.uniba.sk:8443/'
     ),

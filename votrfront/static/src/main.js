@@ -42,7 +42,7 @@ if (Votr.login) {
     $('<input name="server" value="0" />'),
     $('<input name="type" value="cosigncookie" />'),
     $('<input name="cookie" />'),
-    $('<input name="login" />'),
+    $('<input name="username" />'),
     $('<input name="password" type="password" />'),
     $('<input type="submit" value="OK" />')
   );
