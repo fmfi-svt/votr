@@ -2,6 +2,7 @@
 import json
 from werkzeug.routing import Rule
 from werkzeug.wrappers import Response
+from .jsdeps import resolve_dependencies
 
 
 content = '''
@@ -12,14 +13,16 @@ content = '''
 <div id="votr"></div>
 <noscript>JavaScript required.</noscript>
 <script>/*INSERT*/</script>
-<script src="static/jquery.js"></script>
-<script src="static/main.js"></script>
 '''.lstrip()
 # TODO: add some nice noscript content for search engines etc.
+
+for script in resolve_dependencies('main.js'):
+    content += '<script src="static/build/{}"></script>\n'.format(script)
 
 
 def front(request):
     my_data = {}
+    my_data['url_root'] = request.url_root
     # TODO: add relevant settings to my_data.
 
     my_content = content.replace('/*INSERT*/',

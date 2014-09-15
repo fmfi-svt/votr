@@ -12,9 +12,11 @@ logic and knows where to find which buttons and tables. And **Aisikl** does the
 actual communication by sending HTTP requests with fake mouse clicks and screen
 scraping the responses from WebUI (the framework AIS is based on).
 
+You will need Python 3 (with virtualenv) and Node.js (with npm).
+
 Quick start:
 
-    virtualenv3 venv
+    virtualenv -p python3 venv
     source venv/bin/activate
     pip install beautifulsoup4 requests
     export AIS_COOKIE="your cosign-filter cookie value"
@@ -25,7 +27,11 @@ Running the Votrfront web server:
     pip install werkzeug
     mkdir -p sessions logs
     export AIS_COOKIE="your cosign-filter cookie value"
-    python console.py serve --debug
+    ./votrfront/buildstatic.sh
+    ./console.py serve --debug
+
+    # In another terminal:
+    ./votrfront/buildstatic.sh watch
 
 Running IPython notebooks:
 
