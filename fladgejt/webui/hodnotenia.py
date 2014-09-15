@@ -1,8 +1,10 @@
 
+from fladgejt.helpers import with_key_args
 from fladgejt.structures import Hodnotenie, Priemer
 
 
 class WebuiHodnoteniaMixin:
+    @with_key_args(True, True)
     def get_hodnotenia(self, studium_key, zapisny_list_key):
         app = self._open_hodnotenia_priemery_app(studium_key, zapisny_list_key)
 
@@ -22,6 +24,7 @@ class WebuiHodnoteniaMixin:
         return result
         # TODO: Hmm, Fajr mozno pouziva aj 'uznane'
 
+    @with_key_args(True, True)
     def get_priemery(self, studium_key, zapisny_list_key):
         app = self._open_hodnotenia_priemery_app(studium_key, zapisny_list_key)
 
