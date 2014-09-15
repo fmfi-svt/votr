@@ -1,7 +1,9 @@
 
 import json
+import traceback
 from werkzeug.routing import Rule
 from werkzeug.wrappers import Response
+from . import sessions
 from .jsdeps import resolve_dependencies
 
 
@@ -20,14 +22,43 @@ for script in resolve_dependencies('main.js'):
     content += '<script src="static/build/{}"></script>\n'.format(script)
 
 
-def front(request):
+def app_response(request, **more_data):
     my_data = {}
     my_data['url_root'] = request.url_root
     # TODO: add relevant settings to my_data.
 
+    my_data.update(more_data)
+
     my_content = content.replace('/*INSERT*/',
         'Votr = ' + json.dumps(my_data).replace('</', '<\\/'))
     return Response(my_content, content_type='text/html; charset=UTF-8')
+
+
+def front(request):
+    connection_error = None
+    credentials = None
+
+    # If the user has no session cookie, just show the login form.
+    if not sessions.get_cookie(request):
+        return app_response(request, login=True)
+
+    try:
+        with sessions.transaction(request) as session:
+            credentials = session['credentials']
+            session['client'].check_connection()
+    except Exception:
+        connection_error = traceback.format_exc()
+
+    # If we can't open the session at all, show the login form, but complain.
+    if not credentials:
+        return app_response(request, login=True, invalid_session=True)
+
+    # If the session is real but check_connection() failed, complain.
+    if connection_error:
+        return app_response(request, error=connection_error)
+
+    # Otherwise, everything works and we can open the app.
+    return app_response(request)
 
 
 def die(request):
