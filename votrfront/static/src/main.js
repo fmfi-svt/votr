@@ -47,8 +47,8 @@ function sendRpc(name, args, callback) {
 }
 
 // Votr.goPost('logout')
-// Votr.goPost('reset?to=' + encodeURIComponent(location.search))
-// Votr.goPost('login?server=3&type=plainpassword&username=test&password=test&to=')
+// Votr.goPost('reset?destination=' + encodeURIComponent(location.search))
+// Votr.goPost('login?server=3&type=plainpassword&username=test&password=test&destination=')
 
 // sendRpc('get_studia', [])
 // sendRpc('get_zapisne_listy', ['INF'])
@@ -73,7 +73,7 @@ if (Votr.login) {
   if (Votr.invalid_session) $('<p/>').text('Invalid or expired session.').appendTo(el);
   if (Votr.error) $('<pre/>').text(Votr.error).appendTo(el);
   $('<form action="login" method="POST" />').appendTo(el).append(
-    $('<input name="to" type="hidden" />').val(location.search),
+    $('<input name="destination" type="hidden" />').val(location.search),
     $('<input name="server" value="0" />'),
     $('<input name="type" value="cosigncookie" />'),
     $('<input name="cookie" />'),

@@ -18,28 +18,25 @@ def do_logout(request):
     sessions.delete(request)
 
 
-def do_login(request, params):
+def finish_login(request, destination, params):
     do_logout(request)
 
-    params = dict(params)
-
     server = request.app.settings.servers[int(params['server'])]
-    destination = params['to']
 
     if params['type'] == 'cosignproxy':
         name = request.environ['COSIGN_SERVICE']
-        params['cosign_service'] = (name, request.cookies[name])
+        fladgejt_params = dict(type='cosignproxy',
+                               cosign_proxy=request.app.settings.cosign_proxy,
+                               cosign_service=(name, request.cookies[name]))
+    else:
+        fladgejt_params = params
 
     try:
-        client = create_client(request.app.settings, server, params)
+        client = create_client(server, fladgejt_params)
     except Exception:
         return sessions.set_cookie(request, None,
             app_response(request, login=True, error=traceback.format_exc(),
                          destination=destination))
-
-    # TODO: only store real keys in credentials?
-    params.pop('to')
-    params.pop('cosign_service', None)
 
     session = { 'credentials': params, 'client': client }
     sessid = sessions.create(request, session)
@@ -47,13 +44,19 @@ def do_login(request, params):
         app_response(request, destination=destination))
 
 
-def login(request, params=None):
-    if not params:
-        params = request.values.to_dict()
+def proxylogin(request):
+    if request.remote_user is None:
+        raise InternalServerError(
+            '/proxylogin is supposed to have "CosignAllowPublicAccess Off"')
 
+    return finish_login(request, request.args['destination'],
+        dict(type='cosignproxy', server=request.args['server']))
+
+
+def start_login(request, destination, params):
     if params['type'] == 'cosignproxy':
-        response = redirect(request.url_adapter.build(
-            proxylogin, values=dict(server=params['server'], to=params['to'])))
+        args = dict(server=params['server'], destination=destination)
+        response = redirect(request.url_adapter.build(proxylogin, args))
 
         # Every login should be a complete reset, since we only do this when we
         # cannot connect. It wouldn't be good if we tried to renew our proxy
@@ -64,21 +67,16 @@ def login(request, params=None):
 
         return response
 
-    return do_login(request, params)
+    return finish_login(request, destination, params)
 
 
-def proxylogin(request):
-    if request.remote_user is None:
-        raise InternalServerError(
-            '/proxylogin is supposed to have "CosignAllowPublicAccess Off"')
-
-    params = request.args.to_dict()
-    params['type'] = 'cosignproxy'
-    return do_login(request, params)
+def login(request):
+    params = request.values.to_dict()
+    return start_login(request, params.pop('destination'), params)
 
 
 def reset(request):
-    destination = request.args['to']
+    destination = request.args['destination']
     credentials = None
 
     try:
@@ -94,7 +92,7 @@ def reset(request):
     do_logout(request)
     # TODO: We should enforce removing the session cookie.
 
-    return login(request, dict(credentials, to=destination))
+    return start_login(request, destination, credentials)
 
 
 def logout(request):
@@ -111,7 +109,7 @@ def logout(request):
 
 
 def get_routes():
-    yield Rule('/login', methods=['POST'], endpoint=login)
     yield Rule('/proxylogin', methods=['GET'], endpoint=proxylogin)
+    yield Rule('/login', methods=['POST'], endpoint=login)
     yield Rule('/reset', methods=['POST'], endpoint=reset)
     yield Rule('/logout', methods=['POST'], endpoint=logout)

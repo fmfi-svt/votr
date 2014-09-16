@@ -18,7 +18,7 @@ def parse_cookie_string(cookie, cookie_name):
     return value
 
 
-def get_cosign_cookies(settings, server, params):
+def get_cosign_cookies(server, params):
     if params['type'] == 'cosignpassword':
         data = {}
         data['login'] = params['username']
@@ -36,7 +36,7 @@ def get_cosign_cookies(settings, server, params):
         name, value = params['cosign_service']
         filename = name + '=' + value.partition('/')[0]
         result = {}
-        with open(os.path.join(settings.cosign_proxy, filename)) as f:
+        with open(os.path.join(params['cosign_proxy'], filename)) as f:
             for line in f:
                 # Remove starting "x" and everything after the space.
                 name, _, value = line[1:].split()[0].partition('=')
@@ -51,12 +51,12 @@ def get_cosign_cookies(settings, server, params):
     return {}
 
 
-def create_client(settings, server, params):
+def create_client(server, params):
     if params['type'] not in server['login_types']:
         raise ValueError("Unsupported login type")
 
     # Do the cosign login if required.
-    cookies = get_cosign_cookies(settings, server, params)
+    cookies = get_cosign_cookies(server, params)
 
     # TODO: Refactor Context arguments for REST and demo.
     ctx = Context(server.get('ais_url'), cookies)
