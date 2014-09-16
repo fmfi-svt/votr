@@ -65,6 +65,11 @@ if (query !== undefined && (query == '' || query.substring(0, 1) == '?')) {
   }
 }
 
+Votr.setDebug = function (enabled) {
+  document.cookie = enabled ? 'votr_debug=true' : 'votr_debug=';
+  location.reload();
+}
+
 Votr.goPost = function (url) {
   $('<form method="POST"></form>').attr('action', url).appendTo('body').submit();
 };

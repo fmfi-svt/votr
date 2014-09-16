@@ -29,6 +29,8 @@ def app_response(request, **my_data):
 
     my_content = content.replace('/*INSERT*/',
         'Votr = ' + json.dumps({ 'settings': my_data }).replace('</', '<\\/'))
+    if request.cookies.get('votr_debug'):
+        my_content = my_content.replace('.min.js', '.js')
     return Response(my_content, content_type='text/html; charset=UTF-8')
 
 
