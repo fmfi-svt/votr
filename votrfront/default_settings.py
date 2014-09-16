@@ -5,9 +5,9 @@ log_path = './logs/'
 
 session_path = './sessions/'
 
-cosign = 'https://login.uniba.sk/'
-
 cosign_proxy = None
+
+cosign_proxy_logout = 'https://login.uniba.sk/logout.cgi'
 
 servers = [
     dict(

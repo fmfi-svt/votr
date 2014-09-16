@@ -101,7 +101,7 @@ def logout(request):
     cosign_service = request.environ.get('COSIGN_SERVICE')
     if cosign_service and request.cookies.get(cosign_service):
         response = sessions.set_cookie(request, None, redirect(
-            request.app.settings.cosign_url + 'logout.cgi?' + request.url_root))
+            request.app.settings.cosign_proxy_logout + '?' + request.url_root))
         response.delete_cookie(cosign_service)
         return response
 
