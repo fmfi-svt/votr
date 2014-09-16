@@ -38,28 +38,15 @@ def get_cosign_cookies(settings, server, params):
         value = parse_cookie_string(params['cookie'], name)
         return { name: value }
 
-    raise ValueError(params['type'])
-
-
-def get_login_types(settings, server):
-    if 'cosign' in server:
-        if settings.cosign_proxy:
-            return ('cosignpassword', 'cosigncookie', 'cosignproxy')
-        return ('cosignpassword', 'cosigncookie')
-    if 'ais_url' in server:
-        return ('plainpassword',)
-    return ('demo',)
+    return {}
 
 
 def create_client(settings, server, params):
-    if params['type'] not in get_login_types(settings, server):
+    if params['type'] not in server['login_types']:
         raise ValueError("Unsupported login type")
 
     # Do the cosign login if required.
-    if 'cosign' in server:
-        cookies = get_cosign_cookies(settings, server, params)
-    else:
-        cookies = {}
+    cookies = get_cosign_cookies(settings, server, params)
 
     # TODO: Refactor Context arguments for REST and demo.
     ctx = Context(server.get('ais_url'), cookies)
