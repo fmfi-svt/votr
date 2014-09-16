@@ -34,9 +34,9 @@ def finish_login(request, destination, params):
     try:
         client = create_client(server, fladgejt_params)
     except Exception:
-        return sessions.set_cookie(request, None,
-            app_response(request, error=traceback.format_exc(),
-                         destination=destination))
+        return sessions.set_cookie(request, None, app_response(request,
+            server=int(params['server']), type=params['type'],
+            error=traceback.format_exc(), destination=destination))
 
     csrf_token = sessions.generate_key()
     session = dict(csrf_token=csrf_token, credentials=params, client=client)

@@ -22,12 +22,10 @@ for script in resolve_dependencies('main.js'):
     content += '<script src="static/build/{}"></script>\n'.format(script)
 
 
-def app_response(request, **more_data):
-    my_data = {}
+def app_response(request, **my_data):
     my_data['url_root'] = request.url_root
-    # TODO: add relevant settings to my_data.
-
-    my_data.update(more_data)
+    if 'csrf_token' not in my_data:
+        my_data['servers'] = request.app.settings.servers
 
     my_content = content.replace('/*INSERT*/',
         'Votr = ' + json.dumps({ 'settings': my_data }).replace('</', '<\\/'))

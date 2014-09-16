@@ -1,6 +1,7 @@
 /**
  * @require jquery.min.js
  * @require react.min.js
+ * @require LoginPage.js
  */
 
 console.log('hello!');
@@ -49,7 +50,6 @@ function sendRpc(name, args, callback) {
 
 // Votr.goPost('logout')
 // Votr.goPost('reset?destination=' + encodeURIComponent(location.search))
-// Votr.goPost('login?server=3&type=plainpassword&username=test&password=test&destination=')
 
 // sendRpc('get_studia', [])
 // sendRpc('get_zapisne_listy', ['INF'])
@@ -69,20 +69,8 @@ Votr.goPost = function (url) {
   $('<form method="POST"></form>').attr('action', url).appendTo('body').submit();
 };
 
-if (!Votr.settings.csrf_token) {
-  var el = document.getElementById('votr');
-  $('<h1/>').text('Login').appendTo(el);
-  if (Votr.settings.invalid_session) $('<p/>').text('Invalid or expired session.').appendTo(el);
-  if (Votr.settings.error) $('<pre/>').text(Votr.settings.error).appendTo(el);
-  $('<form action="login" method="POST" />').appendTo(el).append(
-    $('<input name="destination" type="hidden" />').val(location.search),
-    $('<input name="server" value="0" />'),
-    $('<input name="type" value="cosigncookie" />'),
-    $('<input name="cookie" />'),
-    $('<input name="username" />'),
-    $('<input name="password" type="password" />'),
-    $('<input type="submit" value="OK" />')
-  );
+if (Votr.settings.servers) {
+  Votr.appRoot = React.renderComponent(Votr.LoginPage(), document.getElementById('votr'));
   return;
 }
 
