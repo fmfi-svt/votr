@@ -2,6 +2,7 @@
  * @require jquery.min.js
  * @require react.min.js
  * @require LoginPage.js
+ * @require router.js
  */
 
 console.log('hello!');
@@ -88,8 +89,19 @@ if (Votr.settings.error) {
   return;
 }
 
+var studiaResult;
 sendRpc('get_studia', [], function (result) {
-  document.getElementById('votr').textContent = JSON.stringify(result);
+  studiaResult = JSON.stringify(result);
+  Votr.appRoot.forceUpdate();
 });
+
+Votr.actions['index'] = React.createClass({
+  render: function () {
+    return React.DOM.div(null, "Index page", studiaResult);
+  }
+});
+
+Votr.appRoot = React.renderComponent(Votr.App(), document.getElementById('votr'));
+
 
 })();
