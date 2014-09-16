@@ -1,8 +1,6 @@
 
-import os
 import json
 import traceback
-from werkzeug.exceptions import BadRequest
 from werkzeug.routing import Rule
 from . import sessions
 from fladgejt.helpers import encode_key, decode_key
@@ -40,13 +38,15 @@ def rpc_handle_call(request, session):
 
 def rpc_handle_sessions(request, send_json):
     if not sessions.get_cookie(request):
-        raise BadRequest('Session cookie not found')
+        raise ValueError('Session cookie not found')
 
     def custom_log(type, message, data=None):
         send_json({ 'log': type, 'message': message })
         # TODO: also write to log file.
 
     with sessions.transaction(request) as session:
+        if request.headers.get('X-CSRF-Token') != session['csrf_token']:
+            raise ValueError('Bad X-CSRF-Token value')
         session['client'].context.log = custom_log
         result = rpc_handle_call(request, session)
         del session['client'].context.log

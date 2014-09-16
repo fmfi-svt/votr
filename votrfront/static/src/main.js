@@ -43,6 +43,7 @@ function sendRpc(name, args, callback) {
   xhr.onerror = fail;
   xhr.open("POST", "rpc?name=" + name, true);
   xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.setRequestHeader("X-CSRF-Token", Votr.settings.csrf_token);
   xhr.send(JSON.stringify(args));
 }
 
@@ -55,9 +56,10 @@ function sendRpc(name, args, callback) {
 
 (function () {
 
-if (Votr.destination !== undefined && (Votr.destination == '' || Votr.destination.substring(0, 1) == '?')) {
+var query = Votr.settings.destination;
+if (query !== undefined && (query == '' || query.substring(0, 1) == '?')) {
   try {
-    history.replaceState(null, '', Votr.url_root + Votr.destination);
+    history.replaceState(null, '', Votr.settings.url_root + query);
   } catch (e) {
     console.error(e);
   }
@@ -67,11 +69,11 @@ Votr.goPost = function (url) {
   $('<form method="POST"></form>').attr('action', url).appendTo('body').submit();
 };
 
-if (Votr.login) {
+if (!Votr.settings.csrf_token) {
   var el = document.getElementById('votr');
   $('<h1/>').text('Login').appendTo(el);
-  if (Votr.invalid_session) $('<p/>').text('Invalid or expired session.').appendTo(el);
-  if (Votr.error) $('<pre/>').text(Votr.error).appendTo(el);
+  if (Votr.settings.invalid_session) $('<p/>').text('Invalid or expired session.').appendTo(el);
+  if (Votr.settings.error) $('<pre/>').text(Votr.settings.error).appendTo(el);
   $('<form action="login" method="POST" />').appendTo(el).append(
     $('<input name="destination" type="hidden" />').val(location.search),
     $('<input name="server" value="0" />'),
@@ -84,10 +86,10 @@ if (Votr.login) {
   return;
 }
 
-if (Votr.error) {
+if (Votr.settings.error) {
   var el = document.getElementById('votr');
   $('<h1/>').text('Error').appendTo(el);
-  $('<pre/>').text(Votr.error).appendTo(el);
+  $('<pre/>').text(Votr.settings.error).appendTo(el);
   // TODO HARDRESET button
   // TODO LOGOUT button
   return;

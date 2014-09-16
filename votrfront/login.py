@@ -1,6 +1,6 @@
 
 import traceback
-from werkzeug.exceptions import BadRequest, InternalServerError
+from werkzeug.exceptions import InternalServerError
 from werkzeug.routing import Rule
 from werkzeug.utils import redirect
 from fladgejt.login import create_client
@@ -35,13 +35,14 @@ def finish_login(request, destination, params):
         client = create_client(server, fladgejt_params)
     except Exception:
         return sessions.set_cookie(request, None,
-            app_response(request, login=True, error=traceback.format_exc(),
+            app_response(request, error=traceback.format_exc(),
                          destination=destination))
 
-    session = { 'credentials': params, 'client': client }
+    csrf_token = sessions.generate_key()
+    session = dict(csrf_token=csrf_token, credentials=params, client=client)
     sessid = sessions.create(request, session)
     return sessions.set_cookie(request, sessid,
-        app_response(request, destination=destination))
+        app_response(request, csrf_token=csrf_token, destination=destination))
 
 
 def proxylogin(request):
@@ -86,7 +87,7 @@ def reset(request):
         pass
 
     if not credentials:
-        return app_response(request, login=True, invalid_session=True,
+        return app_response(request, invalid_session=True,
                             destination=destination)
 
     do_logout(request)
