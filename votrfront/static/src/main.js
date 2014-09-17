@@ -3,9 +3,8 @@
  * @require lodash.min.js
  * @require react.min.js
  * @require LoginPage.js
- * @require ajax.js
  * @require router.js
- * @require layout.js
+ * @require MojeSkuskyPage.js
  */
 
 (function () {
@@ -37,15 +36,6 @@ if (Votr.settings.error) {
   // TODO LOGOUT button
   return;
 }
-
-Votr.actions['index'] = React.createClass({
-  render: function () {
-    var cache = new Votr.CacheRequester();
-    var studia = cache.get('get_studia');
-    var studiaResult = studia ? JSON.stringify(studia) : Votr.Loading({requests: cache.missing});
-    return Votr.PageLayout({query: this.props.query}, React.DOM.div(null, "Index page", studiaResult));
-  }
-});
 
 Votr.appRoot = React.renderComponent(Votr.App(), document.getElementById('votr'));
 
