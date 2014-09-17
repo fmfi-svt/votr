@@ -4,6 +4,7 @@
  * @require react.min.js
  * @require LoginPage.js
  * @require router.js
+ * @require layout.js
  */
 
 console.log('hello!');
@@ -98,7 +99,7 @@ sendRpc('get_studia', [], function (result) {
 
 Votr.actions['index'] = React.createClass({
   render: function () {
-    return React.DOM.div(null, "Index page", studiaResult);
+    return Votr.PageLayout({query: this.props.query}, React.DOM.div(null, "Index page", studiaResult));
   }
 });
 

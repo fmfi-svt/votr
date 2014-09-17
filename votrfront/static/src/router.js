@@ -9,6 +9,7 @@ Votr.actions = {};
 
 
 function parseQueryString(queryString) {
+  if (!queryString) return {};
   var result = {};
   var pairs = queryString.split('&');
   for (var i = 0; i < pairs.length; i++) {

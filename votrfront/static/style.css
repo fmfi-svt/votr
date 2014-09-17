@@ -39,3 +39,11 @@ pre, code {
 .clearfix {
   zoom: 1; /* IE 6/7 */
 }
+
+.active {
+  font-weight: bold;
+}
+
+.main-menu del {
+  color: gray;
+}
