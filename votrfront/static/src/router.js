@@ -1,7 +1,5 @@
 /**
  * @jsx React.DOM
- * @require jquery.min.js
- * @require react.min.js
  */
 
 (function () {

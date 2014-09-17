@@ -14,6 +14,11 @@ if [ "$1" == "build" ] || [ "$1" == "watch" ] || [ "$1" == "" ]; then
     cp -p node_modules/jquery/dist/*.* static/build/
   fi
 
+  if ! [ -f static/build/lodash.js ]; then
+    npm install lodash@^2.4
+    cp -p node_modules/lodash/dist/*.* static/build/
+  fi
+
   if ! [ -f static/build/react.js ]; then
     npm install react@^0.11
     cp -p node_modules/react/dist/*.* static/build/

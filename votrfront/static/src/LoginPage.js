@@ -1,6 +1,5 @@
 /**
  * @jsx React.DOM
- * @require react.min.js
  */
 
 (function () {

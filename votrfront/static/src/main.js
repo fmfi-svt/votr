@@ -1,5 +1,6 @@
 /**
  * @require jquery.min.js
+ * @require lodash.min.js
  * @require react.min.js
  * @require LoginPage.js
  * @require router.js
