@@ -1,11 +1,7 @@
 /**
  * @jsx React.DOM
- * @require jquery.min.js
- * @require lodash.min.js
- * @require react.min.js
- * @require LoginPage.js
- * @require router.js
- * @require actions.js
+ * @dontdepend Votr.settings
+ * @dontdepend Votr.appRoot
  */
 
 (function () {

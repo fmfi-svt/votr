@@ -1,8 +1,4 @@
-/**
- * @jsx React.DOM
- * @require layout.js
- * @require MojeSkuskyPage.js
- */
+/** @jsx React.DOM */
 
 (function () {
 

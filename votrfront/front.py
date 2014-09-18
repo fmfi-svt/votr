@@ -4,7 +4,7 @@ import traceback
 from werkzeug.routing import Rule
 from werkzeug.wrappers import Response
 from . import sessions
-from .jsdeps import resolve_dependencies
+from .jsdeps import order_dependencies
 
 
 content = '''
@@ -18,7 +18,8 @@ content = '''
 '''.lstrip()
 # TODO: add some nice noscript content for search engines etc.
 
-for script in resolve_dependencies('main.js'):
+libs = ['jquery.min.js', 'react.min.js', 'lodash.min.js']
+for script in libs + order_dependencies('main.js'):
     content += '<script src="static/build/{}"></script>\n'.format(script)
 
 

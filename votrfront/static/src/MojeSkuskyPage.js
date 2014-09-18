@@ -1,10 +1,4 @@
-/**
- * @jsx React.DOM
- * @require ajax.js
- * @require router.js
- * @require layout.js
- * @require ZapisnyListSelector.js
- */
+/** @jsx React.DOM */
 
 (function () {
 

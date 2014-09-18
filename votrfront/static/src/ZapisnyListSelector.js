@@ -1,8 +1,4 @@
-/**
- * @jsx React.DOM
- * @require ajax.js
- * @require router.js
- */
+/** @jsx React.DOM */
 
 (function () {
 
