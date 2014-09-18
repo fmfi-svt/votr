@@ -103,19 +103,22 @@ class WebuiPredmetyMixin:
         app = self._open_register_predmetov()
         self.__prepare_dialog()
 
+        message = None
+        predmety = []
+
         if fakulta is not None:
             index = find_option(app.d.fakultaUniverzitaComboBox.options, id=fakulta)
             app.d.fakultaUniverzitaComboBox.select(index)
             
         if semester is not None:
-            index = find_option(app.d.semesterComboBox.options, title=semester)
+            index = find_option(app.d.semesterComboBox.options, id=semester)
             app.d.semesterComboBox.select(index)
             
 
         if akademicky_rok is None:
             index = 0
         else:
-            index = find_option(app.d.akRokComboBox.options, title=akademicky_rok)
+            index = find_option(app.d.akRokComboBox.options, id=akademicky_rok)
         app.d.akRokComboBox.select(index)
 
         if stredisko is not None:
@@ -139,7 +142,10 @@ class WebuiPredmetyMixin:
                 app.awaited_open_dialog(ops)
 
                 # Skusime najst skratku medzi strediskami v tabulke
-                index = find_row(app.d.table.all_rows(), skratka=stredisko)
+                try:
+                    index = find_row(app.d.table.all_rows(), skratka=stredisko)
+                except KeyError:
+                    return [predmety, "Stredisko neexistuje."]
 
                 app.d.table.select(index)
 
@@ -169,7 +175,10 @@ class WebuiPredmetyMixin:
 
                 app.awaited_open_dialog(ops)
                 # Skusime najst skratku medzi studijnymi programami v tabulke
-                index = find_row(app.d.table.all_rows(), skratka=skratka_sp)
+                try:
+                    index = find_row(app.d.table.all_rows(), skratka=skratka_sp)
+                except KeyError:
+                    return [predmety, "Štúdijný program neexistuje."]
 
                 app.d.table.select(index)
 
@@ -188,14 +197,13 @@ class WebuiPredmetyMixin:
             app.d.nazovPredmetuTextField.write(nazov_predmetu)
 
         if stupen is not None:
-            index = find_option(app.d.stupenPredmetuComboBox.options, title=stupen)
+            index = find_option(app.d.stupenPredmetuComboBox.options, id=stupen)
             app.d.stupenPredmetuComboBox.select(index)
 
         # Uz mame nastavene vsetky parametre vyhladavania, stlacime nacitavaci button.
         with app.collect_operations() as ops:
             app.d.zobrazitPredmetyButton.click()
 
-        message = None
         if len(ops) == 1:
             assert_ops(ops, 'messageBox')
             message = ops[0].args[0]            
@@ -212,8 +220,6 @@ class WebuiPredmetyMixin:
                               semester=row['kodSemester'],
                               kredit=row['kredit'])
                       for row in app.d.zoznamPredmetovTable.loaded_rows]
-        else:
-            predmety = None
 
         return [predmety, message]
 
@@ -228,6 +234,18 @@ class WebuiPredmetyMixin:
         self.__prepare_dialog()
 
         return app.d.akRokComboBox.options
+
+    def get_semester_options(self):
+        app = self._open_register_predmetov()
+        self.__prepare_dialog()
+
+        return app.d.semesterComboBox.options
+
+    def get_stupen_options(self):
+        app = self._open_register_predmetov()
+        self.__prepare_dialog()
+
+        return app.d.stupenPredmetuComboBox.options
 
     def get_stredisko_options(self, fakulta=None):
         app = self._open_register_predmetov()
