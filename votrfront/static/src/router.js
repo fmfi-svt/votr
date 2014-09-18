@@ -55,38 +55,14 @@ Votr.App = React.createClass({
 });
 
 
-// Merges input objects similarly to jQuery.extend(), but target is always a new
-// empty object, and setting a key to "undefined" deletes it from the result.
-Votr.merge = function () {
-  var target = {};
-  for (var i = 0; i < arguments.length; i++) {
-    var source = arguments[i];
-    if (!source) continue;
-    for (var name in source) {
-      if (source[name] === undefined) {
-        delete target[name];
-      } else {
-        target[name] = source[name];
-      }
-    }
-  }
-  return target;
+Votr.buildUrl = function (href) {
+  if (_.isString(href)) return href;
+  return '?' + $.param(_.omit(href, _.isUndefined), true);
 };
 
 
-Votr.buildUrl = function (input) {
-  if (typeof input === 'string') {
-    return (input[0] == '?') ? input : '?' + input;
-  }
-  if (arguments.length > 1) {
-    input = Votr.merge.apply(this, arguments);
-  }
-  return '?' + jQuery.param(input, true);
-};
-
-
-Votr.navigate = function (destination) {
-  history.pushState(null, '', Votr.settings.url_root + destination);
+Votr.navigate = function (href) {
+  history.pushState(null, '', Votr.settings.url_root + Votr.buildUrl(href));
   Votr.appRoot.forceUpdate();
 };
 
@@ -104,7 +80,9 @@ Votr.Link = React.createClass({
 
   render: function () {
     return this.transferPropsTo(
-      <a onClick={this.handleClick}>{this.props.children}</a>);
+        <a href={Votr.buildUrl(this.props.href)} onClick={this.handleClick}>
+          {this.props.children}
+        </a>);
   }
 });
 
