@@ -30,7 +30,5 @@ Votr.MojeSkuskyPage = React.createClass({
   }
 });
 
-Votr.actions['mojeSkusky'] = Votr.MojeSkuskyPage;
-
 
 })();

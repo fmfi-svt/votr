@@ -5,9 +5,6 @@
 (function () {
 
 
-Votr.actions = {};
-
-
 function parseQueryString(queryString) {
   if (!queryString) return {};
   var result = {};
@@ -50,7 +47,7 @@ Votr.App = React.createClass({
     }
 
     var action = this.query.action || 'index';
-    var component = Votr.actions[action] || Votr.NotFoundPage;
+    var component = this.props.actions[action] || Votr.NotFoundPage;
     return <component query={this.query} />;
   }
 });

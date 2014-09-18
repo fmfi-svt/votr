@@ -1,10 +1,11 @@
 /**
+ * @jsx React.DOM
  * @require jquery.min.js
  * @require lodash.min.js
  * @require react.min.js
  * @require LoginPage.js
  * @require router.js
- * @require MojeSkuskyPage.js
+ * @require actions.js
  */
 
 (function () {
@@ -37,7 +38,7 @@ if (Votr.settings.error) {
   return;
 }
 
-Votr.appRoot = React.renderComponent(Votr.App(), document.getElementById('votr'));
+Votr.appRoot = React.renderComponent(<Votr.App actions={Votr.actions} />, document.getElementById('votr'));
 
 
 })();

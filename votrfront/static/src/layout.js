@@ -72,32 +72,4 @@ Votr.MainMenu = React.createClass({
 });
 
 
-Votr.IndexPage = React.createClass({
-  propTypes: {
-    query: React.PropTypes.object.isRequired
-  },
-
-  render: function () {
-    return <Votr.PageLayout query={this.props.query}>
-      Vitajte!
-    </Votr.PageLayout>
-  }
-});
-
-Votr.actions['index'] = Votr.IndexPage;
-
-
-// Test pages
-Votr.actions['mojePredmety'] = React.createClass({
-  render: function () {
-    return <Votr.PageLayout query={this.props.query}>Moje predmety page</Votr.PageLayout>;
-  }
-});
-Votr.actions['mojeSkusky'] = React.createClass({
-  render: function () {
-    return <Votr.PageLayout query={this.props.query}>Moje skusky page</Votr.PageLayout>;
-  }
-});
-
-
 })();
