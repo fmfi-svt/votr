@@ -18,6 +18,7 @@ Votr.actions = {
   mojePredmety: Votr.MojePredmetyPage,
   mojeSkusky: Votr.MojeSkuskyPage,
   zoznamPrihlasenychNaTermin: Votr.ZoznamPrihlasenychNaTerminPage
+  registerPredmetov: Votr.RegisterPredmetovPage
 };
 
 
