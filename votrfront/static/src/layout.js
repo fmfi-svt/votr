@@ -61,7 +61,7 @@ Votr.MainMenu = React.createClass({
       <li><del>Môj rozvrh</del></li>
       <li><strong>Register</strong></li>
       <li><del>Register osôb</del></li>
-      <li><del>Register predmetov</del></li>
+      {this.renderMenuItem("Register predmetov", { action: 'registerPredmetov' })}
       <li><del>Register miestností</del></li>
       <li><del>Register študijných programov</del></li>
     </ul>;

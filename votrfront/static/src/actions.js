@@ -15,7 +15,8 @@ Votr.TestPage = React.createClass({
 Votr.actions = {
   index: Votr.TestPage,
   mojePredmety: Votr.TestPage,
-  mojeSkusky: Votr.MojeSkuskyPage
+  mojeSkusky: Votr.MojeSkuskyPage,
+  registerPredmetov: Votr.RegisterPredmetovPage
 };
 
 
