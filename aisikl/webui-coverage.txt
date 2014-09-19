@@ -1506,7 +1506,7 @@ Mostly covered by Application. No longer global.
 - getAppBody(), getRequestFrame(), getResultFrame(), getDownloadFrame(),
   getLogFrame(), getDisableDialogsGlass(), webuiVersion, useAria
     - IRRELEVANT
-- getHost(), getPort(), getProtocol() -> context.base_url
+- getHost(), getPort(), getProtocol() -> context.ais_url
 - webuiVersion, useAria
     - IRRELEVANT
 - controlerUrl -> "/ais/servlets/WebUIServlet" (currently hardcoded)

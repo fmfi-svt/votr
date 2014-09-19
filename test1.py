@@ -11,7 +11,7 @@ if name and name != 'cosign-filter-'+origin:
     raise Exception('cookie by sa mal volat cosign-filter-'+origin)
 
 from aisikl.context import Context
-ctx = Context('https://'+origin+'/', { 'cosign-filter-'+origin: cookie })
+ctx = Context({ 'cosign-filter-'+origin: cookie }, ais_url='https://'+origin+'/')
 
 n = ctx.request_html('/ais/login.do').find(class_='user-name')
 if not (n and n.get_text()): raise Exception('login neuspesny, asi zly cookie')

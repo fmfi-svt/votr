@@ -101,7 +101,7 @@ class WebuiTerminyMixin:
                          pocet_prihlasenych=row['pocetPrihlasenych'],
                          maximalne_prihlasenych=row['maxPocet'],
                          hodnotiaci=row['hodnotiaci'],
-                         prihlaovanie=row['prihlasovanie'],
+                         prihlasovanie=row['prihlasovanie'],
                          odhlasovanie=row['odhlasovanie'],
                          poznamka=row['poznamka'],
                          skratka_predmetu=predmet_row['skratka'],

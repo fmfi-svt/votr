@@ -59,7 +59,9 @@ def create_client(server, params):
     cookies = get_cosign_cookies(server, params)
 
     # TODO: Refactor Context arguments for REST and demo.
-    ctx = Context(server.get('ais_url'), cookies)
+    ctx = Context(cookies,
+                  ais_url=server.get('ais_url'),
+                  rest_url=server.get('rest_url'))
 
     # Request login.do to start the AIS session.
     if 'ais_url' in server:

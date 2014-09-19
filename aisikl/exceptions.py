@@ -1,9 +1,9 @@
 
-class AISError(Exception):
-    '''The base class for AIS-related exceptions.'''
+class AisiklError(Exception):
+    '''The base class for AIS, REST-related exceptions.'''
 
 
-class AISParseError(AISError):
+class AISParseError(AisiklError):
     '''We couldn't parse or properly process the response from AIS.
 
     This isn't just for syntax errors, but also for unknown or unsupported
@@ -15,5 +15,13 @@ class AISParseError(AISError):
     '''
 
 
-class AISBehaviorError(AISError):
+class AISBehaviorError(AisiklError):
     '''AIS did something we didn't expect.'''
+
+
+class RESTServerError(AisiklError):
+    '''Server returned error after our request.'''
+
+
+class LoggedOutError(AisiklError):
+    '''Request couldn't be completed because we are no longer logged in.'''
