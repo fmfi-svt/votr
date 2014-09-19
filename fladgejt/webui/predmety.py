@@ -145,7 +145,7 @@ class WebuiPredmetyMixin:
                 try:
                     index = find_row(app.d.table.all_rows(), skratka=stredisko)
                 except KeyError:
-                    return [predmety, "Stredisko neexistuje."]
+                    message = "Stredisko neexistuje."
 
                 app.d.table.select(index)
 
@@ -155,6 +155,9 @@ class WebuiPredmetyMixin:
 
                 # Dialog sa zavrie.
                 app.awaited_close_dialog(ops)
+
+                if message:
+                    return [predmety, message]
 
         if skratka_sp is not None:
             # Napiseme skratku studijneho programu do textfieldu, 
@@ -178,7 +181,7 @@ class WebuiPredmetyMixin:
                 try:
                     index = find_row(app.d.table.all_rows(), skratka=skratka_sp)
                 except KeyError:
-                    return [predmety, "Štúdijný program neexistuje."]
+                    message = "Štúdijný program neexistuje."
 
                 app.d.table.select(index)
 
@@ -189,6 +192,8 @@ class WebuiPredmetyMixin:
                 # Dialog sa zavrie.
                 app.awaited_close_dialog(ops)
 
+                if message:
+                    return [predmety, message]
 
         if skratka_predmetu is not None:
             app.d.skratkaPredmetuTextField.write(skratka_predmetu)
@@ -223,31 +228,31 @@ class WebuiPredmetyMixin:
 
         return [predmety, message]
 
-    def get_fakulta_options(self):
+    def get_register_predmetov_fakulta_options(self):
         app = self._open_register_predmetov()
         self.__prepare_dialog()
 
         return app.d.fakultaUniverzitaComboBox.options
 
-    def get_akademicky_rok_options(self):
+    def get_register_predmetov_akademicky_rok_options(self):
         app = self._open_register_predmetov()
         self.__prepare_dialog()
 
         return app.d.akRokComboBox.options
 
-    def get_semester_options(self):
+    def get_register_predmetov_semester_options(self):
         app = self._open_register_predmetov()
         self.__prepare_dialog()
 
         return app.d.semesterComboBox.options
 
-    def get_stupen_options(self):
+    def get_register_predmetov_stupen_options(self):
         app = self._open_register_predmetov()
         self.__prepare_dialog()
 
         return app.d.stupenPredmetuComboBox.options
 
-    def get_stredisko_options(self, fakulta=None):
+    def get_register_predmetov_stredisko_options(self, fakulta=None):
         app = self._open_register_predmetov()
         self.__prepare_dialog()
 
@@ -284,7 +289,7 @@ class WebuiPredmetyMixin:
 
         return result
 
-    def get_studijny_program_options(self, fakulta=None):
+    def get_register_predmetov_studijny_program_options(self, fakulta=None):
         app = self._open_register_predmetov()
         self.__prepare_dialog()
 
