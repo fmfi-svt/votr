@@ -17,6 +17,11 @@ Predmet = keyed_namedtuple('Predmet', [
     'skratka', 'nazov', 'typ_vyucby', 'semester', 'kredit', 'key'],
     ['skratka'])
 
+PredmetRegistra = keyed_namedtuple('PredmetRegistra', [
+    'skratka', 'nazov', 'konanie', 'stredisko', 'fakulta', 'cudzi_nazov',
+    'rozsah_vyucby', 'semester', 'kredit', 'key'],
+    ['skratka'])
+
 Hodnotenie = namedtuple('Hodnotenie', [
     'akademicky_rok', 'skratka', 'nazov', 'typ_vyucby', 'semester', 'kredit',
     'hodn_znamka', 'hodn_termin', 'hodn_datum', 'hodn_znamka_popis'])

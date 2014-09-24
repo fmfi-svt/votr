@@ -2,6 +2,7 @@
 from collections import namedtuple
 from functools import wraps
 from base64 import urlsafe_b64encode, urlsafe_b64decode
+from datetime import datetime
 
 
 def memoized(original_method):
@@ -74,6 +75,7 @@ def __new__(_cls, {args}=None):
     return tuple.__new__(_cls, ({args},))
 result_class.__new__ = __new__
 '''
+
 
 def keyed_namedtuple(typename, field_names, key_field_names):
     '''A variant of namedtuple with a default value for the ``key`` field.
@@ -177,3 +179,13 @@ def decode_key(string):
         part = part.decode('utf8')
         result.append(part)
     return tuple(result)
+
+
+def get_aktualny_akademicky_rok():
+    rok = datetime.today().year
+    mesiac = datetime.today().month
+
+    if mesiac < 8:
+        rok = rok - 1
+
+    return '{}/{}'.format(rok, rok+1)

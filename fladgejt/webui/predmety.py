@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 
+from aisikl.exceptions import AISBehaviorError
 from aisikl.app import Application, assert_ops
-from fladgejt.helpers import memoized, find_option, find_row
-from fladgejt.structures import Predmet
+from fladgejt.helpers import memoized, find_option, find_row, get_aktualny_akademicky_rok
+from fladgejt.structures import PredmetRegistra
+
 
 class WebuiPredmetyMixin:
     @memoized
@@ -15,29 +17,21 @@ class WebuiPredmetyMixin:
     def __prepare_dialog(self):
         app = self._open_register_predmetov()
 
-        if app.d.fakultaUniverzitaComboBox.selected_index != 0:
-            app.d.fakultaUniverzitaComboBox.select(0)
+        app.d.fakultaUniverzitaComboBox.select(0)
 
-        if app.d.semesterComboBox.selected_index != 0:
-            app.d.semesterComboBox.select(0)
+        app.d.semesterComboBox.select(0)
 
-        if app.d.stupenPredmetuComboBox.selected_index != 0:
-            app.d.stupenPredmetuComboBox.select(0)
+        app.d.stupenPredmetuComboBox.select(0)
 
-        if app.d.typPredmetuComboBox.selected_index != 0:
-            app.d.typPredmetuComboBox.select(0)
+        app.d.typPredmetuComboBox.select(0)
 
-        if app.d.zobrazitLenComboBox.selected_index != 0:
-            app.d.zobrazitLenComboBox.select(0)
+        app.d.zobrazitLenComboBox.select(0)
 
-        if app.d.skratkaPredmetuTextField.value != '':
-            app.d.skratkaPredmetuTextField.write('')
+        app.d.skratkaPredmetuTextField.write('')
 
-        if app.d.nazovPredmetuTextField.value != '':
-            app.d.nazovPredmetuTextField.write('')
+        app.d.nazovPredmetuTextField.write('')
 
-        if app.d.cisloPredmetuNumberControl.bdvalue != '':
-            app.d.cisloPredmetuNumberControl.write('')
+        app.d.cisloPredmetuNumberControl.write('')
 
         if app.d.strediskoTextField.is_editable():
             app.d.strediskoTextField.write('')
@@ -52,12 +46,15 @@ class WebuiPredmetyMixin:
         if app.d.odobratVyucujucehoButton.is_really_enabled():
             app.d.odobratVyucujucehoButton.click()
 
+        app.d.akRokComboBox.select(
+            find_option(app.d.akRokComboBox.options, id=get_aktualny_akademicky_rok()))
+
     def get_informacny_list(self, kod_predmetu, akademicky_rok=None):
         app = self._open_register_predmetov()
 
         # Vyberieme akademicky rok.
         if akademicky_rok is None:
-            index = 0
+            index = get_aktualny_akademicky_rok()
         else:
             index = find_option(
                 app.d.akRokComboBox.options, title=akademicky_rok)
@@ -107,16 +104,13 @@ class WebuiPredmetyMixin:
         predmety = []
 
         if fakulta is not None:
-            index = find_option(app.d.fakultaUniverzitaComboBox.options, id=fakulta)
-            app.d.fakultaUniverzitaComboBox.select(index)
-            
+            app.d.fakultaUniverzitaComboBox.select(find_option(app.d.fakultaUniverzitaComboBox.options, id=fakulta))
+
         if semester is not None:
-            index = find_option(app.d.semesterComboBox.options, id=semester)
-            app.d.semesterComboBox.select(index)
-            
+            app.d.semesterComboBox.select(find_option(app.d.semesterComboBox.options, id=semester))
 
         if akademicky_rok is None:
-            index = 0
+            index = find_option(app.d.akRokComboBox.options, id=get_aktualny_akademicky_rok())
         else:
             index = find_option(app.d.akRokComboBox.options, id=akademicky_rok)
         app.d.akRokComboBox.select(index)
@@ -135,7 +129,7 @@ class WebuiPredmetyMixin:
             # Ak bola skratka nejednoznacna
             if len(ops) == 1:
                 assert_ops(ops, 'openDialog')
-                
+
                 if ops[0].args[1] != 'Zabezpečujúce strediská':
                     raise AISBehaviorError("AIS opened an unexpected dialog: {}".format(ops))
 
@@ -160,7 +154,7 @@ class WebuiPredmetyMixin:
                     return [predmety, message]
 
         if skratka_sp is not None:
-            # Napiseme skratku studijneho programu do textfieldu, 
+            # Napiseme skratku studijneho programu do textfieldu,
             # ak je jednoznacna AIS ju automaticky vyberie.
             app.d.skratkaStudProgramuTextField.write(skratka_sp)
 
@@ -172,7 +166,7 @@ class WebuiPredmetyMixin:
 
             if len(ops) == 1:
                 assert_ops(ops, 'openDialog')
-                
+
                 if ops[0].args[1] != 'Študijné programy':
                     raise AISBehaviorError("AIS opened an unexpected dialog: {}".format(ops))
 
@@ -202,8 +196,7 @@ class WebuiPredmetyMixin:
             app.d.nazovPredmetuTextField.write(nazov_predmetu)
 
         if stupen is not None:
-            index = find_option(app.d.stupenPredmetuComboBox.options, id=stupen)
-            app.d.stupenPredmetuComboBox.select(index)
+            app.d.stupenPredmetuComboBox.select(find_option(app.d.stupenPredmetuComboBox.options, id=stupen))
 
         # Uz mame nastavene vsetky parametre vyhladavania, stlacime nacitavaci button.
         with app.collect_operations() as ops:
@@ -216,15 +209,18 @@ class WebuiPredmetyMixin:
         while not app.d.zoznamPredmetovTable.is_end_of_data:
             app.d.zoznamPredmetovTable.scroll_down(10)
         if app.d.zoznamPredmetovTable.truncated:
-            message = "Neboli načítané všetky dáta. Upresnite prosím kritéria vyhľadávania."
+            message = "Neboli načítané všetky dáta. Upresnite kritériá vyhľadávania."
 
-        if app.d.zoznamPredmetovTable.loaded_rows:
-            predmety = [Predmet(skratka=row['skratka'],
-                              nazov=row['nazov'],
-                              typ_vyucby=row['kodTypPredmetu'],
-                              semester=row['kodSemester'],
-                              kredit=row['kredit'])
-                      for row in app.d.zoznamPredmetovTable.loaded_rows]
+        predmety = [PredmetRegistra(skratka=row['skratka'],
+                                    nazov=row['nazov'],
+                                    semester=row['kodSemester'],
+                                    stredisko=row['stredisko'],
+                                    fakulta=row['FakUniv'],
+                                    rozsah_vyucby=row['rozsah'],
+                                    konanie=row['konanie'],
+                                    cudzi_nazov=row['nazovJ'],
+                                    kredit=row['kredit'])
+                    for row in app.d.zoznamPredmetovTable.loaded_rows]
 
         return [predmety, message]
 
@@ -238,7 +234,7 @@ class WebuiPredmetyMixin:
         app = self._open_register_predmetov()
         self.__prepare_dialog()
 
-        return app.d.akRokComboBox.options
+        return [app.d.akRokComboBox.options, app.d.akRokComboBox.selected_option()]
 
     def get_register_predmetov_semester_options(self):
         app = self._open_register_predmetov()
@@ -267,7 +263,7 @@ class WebuiPredmetyMixin:
             app.d.vybratStrediskoAction.execute()
 
         assert_ops(ops, 'openDialog')
-        
+
         if ops[0].args[1] != 'Zabezpečujúce strediská':
             raise AISBehaviorError("AIS opened an unexpected dialog: {}".format(ops))
 
@@ -304,7 +300,7 @@ class WebuiPredmetyMixin:
             app.d.vybratStudProgramAction.execute()
 
         assert_ops(ops, 'openDialog')
-        
+
         if ops[0].args[1] != 'Študijné programy':
             raise AISBehaviorError("AIS opened an unexpected dialog: {}".format(ops))
 
