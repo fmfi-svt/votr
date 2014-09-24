@@ -283,8 +283,12 @@ class Application:
         data['xml_spec'] = xml_spec
 
         self.ctx.log('http', 'Sending WebUIServlet request', xml_spec)
+
+        # WebUIServlet needs charset set in Content-Type. Normal POST requests
+        # don't have it, but request.html manually sets it, so we do the same.
+        headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
         return self.ctx.request_html('/ais/servlets/WebUIServlet',
-            method='POST', params=params, data=data)
+            method='POST', params=params, data=data, headers=headers)
 
     def _process_response(self, soup):
         self.ctx.log('http', 'Received response', str(soup))
