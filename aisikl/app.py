@@ -4,7 +4,8 @@ from contextlib import contextmanager
 import json
 import re
 import time
-from .exceptions import AISParseError, AISBehaviorError
+from .exceptions import (
+    AISParseError, AISBehaviorError, AISApplicationClosedError)
 from .dialog import Dialog
 
 
@@ -16,9 +17,9 @@ Update = namedtuple('Update', ('dialog', 'target', 'method', 'args'))
 
 #: The known :class:`Operation` methods.
 known_operations = {
-    'webui': { 'startApp', 'confirmBox', 'messageBox', 'abortBox',
-               'fileUpload', 'fileXUpload', 'editDoc', 'shellExec',
-               'showHelp' },
+    'webui': { 'serverCloseApplication', 'closeApplication', 'messageBox',
+               'confirmBox', 'fileUpload', 'fileXUpload', 'editDoc',
+               'abortBox', 'shellExec', 'showHelp', 'startApp' },
     'dm': { 'openMainDialog', 'openDialog', 'closeDialog' },
 }
 
@@ -81,6 +82,8 @@ def parse_response(soup):
     script = script_tag.get_text()
 
     functions = [m.group(1) for m in _functions_re.finditer(script)]
+    if ','.join(functions) == 'main' and 'onAppClosedOnServer' in script:
+        raise AISApplicationClosedError("Application has already closed")
     if ','.join(functions) != 'webui,f,dm,isResponseIdle,main0,main':
         raise AISParseError("Unexpected script in result frame response")
 
@@ -166,6 +169,7 @@ class Application:
         dialog_stack:
             The ordered list of open :class:`~aisikl.dialog.Dialog`\ s. Its
             last item is the currently active dialog.
+        last_response_time: When did this app last receive a WebUI response.
     '''
 
     @classmethod
@@ -205,8 +209,9 @@ class Application:
         self.collector = None
 
         match = re.search(r'appClassName=([a-zA-Z0-9_\.]*)', url)
+        self.class_name = match.group(1) if match else None
         self.ctx.log('operation', 'Opening application {}'.format(
-            match.group(1) if match else '(unknown)'), url)
+            self.class_name), url)
 
         app_soup = self.ctx.request_html(url)
         if not app_soup.find(id='webuiProperties'):
@@ -292,6 +297,7 @@ class Application:
 
     def _process_response(self, soup):
         self.ctx.log('http', 'Received response', str(soup))
+        self.last_response_time = time.time()
         operations, updates = parse_response(soup)
         body = soup.body
 
@@ -348,6 +354,24 @@ class Application:
         self._do_request('<events>' + body + '</events>' +
                          self.collect_component_changes())
 
+    def send_empty_request(self):
+        '''Sends a request without any events to AIS.'''
+        self._do_request(self.collect_component_changes())
+
+    def force_close(self):
+        '''Tells the server to close the application.
+
+        Usually, users close applications with the exit button in the main
+        dialog. This method disregards open dialogs and just closes everything.
+        It also works even if the application is already closed.
+        '''
+        self.close_all_dialogs()
+        self.ctx.log('operation',
+            'Sending WebUIKillEvent to {}'.format(self.class_name))
+        self._send_request(
+            "<events><ev><event class='avc.framework.webui.WebUIKillEvent'/>"
+            "</ev></events>\n")
+
     def collect_component_changes(self):
         '''Returns the <changedProps> string that goes into POST requests.'''
         app_changes = ''
@@ -363,6 +387,32 @@ class Application:
             app_changes +
             ''.join(d.changed_properties() for d in self.dialog_stack) +
             '</changedProps>\n')
+
+    def is_still_open(self):
+        '''Checks whether this application is still open.
+
+        The AIS server forgets about open applications after a short period of
+        inactivity (much shorter than the session expiring). If that happens,
+        the program must stop using this Application and start anew.
+
+        If this application contacted the server recently, we assume it's still
+        open. Otherwise, we test it by sending an empty request.
+
+        Returns:
+            True if the server still accepts requests from this application.
+        '''
+        if not self.dialog_stack: return False
+        THRESHOLD = 5 * 60
+        if time.time() - self.last_response_time > THRESHOLD:
+            self.ctx.log('operation', 'Checking if {} is still open'.format(
+                self.class_name))
+            try:
+                self.send_empty_request()
+            except AISApplicationClosedError:
+                self.ctx.log('operation', 'Server already closed {}'.format(
+                    self.class_name))
+                return False
+        return True
 
     def start_app(self, url, params):
         '''Opens a new application in response to the startApp
@@ -434,6 +484,13 @@ class Application:
         return dialog
 
     def close_dialog(self, name, is_native=False):
+        '''Closes a dialog in response to the closeDialog :class:`Operation`.
+
+        Only the top dialog can be closed.
+
+        Returns:
+            True if the dialog was closed, or if it had already been closed.
+        '''
         if is_native:
             raise AISParseError("closeDialog() with isNative is not supported")
 
@@ -448,6 +505,13 @@ class Application:
         self.dialog_stack.pop()
         del self.dialogs[name]
         return True
+
+    def close_all_dialogs(self):
+        '''Closes all dialogs after they have been closed on the server.'''
+        if self.dialog_stack:
+            self.ctx.log('operation', 'Closing all dialogs')
+        self.dialogs.clear()
+        self.dialog_stack.clear()
 
     def confirm_box(self, option_index):
         '''Sends an answer after receiving the confirmBox :class:`~Operation`.
@@ -511,4 +575,17 @@ class Application:
         '''
         assert_ops(ops, 'closeDialog')
         return self.close_dialog(*ops[0].args)
+
+    def awaited_close_application(self, ops):
+        '''Combines :func:`assert_ops` and :meth:`close_all_dialogs` in one
+        step.
+
+        If ``ops`` contains the serverCloseApplication, closeDialog and
+        closeApplication operations (which is common when pressing exit buttons
+        and such), closes all dialogs and does not send any other requests (the
+        server already considers the application closed). Throws otherwise.
+        '''
+        assert_ops(ops,
+                   'serverCloseApplication', 'closeDialog', 'closeApplication')
+        self.close_all_dialogs()
 

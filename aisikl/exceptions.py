@@ -19,6 +19,10 @@ class AISBehaviorError(AisiklError):
     '''AIS did something we didn't expect.'''
 
 
+class AISApplicationClosedError(AisiklError):
+    '''The application we were using has already closed.'''
+
+
 class RESTServerError(AisiklError):
     '''Server returned error after our request.'''
 

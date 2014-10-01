@@ -445,8 +445,12 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
     - Application.close_dialog()
     - Note that `isNative` is an optional argument.
     - Calling `webui.clean(true)` when no dialogs remain is TODO.
-- closeAllDialogs(), canKillApplication()
-    - TODO
+- closeAllDialogs()
+    - Application.close_all_dialogs()
+    - For each dialog stack, calls close() on every dialog from top to bottom.
+      But Dialog.close() is mostly IRRELEVANT, so we just clear the dialog list.
+- canKillApplication()
+    - IRRELEVANT. Only used in beforeUnload().
 - disableAllDialogs() -> no-op
 - setActiveDialogName() -> no-op (we have a single dialog stack)
 - setActiveDialog() -> no-op
@@ -1515,6 +1519,8 @@ Mostly covered by Application. No longer global.
     - UNSUPPORTED until we actually see it in use.
 - getWindowFrame() -> None
     - Because isWindowInFrame() is False.
+- refreshAppEnabled -> False
+    - Because windowInFrame is False.
 - timeDifference
     - IRRELEVANT
 - noteLastDoneRequest(), lastDoneRequest
@@ -1526,11 +1532,44 @@ Mostly covered by Application. No longer global.
     - UNSUPPORTED, because non-empty initScript is UNSUPPORTED.
 - startRestoreConnectionCountdown(), stopRestoringConnection()
     - TODO (IRRELEVANT?)
-- wasKilled, wasWindowClose, wasClosedOnServer, serverCloseApplication(),
-  closeApplication(), clear(), onAppClosedOnServer(), killApplication()
-    - TODO
+- wasKilled
+    - IRRELEVANT. Mainly used in WebUI to ensure clear() only runs once.
+- wasWindowClose
+    - IRRELEVANT. Only used to ensure window.close() is only called once.
+- wasClosedOnServer, serverCloseApplication()
+    - See clear() below. The serverCloseApplication() operation usually requires
+      no reaction, and is handled in Application.awaited_close_application().
+- closeApplication()
+    - Equivalent to clear(true) followed by window.close().
+    - The withBrowser argument is only used if NativeDialog_getOpenedDialog(),
+      and even then, it only delays closeApplication() until the dialog closes.
 - beforeUnload(), unload()
     - IRRELEVANT
+- clear()
+    - The main method for closing the application. WebUI calls in
+      closeApplication() (an operation used in result frame scripts), in
+      onAppClosedOnServer(), and after closing the last dialog.
+    - If wasClosedOnServer is false (i.e. serverCloseApplication() was not
+      called) and the withRequest argument is true, clear() sends
+      a WebUIKillEvent and ignores the response. In Votr, this is done with
+      Application.force_close().
+    - Afterwards, clear() sets various things to null (probably trying to avoid
+      memory leaks in old IE) and closes the window. Votr doesn't need that.
+      The program can access the Application object even after it's closed, but
+      sending any requests would cause an AISApplicationClosedError.
+    - Usually, pressing the close or exit button in the last dialog results in
+      serverCloseApplication(), closeDialog(), and closeApplication(). That
+      means clear() just closes the window without sending any requests. In
+      Votr, this is handled by Application.awaited_close_application().
+    - Normally, WebUIKillEvent is never sent. It would only be sent e.g. if the
+      server called closeDialog() but not serverCloseApplication(). But the
+      event is useful for Votr, because it can close an application regardless
+      of its current state or the open dialogs.
+- onAppClosedOnServer()
+    - Shows an alert and calls clear(false), which basically closes the window
+      without sending any requests.
+    - In Votr, this is handled in parse_response() by raising
+      AISApplicationClosedError. No other cleanup (closing dialog etc) is done.
 - setReturnValue()
     - IRRELEVANT
 - sendingEvent, getSendingEvent(), setSendingEvent()
@@ -1551,9 +1590,7 @@ Mostly covered by Application. No longer global.
 - sendWhatsUp(), whatsUpGetLastOutput(), whatsUpGetLastRequest(),
   startWhatsUpTimer(), setIdleEventInterval(), getPingOrIdleInterval()
     - TODO
-- sendEmptyRequest()
-    - Wasn't needed yet. Could be implemented as:
-      `self._do_request(self.collect_component_changes())`
+- sendEmptyRequest() -> app.send_empty_request()
 - currentTimeMillis() -> time.time()
     - Used only in `antiCache`, so nobody cares whether it's a float.
 - popupMenuToShowAfterEnableJSO, setPopupMenuToShowAfterEnable()
@@ -1605,5 +1642,8 @@ Mostly covered by Application. No longer global.
       which is hardcoded.
 - WebUI_init
     - Parsed in Application._open()
+- killApplication()
+    - IRRELEVANT. Calls window.close().
+    - Also called from the portal window just before logout.
 
 
