@@ -69,8 +69,8 @@ class WebuiTerminyMixin:
         return result
 
     def __open_vyber_terminu_dialog(self, app):
-        # Nie je memoized. Caller musi dialog zavriet, aby memoizovana
-        # aplikacia bola zase v konzistentnom stave.
+        # Caller musi dialog potom zavriet, aby otvorena aplikacia bola zase
+        # v konzistentnom stave pre dalsieho co ju pouzije.
 
         # Stlacime button "Prihlasit sa na termin" dole.
         with app.collect_operations() as ops:

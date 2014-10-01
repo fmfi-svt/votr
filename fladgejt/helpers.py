@@ -1,31 +1,6 @@
 
 from collections import namedtuple
-from functools import wraps
 from base64 import urlsafe_b64encode, urlsafe_b64decode
-
-
-def memoized(original_method):
-    '''Decorator to memoize the results of methods.
-
-    The ``original_method`` must accept only self and positional arguments.
-    Their values will be used to memoize already computed results. If you call
-    the decorated method on the same object with the same arguments, it will
-    return the previous result without calling the original method again.
-
-    Args:
-        original_method: The method to decorate.
-    Returns:
-        The decorated method.
-    '''
-    @wraps(original_method)
-    def wrapper(self, *args):
-        if not hasattr(self, '_memoized'):
-            self._memoized = {}
-        my_results = self._memoized.setdefault(original_method.__name__, {})
-        if args not in my_results:
-            my_results[args] = original_method(self, *args)
-        return my_results[args]
-    return wrapper
 
 
 def find_row(objects, **conditions):

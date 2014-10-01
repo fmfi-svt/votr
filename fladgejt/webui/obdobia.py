@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 from aisikl.app import Application
-from fladgejt.helpers import memoized, find_row
+from fladgejt.helpers import find_row
 from fladgejt.structures import Obdobie
+from fladgejt.webui.pool import pooled_app
 
 
 class WebuiObdobiaMixin:
-    @memoized
+    @pooled_app
     def _open_sprava_datumov(self):
         '''Opens 'Správa dátumových akcií' application (VSST010).
 

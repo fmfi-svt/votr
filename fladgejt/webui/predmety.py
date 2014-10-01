@@ -1,9 +1,10 @@
 
 from aisikl.app import Application, assert_ops
-from fladgejt.helpers import memoized, find_option
+from fladgejt.helpers import find_option
+from fladgejt.webui.pool import pooled_app
 
 class WebuiPredmetyMixin:
-    @memoized
+    @pooled_app
     def _open_register_predmetov(self):
         url = '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST060App&kodAplikacie=VSST060&uiLang=SK'
         app, ops = Application.open(self.context, url)

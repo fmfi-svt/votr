@@ -2,12 +2,13 @@
 
 from aisikl.app import Application, assert_ops
 from aisikl.exceptions import AISBehaviorError
-from fladgejt.helpers import memoized, find_row, find_option, with_key_args
+from fladgejt.helpers import find_row, find_option, with_key_args
 from fladgejt.structures import Studium, ZapisnyList, Hodnotenie
+from fladgejt.webui.pool import pooled_app
 
 
 class WebuiStudiumMixin:
-    @memoized
+    @pooled_app
     def _open_administracia_studia(self):
         url = '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.es.VSES017App&kodAplikacie=VSES017&uiLang=SK'
         app, ops = Application.open(self.context, url)
@@ -65,7 +66,7 @@ class WebuiStudiumMixin:
             app.d.zapisneListyTable.all_rows(), popisAkadRok=akademicky_rok)
         app.d.zapisneListyTable.select(zapisny_list_index)
 
-    @memoized
+    @pooled_app
     def _open_terminy_hodnotenia_app(self, studium_key, zapisny_list_key):
         app = self._open_administracia_studia()
 
@@ -81,7 +82,7 @@ class WebuiStudiumMixin:
         new_app.awaited_open_main_dialog(new_ops)
         return new_app
 
-    @memoized
+    @pooled_app
     def _open_hodnotenia_priemery_app(self, studium_key, zapisny_list_key):
         app = self._open_administracia_studia()
 
