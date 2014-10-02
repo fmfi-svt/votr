@@ -14,6 +14,13 @@ Votr.MojeSkuskyPageContent = React.createClass({
     query: React.PropTypes.object.isRequired
   },
 
+  getInitialState: function() {
+    return {
+      currentDirection: 'asc',
+      sortBy: 'nazov_predmetu'
+    }
+  },
+
   renderContent: function () {
     var cache = new Votr.CacheRequester();
     var {studiumKey, zapisnyListKey} = this.props.query;
@@ -23,18 +30,28 @@ Votr.MojeSkuskyPageContent = React.createClass({
       return <Votr.Loading requests={cache.missing} />;
     }
 
+    var sortKey = this.state.sortBy;
+    terminy.sort(function(a, b) {
+        a = a[sortKey];
+        b = b[sortKey];
+
+        return a < b ? -1 : (a > b ? 1 : 0);
+    });
+
     return <table>
       <thead>
         <tr>
-          <th>Predmet</th>
-          <th>Dátum</th>
-          <th>Čas</th>
-          <th>Miestnosť</th>
-          <th>Hodnotiaci</th>
-          <th>Prihlásení</th>
-          <th>Poznámka</th>
-          <th>Prihlasovanie</th>
-          <th>Odhlasovanie</th>
+          <th onClick={this.handleSort.bind(null, 'nazov_predmetu')}>Predmet</th>
+          <th onClick={this.handleSort.bind(null, 'datum')}>Dátum</th>
+          <th onClick={this.handleSort.bind(null, 'cas')}>Čas</th>
+          <th onClick={this.handleSort.bind(null, 'miestnost')}>Miestnosť</th>
+          <th onClick={this.handleSort.bind(null, 'hodnotiaci')}>Hodnotiaci</th>
+          <th onClick={this.handleSort.bind(null, 'pocet_prihlasenych')}>Prihlásení</th>
+          <th onClick={this.handleSort.bind(null, 'poznamka')}>Poznámka</th>
+          <th onClick={this.handleSort.bind(null, 'prihlasovanie')}>Prihlasovanie</th>
+          <th onClick={this.handleSort.bind(null, 'odhlasovanie')}>Odhlasovanie</th>
+          <th onClick={this.handleSort.bind(null, 'hodnotenie_terminu')}>Hodnotenie termínu</th>
+          <th onClick={this.handleSort.bind(null, 'hodnotenie_predmetu')}>Hodnotenie predmetu</th>
           {/* TODO <th>Odhlás</th> */}
           {/* TODO <th>Známka</th> */}
         </tr>
@@ -52,12 +69,21 @@ Votr.MojeSkuskyPageContent = React.createClass({
             <td>{termin.poznamka}</td>
             <td>{termin.prihlasovanie}</td>
             <td>{termin.odhlasovanie}</td>
+            <td>{termin.hodnotenie_terminu}</td>
+            <td>{termin.hodnotenie_predmetu}</td>
             {/* TODO Odhlás */}
             {/* TODO Známka */}
           </tr>
         )}
       </tbody>
     </table>;
+  },
+
+  handleSort: function(sortKey) {
+    var update = {};
+    update['sortBy'] = sortKey;
+    this.setState(update);
+    
   },
 
   render: function () {
