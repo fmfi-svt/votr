@@ -5,9 +5,7 @@
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
 // TODO: Prihlas/odhlas
-// TODO: Znamka (priradena / nepriradena k terminu)
 // TODO: Zoznam prihlasenych (modal?)
-// TODO: Sorting
 
 Votr.MojeSkuskyPageContent = React.createClass({
   propTypes: {
@@ -16,8 +14,9 @@ Votr.MojeSkuskyPageContent = React.createClass({
 
   getInitialState: function() {
     return {
-      currentDirection: 'asc',
-      sortBy: 'nazov_predmetu'
+      sortBy: 'nazov_predmetu',
+      sortType: 'string',
+      sorted: []
     }
   },
 
@@ -31,9 +30,16 @@ Votr.MojeSkuskyPageContent = React.createClass({
     }
 
     var sortKey = this.state.sortBy;
+    var sortType = this.state.sortType;
+    var sorted = this.state.sorted;
     terminy.sort(function(a, b) {
         a = a[sortKey];
         b = b[sortKey];
+        if(sorted[sortKey] == 'dsc')
+          b = [a, a = b][0];
+
+        if(sortType == 'date')
+          return (new Date(a.substring(6, 10), a.substring(3, 5), a.substring(0, 2)) - new Date(b.substring(6, 10), b.substring(3, 5), b.substring(0, 2)));
 
         return a < b ? -1 : (a > b ? 1 : 0);
     });
@@ -42,7 +48,7 @@ Votr.MojeSkuskyPageContent = React.createClass({
       <thead>
         <tr>
           <th onClick={this.handleSort.bind(null, 'nazov_predmetu')}>Predmet</th>
-          <th onClick={this.handleSort.bind(null, 'datum')}>Dátum</th>
+          <th onClick={this.handleSort.bind(null, 'datum', 'date')}>Dátum</th>
           <th onClick={this.handleSort.bind(null, 'cas')}>Čas</th>
           <th onClick={this.handleSort.bind(null, 'miestnost')}>Miestnosť</th>
           <th onClick={this.handleSort.bind(null, 'hodnotiaci')}>Hodnotiaci</th>
@@ -53,7 +59,6 @@ Votr.MojeSkuskyPageContent = React.createClass({
           <th onClick={this.handleSort.bind(null, 'hodnotenie_terminu')}>Hodnotenie termínu</th>
           <th onClick={this.handleSort.bind(null, 'hodnotenie_predmetu')}>Hodnotenie predmetu</th>
           {/* TODO <th>Odhlás</th> */}
-          {/* TODO <th>Známka</th> */}
         </tr>
       </thead>
       <tbody>
@@ -72,18 +77,19 @@ Votr.MojeSkuskyPageContent = React.createClass({
             <td>{termin.hodnotenie_terminu}</td>
             <td>{termin.hodnotenie_predmetu}</td>
             {/* TODO Odhlás */}
-            {/* TODO Známka */}
           </tr>
         )}
       </tbody>
     </table>;
   },
 
-  handleSort: function(sortKey) {
+  handleSort: function(sortKey, type) {
     var update = {};
     update['sortBy'] = sortKey;
-    this.setState(update);
-    
+    update['sorted'] = this.state.sorted;
+    update['sorted'][sortKey] = (update['sorted'][sortKey] != 'asc') ? 'asc' : 'dsc';
+    update['sortType'] = type;
+    this.setState(update);   
   },
 
   render: function () {
