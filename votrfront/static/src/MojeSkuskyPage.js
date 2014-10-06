@@ -15,7 +15,6 @@ Votr.MojeSkuskyPageContent = React.createClass({
   getInitialState: function() {
     return {
       sortBy: 'nazov_predmetu',
-      sortType: 'string',
       sorted: []
     }
   },
@@ -30,16 +29,18 @@ Votr.MojeSkuskyPageContent = React.createClass({
     }
 
     var sortKey = this.state.sortBy;
-    var sortType = this.state.sortType;
     var sorted = this.state.sorted;
     terminy.sort(function(a, b) {
         a = a[sortKey];
         b = b[sortKey];
+
         if(sorted[sortKey] == 'dsc')
           b = [a, a = b][0];
 
-        if(sortType == 'date')
-          return (new Date(a.substring(6, 10), a.substring(3, 5), a.substring(0, 2)) - new Date(b.substring(6, 10), b.substring(3, 5), b.substring(0, 2)));
+        if(sortKey == 'datum') {
+           a = new Date(a.substring(6, 10), a.substring(3, 5), a.substring(0, 2));
+           b = new Date(b.substring(6, 10), b.substring(3, 5), b.substring(0, 2));
+        }
 
         return a < b ? -1 : (a > b ? 1 : 0);
     });
@@ -47,17 +48,17 @@ Votr.MojeSkuskyPageContent = React.createClass({
     return <table>
       <thead>
         <tr>
-          <th onClick={this.handleSort.bind(null, 'nazov_predmetu')}>Predmet</th>
-          <th onClick={this.handleSort.bind(null, 'datum', 'date')}>Dátum</th>
-          <th onClick={this.handleSort.bind(null, 'cas')}>Čas</th>
-          <th onClick={this.handleSort.bind(null, 'miestnost')}>Miestnosť</th>
-          <th onClick={this.handleSort.bind(null, 'hodnotiaci')}>Hodnotiaci</th>
-          <th onClick={this.handleSort.bind(null, 'pocet_prihlasenych')}>Prihlásení</th>
-          <th onClick={this.handleSort.bind(null, 'poznamka')}>Poznámka</th>
-          <th onClick={this.handleSort.bind(null, 'prihlasovanie')}>Prihlasovanie</th>
-          <th onClick={this.handleSort.bind(null, 'odhlasovanie')}>Odhlasovanie</th>
-          <th onClick={this.handleSort.bind(null, 'hodnotenie_terminu')}>Hodnotenie termínu</th>
-          <th onClick={this.handleSort.bind(null, 'hodnotenie_predmetu')}>Hodnotenie predmetu</th>
+          <th onClick={this.handleSort.bind(null, 'nazov_predmetu')}>Predmet {this.getOrder('nazov_predmetu')}</th>
+          <th onClick={this.handleSort.bind(null, 'datum')}>Dátum {this.getOrder('datum')}</th>
+          <th onClick={this.handleSort.bind(null, 'cas')}>Čas {this.getOrder('cas')}</th>
+          <th onClick={this.handleSort.bind(null, 'miestnost')}>Miestnosť {this.getOrder('miestnost')}</th>
+          <th onClick={this.handleSort.bind(null, 'hodnotiaci')}>Hodnotiaci {this.getOrder('hodnotiaci')}</th>
+          <th onClick={this.handleSort.bind(null, 'pocet_prihlasenych')}>Prihlásení {this.getOrder('pocet_prihlasenych')}</th>
+          <th onClick={this.handleSort.bind(null, 'poznamka')}>Poznámka {this.getOrder('poznamka')}</th>
+          <th onClick={this.handleSort.bind(null, 'prihlasovanie')}>Prihlasovanie {this.getOrder('prihlasovanie')}</th>
+          <th onClick={this.handleSort.bind(null, 'odhlasovanie')}>Odhlasovanie {this.getOrder('odhlasovanie')}</th>
+          <th onClick={this.handleSort.bind(null, 'hodnotenie_terminu')}>Hodnotenie termínu {this.getOrder('hodnotenie_terminu')}</th>
+          <th onClick={this.handleSort.bind(null, 'hodnotenie_predmetu')}>Hodnotenie predmetu {this.getOrder('hodnotenie_predmetu')}</th>
           {/* TODO <th>Odhlás</th> */}
         </tr>
       </thead>
@@ -83,12 +84,19 @@ Votr.MojeSkuskyPageContent = React.createClass({
     </table>;
   },
 
-  handleSort: function(sortKey, type) {
+  getOrder: function(sortKey) {
+    if(typeof this.state.sorted[sortKey] === 'undefined')
+      return null;
+    if(this.state.sorted[sortKey] === 'asc')
+      return <span className="ascending"></span>;
+    return <span className="descending"></span>;
+  },
+
+  handleSort: function(sortKey) {
     var update = {};
     update['sortBy'] = sortKey;
     update['sorted'] = this.state.sorted;
     update['sorted'][sortKey] = (update['sorted'][sortKey] != 'asc') ? 'asc' : 'dsc';
-    update['sortType'] = type;
     this.setState(update);   
   },
 
