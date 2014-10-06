@@ -57,8 +57,7 @@ Votr.MojeSkuskyPageContent = React.createClass({
           <th onClick={this.handleSort.bind(null, 'poznamka')}>Poznámka {this.getOrder('poznamka')}</th>
           <th onClick={this.handleSort.bind(null, 'prihlasovanie')}>Prihlasovanie {this.getOrder('prihlasovanie')}</th>
           <th onClick={this.handleSort.bind(null, 'odhlasovanie')}>Odhlasovanie {this.getOrder('odhlasovanie')}</th>
-          <th onClick={this.handleSort.bind(null, 'hodnotenie_terminu')}>Hodnotenie termínu {this.getOrder('hodnotenie_terminu')}</th>
-          <th onClick={this.handleSort.bind(null, 'hodnotenie_predmetu')}>Hodnotenie predmetu {this.getOrder('hodnotenie_predmetu')}</th>
+          <th onClick={this.handleSort.bind(null, 'hodnotenie_predmetu')}>Známka {this.getOrder('hodnotenie_predmetu')}</th>
           {/* TODO <th>Odhlás</th> */}
         </tr>
       </thead>
@@ -75,8 +74,8 @@ Votr.MojeSkuskyPageContent = React.createClass({
             <td>{termin.poznamka}</td>
             <td>{termin.prihlasovanie}</td>
             <td>{termin.odhlasovanie}</td>
-            <td>{termin.hodnotenie_terminu}</td>
-            <td>{termin.hodnotenie_predmetu}</td>
+            <td>{termin.hodnotenie_terminu || termin.hodnotenie_predmetu}
+                {(termin.hodnotenie_terminu != '') || (termin.hodnotenie_predmetu == '' || ' (nepriradená k termínu)')}</td>
             {/* TODO Odhlás */}
           </tr>
         )}
