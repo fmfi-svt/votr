@@ -53,11 +53,11 @@ Votr.MainMenu = React.createClass({
     var {studiumKey, zapisnyListKey} = this.props.query;
 
     return <ul className="main-menu">
-      <li><strong>Moje predmety</strong></li>
-      <li><del>Prehľad</del></li>
+      <li><strong>Moje štúdium</strong></li>
+      <li><del>Prehľad štúdia</del></li>
       {this.renderMenuItem("Moje predmety", { action: 'mojePredmety', studiumKey, zapisnyListKey })}
       {this.renderMenuItem("Moje skúšky", { action: 'mojeSkusky', studiumKey, zapisnyListKey })}
-      <li><del>Moje hodnotenia</del></li>
+      {this.renderMenuItem("Moje hodnotenia", { action: 'mojeHodnotenia', studiumKey })}
       <li><del>Môj rozvrh</del></li>
       <li><strong>Register</strong></li>
       <li><del>Register osôb</del></li>
