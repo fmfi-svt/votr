@@ -48,6 +48,8 @@ class WebuiTerminyMixin:
                          poznamka=row['poznamka'],
                          skratka_predmetu=row['predmetSkratka'],
                          nazov_predmetu=row['predmetNazov'],
+                         hodnotenie_terminu=row['znamka'],
+                         hodnotenie_predmetu=row['hodnPredmetu'],
                          moznost_prihlasit=row['moznostPrihlasenia'])
                   for row in app.d.terminyTable.all_rows()
                   if not row['datumOdhlas']]

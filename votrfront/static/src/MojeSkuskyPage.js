@@ -35,8 +35,8 @@ Votr.MojeSkuskyPageContent = React.createClass({
           <th>Poznámka</th>
           <th>Prihlasovanie</th>
           <th>Odhlasovanie</th>
+          <th>Známka</th>
           {/* TODO <th>Odhlás</th> */}
-          {/* TODO <th>Známka</th> */}
         </tr>
       </thead>
       <tbody>
@@ -52,8 +52,12 @@ Votr.MojeSkuskyPageContent = React.createClass({
             <td>{termin.poznamka}</td>
             <td>{termin.prihlasovanie}</td>
             <td>{termin.odhlasovanie}</td>
+            <td>
+              {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
+               termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
+               null}
+            </td>
             {/* TODO Odhlás */}
-            {/* TODO Známka */}
           </tr>
         )}
       </tbody>
