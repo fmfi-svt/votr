@@ -5,8 +5,6 @@
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
 // TODO: Prihlas/odhlas
-// TODO: Znamka (priradena / nepriradena k terminu)
-// TODO: Zoznam prihlasenych (modal?)
 // TODO: Sorting
 
 Votr.MojeSkuskyPageContent = React.createClass({
@@ -47,8 +45,10 @@ Votr.MojeSkuskyPageContent = React.createClass({
             <td>{termin.cas}</td>
             <td>{termin.miestnost}</td>
             <td>{termin.hodnotiaci}</td>
-            <td>{termin.pocet_prihlasenych +
-                 (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}</td>
+            <td><Votr.Link href={_.assign({}, this.props.query, { action: 'zoznamPrihlasenychNaTermin', predmetKey: termin.skratka_predmetu, terminKey: termin.key })}>
+              {termin.pocet_prihlasenych + 
+               (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
+            </Votr.Link></td>
             <td>{termin.poznamka}</td>
             <td>{termin.prihlasovanie}</td>
             <td>{termin.odhlasovanie}</td>

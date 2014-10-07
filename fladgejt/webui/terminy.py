@@ -123,12 +123,39 @@ class WebuiTerminyMixin:
     @with_key_args(True, True, True, True)
     def get_prihlaseni_studenti(self, studium_key, zapisny_list_key, predmet_key, termin_key):
         app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
-        predmet_row = self.__select_predmet_row(app, predmet_key)
+
+        self.__vyber_oba_semestre(app)
+        self.__select_predmet_row(app, predmet_key)
+
+        datum, cas, miestnost, poznamka = termin_key
+
+        app.d.zobrazitTerminyAction.execute()
+        try:
+            index = find_row(
+                app.d.terminyTable.all_rows(),
+                dat=datum, cas=cas, miestnosti=miestnost, poznamka=poznamka)
+        except KeyError:
+            index = None
+
+        # Ak sa pozerame na stary zapisny list, vyber_terminov_dialog
+        # bude disabled, preto termin musi byt v hlavnom dialogu.
+        if index is not None:
+            app.d.terminyTable.select(index)   
+            # Stlacime "Zobrazit zoznam prihlasenych".
+            with app.collect_operations() as ops:
+                app.d.zoznamPrihlasenychStudentovAction.execute()
+
+            return self.__process_prihlaseni_studenti_list(app, ops)
+        else:
+            return self.__get_prihlaseni_studenti_cez_vyber_terminu(app, termin_key)
+
+    def __get_prihlaseni_studenti_cez_vyber_terminu(self, app, termin_key):
         self.__open_vyber_terminu_dialog(app)
+
+        datum, cas, miestnost, poznamka = termin_key
 
         # Vyberieme spravny riadok. Ak v tabulke nie je, vypneme "Zobrazit len
         # aktualne terminy", stlacime nacitavaci button a skusime znovu.
-        datum, cas, miestnost, poznamka = termin_key
         try:
             index = find_row(
                 app.d.zoznamTerminovTable.all_rows(),
@@ -147,6 +174,18 @@ class WebuiTerminyMixin:
         with app.collect_operations() as ops:
             app.d.zobrazitZoznamPrihlasenychAction.execute()
 
+        result = self.__process_prihlaseni_studenti_list(app, ops)
+
+        # Stlacime zatvaraci button na zozname terminov.
+        with app.collect_operations() as ops:
+            app.d.click_close_button()
+
+        # Dialog sa zavrie.
+        app.awaited_close_dialog(ops)
+
+        return result
+
+    def __process_prihlaseni_studenti_list(self, app, ops):
         # Otvori sa zoznam prihlasenych.
         app.awaited_open_dialog(ops)
 
@@ -159,13 +198,6 @@ class WebuiTerminyMixin:
                   for row in app.d.prihlaseniTable.all_rows()]
 
         # Stlacime zatvaraci button na zozname prihlasenych.
-        with app.collect_operations() as ops:
-            app.d.click_close_button()
-
-        # Dialog sa zavrie.
-        app.awaited_close_dialog(ops)
-
-        # Stlacime zatvaraci button na zozname terminov.
         with app.collect_operations() as ops:
             app.d.click_close_button()
 
