@@ -10,8 +10,21 @@ var TYPY_VYUCBY = {
 };
 
 
-// TODO: Sorting
 // TODO: Pocet predmetov, sucet kreditov
+
+
+Votr.MojePredmetyColumns = [
+  ["Semester", 'semester', null, true],
+  ["Skratka", 'skratka'],
+  ["Názov predmetu", 'nazov'],
+  ["Kredit", 'kredit', Votr.sortAs.number],
+  ["Typ výučby", 'typ_vyucby'],
+  ["Hodnotenie", 'hodn_znamka'],
+  ["Dátum hodnotenia", 'hodn_datum', Votr.sortAs.date],
+  ["Termín hodnotenia", 'hodn_termin']
+];
+Votr.MojePredmetyColumns.defaultOrder = 'd0a2';
+
 
 Votr.MojePredmetyPageContent = React.createClass({
   propTypes: {
@@ -27,19 +40,11 @@ Votr.MojePredmetyPageContent = React.createClass({
       return <Votr.Loading requests={cache.missing} />;
     }
 
+    var [hodnotenia, header] = Votr.sortTable(
+      hodnotenia, Votr.MojePredmetyColumns, this.props.query, 'predmetySort');
+
     return <table>
-      <thead>
-        <tr>
-          <th>Semester</th>
-          <th>Skratka</th>
-          <th>Názov predmetu</th>
-          <th>Kredit</th>
-          <th>Typ výučby</th>
-          <th>Hodnotenie</th>
-          <th>Dátum hodnotenia</th>
-          <th>Termín hodnotenia</th>
-        </tr>
-      </thead>
+      <thead>{header}</thead>
       <tbody>
         {hodnotenia.map((hodnotenie) =>
           <tr key={hodnotenie.key} className={hodnotenie.semester == 'Z' ? 'zima' : 'leto'}>

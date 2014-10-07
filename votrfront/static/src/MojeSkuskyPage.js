@@ -5,7 +5,22 @@
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
 // TODO: Prihlas/odhlas
-// TODO: Sorting
+
+
+Votr.MojeSkuskyColumns = [
+  ["Predmet", 'nazov_predmetu'],
+  ["Dátum", 'datum', Votr.sortAs.date],
+  ["Čas", 'cas'],
+  ["Miestnosť", 'miestnost'],
+  ["Hodnotiaci", 'hodnotiaci', Votr.sortAs.personName],
+  ["Prihlásení", 'pocet_prihlasenych', Votr.sortAs.number],
+  ["Poznámka", 'poznamka'],
+  ["Prihlasovanie", 'prihlasovanie', Votr.sortAs.interval],
+  ["Odhlasovanie", 'odhlasovanie', Votr.sortAs.interval],
+  ["Známka", null, (termin) => termin.hodnotenie_terminu || termin.hodnotenie_predmetu]
+  // TODO: "Odhlás"
+];
+
 
 Votr.MojeSkuskyPageContent = React.createClass({
   propTypes: {
@@ -21,22 +36,11 @@ Votr.MojeSkuskyPageContent = React.createClass({
       return <Votr.Loading requests={cache.missing} />;
     }
 
+    var [terminy, header] = Votr.sortTable(
+      terminy, Votr.MojeSkuskyColumns, this.props.query, 'skuskySort');
+
     return <table>
-      <thead>
-        <tr>
-          <th>Predmet</th>
-          <th>Dátum</th>
-          <th>Čas</th>
-          <th>Miestnosť</th>
-          <th>Hodnotiaci</th>
-          <th>Prihlásení</th>
-          <th>Poznámka</th>
-          <th>Prihlasovanie</th>
-          <th>Odhlasovanie</th>
-          <th>Známka</th>
-          {/* TODO <th>Odhlás</th> */}
-        </tr>
-      </thead>
+      <thead>{header}</thead>
       <tbody>
         {terminy.map((termin) =>
           <tr key={termin.key}>

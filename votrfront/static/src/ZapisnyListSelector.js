@@ -3,14 +3,6 @@
 (function () {
 
 
-function dateToInteger(date) {
-  if (date == '') return 0;
-  if (!date.match(/^\d\d\.\d\d\.\d\d\d\d$/)) throw Error('Bad date format');
-  return parseInt(
-    date.substring(6, 10) + date.substring(3, 5) + date.substring(0, 2), 10);
-}
-
-
 function withKeys(oldQuery, studiumKey, zapisnyListKey) {
   return _.assign({}, oldQuery, { studiumKey, zapisnyListKey });
 }
@@ -30,8 +22,7 @@ Votr.ZapisnyListSelector = React.createClass({
     if (studia) studia.forEach((studium) => {
       var zapisneListy = cache.get('get_zapisne_listy', studium.key);
       if (zapisneListy) zapisneListy.forEach((zapisnyList) => {
-        var sortValue = dateToInteger(zapisnyList.datum_zapisu);
-        items.push({ studium, zapisnyList, sortValue });
+        items.push({ studium, zapisnyList });
       });
     });
 
@@ -70,7 +61,7 @@ Votr.ZapisnyListSelector = React.createClass({
     var query = this.props.query;
 
     if (!(query.studiumKey && query.zapisnyListKey) && cache.loadedAll && items.length) {
-      var mostRecentItem = _.max(items, 'sortValue');
+      var mostRecentItem = _.max(items, (item) => Votr.sortAs.date(item.zapisnyList.datum_zapisu));
       query = withKeys(query, mostRecentItem.studium.key, mostRecentItem.zapisnyList.key);
     }
 

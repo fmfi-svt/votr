@@ -2,6 +2,16 @@
 
 (function () {
 
+
+Votr.ZoznamPrihlasenychNaTerminColumns = [
+  ["Meno", 'plne_meno', Votr.sortAs.personName],
+  ["Študijný program", 'sp_skratka'],
+  ["Ročník", 'rocnik', Votr.sortAs.number],
+  ["E-mail", 'email'],
+  ["Dátum prihlásenia", 'datum_prihlasenia', Votr.sortAs.date]
+];
+
+
 Votr.ZoznamPrihlasenychNaTerminPageContent = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired
@@ -18,16 +28,12 @@ Votr.ZoznamPrihlasenychNaTerminPageContent = React.createClass({
       return <Votr.Loading requests={cache.missing} />;
     }
 
+    var [studenti, header] = Votr.sortTable(
+      studenti, Votr.ZoznamPrihlasenychNaTerminColumns,
+      this.props.query, 'studentiSort');
+
     return <table>
-      <thead>
-        <tr>
-          <th>Meno</th>
-          <th>Štúdijný program</th>
-          <th>Ročník</th>
-          <th>Email</th>
-          <th>Dátum prihlásenia</th>
-        </tr>
-      </thead>
+      <thead>{header}</thead>
       <tbody>
         {studenti.map((student, index) =>
           <tr key={index}>
@@ -49,6 +55,7 @@ Votr.ZoznamPrihlasenychNaTerminPageContent = React.createClass({
     </div>;
   }
 });
+
 
 Votr.ZoznamPrihlasenychNaTerminPage = React.createClass({
   propTypes: {
