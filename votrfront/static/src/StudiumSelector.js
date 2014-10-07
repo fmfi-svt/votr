@@ -5,14 +5,6 @@
 // TODO: Reduce code duplication with ZapisnyListSelector.
 
 
-function dateToInteger(date) {
-  if (date == '') return 0;
-  if (!date.match(/^\d\d\.\d\d\.\d\d\d\d$/)) throw Error('Bad date format');
-  return parseInt(
-    date.substring(6, 10) + date.substring(3, 5) + date.substring(0, 2), 10);
-}
-
-
 function withKeys(oldQuery, studiumKey) {
   return _.assign({}, oldQuery, { studiumKey });
 }
@@ -30,8 +22,7 @@ Votr.StudiumSelector = React.createClass({
     var items = [];
 
     if (studia) studia.forEach((studium) => {
-      var sortValue = dateToInteger(studium.zaciatok);
-      items.push({ studium, sortValue });
+      items.push({ studium });
     });
 
     return items;
@@ -69,7 +60,7 @@ Votr.StudiumSelector = React.createClass({
     var query = this.props.query;
 
     if (!query.studiumKey && cache.loadedAll && items.length) {
-      var mostRecentItem = _.max(items, 'sortValue');
+      var mostRecentItem = _.max(items, (item) => Votr.sortAs.date(item.studium.zaciatok));
       query = withKeys(query, mostRecentItem.studium.key);
     }
 

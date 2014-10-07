@@ -16,7 +16,7 @@ Votr.sortAs.personName = function (text) {
 
 
 Votr.sortAs.number = function (text) {
-  return +text;
+  return +text.replace(/,/g, '.');
   // TODO: this won't be needed when fladgejt starts returning numbers
 };
 

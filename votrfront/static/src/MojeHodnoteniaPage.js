@@ -10,7 +10,27 @@ var TYPY_VYUCBY = {
 };
 
 
-// TODO: Sorting
+Votr.MojeHodnoteniaColumns = [
+  ["Akademický rok", 'akademicky_rok']
+].concat(Votr.MojePredmetyColumns);
+Votr.MojeHodnoteniaColumns.defaultOrder = 'a0d1a3';
+
+
+Votr.MojePriemeryColumns = [
+  ["Akademický rok", 'akademicky_rok'],
+  ["Názov priemeru", 'nazov'],
+  ["Semester", 'semester', null, true],
+  ["Získaný kredit", 'ziskany_kredit', Votr.sortAs.number],
+  ["Celkový počet predmetov", 'predmetov', Votr.sortAs.number],
+  ["Počet neabsolvovaných predmetov", 'neabsolvovanych', Votr.sortAs.number],
+  ["Študijný priemer", 'studijny_priemer', Votr.sortAs.number],
+  ["Vážený priemer", 'vazeny_priemer', Votr.sortAs.number],
+  ["Priemer na koľký pokus", 'pokusy_priemer', Votr.sortAs.number],
+  ["Dátum výpočtu priemeru", 'datum_vypoctu', Votr.sortAs.date]
+];
+Votr.MojePriemeryColumns.defaultOrder = 'a9a0a1';
+
+
 // TODO: Pocet predmetov, sucet kreditov
 // TODO: Neoficialne priemery ala fajr
 
@@ -28,20 +48,11 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
       return <Votr.Loading requests={cache.missing} />;
     }
 
+    var [hodnotenia, header] = Votr.sortTable(
+      hodnotenia, Votr.MojeHodnoteniaColumns, this.props.query, 'predmetySort');
+
     return <table>
-      <thead>
-        <tr>
-          <th>Akademický rok</th>
-          <th>Semester</th>
-          <th>Skratka</th>
-          <th>Názov predmetu</th>
-          <th>Kredit</th>
-          <th>Typ výučby</th>
-          <th>Hodnotenie</th>
-          <th>Dátum hodnotenia</th>
-          <th>Termín hodnotenia</th>
-        </tr>
-      </thead>
+      <thead>{header}</thead>
       <tbody>
         {hodnotenia.map((hodnotenie) =>
           <tr key={hodnotenie.key} className={hodnotenie.semester == 'Z' ? 'zima' : 'leto'}>
@@ -73,31 +84,21 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
 
     if (zapisneListy) {
       var zapisnyListKey = _.max(zapisneListy,
-          (zapisnyList) => dateToInteger(zapisnyList.datum_zapisu)).key;
+          (zapisnyList) => Votr.sortAs.date(zapisnyList.datum_zapisu)).key;
       priemery = cache.get('get_priemery', studiumKey, zapisnyListKey);
     } else if (zapisneListy === []) {
       priemery = [];
     }
 
-    if (priemery === undefined) {
+    if (!priemery && priemery !== []) {
       return <Votr.Loading requests={cache.missing} />;
     }
 
+    var [priemery, header] = Votr.sortTable(
+      priemery, Votr.MojePriemeryColumns, this.props.query, 'priemerySort');
+
     return <table>
-      <thead>
-        <tr>
-          <th>Akademický rok</th>
-          <th>Názov priemeru</th>
-          <th>Semester</th>
-          <th>Získaný kredit</th>
-          <th>Celkový počet predmetov</th>
-          <th>Počet neabsolvovaných predmetov</th>
-          <th>Študijný priemer</th>
-          <th>Vážený priemer</th>
-          <th>Priemer na koľký pokus</th>
-          <th>Dátum výpočtu priemeru</th>
-        </tr>
-      </thead>
+      <thead>{header}</thead>
       <tbody>
         {priemery.map((priemer, index) =>
           <tr key={index}>
