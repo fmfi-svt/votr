@@ -18,6 +18,7 @@ from .progressbar import ProgressBar
 from .radiobox import RadioBox
 from .separator import Separator
 from .splitpane import SplitPane
+from .stackedpane import StackedPane
 from .tabbedpane import TabbedPane
 from .table import Table
 from .textarea import TextArea
@@ -53,6 +54,7 @@ component_classes = {
     'radioGroup': TODO,
     'separator': Separator,
     'splitPane': SplitPane,
+    'stackedPane': StackedPane,
     'tabbedPane': TabbedPane,
     'table': Table,
     'textArea': TextArea,

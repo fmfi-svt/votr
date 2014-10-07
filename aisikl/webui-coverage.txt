@@ -619,7 +619,7 @@ COMPLETE
 - getTabId() -> self.tab_id
 - getTitle(), setTitle() -> self.title (`_ais_setTitle()` is inherited)
 - blur()
-    - The call to componentChanges() might be TODO.
+    - The call to componentChanges() might be TODO. (Ditto in StackedPane.)
 - getAutoscrolls() -> self.autoscrolls
 - getOverflowed(), setOverflowed()
     - Removed. We should add `_ais_setOverflowed()` no-op if webui uses it.
@@ -652,6 +652,15 @@ COMPLETE
 
 orientation and lastDividerLocation are UNSUPPORTED. This makes everything else
 IRRELEVANT, including fireUIChangesEvent() and changedProperties().
+
+
+
+# StackedPane
+
+COMPLETE
+
+Documentation is TODO, because this file currently covers webui.js as of AIS
+version 2.4.111.66, and StackedPane is from 2.4.209.62.
 
 
 
