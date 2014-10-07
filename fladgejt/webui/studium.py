@@ -53,8 +53,13 @@ class WebuiStudiumMixin:
 
         # Vyberieme studium a stlacime nacitavaci button (sipku dole).
         if app.d.studiaTable.selected_row_indexes != [studium_index] or len(app.d.zapisneListyTable.all_rows()) == 0:
-            app.d.studiaTable.select(studium_index)
-            app.d.nacitatButton.click()
+            with app.collect_operations() as ops:
+                app.d.studiaTable.select(studium_index)
+            app.awaited_refresh_dialog(ops)
+
+            with app.collect_operations() as ops:
+                app.d.nacitatButton.click()
+            app.awaited_refresh_dialog(ops)
 
     def __vyber_zapisny_list(self, app, studium_key, zapisny_list_key):
         # Ak este nie je vybrate spravne studium, vyberieme ho.

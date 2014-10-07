@@ -20,7 +20,7 @@ known_operations = {
     'webui': { 'serverCloseApplication', 'closeApplication', 'messageBox',
                'confirmBox', 'fileUpload', 'fileXUpload', 'editDoc',
                'abortBox', 'shellExec', 'showHelp', 'startApp' },
-    'dm': { 'openMainDialog', 'openDialog', 'closeDialog' },
+    'dm': { 'openMainDialog', 'openDialog', 'closeDialog', 'refreshDialog' },
 }
 
 
@@ -483,6 +483,18 @@ class Application:
 
         return dialog
 
+    def refresh_dialog(self, name):
+        dialog = self.dialogs[name]
+
+        self.ctx.log('operation', 'Refreshing dialog {} "{}"'.format(
+            dialog.name, dialog.title))
+
+        url = ('/ais/servlets/WebUIServlet?appId={}&form={}&antiCache={}'.
+            format(self.app_id, dialog.name, time.time()))
+        dialog._init(url)
+        # TODO: Document refresh_dialog in webui-coverage.txt when we update
+        # it to the current version of webui.js.
+
     def close_dialog(self, name, is_native=False):
         '''Closes a dialog in response to the closeDialog :class:`Operation`.
 
@@ -566,6 +578,15 @@ class Application:
         '''
         assert_ops(ops, 'openMainDialog')
         return self.open_main_dialog(*ops[0].args)
+
+    def awaited_refresh_dialog(self, ops):
+        '''Combines :func:`assert_ops` and :meth:`refresh_dialog` in one step.
+
+        If ``ops`` really contains a single refreshDialog :class:`Operation` as
+        expected, refreshes the dialog. Throws otherwise.
+        '''
+        assert_ops(ops, 'refreshDialog')
+        return self.refresh_dialog(*ops[0].args)
 
     def awaited_close_dialog(self, ops):
         '''Combines :func:`assert_ops` and :meth:`close_dialog` in one step.

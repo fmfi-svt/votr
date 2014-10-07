@@ -51,6 +51,9 @@ class Dialog:
         if body.get('jsct') != 'body' or body.get('id') != self.name:
             raise AISParseError("Unexpected dialog body response")
 
+        self.components = {}
+        self.changed_components = None
+
         for element in dialog_soup.find_all(jsct=True):
             if element.get('isTemporary') == 'true': continue
             id = element['id']
@@ -68,14 +71,12 @@ class Dialog:
 
             self.components[id] = component
 
-            if hasattr(self, id):
-                raise Exception(
-                    'Component id conflicts with Dialog attribute: %r' % id)
-                # If this ever becomes a problem, we can simply skip the
-                # setattr. But for now, let's keep component access consistent.
-            setattr(self, id, component)
-
         self.body = self.components[self.name]
+
+    def __getattr__(self, name):
+        if 'components' in self.__dict__ and name in self.components:
+            return self.components[name]
+        raise AttributeError(name)
 
     def changed_properties(self):
         '''Return the <changedProperties> string for this dialog.'''
