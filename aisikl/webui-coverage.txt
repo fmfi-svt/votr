@@ -98,6 +98,9 @@ which does a type conversion and sets the attribute.
 - getComponentType() -> self.jsct
 - getState(), setState()
     - STATE_DT is UNSUPPORTED, whatever it's supposed to be.
+    - Some AIS components have state 0, despite there being no difference
+      between 0 and 1 (the default). Webui only ever checks if it's equal to
+      STATE_DT.
 - getUsedListenersMask(), setUsedListenersMask() -> self.used_listeners_mask
 - getEnabled(), setEnabled() -> self.enabled
 - getEnabledInUI(), setEnabledInUI() -> self.enabled_in_ui

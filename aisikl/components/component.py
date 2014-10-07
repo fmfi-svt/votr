@@ -17,9 +17,8 @@ class Component:
         self.title = element.get('_title')
         self.popup_menu = element.get('popupmenu')
 
-        if element.get('state', '1') != '1':
+        if int(element.get('state', '1')) == 2:
             raise AISParseError('STATE_DT is not supported')
-        self.state = 1
 
         parent = element.find_parent(jsct=True)
         self.parent_id = parent['id'] if parent else None
@@ -35,7 +34,7 @@ class Component:
         return self.enabled and self.enabled_in_ui
 
     def _ais_setState(self, value):
-        if value != '1': raise AISParseError('STATE_DT is not supported')
+        if int(value) == 2: raise AISParseError('STATE_DT is not supported')
     def _ais_setUsedListenersMask(self, value):
         self.used_listeners_mask = int(value)
     def _ais_setEnabled(self, value):
