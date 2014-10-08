@@ -38,10 +38,15 @@ class Context:
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
         :return: a :class:`~BeautifulSoup` object.
         '''
+        self.log('http', 'Requesting {} {}'.format(
+            method, url.partition('?')[0]), url)
         url = urljoin(self.ais_url, url)
         response = self.connection.request(method, url, **kwargs)
         response.raise_for_status()
-        return BeautifulSoup(response.text)
+        self.log('http', 'Received response', response.text)
+        soup = BeautifulSoup(response.text)
+        self.log('http', 'Parsed HTML data')
+        return soup
 
     def request_json(self, url, **data):
         '''Sends a request to REST API and parses the response as JSON.
@@ -51,9 +56,12 @@ class Context:
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
         :return: a dictionary.
         '''
+        self.log('http', 'Requesting {} {}'.format(
+            method, url.partition('?')[0]), url)
         url = urljoin(self.rest_url, url)
         response = self.connection.request("POST", url, data=data)
         response.raise_for_status()
+        self.log('http', 'Received response', response.text)
 
         if not response.url.startswith(self.rest_url):
             raise LoggedOutError('REST login expired.')
@@ -63,6 +71,7 @@ class Context:
             raise RESTServerError(
                 "Status: {status} Error: {error}".format(**response))
 
+        self.log('http', 'Parsed JSON data')
         return response['response']
 
     def log(self, type, message, data=None):

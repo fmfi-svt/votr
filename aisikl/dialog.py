@@ -43,9 +43,7 @@ class Dialog:
 
         Called from :meth:`aisikl.app.Application.open_dialog`.
         '''
-        self.app.ctx.log('http', 'Sending dialog body request', url)
         dialog_soup = self.app.ctx.request_html(url)
-        self.app.ctx.log('http', 'Received response', str(dialog_soup))
 
         body = dialog_soup.body
         if body.get('jsct') != 'body' or body.get('id') != self.name:
@@ -72,6 +70,8 @@ class Dialog:
             self.components[id] = component
 
         self.body = self.components[self.name]
+
+        self.app.ctx.log('operation', 'Finished loading {}'.format(self.name))
 
     def __getattr__(self, name):
         if 'components' in self.__dict__ and name in self.components:
