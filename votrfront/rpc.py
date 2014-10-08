@@ -30,10 +30,19 @@ def encode_result(thing):
 def rpc_handle_call(request, session):
     name = request.args['name']
     args = json.loads(request.get_data(as_text=True))
-    method = getattr(session['client'], name)
+    log = session['client'].context.log
 
-    args = decode_args(method, args)
-    return encode_result(method(*args))
+    log('rpc', 'RPC {} started'.format(name), args)
+    try:
+        method = getattr(session['client'], name)
+        args = decode_args(method, args)
+        result = encode_result(method(*args))
+    except Exception as e:
+        log('rpc', 'RPC {} failed with {}'.format(name, type(e).__name__),
+            traceback.format_exc())
+        raise
+    log('rpc', 'RPC {} finished'.format(name), result)
+    return result
 
 
 def rpc_handle_sessions(request, send_json):
