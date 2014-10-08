@@ -11,6 +11,9 @@ Votr.PageLayout = React.createClass({
   render: function () {
     return <div className="page">
       <h1>Votr</h1>
+      {_.last(Votr.logs, 5).map((entry, index) =>
+        <div key={index}><code>[{entry.log}] {entry.message}</code></div>
+      )}
       <Votr.MainMenu query={this.props.query} />
       <div className="content">
         {this.props.children}

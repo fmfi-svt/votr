@@ -20,6 +20,7 @@ Votr.sendRpc = function (name, args, callback) {
       var payload = xhr.responseText.substr(processed + HEADER_LENGTH, length);
       var data = JSON.parse(payload);
       console.log('RECEIVED', data);
+      if (data.log !== undefined) Votr.logs.push(data);
       if (data.result !== undefined) result = data.result;
       if (data.error !== undefined) return fail(data.error);
       processed += HEADER_LENGTH + length;
@@ -33,6 +34,7 @@ Votr.sendRpc = function (name, args, callback) {
         callback(result);
       }
     }
+    Votr.appRoot.forceUpdate();
   }
 
   function fail(e) {
@@ -53,6 +55,9 @@ Votr.sendRpc = function (name, args, callback) {
 }
 
 
+Votr.logs = [];
+
+
 Votr.RequestCache = {};
 
 Votr.RequestCache.pending = {};
@@ -64,7 +69,6 @@ Votr.RequestCache.sendRequest = function (request) {
   Votr.RequestCache.pending[cacheKey] = true;
   Votr.sendRpc(request[0], request.slice(1), function (result) {
     Votr.RequestCache[cacheKey] = result;
-    Votr.appRoot.forceUpdate();
   });
 };
 
