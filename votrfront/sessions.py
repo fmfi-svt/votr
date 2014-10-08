@@ -65,3 +65,16 @@ def transaction(request, sessid=None):
         f.seek(0)
         f.truncate(0)
         f.write(new_content)
+
+
+@contextlib.contextmanager
+def logged_transaction(request, sessid=None):
+    if not sessid: sessid = get_cookie(request)
+
+    with transaction(request, sessid) as session:
+        log_filename = os.path.join(request.app.settings.log_path, sessid)
+        with open(log_filename, 'a') as log_file:
+            client = session.get('client')
+            if client: client.context.log_file = log_file
+            yield session
+            if client: del client.context.log_file

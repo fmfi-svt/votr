@@ -49,16 +49,16 @@ def rpc_handle_sessions(request, send_json):
     if not sessions.get_cookie(request):
         raise ValueError('Session cookie not found')
 
-    def custom_log(type, message, data=None):
-        send_json({ 'log': type, 'message': message })
-        # TODO: also write to log file.
-
-    with sessions.transaction(request) as session:
+    with sessions.logged_transaction(request) as session:
         if request.headers.get('X-CSRF-Token') != session['csrf_token']:
             raise ValueError('Bad X-CSRF-Token value')
-        session['client'].context.log = custom_log
+
+        def send_log(timestamp, type, message, data):
+            send_json({ 'log': type, 'message': message, 'time': timestamp })
+
+        session['client'].context.send_log = send_log
         result = rpc_handle_call(request, session)
-        del session['client'].context.log
+        del session['client'].context.send_log
 
     return result
 

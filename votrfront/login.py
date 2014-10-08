@@ -10,7 +10,7 @@ from .front import app_response
 
 def do_logout(request):
     try:
-        with sessions.transaction(request) as session:
+        with sessions.logged_transaction(request) as session:
             session['client'].logout()
     except Exception:
         pass
@@ -81,7 +81,7 @@ def reset(request):
     credentials = None
 
     try:
-        with sessions.transaction(request) as session:
+        with sessions.logged_transaction(request) as session:
             credentials = session['credentials']
     except Exception:
         pass

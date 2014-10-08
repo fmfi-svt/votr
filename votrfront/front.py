@@ -44,7 +44,7 @@ def front(request):
         return app_response(request)
 
     try:
-        with sessions.transaction(request) as session:
+        with sessions.logged_transaction(request) as session:
             csrf_token = session['csrf_token']
             session['client'].check_connection()
     except Exception:

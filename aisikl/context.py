@@ -1,5 +1,6 @@
 
 from bs4 import BeautifulSoup
+import time
 import json
 import requests
 from urllib.parse import urljoin
@@ -18,6 +19,14 @@ class Context:
         cookies: A dictionary of initial cookies.
         ais_url: The AIS server to connect to, e.g. "https://ais2.uniba.sk/".
         rest_url: The REST server to connect to
+
+    Attributes:
+        send_log: A function that will be called with (timestamp, type,
+            message, data) for every log entry. Used to send JSON logs to the
+            client during a RPC request.
+        log_file: A file to write log entries to. Used when this Context is
+            part of a votrfront session.
+        print_logs: Set to True to print log entries to the console.
     '''
 
     # TODO: Make sure this class is pickle-able.
@@ -74,6 +83,10 @@ class Context:
         self.log('http', 'Parsed JSON data')
         return response['response']
 
+    log_file = None
+    send_log = None
+    print_logs = False
+
     def log(self, type, message, data=None):
         '''Logs a message.
 
@@ -82,9 +95,17 @@ class Context:
             message: The log message. Should be a single line.
             data: A JSON-serializable object containing more details.
         '''
-        # For now, just print it.
-        print('\033[1;36m{} \033[1;33m{} \033[0m{}'.format(
-            type, message, '' if data is None else json.dumps(data)))
+        timestamp = time.time()
+
+        if self.log_file:
+            self.log_file.write(json.dumps([timestamp, type, message, data],
+                                           ensure_ascii=False) + '\n')
+
+        if self.send_log:
+            self.send_log(timestamp, type, message, data)
+        elif self.print_logs:
+            print('\033[1;36m{} \033[1;33m{} \033[0m{}'.format(
+                type, message, '' if data is None else json.dumps(data)))
 
 
 try:
@@ -95,13 +116,12 @@ else:
     from urllib.parse import quote
     from jinja2 import Markup
     from IPython.display import display, HTML
-    from base64 import b64encode
 
     def data_link(title, content):
         return Markup(' <a href="{}" target="_blank">{}</a>').format(
             'data:text/plain;charset=UTF-8,' + quote(content), title)
 
-    def ipython_log(self, type, message, data=None):
+    def ipython_log(self, timestamp, type, message, data):
         parts = []
         parts.append(Markup('<span style="background:#FF8">'))
         parts.append(Markup('<b>{}</b> {}').format(type, message))
@@ -112,5 +132,5 @@ else:
         parts.append(Markup('</span>'))
         display(HTML(''.join(parts)))
 
-    Context.log = ipython_log
+    Context.send_log = ipython_log
     # TODO: Do not use HTML logs when running command line ipython.
