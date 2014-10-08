@@ -42,7 +42,6 @@ Votr.sortTable = function (items, columns, query, queryKey) {
   var orderLength = order.length;
   var orderAsc = order.map((orderItem) => orderItem.substring(0, 1) == 'a');
   var orderColumns = order.map((orderItem) => columns[orderItem.substring(1)]);
-  console.log(order, orderAsc, orderColumns);
 
   items = items.map((item, index) => {
     var criteria = [];
