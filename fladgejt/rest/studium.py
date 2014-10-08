@@ -1,9 +1,15 @@
 
 from fladgejt.helpers import with_key_args
-from fladgejt.structures import Studium, ZapisnyList
+from fladgejt.structures import Studium, ZapisnyList, UserInfo
 
 
 class RestStudiumMixin:
+    def get_user_info(self):
+        info = self.context.request_json('/')
+
+        return UserInfo(login=info['userName'],
+                        plne_meno=info['pouzivatel']['osoba']['plneMeno'])
+
     def get_studia(self):
         studia = self.context.request_json('/studium')
 

@@ -3,7 +3,7 @@
 from aisikl.app import Application, assert_ops
 from aisikl.exceptions import AISBehaviorError
 from fladgejt.helpers import find_row, find_option, with_key_args
-from fladgejt.structures import Studium, ZapisnyList, Hodnotenie
+from fladgejt.structures import Studium, ZapisnyList, Hodnotenie, UserInfo
 from fladgejt.webui.pool import pooled_app
 
 
@@ -14,6 +14,28 @@ class WebuiStudiumMixin:
         app, ops = Application.open(self.context, url)
         app.awaited_open_main_dialog(ops)
         return app
+
+    def get_user_info(self):
+        app = self._open_administracia_studia()
+
+        # Stlacime tlacidlo "informacie o prihlaseni".
+        with app.collect_operations() as ops:
+            app.d.infoAction.execute()
+
+        # Otvori sa novy dialog.
+        app.awaited_open_dialog(ops)
+
+        login = app.d.loginTextField.value
+        plne_meno = app.d.fullNameTextField.value
+
+        # Stlacime zatvaraci button.
+        with app.collect_operations() as ops:
+            app.d.click_close_button()
+
+        # Dialog sa zavrie.
+        app.awaited_close_dialog(ops)
+
+        return UserInfo(login=login, plne_meno=plne_meno)
 
     def get_studia(self):
         app = self._open_administracia_studia()

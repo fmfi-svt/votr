@@ -14,11 +14,26 @@ Votr.PageLayout = React.createClass({
       {_.last(Votr.logs, 5).map((entry, index) =>
         <div key={index}><code>[{entry.log}] {entry.message}</code></div>
       )}
+      <Votr.UserFullName />
       <Votr.MainMenu query={this.props.query} />
       <div className="content">
         {this.props.children}
       </div>
     </div>;
+  }
+});
+
+
+Votr.UserFullName = React.createClass({
+  render: function () {
+    var cache = new Votr.CacheRequester();
+    var userInfo = cache.get('get_user_info');
+
+    if (!userInfo) {
+      return <Votr.Loading requests={cache.missing} />;
+    }
+
+    return <p>{userInfo.plne_meno}</p>;
   }
 });
 

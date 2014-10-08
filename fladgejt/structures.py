@@ -38,3 +38,5 @@ PrihlasenyStudent = namedtuple('PrihlasenyStudent', [
     'sp_skratka', 'datum_prihlasenia', 'plne_meno', 'rocnik', 'email'])
 
 Obdobie = namedtuple('Obdobie', ['obdobie_od', 'obdobie_do', 'id_akcie'])
+
+UserInfo = namedtuple('UserInfo', ['login', 'plne_meno'])
