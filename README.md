@@ -18,20 +18,8 @@ Quick start:
 
     virtualenv -p python3 venv
     source venv/bin/activate
-    pip install beautifulsoup4 requests
-    export AIS_COOKIE="your cosign-filter cookie value"
-    python test1.py
-
-Running the Votrfront web server:
-
-    pip install werkzeug
-    mkdir -p sessions logs
-    export AIS_COOKIE="your cosign-filter cookie value"
-    ./votrfront/buildstatic.sh
+    pip install beautifulsoup4 requests werkzeug lxml
     ./console.py serve --debug
-
-    # In another terminal:
-    ./votrfront/buildstatic.sh watch
 
 Running IPython notebooks:
 
