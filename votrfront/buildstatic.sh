@@ -8,6 +8,7 @@ cd "$(dirname "$0")"
 if [ "$1" == "build" ] || [ "$1" == "" ]; then
 
   mkdir -p static/build/
+  rm -f static/build/ok
 
   if ! [ -f static/build/jquery.js ]; then
     npm install jquery@^1
@@ -29,6 +30,22 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   fi
 
   ./node_modules/.bin/jsx --harmony static/src/ static/build/
+
+  (
+    echo jquery.js
+    echo react.js
+    echo lodash.js
+    python jsdeps.py main.js
+  ) > static/build/jsdeps-dev
+
+  (
+    echo jquery.min.js
+    echo react.min.js
+    echo lodash.min.js
+    python jsdeps.py main.js
+  ) > static/build/jsdeps-prod
+
+  touch static/build/ok
 
 elif [ "$1" == "clean" ]; then
 

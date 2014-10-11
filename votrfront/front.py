@@ -1,13 +1,13 @@
 
+import os
 import json
 import traceback
 from werkzeug.routing import Rule
 from werkzeug.wrappers import Response
 from . import sessions
-from .jsdeps import order_dependencies
 
 
-content = '''
+template = '''
 <!DOCTYPE html>
 <meta charset="UTF-8">
 <title>Votr</title>
@@ -18,9 +18,7 @@ content = '''
 '''.lstrip()
 # TODO: add some nice noscript content for search engines etc.
 
-libs = ['jquery.min.js', 'react.min.js', 'lodash.min.js']
-for script in libs + order_dependencies('main.js'):
-    content += '<script src="static/build/{}"></script>\n'.format(script)
+build_path = os.path.join(os.path.dirname(__file__), 'static/build/')
 
 
 def app_response(request, **my_data):
@@ -28,11 +26,18 @@ def app_response(request, **my_data):
     if 'csrf_token' not in my_data:
         my_data['servers'] = request.app.settings.servers
 
-    my_content = content.replace('/*INSERT*/',
+    if not os.path.exists(build_path + 'ok'):
+        return Response('buildstatic failed!', status=500)
+
+    is_debug = request.cookies.get('votr_debug')
+    with open(build_path + ('jsdeps-dev' if is_debug else 'jsdeps-prod')) as f:
+        scripts = f.read().split()
+
+    content = template.replace('/*INSERT*/',
         'Votr = ' + json.dumps({ 'settings': my_data }).replace('</', '<\\/'))
-    if request.cookies.get('votr_debug'):
-        my_content = my_content.replace('.min.js', '.js')
-    return Response(my_content, content_type='text/html; charset=UTF-8')
+    for script in scripts:
+        content += '<script src="static/build/{}"></script>\n'.format(script)
+    return Response(content, content_type='text/html; charset=UTF-8')
 
 
 def front(request):
