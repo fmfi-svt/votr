@@ -9,10 +9,6 @@ var TYPY_VYUCBY = {
   'C': 'C - výberové'
 };
 
-
-// TODO: Pocet predmetov, sucet kreditov
-
-
 Votr.MojePredmetyColumns = [
   ["Semester", 'semester', null, true],
   ["Skratka", 'skratka'],
@@ -43,6 +39,8 @@ Votr.MojePredmetyPageContent = React.createClass({
     var [hodnotenia, header] = Votr.sortTable(
       hodnotenia, Votr.MojePredmetyColumns, this.props.query, 'predmetySort');
 
+    var coursesStats = Votr.coursesStats(hodnotenia);
+
     return <table>
       <thead>{header}</thead>
       <tbody>
@@ -63,6 +61,16 @@ Votr.MojePredmetyPageContent = React.createClass({
           </tr>
         )}
       </tbody>
+      <tfoot>
+          <tr>
+            <td colSpan="3">Celkom {coursesStats.spolu.count} predmetov ({coursesStats.zima.count} v zime, {coursesStats.leto.count} v lete)</td>
+            <td>{coursesStats.spolu.creditsCount} ({coursesStats.zima.creditsCount}+{coursesStats.leto.creditsCount})</td>
+            <td></td>
+            <td>{Votr.renderWeightedStudyAverage(hodnotenia)}</td>
+            <td></td>
+            <td></td>
+          </tr>
+      </tfoot>
     </table>;
   },
 

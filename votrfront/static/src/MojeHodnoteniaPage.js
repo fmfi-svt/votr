@@ -31,9 +31,6 @@ Votr.MojePriemeryColumns = [
 Votr.MojePriemeryColumns.defaultOrder = 'a9a0a1';
 
 
-// TODO: Pocet predmetov, sucet kreditov
-// TODO: Neoficialne priemery ala fajr
-
 Votr.MojeHodnoteniaPageContent = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired
@@ -50,6 +47,8 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
 
     var [hodnotenia, header] = Votr.sortTable(
       hodnotenia, Votr.MojeHodnoteniaColumns, this.props.query, 'predmetySort');
+
+    var coursesStats = Votr.coursesStats(hodnotenia);
 
     return <table>
       <thead>{header}</thead>
@@ -72,6 +71,16 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
           </tr>
         )}
       </tbody>
+      <tfoot>
+          <tr>
+            <td colSpan="4">Celkom {coursesStats.spolu.count} predmetov</td>
+            <td>{coursesStats.spolu.creditsCount}</td>
+            <td></td>
+            <td>{Votr.renderWeightedStudyAverage(hodnotenia)}</td>
+            <td></td>
+            <td></td>
+          </tr>
+      </tfoot>
     </table>;
   },
 
