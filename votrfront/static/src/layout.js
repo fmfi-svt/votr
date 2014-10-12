@@ -55,8 +55,11 @@ Votr.MainMenu = React.createClass({
   render: function () {
     var {studiumKey, zapisnyListKey} = this.props.query;
 
+    var cache = new Votr.CacheRequester();
+    var menoUzivatela = cache.get('get_meno_uzivatela');
+
     return <ul className="main-menu">
-      <li><strong>Moje štúdium</strong></li>
+      <li><strong>Moje štúdium - {menoUzivatela ? menoUzivatela : <Votr.Loading requests={cache.missing} />}</strong></li>
       <li><del>Prehľad štúdia</del></li>
       {this.renderMenuItem("Moje predmety", { action: 'mojePredmety', studiumKey, zapisnyListKey })}
       {this.renderMenuItem("Moje skúšky", { action: 'mojeSkusky', studiumKey, zapisnyListKey })}
