@@ -22,7 +22,7 @@ PredmetRegistra = keyed_namedtuple('PredmetRegistra', [
     'rozsah_vyucby', 'semester', 'kredit', 'key'],
     ['skratka'])
 
-Hodnotenie = namedtuple('Hodnotenie', [
+Hodnotenie = keyed_namedtuple('Hodnotenie', [
     'akademicky_rok', 'skratka', 'nazov', 'typ_vyucby', 'semester', 'kredit',
     'hodn_znamka', 'hodn_termin', 'hodn_datum', 'hodn_znamka_popis', 'key'],
     ['skratka'])

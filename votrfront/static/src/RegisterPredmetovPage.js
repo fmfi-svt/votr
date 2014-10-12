@@ -2,6 +2,18 @@
 
 (function () {
 
+Votr.RegisterPredmetovColumns = [
+  ["Názov predmetu", 'nazov'],
+  ["Fakulta", 'fakulta'],
+  ["Stredisko", 'stredisko'],
+  ["Skratka predmetu", 'skratka'],
+  ["Rozsah výučby", 'rozsah_vyucby'],
+  ["Semester", 'semester'],
+  ["Počet kreditov", 'kredit', Votr.sortAs.number],
+  ["Konanie", 'konanie']
+];
+Votr.RegisterPredmetovColumns.defaultOrder = 'a0';
+
 
 Votr.RegisterPredmetovForm = React.createClass({
   getInitialState: function () {
@@ -143,30 +155,27 @@ Votr.RegisterPredmetovResultTable = React.createClass({
     
     var [rows, message] = response;
 
+    var [rows, header] = Votr.sortTable(
+      rows, Votr.RegisterPredmetovColumns, this.props.query, 'predmetySort');
+
     return <div>
         <div>{message}</div>
         <table>
-          <tr>
-            <th>Názov predmetu</th>
-            <th>Fakulta</th>
-            <th>Stredisko</th>
-            <th>Skratka predmetu</th>
-            <th>Typ výučby</th>
-            <th>Semester</th>
-            <th>Počet kreditov</th>
-            <th>Konanie</th>
-          </tr>
-          { rows.map((predmet) =>         
-          <tr key={predmet.skratka}>
-            <td>{predmet.nazov}</td>
-            <td>{predmet.fakulta}</td>
-            <td>{predmet.stredisko}</td>
-            <td>{predmet.skratka}</td>
-            <td>{predmet.rozsah_vyucby}</td>
-            <td>{predmet.semester}</td>
-            <td>{predmet.kredit}</td>
-            <td>{predmet.konanie}</td>
-          </tr> )}
+          <thead>{header}</thead>
+          <tbody>
+            {rows.map((predmet) =>         
+              <tr key={predmet.skratka}>
+                <td>{predmet.nazov}</td>
+                <td>{predmet.fakulta}</td>
+                <td>{predmet.stredisko}</td>
+                <td>{predmet.skratka}</td>
+                <td>{predmet.rozsah_vyucby}</td>
+                <td>{predmet.semester}</td>
+                <td>{predmet.kredit}</td>
+                <td>{predmet.konanie}</td>
+              </tr>
+            )}
+          </tbody>
         </table>
     </div>;
   }
