@@ -17,7 +17,7 @@ Votr.actions = {
   mojeHodnotenia: Votr.MojeHodnoteniaPage,
   mojePredmety: Votr.MojePredmetyPage,
   mojeSkusky: Votr.MojeSkuskyPage,
-  zoznamPrihlasenychNaTermin: Votr.ZoznamPrihlasenychNaTerminPage
+  zoznamPrihlasenychNaTermin: Votr.ZoznamPrihlasenychNaTerminPage,
   registerPredmetov: Votr.RegisterPredmetovPage
 };
 

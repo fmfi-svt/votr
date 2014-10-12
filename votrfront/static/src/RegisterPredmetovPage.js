@@ -5,11 +5,17 @@
 
 Votr.RegisterPredmetovForm = React.createClass({
   getInitialState: function () {
+    var query = this.props.query
+
     return {
-      stredisko: '',
-      studijnyProgramSkratka: '',
-      skratkaPredmetu: '',
-      nazovPredmetu: ''
+      fakulta: query.fakulta || '',
+      stredisko: query.stredisko || '',
+      studijnyProgramSkratka: query.studijnyProgramSkratka || '',
+      skratkaPredmetu: query.skratkaPredmetu || '',
+      nazovPredmetu: query.nazovPredmetu || '',
+      akademickyRok: query.akademickyRok || '',
+      semester: query.semester || '',
+      stupen: query.stupen || ''
     };
   },
 
@@ -71,8 +77,8 @@ Votr.RegisterPredmetovForm = React.createClass({
         <label>
           {"Akademický rok: "}
           {rocniky ?
-            <select name="akademickyRok" value={this.state.akademickyRok} onChange={this.handleFieldChange}>
-              {rocniky.map((rocnik) =>
+            <select name="akademickyRok" value={this.state.akademickyRok != '' ? this.state.akademickyRok : rocniky[1].id} onChange={this.handleFieldChange}>
+              {rocniky[0].map((rocnik) =>
                 <option key={rocnik.id} value={rocnik.id}>{rocnik.title}</option>
               )}
             </select> : <Votr.Loading requests={cache.missing} />}
@@ -142,18 +148,24 @@ Votr.RegisterPredmetovResultTable = React.createClass({
         <table>
           <tr>
             <th>Názov predmetu</th>
+            <th>Fakulta</th>
+            <th>Stredisko</th>
             <th>Skratka predmetu</th>
             <th>Typ výučby</th>
             <th>Semester</th>
             <th>Počet kreditov</th>
+            <th>Konanie</th>
           </tr>
-          { rows.map((predmet) =>
+          { rows.map((predmet) =>         
           <tr key={predmet.skratka}>
             <td>{predmet.nazov}</td>
+            <td>{predmet.fakulta}</td>
+            <td>{predmet.stredisko}</td>
             <td>{predmet.skratka}</td>
-            <td>{predmet.typ_vyucby}</td>
+            <td>{predmet.rozsah_vyucby}</td>
             <td>{predmet.semester}</td>
             <td>{predmet.kredit}</td>
+            <td>{predmet.konanie}</td>
           </tr> )}
         </table>
     </div>;

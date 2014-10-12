@@ -235,7 +235,7 @@ class WebuiPredmetyMixin:
         app = self._open_register_predmetov()
         self.__prepare_dialog()
 
-        return [app.d.akRokComboBox.options, app.d.akRokComboBox.selected_option()]
+        return [app.d.akRokComboBox.options, app.d.akRokComboBox.selected_option]
 
     def get_register_predmetov_semester_options(self):
         app = self._open_register_predmetov()
