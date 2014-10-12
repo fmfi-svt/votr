@@ -100,13 +100,22 @@ Votr.LoginForm = React.createClass({
       {currentType == 'cosigncookie' &&
         <div>
           {/* TODO: Detailed instructions for cosigncookie. */}
-          <p>
-            <label>
-              {"Hodnota cookie " + serverConfig.ais_cookie + ": "}
-              <input name="cookie" value={this.state.cookie}
-                     onChange={this.handleFieldChange} />
-            </label>
-          </p>
+          {serverConfig.ais_cookie &&
+            <p>
+              <label>
+                {"Hodnota cookie " + serverConfig.ais_cookie + ": "}
+                <input name="ais_cookie" value={this.state.ais_cookie}
+                       onChange={this.handleFieldChange} />
+              </label>
+            </p>}
+          {serverConfig.rest_cookie &&
+            <p>
+              <label>
+                {"Hodnota cookie " + serverConfig.rest_cookie + ": "}
+                <input name="rest_cookie" value={this.state.rest_cookie}
+                       onChange={this.handleFieldChange} />
+              </label>
+            </p>}
         </div>}
 
       <button type="submit" className="btn btn-lg btn-primary center-block">Prihlásiť</button>

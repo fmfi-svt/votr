@@ -65,8 +65,8 @@ class Context:
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
         :return: a dictionary.
         '''
-        self.log('http', 'Requesting {} {}'.format(
-            method, url.partition('?')[0]), url)
+        self.log('http', 'Requesting POST {}'.format(
+            url.partition('?')[0]), url)
         url = urljoin(self.rest_url, url)
         response = self.connection.request("POST", url, data=data)
         response.raise_for_status()

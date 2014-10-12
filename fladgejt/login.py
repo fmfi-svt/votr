@@ -2,6 +2,8 @@
 import os
 import requests
 from aisikl.context import Context
+from fladgejt.hybrid import HybridClient
+from fladgejt.rest import RestClient
 from fladgejt.webui import WebuiClient
 
 
@@ -20,16 +22,24 @@ def parse_cookie_string(cookie, cookie_name):
 
 def get_cosign_cookies(server, params):
     if params['type'] == 'cosignpassword':
-        data = {}
-        data['login'] = params['username']
-        data['password'] = params['password']
-        data['ref'] = server['ais_url'] + 'ais/login.do?'
+        if 'ais_url' in server:
+            url = server['ais_url'] + 'ais/login.do?'
+        else:
+            url = server['rest_url']
+
         s = requests.Session()
-        r = s.get(data['ref'])
-        r = s.post(r.url.partition('?')[0] + 'cosign.cgi', data=data)
-        name = server['ais_cookie']
-        value = s.cookies[name]
-        return { name: value }
+        r = s.get(url)
+        s.post(r.url.partition('?')[0] + 'cosign.cgi', data=dict(
+            login=params['username'], password=params['password'], ref=url))
+        if 'ais_url' in server and 'rest_url' in server:
+            s.get(server['rest_url'])
+
+        result = {}
+        if 'ais_url' in server:
+            result[server['ais_cookie']] = s.cookies[server['ais_cookie']]
+        if 'rest_url' in server:
+            result[server['rest_cookie']] = s.cookies[server['rest_cookie']]
+        return result
 
     if params['type'] == 'cosignproxy':
         # http://webapps.itcs.umich.edu/cosign/index.php/Using_Proxy_Cookies
@@ -44,9 +54,12 @@ def get_cosign_cookies(server, params):
         return result
 
     if params['type'] == 'cosigncookie':
-        name = server['ais_cookie']
-        value = parse_cookie_string(params['cookie'], name)
-        return { name: value }
+        result = {}
+        for key in ('ais_cookie', 'rest_cookie'):
+            if key not in server: continue
+            name = server[key]
+            result[name] = parse_cookie_string(params[key], name)
+        return result
 
     return {}
 
@@ -74,8 +87,17 @@ def create_client(server, params):
         if not (username_element and username_element.get_text()):
             raise Exception('AIS login unsuccessful.')
 
-    # Create the fladgejt client.
-    # TODO: Other client types, depending on keys present in server.
-    client = WebuiClient(ctx)
+    # Create the client.
+    if 'ais_url' in server and 'rest_url' in server:
+        client = HybridClient(ctx)
+    elif 'ais_url' in server:
+        client = WebuiClient(ctx)
+    elif 'rest_url' in server:
+        client = RestClient(ctx)
+    else:
+        raise Exception('Demo client is not supported')
+
+    # Check that login was successful.
+    client.check_connection()
 
     return client
