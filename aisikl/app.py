@@ -44,6 +44,7 @@ _useless_res = [
     re.compile(r'^if \(dm\(\)!=null\) \w+=dm\(\)\.getDialog\(\'\w+\'\)$'),
     re.compile(r'^if \(\w+!=null\) \w+=\w+\.getDialogContext\(\)$'),
     re.compile(r'^dm\(\)\.setActiveDialogName\(\'\w+\'\)$'),
+    re.compile(r'^\w+\.getDialogJSObject\(\)\.setFocusedComponent\("\w+"\)$'),
 ]
 _main_re = re.compile(r'^function main0?\(\) \{$')
 _operation_re = re.compile(r'^(webui|dm)\(\)\.(\w+)\((.*)\)$')

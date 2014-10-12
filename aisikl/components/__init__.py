@@ -23,6 +23,7 @@ from .tabbedpane import TabbedPane
 from .table import Table
 from .textarea import TextArea
 from .textfield import TextField
+from .tree import Tree
 from .updown import UpDown
 
 from .component import Component as TODO
@@ -59,7 +60,7 @@ component_classes = {
     'table': Table,
     'textArea': TextArea,
     'textField': TextField,
-    'tree': TODO,
+    'tree': Tree,
     'upDown': UpDown,
     'valueInteractive': TODO,
     'view': TODO,

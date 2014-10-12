@@ -158,7 +158,7 @@ class Table(Control):
 
         was_multiple_selection = len(self.selected_row_indexes) > 1
 
-        selection = [int(id) for id in element.get('selection', '').split(',')]
+        selection = [int(id) for id in element.get('selection', '').split(',') if id]
         if self.cell_selection_mode:
             selection = selection[0:1] if selection else [0]
         self.selected_row_indexes = selection

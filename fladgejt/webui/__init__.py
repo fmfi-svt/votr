@@ -5,10 +5,11 @@ from .predmety import WebuiPredmetyMixin
 from .studium import WebuiStudiumMixin
 from .terminy import WebuiTerminyMixin
 from .obdobia import WebuiObdobiaMixin
+from .ciselnik import WebuiCiselnikMixin
 
 
 class WebuiClient(WebuiHodnoteniaMixin, WebuiPredmetyMixin, WebuiStudiumMixin,
-                  WebuiTerminyMixin, WebuiObdobiaMixin):
+                  WebuiTerminyMixin, WebuiObdobiaMixin, WebuiCiselnikMixin):
     def __init__(self, context):
         self.context = context
 
