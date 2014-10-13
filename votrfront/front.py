@@ -11,7 +11,7 @@ template = '''
 <!DOCTYPE html>
 <meta charset="UTF-8">
 <title>Votr</title>
-<link rel="stylesheet" type="text/css" href="static/style.css">
+<link rel="stylesheet" type="text/css" href="static/build/style.css">
 <div id="votr"></div>
 <noscript>JavaScript required.</noscript>
 <script>/*INSERT*/</script>

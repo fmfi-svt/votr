@@ -37,6 +37,8 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
 
   ./node_modules/.bin/jsx --harmony static/src/ static/build/
 
+  sassc -s compressed css/main.scss static/build/style.css
+
   (
     echo jquery.js
     echo react.js

@@ -12,13 +12,14 @@ logic and knows where to find which buttons and tables. And **Aisikl** does the
 actual communication by sending HTTP requests with fake mouse clicks and screen
 scraping the responses from WebUI (the framework AIS is based on).
 
-You will need Python 3 (with virtualenv) and Node.js (with npm).
+You will need Python 3 (with virtualenv and python3-dev headers) and Node.js
+(with npm).
 
 Quick start:
 
     virtualenv -p python3 venv
     source venv/bin/activate
-    pip install beautifulsoup4 requests werkzeug lxml
+    pip install beautifulsoup4 requests werkzeug lxml libsass
     ./console.py serve --debug
 
 Sourcing `activate` adds `venv/bin` to your PATH. You could also directly call

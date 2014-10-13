@@ -7,7 +7,7 @@ import time
 
 
 votrfront_path = os.path.dirname(__file__) or '.'
-src_path = votrfront_path + '/static/src/'
+watch_paths = ['buildstatic.sh', 'static/src', 'css']
 
 
 def build():
@@ -19,6 +19,15 @@ def build():
           ' * buildstatic.sh ended successfully', file=sys.stderr)
 
 
+def walk(root):
+    if os.path.isfile(root):
+        yield root
+    if os.path.isdir(root):
+        for dirpath, dirnames, filenames in os.walk(root):
+            for filename in filenames:
+                yield os.path.join(dirpath, filename)
+
+
 def watch(interval=1):
     last_build = time.time()
     build()
@@ -26,16 +35,14 @@ def watch(interval=1):
     while True:
         modified_files = []
 
-        for dirpath, dirnames, filenames in os.walk(src_path):
-            for filename in filenames:
-                full_path = os.path.join(dirpath, filename)
+        for root in watch_paths:
+            for filename in walk(os.path.join(votrfront_path, root)):
                 try:
-                    mtime = os.stat(full_path).st_mtime
+                    mtime = os.stat(filename).st_mtime
+                    if mtime > last_build:
+                        modified_files.append(filename)
                 except OSError:
                     continue
-
-                if mtime > last_build:
-                    modified_files.append(full_path)
 
         if modified_files:
             print(' * Detected change in {}, rebuilding static'.format(
