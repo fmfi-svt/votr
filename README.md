@@ -19,7 +19,7 @@ Quick start:
 
     virtualenv -p python3 venv
     source venv/bin/activate
-    pip install beautifulsoup4 requests werkzeug lxml libsass
+    pip install -r requirements.txt
     ./console.py serve --debug
 
 Sourcing `activate` adds `venv/bin` to your PATH. You could also directly call
