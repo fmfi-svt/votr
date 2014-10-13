@@ -29,8 +29,8 @@ if (Votr.settings.error) {
   var el = document.getElementById('votr');
   $('<h1/>').text('Error').appendTo(el);
   $('<pre/>').text(Votr.settings.error).appendTo(el);
-  // TODO HARDRESET button
-  // TODO LOGOUT button
+  $('<a href="#" onClick="Votr.goReset()">Reset</a>').appendTo(el);
+  $('<a href="#" onClick="Votr.goLogout()">Odhlásiť</a>').appendTo(el);
   return;
 }
 

@@ -52,7 +52,14 @@ Votr.MainMenu = React.createClass({
     </li>;
   },
 
-  render: function () {
+  renderPersonalMenu: function() {
+    return <ul className="personal-menu">
+      <li><strong>Osobné menu</strong></li>
+      <li><a href="#" onClick={Votr.goLogout}>Odhlásiť</a></li>
+    </ul>;
+  },
+
+  renderMainMenu: function() {
     var {studiumKey, zapisnyListKey} = this.props.query;
 
     return <ul className="main-menu">
@@ -68,6 +75,11 @@ Votr.MainMenu = React.createClass({
       <li><del>Register miestností</del></li>
       <li><del>Register študijných programov</del></li>
     </ul>;
+  },
+
+  render: function () {
+    return <div>{this.renderPersonalMenu()}
+      {this.renderMainMenu()}</div>;
   }
 });
 
