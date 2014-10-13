@@ -55,8 +55,7 @@ Votr.MainMenu = React.createClass({
   renderPersonalMenu: function() {
     return <ul className="personal-menu">
       <li><strong>Osobné menu</strong></li>
-      <li><a href="/" onClick={Votr.goLogout}>Logout</a></li>
-      <li><a href="/" onClick={Votr.goReset}>Reset</a></li>
+      <li><a href="#" onClick={Votr.goLogout}>Odhlásiť</a></li>
     </ul>;
   },
 
