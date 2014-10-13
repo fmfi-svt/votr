@@ -11,7 +11,10 @@ src_path = votrfront_path + '/static/src/'
 
 
 def build():
-    returncode = subprocess.call(['./buildstatic.sh'], cwd=votrfront_path)
+    command = ['./buildstatic.sh']
+    if hasattr(sys, 'real_prefix'):
+        command.append('--env=' + sys.prefix)
+    returncode = subprocess.call(command, cwd=votrfront_path)
     print(' * buildstatic.sh failed' if returncode else
           ' * buildstatic.sh ended successfully', file=sys.stderr)
 

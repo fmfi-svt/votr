@@ -1,6 +1,12 @@
 #!/bin/bash
 
 set -e
+
+if [ "${1:0:6}" == "--env=" ]; then
+  source "${1:6}/bin/activate"
+  shift
+fi
+
 cd "$(dirname "$0")"
 
 ! [ -w "$HOME" ] && echo "HOME is not writable" && exit 1
@@ -52,6 +58,6 @@ elif [ "$1" == "clean" ]; then
   rm -rf node_modules static/build
 
 else
-  echo "usage: $0 [build|clean]"
+  echo "usage: $0 [--env=path/to/venv] [build|clean]"
   exit 1
 fi

@@ -21,6 +21,9 @@ Quick start:
     pip install beautifulsoup4 requests werkzeug lxml
     ./console.py serve --debug
 
+Sourcing `activate` adds `venv/bin` to your PATH. You could also directly call
+`venv/bin/pip ...` and `venv/bin/python console.py ...` instead.
+
 Running IPython notebooks:
 
     pip install ipython[all]
