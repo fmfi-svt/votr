@@ -1,49 +1,83 @@
 
+$uniba-color: #B3231B;
+$brand-primary: $uniba-color;
+$link-color: $uniba-color;
+
+$font-size-base: 13px;
+$font-family-monospace: 9pt monospace;
+
+$code-color: #333;   // $text-color
+$code-bg: #F5F5F5;
+
+$nav-link-padding: 8px 13px;
+
+$navbar-inverse-bg: #535250;
+$navbar-inverse-color: #ADADAD;
+$navbar-inverse-link-color: #ADADAD;
+
+$table-condensed-cell-padding: 4px;
+
+
+@import "votr-bootstrap";
+@import "layout";
+
+
 html {
   overflow-y: scroll;
   position: relative;
   height: 100%;
 }
 
-body {
-  font: 10pt Arial, sans-serif;
-  margin: 3.5em 0.7em 4em 0.7em;
-}
-
-a, .fakelink {
-  color: #00A;
-  cursor: pointer;
+a {
   text-decoration: underline;
 }
-a:hover, .fakelink:hover {
-  color: #00E;
+
+.nav a {
+  text-decoration: none;
 }
 
-pre {
-  margin: 0;
-  padding: 0;
+.nav .disabled a {
+  text-decoration: line-through !important;
+  cursor: auto !important;
 }
 
-pre, code {
-  font: 9pt monospace;
-}
-
-.clearfix:before,
-.clearfix:after {
-  content: "";
-  display: table;
-}
-.clearfix:after {
-  clear: both;
-}
-.clearfix {
-  zoom: 1; /* IE 6/7 */
-}
-
-.active {
+.navbar-brand {
+  text-decoration: none;
   font-weight: bold;
 }
 
-.main-menu del {
-  color: gray;
+.text-pill {
+  position: relative;
+  display: block;
+  padding: $nav-link-padding;
+}
+
+.selector {
+  background: $gray-lighter;
+  padding: 3px;
+  border-radius: $border-radius-large;
+  display: inline-block;
+
+  li a:hover, li a:focus {
+    background-color: #ddd;
+  }
+  .text-pill {
+    color: $gray-light;
+  }
+}
+
+.table-bordered {
+  th, td {
+    border-left-style: none !important;
+    border-right-style: none !important;
+  }
+}
+
+.login-page {
+  max-width: 30em;
+  padding: 15px;
+  margin: auto;
+  input, select {
+    font-weight: normal;
+  }
 }

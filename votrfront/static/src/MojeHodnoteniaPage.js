@@ -50,7 +50,7 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
 
     var coursesStats = Votr.coursesStats(hodnotenia);
 
-    return <table>
+    return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
         {hodnotenia.map((hodnotenie) =>
@@ -106,7 +106,7 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
     var [priemery, header] = Votr.sortTable(
       priemery, Votr.MojePriemeryColumns, this.props.query, 'priemerySort');
 
-    return <table>
+    return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
         {priemery.map((priemer, index) =>

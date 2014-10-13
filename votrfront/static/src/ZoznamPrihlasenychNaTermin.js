@@ -32,7 +32,7 @@ Votr.ZoznamPrihlasenychNaTerminPageContent = React.createClass({
       studenti, Votr.ZoznamPrihlasenychNaTerminColumns,
       this.props.query, 'studentiSort');
 
-    return <table>
+    return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
         {studenti.map((student, index) =>

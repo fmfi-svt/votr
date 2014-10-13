@@ -39,7 +39,7 @@ Votr.MojeSkuskyPageContent = React.createClass({
     var [terminy, header] = Votr.sortTable(
       terminy, Votr.MojeSkuskyColumns, this.props.query, 'skuskySort');
 
-    return <table>
+    return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
         {terminy.map((termin) =>

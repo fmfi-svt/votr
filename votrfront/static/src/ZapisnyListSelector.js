@@ -30,19 +30,23 @@ Votr.ZapisnyListSelector = React.createClass({
   },
 
   renderSelector: function (cache, items, query) {
-    return <div className="selector">
+    return <ul className="nav nav-pills selector">
+      <li><span className="text-pill">Zápisný list:</span></li>
       {items.map((item) => {
         var { studium, zapisnyList } = item;
         var key = studium.key + '.' + zapisnyList.key;
         var active = studium.key == query.studiumKey && zapisnyList.key == query.zapisnyListKey;
-        return <div key={key} className={active ? "active" : ""}>
+        return <li key={key} className={active ? "active" : ""}>
           <Votr.Link href={withKeys(query, studium.key, zapisnyList.key)}>
             {zapisnyList.akademicky_rok} {zapisnyList.sp_skratka}
           </Votr.Link>
-        </div>;
+        </li>;
       })}
-      {cache.loadedAll ? null : <Votr.Loading requests={cache.missing} />}
-    </div>;
+      {cache.loadedAll ? null :
+        <li><span className="text-pill">
+          <Votr.Loading requests={cache.missing} />
+        </span></li>}
+    </ul>;
   },
 
   renderPage: function (cache, items, query) {

@@ -41,7 +41,7 @@ Votr.MojePredmetyPageContent = React.createClass({
 
     var coursesStats = Votr.coursesStats(hodnotenia);
 
-    return <table>
+    return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
         {hodnotenia.map((hodnotenie) =>

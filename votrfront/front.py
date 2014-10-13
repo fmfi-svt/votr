@@ -10,6 +10,7 @@ from . import sessions
 template = '''
 <!DOCTYPE html>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Votr</title>
 <link rel="stylesheet" type="text/css" href="static/build/style.css">
 <div id="votr"></div>

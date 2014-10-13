@@ -35,9 +35,15 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     npm install react-tools@^0.11
   fi
 
+  if ! [ -d node_modules/bootstrap-sass ]; then
+    npm install bootstrap-sass@^3.2
+  fi
+
   ./node_modules/.bin/jsx --harmony static/src/ static/build/
 
-  sassc -s compressed css/main.scss static/build/style.css
+  sassc -I node_modules/bootstrap-sass/assets/stylesheets \
+      -s compressed \
+      css/main.scss static/build/style.css
 
   (
     echo jquery.js

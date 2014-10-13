@@ -9,14 +9,34 @@ Votr.PageLayout = React.createClass({
   },
 
   render: function () {
-    return <div className="page">
-      <h1>Votr</h1>
-      {_.last(Votr.logs, 5).map((entry, index) =>
-        <div key={index}><code>[{entry.log}] {entry.message}</code></div>
-      )}
-      <Votr.MainMenu query={this.props.query} />
-      <div className="content">
-        {this.props.children}
+    return <div>
+      <Votr.PageNavbar />
+      <div className="layout-container">
+        <div className="layout-menu">
+          <Votr.MainMenu query={this.props.query} />
+        </div>
+        <div className="layout-content">
+          <div className="container-fluid">
+            {this.props.children}
+          </div>
+        </div>
+      </div>
+    </div>;
+  }
+});
+
+
+Votr.PageNavbar = React.createClass({
+  render: function () {
+    return <div className="navbar navbar-inverse navbar-static-top">
+      <div className="container-fluid">
+        <div className="navbar-header">
+          <Votr.Link className="navbar-brand" href={{}}>Votr</Votr.Link>
+        </div>
+        <div className="navbar-left">
+        </div>
+        <div className="navbar-right">
+        </div>
       </div>
     </div>;
   }
@@ -45,28 +65,31 @@ Votr.MainMenu = React.createClass({
 
   renderMenuItem: function (content, href) {
     var isActive = href.action == this.props.query.action;
-    return <li>
-      <Votr.Link href={href} className={isActive ? 'active' : null}>
-        {content}
-      </Votr.Link>
+    return <li className={isActive ? 'active' : null}>
+      <Votr.Link href={href}>{content}</Votr.Link>
     </li>;
+  },
+
+  renderDisabled: function (content) {
+    return <li className="disabled"><a>{content}</a></li>;
   },
 
   render: function () {
     var {studiumKey, zapisnyListKey} = this.props.query;
 
-    return <ul className="main-menu">
-      <li><strong>Moje štúdium</strong></li>
-      <li><del>Prehľad štúdia</del></li>
+    return <ul className="main-menu nav nav-pills nav-stacked">
+      <li><strong className="text-pill">Moje štúdium</strong></li>
+      {this.renderDisabled("Prehľad štúdia")}
       {this.renderMenuItem("Moje predmety", { action: 'mojePredmety', studiumKey, zapisnyListKey })}
       {this.renderMenuItem("Moje skúšky", { action: 'mojeSkusky', studiumKey, zapisnyListKey })}
       {this.renderMenuItem("Moje hodnotenia", { action: 'mojeHodnotenia', studiumKey })}
-      <li><del>Môj rozvrh</del></li>
-      <li><strong>Register</strong></li>
-      <li><del>Register osôb</del></li>
-      <li><del>Register predmetov</del></li>
-      <li><del>Register miestností</del></li>
-      <li><del>Register študijných programov</del></li>
+      {this.renderDisabled("Môj rozvrh")}
+      <li><hr/></li>
+      <li><strong className="text-pill">Register</strong></li>
+      {this.renderDisabled("Register osôb")}
+      {this.renderDisabled("Register predmetov")}
+      {this.renderDisabled("Register miestností")}
+      {this.renderDisabled("Register študijných programov")}
     </ul>;
   }
 });

@@ -6,7 +6,7 @@
 Votr.TestPage = React.createClass({
   render: function () {
     return <Votr.PageLayout query={this.props.query}>
-      <p>Action is: "{this.props.query.action}"</p>
+      <p></p>
     </Votr.PageLayout>
   }
 });

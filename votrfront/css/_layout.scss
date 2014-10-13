@@ -1,0 +1,41 @@
+
+$menu-width: 200px;
+
+@media (min-width: $screen-md-min) {
+  .layout-container {
+    position: relative;
+    padding-left: $menu-width;
+    @include clearfix();
+  }
+  .layout-menu {
+    float: left;
+    margin-left: -$menu-width;
+    width: $menu-width;
+    padding: 0 5px;
+  }
+  .layout-menu:after {
+    content: " ";
+    position: absolute;
+    z-index: -1;
+    left: 0;
+    top: 0;
+    width: $menu-width;
+    height: 100%;
+    border-right: solid $hr-border 1px;
+  }
+  .layout-content {
+    // We float .layout-content too, so that it has its own "block formatting
+    // context" and using "clear: both" inside it won't clear the layout-menu.
+    float: left;
+    width: 100%;
+
+    padding-bottom: 2em;
+  }
+}
+
+@media (max-width: $screen-sm-max) {
+  .layout-menu {
+    padding: 15px;
+    max-width: 2 * $menu-width;
+  }
+}
