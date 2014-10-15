@@ -73,7 +73,7 @@ def logged_transaction(request, sessid=None):
 
     with transaction(request, sessid) as session:
         log_filename = os.path.join(request.app.settings.log_path, sessid)
-        with open(log_filename, 'a') as log_file:
+        with open(log_filename, 'a', encoding='utf8') as log_file:
             client = session.get('client')
             if client: client.context.log_file = log_file
             yield session
