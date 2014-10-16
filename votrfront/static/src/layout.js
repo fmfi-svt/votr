@@ -36,6 +36,10 @@ Votr.PageNavbar = React.createClass({
         <div className="navbar-left">
         </div>
         <div className="navbar-right">
+          <ul className="nav navbar-nav">
+            <li><Votr.FakeLink onClick={Votr.goReset} title="Znovu načítať všetky dáta">Obnoviť</Votr.FakeLink></li>
+            <li><Votr.FakeLink onClick={Votr.goLogout}>Odhlásiť</Votr.FakeLink></li>
+          </ul>
         </div>
       </div>
     </div>;
