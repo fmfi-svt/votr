@@ -83,4 +83,30 @@ Votr.Link = React.createClass({
 });
 
 
+// Looks and acts like a link, but doesn't have a href and cannot be opened in
+// a new tab when middle-clicked or ctrl-clicked.
+Votr.FakeLink = React.createClass({
+  propTypes: {
+    onClick: React.PropTypes.func.isRequired
+  },
+
+  // Pressing Enter on <a href=...> emits a click event, and the HTML5 spec
+  // says elements with tabindex should do that too, but they don't.
+  // <http://www.w3.org/TR/WCAG20-TECHS/SCR29> suggests using a keyup event:
+  handleKeyUp: function (event) {
+    if (event.which == 13) {
+      event.preventDefault();
+      this.props.onClick(event);
+    }
+  },
+
+  render: function () {
+    return this.transferPropsTo(
+        <a onKeyUp={this.handleKeyUp} tabIndex="0" role="button">
+          {this.props.children}
+        </a>);
+  }
+});
+
+
 })();
