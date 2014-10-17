@@ -34,6 +34,7 @@ Votr.PageNavbar = React.createClass({
           <Votr.Link className="navbar-brand" href={{}}>Votr</Votr.Link>
         </div>
         <div className="navbar-left">
+          <Votr.LogStatus />
         </div>
         <div className="navbar-right">
           <ul className="nav navbar-nav">
@@ -43,6 +44,22 @@ Votr.PageNavbar = React.createClass({
         </div>
       </div>
     </div>;
+  }
+});
+
+
+Votr.LogStatus = React.createClass({
+  render: function () {
+    var entry = _.last(Votr.logs);
+    if (!entry) return null;
+    var message = "Spracovávam dáta... (" + entry.message + ")";
+    if (entry.log == 'http' && entry.message.match(/^Requesting/)) {
+      message = "Čakám na AIS..."
+    }
+    if (entry.log == 'rpc' && entry.message.match(/finished$/)) {
+      return null;
+    }
+    return <p className="navbar-text">{message}</p>;
   }
 });
 
