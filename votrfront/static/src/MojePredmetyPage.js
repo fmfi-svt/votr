@@ -3,12 +3,6 @@
 (function () {
 
 
-var TYPY_VYUCBY = {
-  'A': 'A - povinné',
-  'B': 'B - povinne voliteľné',
-  'C': 'C - výberové'
-};
-
 Votr.MojePredmetyColumns = [
   ["Semester", 'semester', null, true],
   ["Skratka", 'skratka'],
@@ -50,14 +44,14 @@ Votr.MojePredmetyPageContent = React.createClass({
             <td>{hodnotenie.skratka}</td>
             <td>{hodnotenie.nazov}</td>
             <td>{hodnotenie.kredit}</td>
-            <td>{TYPY_VYUCBY[hodnotenie.typ_vyucby] || hodnotenie.typ_vyucby}</td>
+            <td>{Votr.humanizeTypVyucby(hodnotenie.typ_vyucby)}</td>
             <td>
               {hodnotenie.hodn_znamka}
               {hodnotenie.hodn_znamka ? " - " : null}
               {hodnotenie.hodn_znamka_popis}
             </td>
             <td>{hodnotenie.hodn_datum}</td>
-            <td>{hodnotenie.hodn_termin}</td>
+            <td>{Votr.humanizeTerminHodnotenia(hodnotenie.hodn_termin)}</td>
           </tr>
         )}
       </tbody>
