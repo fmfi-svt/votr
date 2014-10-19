@@ -37,9 +37,9 @@ class WebuiTerminyMixin:
         app.d.zobrazitTerminyAction.execute()
 
         # Vytiahneme tabulku terminov.
-        result = [Termin(datum=row['dat'], 
-                         cas=row['cas'], 
-                         miestnost=row['miestnosti'], 
+        result = [Termin(datum=row['dat'],
+                         cas=row['cas'],
+                         miestnost=row['miestnosti'],
                          pocet_prihlasenych=row['pocetPrihlasenych'],
                          maximalne_prihlasenych=row['maxPocet'],
                          hodnotiaci=row['hodnotiaci'],
@@ -97,9 +97,9 @@ class WebuiTerminyMixin:
         predmet_row = self.__select_predmet_row(app, predmet_key)
         self.__open_vyber_terminu_dialog(app)
 
-        result = [Termin(datum=row['dat'], 
-                         cas=row['cas'], 
-                         miestnost=row['miestnosti'], 
+        result = [Termin(datum=row['dat'],
+                         cas=row['cas'],
+                         miestnost=row['miestnosti'],
                          pocet_prihlasenych=row['pocetPrihlasenych'],
                          maximalne_prihlasenych=row['maxPocet'],
                          hodnotiaci=row['hodnotiaci'],
@@ -140,7 +140,7 @@ class WebuiTerminyMixin:
         # Ak sa pozerame na stary zapisny list, vyber_terminov_dialog
         # bude disabled, preto termin musi byt v hlavnom dialogu.
         if index is not None:
-            app.d.terminyTable.select(index)   
+            app.d.terminyTable.select(index)
             # Stlacime "Zobrazit zoznam prihlasenych".
             with app.collect_operations() as ops:
                 app.d.zoznamPrihlasenychStudentovAction.execute()
