@@ -44,42 +44,71 @@ def find_option(objects, **conditions):
 
 
 _keyed_namedtuple_template = '''
-def __new__(_cls, {args}=None):
-    if key is None: key = ({key_args},)
+def __new__(_cls, {args_none}):
+    {keys}
     return tuple.__new__(_cls, ({args},))
 result_class.__new__ = __new__
+
+def _encode(self):
+    return self._replace({encode_kwargs})
+result_class._encode = _encode
 '''
 
-def keyed_namedtuple(typename, field_names, key_field_names):
-    '''A variant of namedtuple with a default value for the ``key`` field.
+_keyed_namedtuple_key_template = '''
+    if {key_name} is None: {key_name} = ({key_args},)
+'''
 
-    The last field of the tuple must be named ``key``. This argument will be
-    optional. When not given, it will default to a normal tuple containing the
-    values of the tuple's `key fields` (specified in ``key_field_names``). So
-    when a namedtuple has the same key as another namedtuple you've seen before,
-    that means their key fields also have equal values (unless someone changed
-    the key manually).
 
-    Except for the above behavior, ``key`` is a normal field, and will be
-    included in JSON dumps, pickles, etc.
+def keyed_namedtuple(typename, field_names, **key_fields):
+    '''A variant of namedtuple where "key fields" can have default values.
+
+    If the value of the "key field" is not specified, it will default to a
+    normal tuple containing some of the other field values, as specified by the
+    kwargs (the ``key_fields`` dict). The name of each keyword argument must be
+    a tuple field and the value must be a list of other field names which are
+    to be used as the default value.
+
+    Key names have to be at the end of the ``field_names`` list.
+
+    A key field can serve as an unique indetifier when a real ID is not
+    available, e.g., from a database.
+
+    The tuple is provided with an ``_encode()`` method which returns a new
+    tuple with all key fields encoded into strings using :func:`encode_key`.
 
     Args:
         typename: The class name, like in namedtuple.
-        field_names: The list of fields, like in namedtuple. The last name must
-            be ``"key"``.
-        key_field_names: The list of key fields, which will be used to compute
-            the default value of ``key``.
+        field_names: The list of fields, like in namedtuple. Key fields have
+            to be at the end, after normal fields.
+        key_fields: Keyword arguments of key names and their associated lists
+            of field names, which will be used to compute its default value.
     Returns:
         A new class, like returned by namedtuple.
     '''
-    if field_names[-1] != 'key': raise ValueError(typename)
-    if set(key_field_names) - set(field_names): raise ValueError(typename)
+    # Key names have to be in field_names and key args have to exist
+    for key_name, key_args in key_fields.items():
+        if key_name not in field_names or set(key_args) - set(field_names):
+            raise ValueError(typename)
 
     result_class = namedtuple(typename, field_names)
 
+    # Add '=None' to the keys
+    field_names_none = [name + ("=None" if name in key_fields else "")
+                        for name in field_names]
+
+    # Create assignements of list of field names to their keys
+    key_defs = [_keyed_namedtuple_key_template.format(
+                    key_name=key_name, key_args=', '.join(key_args))
+                for key_name, key_args in key_fields.items()]
+
+    # Create custom __new__ method and _encode method
     exec(_keyed_namedtuple_template.format(
+        args_none=', '.join(field_names_none),
         args=', '.join(field_names),
-        key_args=', '.join(key_field_names)))
+        keys=''.join(key_defs),
+        encode_kwargs=', '.join(
+            '{}=encode_key(self.{})'.format(key_name, key_name)
+            for key_name in key_fields)))
 
     return result_class
 

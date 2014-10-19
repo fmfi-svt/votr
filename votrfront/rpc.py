@@ -14,9 +14,8 @@ def decode_args(method, args):
 
 
 def encode_result(thing):
-    if (isinstance(thing, tuple) and hasattr(thing, '_replace') and
-        hasattr(thing, 'key')):
-        thing = thing._replace(key=encode_key(thing.key))
+    if isinstance(thing, tuple) and hasattr(thing, '_encode'):
+        thing = thing._encode()
     if isinstance(thing, tuple) and hasattr(thing, '_asdict'):
         thing = thing._asdict()
 
