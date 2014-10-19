@@ -116,4 +116,72 @@ Votr.MainMenu = React.createClass({
 });
 
 
+Votr.ModalBase = React.createClass({
+  propTypes: {
+    component: React.PropTypes.func,
+    onClose: React.PropTypes.func.isRequired,
+    query: React.PropTypes.object.isRequired
+  },
+
+  componentDidMount: function () {
+    var $node = $(this.getDOMNode());
+    $node.modal();
+    $node.on('hide.bs.modal', (e) => {
+      if ($node.attr('data-show') == 'true') {
+        e.preventDefault();
+        this.props.onClose();
+      }
+    });
+  },
+
+  componentDidUpdate: function () {
+    var $node = $(this.getDOMNode());
+    $node.modal($node.attr('data-show') == 'true' ? 'show' : 'hide');
+  },
+
+  render: function () {
+    var component = this.props.component;
+
+    return <div data-show={Boolean(component)} className="modal fade"
+                tabIndex="-1" role="dialog" aria-hidden="true">
+      <div className="modal-dialog modal-lg">
+        {component && <component query={this.props.query} />}
+      </div>
+    </div>;
+  }
+});
+
+
+Votr.Modal = React.createClass({
+  propTypes: {
+    closeButton: React.PropTypes.bool.isRequired,
+    title: React.PropTypes.renderable.isRequired,
+    footer: React.PropTypes.renderable
+  },
+
+  getDefaultProps: function () {
+    return {
+      closeButton: true
+    };
+  },
+
+  render: function () {
+    return <div className="modal-content">
+      <div className="modal-header">
+        {this.props.closeButton &&
+          <button type="button" className="close" data-dismiss="modal">
+            <span aria-hidden="true">&times;</span>
+            <span className="sr-only">Close</span>
+          </button>}
+        <h4 className="modal-title">{this.props.title}</h4>
+      </div>
+      <div className="modal-body">
+        {this.props.children}
+      </div>
+      {this.props.footer}
+    </div>;
+  }
+});
+
+
 })();

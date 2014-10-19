@@ -3,6 +3,15 @@
 (function () {
 
 
+Votr.NotFoundPage = React.createClass({
+  render: function () {
+    return <Votr.PageLayout query={this.props.query}>
+      <p>Action not found!</p>
+    </Votr.PageLayout>;
+  }
+});
+
+
 Votr.TestPage = React.createClass({
   render: function () {
     return <Votr.PageLayout query={this.props.query}>
@@ -19,6 +28,34 @@ Votr.actions = {
   mojeSkusky: Votr.MojeSkuskyPage,
   zoznamPrihlasenychNaTermin: Votr.ZoznamPrihlasenychNaTerminPage
 };
+
+
+Votr.modalActions = {
+};
+
+
+Votr.App = React.createClass({
+  propTypes: {
+    query: React.PropTypes.object.isRequired
+  },
+
+  handleClose: function () {
+    Votr.navigate(_.omit(
+        this.props.query, (value, key) => key.substring(0, 5) == 'modal'));
+  },
+
+  render: function () {
+    var query = this.props.query;
+    var action = query.action || 'index';
+    var mainComponent = Votr.actions[action] || Votr.NotFoundPage;
+    var modalComponent = Votr.modalActions[query.modal];
+
+    return <div>
+      <mainComponent query={query} />
+      <Votr.ModalBase query={query} component={modalComponent} onClose={this.handleClose} />
+    </div>;
+  }
+});
 
 
 })();

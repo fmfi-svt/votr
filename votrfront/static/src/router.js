@@ -20,15 +20,7 @@ function parseQueryString(queryString) {
 }
 
 
-Votr.NotFoundPage = React.createClass({
-  render: function () {
-    // TODO: Proper page style and navigation.
-    return <div>Action not found!</div>;
-  }
-});
-
-
-Votr.App = React.createClass({
+Votr.Root = React.createClass({
   handlePopState: function () {
     this.forceUpdate();
   },
@@ -44,9 +36,7 @@ Votr.App = React.createClass({
       this.lastQueryString = queryString;
     }
 
-    var action = this.query.action || 'index';
-    var component = this.props.actions[action] || Votr.NotFoundPage;
-    return <component query={this.query} />;
+    return <this.props.app query={this.query} />;
   }
 });
 

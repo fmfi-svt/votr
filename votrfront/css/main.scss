@@ -23,9 +23,12 @@ $table-condensed-cell-padding: 4px;
 
 
 html {
-  overflow-y: scroll;
   position: relative;
   height: 100%;
+}
+
+body, .modal-open .modal {
+  overflow-y: scroll;
 }
 
 a {

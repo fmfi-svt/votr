@@ -38,17 +38,22 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   if ! [ -d node_modules/bootstrap-sass ]; then
     npm install bootstrap-sass@^3.2
   fi
+  bs=node_modules/bootstrap-sass/assets
+  if ! [ -f static/build/modal.js ]; then
+    cp $bs/javascripts/bootstrap/*.js static/build/
+  fi
 
   ./node_modules/.bin/jsx --harmony static/src/ static/build/
 
-  sassc -I node_modules/bootstrap-sass/assets/stylesheets \
-      -s compressed \
-      css/main.scss static/build/style.css
+  compressed='-s compressed'
+  sassc $compressed -I $bs/stylesheets css/main.scss static/build/style.css
 
   (
     echo jquery.js
     echo react.js
     echo lodash.js
+    echo transition.js
+    echo modal.js
     python jsdeps.py main.js
   ) > static/build/jsdeps-dev
 
@@ -56,6 +61,8 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     echo jquery.min.js
     echo react.min.js
     echo lodash.min.js
+    echo transition.js
+    echo modal.js
     python jsdeps.py main.js
   ) > static/build/jsdeps-prod
 

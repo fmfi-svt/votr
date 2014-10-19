@@ -34,7 +34,7 @@ if (Votr.settings.error) {
   return;
 }
 
-Votr.appRoot = React.renderComponent(<Votr.App actions={Votr.actions} />, document.getElementById('votr'));
+Votr.appRoot = React.renderComponent(<Votr.Root app={Votr.App} />, document.getElementById('votr'));
 
 
 })();
