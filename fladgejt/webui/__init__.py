@@ -1,4 +1,5 @@
 
+from aisikl.exceptions import LoggedOutError
 from .hodnotenia import WebuiHodnoteniaMixin
 from .predmety import WebuiPredmetyMixin
 from .studium import WebuiStudiumMixin
@@ -15,7 +16,7 @@ class WebuiClient(WebuiHodnoteniaMixin, WebuiPredmetyMixin, WebuiStudiumMixin,
         soup = self.context.request_html('/ais/portal/changeTab.do?tab=0')
         username_element = soup.find(class_='user-name')
         if not (username_element and username_element.get_text()):
-            raise Exception('AIS login expired.')
+            raise LoggedOutError('AIS login expired.')
 
     def logout(self):
         self.context.request_html('/ais/logout.do')

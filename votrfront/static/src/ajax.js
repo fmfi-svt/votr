@@ -1,4 +1,7 @@
-/** @jsx React.DOM */
+/**
+ * @jsx React.DOM
+ * @dontdepend Votr.ajaxError
+ */
 
 (function () {
 
@@ -40,8 +43,11 @@ Votr.sendRpc = function (name, args, callback) {
   function fail(e) {
     if (failed) return;
     failed = true;
-    console.log("FAILED!", e); // TODO
-    alert("FAILED!\n" + e);
+    console.log("FAILED!", e);
+    if (!Votr.ajaxError) {
+      Votr.ajaxError = e;
+      Votr.appRoot.forceUpdate();
+    }
   }
 
   var xhr = new XMLHttpRequest();
@@ -53,6 +59,9 @@ Votr.sendRpc = function (name, args, callback) {
   xhr.setRequestHeader("X-CSRF-Token", Votr.settings.csrf_token);
   xhr.send(JSON.stringify(args));
 }
+
+
+Votr.ajaxError = null;
 
 
 Votr.logs = [];
@@ -119,6 +128,8 @@ Votr.goLogout = function () {
 };
 
 Votr.goReset = function () {
+  // TODO: Since the query string itself might have errors (nonexistent keys
+  // and the like), consider always returning to the front page.
   Votr.goPost('reset?destination=' + encodeURIComponent(location.search));
 };
 

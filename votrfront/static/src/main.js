@@ -20,21 +20,12 @@ Votr.setDebug = function (enabled) {
   location.reload();
 }
 
-if (Votr.settings.servers) {
-  Votr.appRoot = React.renderComponent(Votr.LoginPage(), document.getElementById('votr'));
-  return;
-}
+var root =
+    Votr.settings.servers ? <Votr.LoginPage /> :
+    Votr.settings.error ? <Votr.ErrorPage /> :
+    <Votr.Root app={Votr.App} />;
 
-if (Votr.settings.error) {
-  var el = document.getElementById('votr');
-  $('<h1/>').text('Error').appendTo(el);
-  $('<pre/>').text(Votr.settings.error).appendTo(el);
-  // TODO HARDRESET button
-  // TODO LOGOUT button
-  return;
-}
-
-Votr.appRoot = React.renderComponent(<Votr.Root app={Votr.App} />, document.getElementById('votr'));
+Votr.appRoot = React.renderComponent(root, document.getElementById('votr'));
 
 
 })();

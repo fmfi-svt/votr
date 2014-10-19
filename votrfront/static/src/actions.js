@@ -40,6 +40,7 @@ Votr.App = React.createClass({
   },
 
   handleClose: function () {
+    if (Votr.ajaxError) return;
     Votr.navigate(_.omit(
         this.props.query, (value, key) => key.substring(0, 5) == 'modal'));
   },
@@ -48,7 +49,7 @@ Votr.App = React.createClass({
     var query = this.props.query;
     var action = query.action || 'index';
     var mainComponent = Votr.actions[action] || Votr.NotFoundPage;
-    var modalComponent = Votr.modalActions[query.modal];
+    var modalComponent = Votr.ajaxError ? Votr.ErrorModal : Votr.modalActions[query.modal];
 
     return <div>
       <mainComponent query={query} />
