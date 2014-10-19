@@ -25,12 +25,12 @@ Votr.actions = {
   index: Votr.TestPage,
   mojeHodnotenia: Votr.MojeHodnoteniaPage,
   mojePredmety: Votr.MojePredmetyPage,
-  mojeSkusky: Votr.MojeSkuskyPage,
-  zoznamPrihlasenychNaTermin: Votr.ZoznamPrihlasenychNaTerminPage
+  mojeSkusky: Votr.MojeSkuskyPage
 };
 
 
 Votr.modalActions = {
+  zoznamPrihlasenychNaTermin: Votr.ZoznamPrihlasenychNaTerminModal
 };
 
 

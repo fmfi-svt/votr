@@ -12,17 +12,17 @@ Votr.ZoznamPrihlasenychNaTerminColumns = [
 ];
 
 
-Votr.ZoznamPrihlasenychNaTerminPageContent = React.createClass({
+Votr.ZoznamPrihlasenychNaTerminModal = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired
   },
 
   renderContent: function () {
     var cache = new Votr.CacheRequester();
-    var {studiumKey, zapisnyListKey, predmetKey, terminKey} = this.props.query;
+    var {modalStudiumKey, modalZapisnyListKey, modalPredmetKey, modalTerminKey} = this.props.query;
 
-    if (!(predmetKey && terminKey && studiumKey && zapisnyListKey)) return null;
-    var studenti = cache.get('get_prihlaseni_studenti', studiumKey, zapisnyListKey, [predmetKey], terminKey);
+    if (!(modalPredmetKey && modalTerminKey && modalStudiumKey && modalZapisnyListKey)) return null;
+    var studenti = cache.get('get_prihlaseni_studenti', modalStudiumKey, modalZapisnyListKey, [modalPredmetKey], modalTerminKey);
 
     if (!studenti) {
       return <Votr.Loading requests={cache.missing} />;
@@ -30,7 +30,7 @@ Votr.ZoznamPrihlasenychNaTerminPageContent = React.createClass({
 
     var [studenti, header] = Votr.sortTable(
       studenti, Votr.ZoznamPrihlasenychNaTerminColumns,
-      this.props.query, 'studentiSort');
+      this.props.query, 'modalStudentiSort');
 
     return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
@@ -49,24 +49,11 @@ Votr.ZoznamPrihlasenychNaTerminPageContent = React.createClass({
   },
 
   render: function () {
-    return <div>
-      <Votr.PageTitle>Zoznam prihlásených na termín:</Votr.PageTitle>
+    return <Votr.Modal title="Zoznam prihlásených na termín">
       {this.renderContent()}
-    </div>;
+    </Votr.Modal>;
   }
 });
 
-
-Votr.ZoznamPrihlasenychNaTerminPage = React.createClass({
-  propTypes: {
-    query: React.PropTypes.object.isRequired
-  },
-
-  render: function () {
-    return <Votr.PageLayout query={this.props.query}>
-      <Votr.ZoznamPrihlasenychNaTerminPageContent query={this.props.query} />
-    </Votr.PageLayout>;
-  }
-});
 
 })();
