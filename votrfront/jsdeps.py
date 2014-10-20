@@ -19,6 +19,7 @@ def find_dependencies():
     for dirpath, dirnames, filenames in os.walk(base_path):
         for filename in filenames:
             if not filename.endswith('.js'): continue
+            if filename.endswith('.min.js'): continue
             module_path = os.path.join(dirpath, filename)
             module_name = module_path[len(base_path):]
 
@@ -91,7 +92,7 @@ if __name__ == '__main__':
         for filefrom, fileto, var in sorted(find_dependencies()):
             print('"{}" -> "{}" [label="{}"];'.format(filefrom, fileto, var))
         print("}")
-    elif argv and all(os.path.exists(base_path + name) for name in argv):
+    elif argv and not any(arg.startswith('-') for arg in argv):
         for dep in order_dependencies(*argv):
             print(dep)
     else:

@@ -13,41 +13,45 @@ cd "$(dirname "$0")"
 
 if [ "$1" == "build" ] || [ "$1" == "" ]; then
 
-  mkdir -p static/
+  mkdir -p static/libs/
   rm -f static/ok
 
-  if ! [ -f static/jquery.js ]; then
+  if ! [ -f static/libs/jquery.js ]; then
     npm install jquery@^1
-    cp -p node_modules/jquery/dist/*.* static/
+    cp -p node_modules/jquery/dist/*.* static/libs/
   fi
 
-  if ! [ -f static/lodash.js ]; then
+  if ! [ -f static/libs/lodash.js ]; then
     npm install lodash@^2.4
-    cp -p node_modules/lodash/dist/*.* static/
+    cp -p node_modules/lodash/dist/*.* static/libs/
   fi
 
-  if ! [ -f static/react.js ]; then
+  if ! [ -f static/libs/react.js ]; then
     npm install react@^0.11
-    cp -p node_modules/react/dist/*.* static/
+    cp -p node_modules/react/dist/*.* static/libs/
   fi
 
   if ! [ -f node_modules/.bin/jsx ]; then
     npm install react-tools@^0.11
   fi
 
-  if ! [ -f static/spinner.svg ]; then
-    wget https://raw.githubusercontent.com/kvakes/spinner.svg/master/spinner2.svg -O static/spinner.svg
+  if ! [ -f node_modules/.bin/uglifyjs ]; then
+    npm install uglify-js@^2.4
   fi
 
   if ! [ -d node_modules/bootstrap-sass ]; then
     npm install bootstrap-sass@~3.2
   fi
   bs=node_modules/bootstrap-sass/assets
-  if ! [ -f static/modal.js ]; then
-    cp $bs/javascripts/bootstrap/*.js static/
+  if ! [ -f static/libs/modal.js ]; then
+    cp $bs/javascripts/bootstrap/*.js static/libs/
   fi
 
-  ./node_modules/.bin/jsx --harmony js/ static/
+  if ! [ -f static/spinner.svg ]; then
+    wget https://raw.githubusercontent.com/kvakes/spinner.svg/master/spinner2.svg -O static/spinner.svg
+  fi
+
+  ./node_modules/.bin/jsx --harmony js/ static/dev/
 
   sed -i "
     # Don't use pointer cursor on buttons.
@@ -61,23 +65,14 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   compressed='-s compressed'
   sassc $compressed -I $bs/stylesheets css/main.scss static/style.css
 
-  (
-    echo jquery.js
-    echo react.js
-    echo lodash.js
-    echo transition.js
-    echo modal.js
-    python jsdeps.py main.js
-  ) > static/jsdeps-dev
+  deps=$(python jsdeps.py dev/main.js)
+  ./node_modules/.bin/uglifyjs \
+      -o static/votr.min.js --source-map static/votr.min.js.map \
+      $(sed 's@^@static/@' <<<"$deps") --screw-ie8 -m -c -p relative
 
-  (
-    echo jquery.min.js
-    echo react.min.js
-    echo lodash.min.js
-    echo transition.js
-    echo modal.js
-    python jsdeps.py main.js
-  ) > static/jsdeps-prod
+  libs='dev/old.js libs/jquery.min.js libs/react.min.js libs/lodash.min.js libs/transition.js libs/modal.js'
+  echo ${libs//.min} $deps > static/jsdeps-dev
+  echo $libs votr.min.js > static/jsdeps-prod
 
   touch static/ok
 
