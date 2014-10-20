@@ -104,13 +104,13 @@ Votr.MainMenu = React.createClass({
       {this.renderMenuItem("Moje predmety", { action: 'mojePredmety', studiumKey, zapisnyListKey })}
       {this.renderMenuItem("Moje skúšky", { action: 'mojeSkusky', studiumKey, zapisnyListKey })}
       {this.renderMenuItem("Moje hodnotenia", { action: 'mojeHodnotenia', studiumKey })}
-      {this.renderDisabled("Môj rozvrh")}
+      {/*this.renderDisabled("Môj rozvrh")*/}
       <li><hr/></li>
-      <li><strong className="text-pill">Register</strong></li>
+      <li><strong className="text-pill">Registre</strong></li>
       {this.renderDisabled("Register osôb")}
       {this.renderDisabled("Register predmetov")}
-      {this.renderDisabled("Register miestností")}
-      {this.renderDisabled("Register študijných programov")}
+      {/*this.renderDisabled("Register miestností")*/}
+      {/*this.renderDisabled("Register študijných programov")*/}
     </ul>;
   }
 });
