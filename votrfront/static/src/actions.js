@@ -54,6 +54,7 @@ Votr.App = React.createClass({
     return <div>
       <mainComponent query={query} />
       <Votr.ModalBase query={query} component={modalComponent} onClose={this.handleClose} />
+      <Votr.LogViewer />
     </div>;
   }
 });

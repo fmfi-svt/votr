@@ -24,6 +24,7 @@ build_path = os.path.join(os.path.dirname(__file__), 'static/build/')
 
 def app_response(request, **my_data):
     my_data['url_root'] = request.url_root
+    my_data['instance_name'] = request.app.settings.instance_name
     if 'csrf_token' not in my_data:
         my_data['servers'] = request.app.settings.servers
 

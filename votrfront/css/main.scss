@@ -77,6 +77,36 @@ a {
   }
 }
 
+.log-viewer {
+  position: fixed;
+  left: 5em;
+  right: 5em;
+  bottom: 0;
+  height: 20em;
+  max-height: 70%;
+  z-index: 1111;
+  background: $gray-lighter;
+  border: solid $gray-light 2px;
+  border-bottom: 0;
+  .options, .right {
+    position: absolute;
+    bottom: 100%;
+    margin: 0 1em;
+    background: $gray-lighter;
+    border: solid $gray-light 2px;
+    border-bottom: 0;
+  }
+  .right {
+    padding: 0.5em;
+    right: 0;
+  }
+  .scroll {
+    height: 100%;
+    padding: 1em;
+    overflow: auto;
+  }
+}
+
 .login-page {
   max-width: 30em;
   padding: 15px;
