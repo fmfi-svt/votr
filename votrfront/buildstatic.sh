@@ -13,41 +13,41 @@ cd "$(dirname "$0")"
 
 if [ "$1" == "build" ] || [ "$1" == "" ]; then
 
-  mkdir -p static/build/
-  rm -f static/build/ok
+  mkdir -p static/
+  rm -f static/ok
 
-  if ! [ -f static/build/jquery.js ]; then
+  if ! [ -f static/jquery.js ]; then
     npm install jquery@^1
-    cp -p node_modules/jquery/dist/*.* static/build/
+    cp -p node_modules/jquery/dist/*.* static/
   fi
 
-  if ! [ -f static/build/lodash.js ]; then
+  if ! [ -f static/lodash.js ]; then
     npm install lodash@^2.4
-    cp -p node_modules/lodash/dist/*.* static/build/
+    cp -p node_modules/lodash/dist/*.* static/
   fi
 
-  if ! [ -f static/build/react.js ]; then
+  if ! [ -f static/react.js ]; then
     npm install react@^0.11
-    cp -p node_modules/react/dist/*.* static/build/
+    cp -p node_modules/react/dist/*.* static/
   fi
 
   if ! [ -f node_modules/.bin/jsx ]; then
     npm install react-tools@^0.11
   fi
 
-  if ! [ -f static/build/spinner.svg ]; then
-    wget https://raw.githubusercontent.com/kvakes/spinner.svg/master/spinner2.svg -O static/build/spinner.svg
+  if ! [ -f static/spinner.svg ]; then
+    wget https://raw.githubusercontent.com/kvakes/spinner.svg/master/spinner2.svg -O static/spinner.svg
   fi
 
   if ! [ -d node_modules/bootstrap-sass ]; then
     npm install bootstrap-sass@~3.2
   fi
   bs=node_modules/bootstrap-sass/assets
-  if ! [ -f static/build/modal.js ]; then
-    cp $bs/javascripts/bootstrap/*.js static/build/
+  if ! [ -f static/modal.js ]; then
+    cp $bs/javascripts/bootstrap/*.js static/
   fi
 
-  ./node_modules/.bin/jsx --harmony js/ static/build/
+  ./node_modules/.bin/jsx --harmony js/ static/
 
   sed -i "
     # Don't use pointer cursor on buttons.
@@ -59,7 +59,7 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     " $bs/stylesheets/bootstrap/_normalize.scss
 
   compressed='-s compressed'
-  sassc $compressed -I $bs/stylesheets css/main.scss static/build/style.css
+  sassc $compressed -I $bs/stylesheets css/main.scss static/style.css
 
   (
     echo jquery.js
@@ -68,7 +68,7 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     echo transition.js
     echo modal.js
     python jsdeps.py main.js
-  ) > static/build/jsdeps-dev
+  ) > static/jsdeps-dev
 
   (
     echo jquery.min.js
@@ -77,13 +77,13 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     echo transition.js
     echo modal.js
     python jsdeps.py main.js
-  ) > static/build/jsdeps-prod
+  ) > static/jsdeps-prod
 
-  touch static/build/ok
+  touch static/ok
 
 elif [ "$1" == "clean" ]; then
 
-  rm -rf node_modules static/build
+  rm -rf node_modules static
 
 else
   echo "usage: $0 [--env=path/to/venv] [build|clean]"

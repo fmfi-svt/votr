@@ -48,12 +48,12 @@ ga('create', '%(ua_code)s', 'auto');
 </script>
 '''.strip()
 
-build_path = os.path.join(os.path.dirname(__file__), 'static/build/')
+static_path = os.path.join(os.path.dirname(__file__), 'static/')
 
 
 def static_url(filename):
-    mtime = int(os.path.getmtime(build_path + filename))
-    return 'static/build/{}?v={}'.format(filename, mtime)
+    mtime = int(os.path.getmtime(static_path + filename))
+    return 'static/{}?v={}'.format(filename, mtime)
 
 
 def app_response(request, **my_data):
@@ -62,11 +62,11 @@ def app_response(request, **my_data):
     if 'csrf_token' not in my_data:
         my_data['servers'] = request.app.settings.servers
 
-    if not os.path.exists(build_path + 'ok'):
+    if not os.path.exists(static_path + 'ok'):
         return Response('buildstatic failed!', status=500)
 
-    is_debug = request.cookies.get('votr_debug')
-    with open(build_path + ('jsdeps-dev' if is_debug else 'jsdeps-prod')) as f:
+    debug = request.cookies.get('votr_debug')
+    with open(static_path + ('jsdeps-dev' if debug else 'jsdeps-prod')) as f:
         scripts = f.read().split()
 
     content = template % dict(

@@ -3,7 +3,7 @@ import os
 import re
 from collections import defaultdict
 
-base_path = os.path.join(os.path.dirname(__file__), 'static/build/')
+base_path = os.path.join(os.path.dirname(__file__), 'static/')
 
 _use_re = re.compile(r'\bVotr\.(\w+)')
 _define_re = re.compile(r'\bVotr\.(\w+)\s*=')
