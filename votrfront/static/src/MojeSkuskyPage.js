@@ -49,7 +49,7 @@ Votr.MojeSkuskyPageContent = React.createClass({
             <td>{termin.cas}</td>
             <td>{termin.miestnost}</td>
             <td>{termin.hodnotiaci}</td>
-            <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'zoznamPrihlasenychNaTermin', modalStudiumKey: studiumKey, modalZapisnyListKey: zapisnyListKey, modalPredmetKey: termin.skratka_predmetu, modalTerminKey: termin.key })}>
+            <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'zoznamPrihlasenychNaTermin', modalStudiumKey: studiumKey, modalZapisnyListKey: zapisnyListKey, modalPredmetKey: termin.predmet_key, modalTerminKey: termin.key })}>
               {termin.pocet_prihlasenych + 
                (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
             </Votr.Link></td>
