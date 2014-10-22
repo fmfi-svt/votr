@@ -25,6 +25,8 @@ Votr.StudiumSelector = React.createClass({
       items.push({ studium });
     });
 
+    items = _.sortBy(items, (item) => Votr.sortAs.date(item.studium.zaciatok)).reverse();
+    
     return items;
   },
 
@@ -64,7 +66,7 @@ Votr.StudiumSelector = React.createClass({
     var query = this.props.query;
 
     if (!query.studiumKey && cache.loadedAll && items.length) {
-      var mostRecentItem = _.max(items, (item) => Votr.sortAs.date(item.studium.zaciatok));
+      var mostRecentItem = items[0];
       query = withKeys(query, mostRecentItem.studium.key);
     }
 

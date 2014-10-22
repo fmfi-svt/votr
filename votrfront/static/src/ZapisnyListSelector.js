@@ -26,6 +26,8 @@ Votr.ZapisnyListSelector = React.createClass({
       });
     });
 
+    items = _.sortBy(items, (item) => Votr.sortAs.date(item.zapisnyList.datum_zapisu)).reverse();
+
     return items;
   },
 
@@ -65,7 +67,7 @@ Votr.ZapisnyListSelector = React.createClass({
     var query = this.props.query;
 
     if (!(query.studiumKey && query.zapisnyListKey) && cache.loadedAll && items.length) {
-      var mostRecentItem = _.max(items, (item) => Votr.sortAs.date(item.zapisnyList.datum_zapisu));
+      var mostRecentItem = items[0];
       query = withKeys(query, mostRecentItem.studium.key, mostRecentItem.zapisnyList.key);
     }
 
