@@ -85,8 +85,8 @@ Votr.sortTable = function (items, columns, query, queryKey) {
   var header = <tr>
     {columns.map(([label, prop, process, preferDesc], index) =>
       <th key={index} data-index={index} onClick={handleClick}
-          className={order[0] == 'a' + index ? 'asc' :
-                     order[0] == 'd' + index ? 'desc' : ''}>
+          className={'sort ' + (order[0] == 'a' + index ? 'asc' :
+                                order[0] == 'd' + index ? 'desc' : '')}>
         {label}
       </th>
     )}

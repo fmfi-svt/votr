@@ -77,6 +77,27 @@ a {
   }
 }
 
+th.sort {
+  cursor: pointer;
+  &.asc, &.desc {
+    background: $gray-lighter;
+  }
+  /* TODO: Decide if we want this.
+  &:after {
+    content: "\00a0↕";   // \00a0 is &nbsp;
+    color: $gray-light;
+  }
+  */
+  &.asc:after {
+    content: "\00a0↑";   // \00a0 is &nbsp;
+    color: inherit;
+  }
+  &.desc:after {
+    content: "\00a0↓";   // \00a0 is &nbsp;
+    color: inherit;
+  }
+}
+
 .log-viewer {
   position: fixed;
   left: 5em;
