@@ -14,10 +14,17 @@ template = '''
 <title>Votr</title>
 <link rel="stylesheet" type="text/css" href="static/build/style.css">
 <div id="votr"></div>
-<noscript>JavaScript required.</noscript>
+<noscript>
+<div class="login-page">
+<h1>Votr</h1>
+<p><strong>Votr</strong> ponúka študentom jednoduchší a pohodlnejší spôsob, ako
+robiť najčastejšie činnosti zo systému AIS. Zapíšte sa na skúšky, prezrite si
+vaše hodnotenia, a skontrolujte si počet kreditov, bez zbytočného klikania.</p>
+<p><strong>Na používanie Votr musí byť zapnutý JavaScript.</strong></p>
+</div>
+</noscript>
 <script>/*INSERT*/</script>
 '''.lstrip()
-# TODO: add some nice noscript content for search engines etc.
 
 build_path = os.path.join(os.path.dirname(__file__), 'static/build/')
 

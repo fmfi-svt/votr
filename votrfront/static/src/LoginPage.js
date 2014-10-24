@@ -51,16 +51,19 @@ Votr.LoginForm = React.createClass({
 
       <input type="hidden" name="destination" value={location.search} />
 
-      <p>
-        <label>
-          {"Server: "}
-          <select name="server" value={this.state.server} onChange={this.handleServerChange}>
-            {Votr.settings.servers.map((server, index) =>
-              <option key={index} value={index}>{server.title}</option>
-            )}
-          </select>
-        </label>
-      </p>
+      {Votr.settings.servers.length > 1 ?
+        <p>
+          <label>
+            {"Server: "}
+            <select name="server" value={this.state.server} onChange={this.handleServerChange}>
+              {Votr.settings.servers.map((server, index) =>
+                <option key={index} value={index}>{server.title}</option>
+              )}
+            </select>
+          </label>
+        </p> :
+        <input type="hidden" name="server" value="0" />
+      }
 
       {serverConfig.login_types.length > 1 ?
         <p>
@@ -106,7 +109,7 @@ Votr.LoginForm = React.createClass({
           </p>
         </div>}
 
-      <input type="submit" value="Prihlásiť" />
+      <button type="submit" className="btn btn-lg btn-primary center-block">Prihlásiť</button>
     </form>;
   }
 });
@@ -114,11 +117,24 @@ Votr.LoginForm = React.createClass({
 
 Votr.LoginPage = React.createClass({
   render: function () {
-    return <div className="login-page">
-      <h1>Votr</h1>
-      {/* TODO: Add introductory description of Votr. */}
-      <h2>Prihlásenie</h2>
-      <Votr.LoginForm />
+    return <div>
+      <div className="navbar navbar-inverse navbar-static-top">
+        <div className="container-fluid">
+          <div className="navbar-header">
+            <a href={Votr.settings.url_root} className="navbar-brand">Votr</a>
+          </div>
+        </div>
+      </div>
+      <div className="login-page">
+        <p>
+          <strong>Votr</strong> ponúka študentom jednoduchší a pohodlnejší
+          spôsob, ako robiť najčastejšie činnosti zo systému AIS. Zapíšte sa na
+          skúšky, prezrite si vaše hodnotenia, a skontrolujte si počet kreditov,
+          bez zbytočného klikania.
+        </p>
+        <hr />
+        <Votr.LoginForm />
+      </div>
     </div>;
   }
 });
