@@ -37,6 +37,7 @@ class WebuiTerminyMixin:
         app.d.zobrazitTerminyAction.execute()
 
         # Vytiahneme tabulku terminov.
+        (akademicky_rok,) = zapisny_list_key
         result = [Termin(datum=row['dat'],
                          cas=row['cas'],
                          miestnost=row['miestnosti'],
@@ -50,7 +51,8 @@ class WebuiTerminyMixin:
                          nazov_predmetu=row['predmetNazov'],
                          hodnotenie_terminu=row['znamka'],
                          hodnotenie_predmetu=row['hodnPredmetu'],
-                         moznost_prihlasit=row['moznostPrihlasenia'])
+                         moznost_prihlasit=row['moznostPrihlasenia'],
+                         akademicky_rok=akademicky_rok)
                   for row in app.d.terminyTable.all_rows()
                   if not row['datumOdhlas']]
         return result
@@ -97,6 +99,7 @@ class WebuiTerminyMixin:
         predmet_row = self.__select_predmet_row(app, predmet_key)
         self.__open_vyber_terminu_dialog(app)
 
+        (akademicky_rok,) = zapisny_list_key
         result = [Termin(datum=row['dat'],
                          cas=row['cas'],
                          miestnost=row['miestnosti'],
@@ -108,7 +111,8 @@ class WebuiTerminyMixin:
                          poznamka=row['poznamka'],
                          skratka_predmetu=predmet_row['skratka'],
                          nazov_predmetu=predmet_row['nazov'],
-                         moznost_prihlasit=row['moznostPrihlasenia'])
+                         moznost_prihlasit=row['moznostPrihlasenia'],
+                         akademicky_rok=akademicky_rok)
                   for row in app.d.zoznamTerminovTable.all_rows()]
 
         # Stlacime zatvaraci button.

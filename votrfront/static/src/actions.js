@@ -22,7 +22,6 @@ Votr.TestPage = React.createClass({
 
 
 Votr.actions = {
-  detailPredmetu: Votr.DetailPredmetuPage,
   index: Votr.TestPage,
   mojeHodnotenia: Votr.MojeHodnoteniaPage,
   mojePredmety: Votr.MojePredmetyPage,
@@ -31,6 +30,7 @@ Votr.actions = {
 
 
 Votr.modalActions = {
+  detailPredmetu: Votr.DetailPredmetuModal,
   zoznamPrihlasenychNaTermin: Votr.ZoznamPrihlasenychNaTerminModal
 };
 

@@ -6,7 +6,6 @@
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
 // TODO: Prihlas/odhlas
 
-
 Votr.MojeSkuskyColumns = [
   ["Predmet", 'nazov_predmetu'],
   ["Dátum", 'datum', Votr.sortAs.date],
@@ -44,7 +43,9 @@ Votr.MojeSkuskyPageContent = React.createClass({
       <tbody>
         {terminy.map((termin) =>
           <tr key={termin.key}>
-            <td>{termin.nazov_predmetu}</td>
+            <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok })}>
+              {termin.nazov_predmetu}
+            </Votr.Link></td>
             <td>{termin.datum}</td>
             <td>{termin.cas}</td>
             <td>{termin.miestnost}</td>

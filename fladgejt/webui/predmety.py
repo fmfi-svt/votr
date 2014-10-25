@@ -83,7 +83,7 @@ class WebuiPredmetyMixin:
 
         app.d.cisloPredmetuNumberControl.write(cislo_predmetu or '')
 
-        if not self._select_ciselnik(app, stredisko, 'strediskoTextField', 'zmazatStrediskoButton', 'vybratStrediskoAction', 'skratka'):
+        if not self._select_ciselnik(app, stredisko, 'skratkaStrediskaTextField', 'zmazatStrediskoButton', 'vybratStrediskoAction', 'skratka'):
             message.append("Stredisko neexistuje.")
 
         if not self._select_ciselnik(app, skratka_sp, 'skratkaStudProgramuTextField', 'zmazatStudProgramButton', 'vybratStudProgramAction', 'skratka'):
@@ -153,6 +153,7 @@ class WebuiPredmetyMixin:
 
         return [studenti, predmet]
 
+    @pooled_app
     def _open_nastenka_predmetu(self):
         url = '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST157App&kodAplikacie=VSST157&uiLang=SK'
         app, ops = Application.open(self.context, url)
@@ -160,11 +161,12 @@ class WebuiPredmetyMixin:
         return app
 
     @with_key_args(True, False, False, False)
-    def get_ucitelia_predmetu(self, predmet_key, fakulta, akademicky_rok, semester):
+    def get_ucitelia_predmetu(self, predmet_key, akademicky_rok, semester, fakulty):
         (skratka_predmetu,) = predmet_key
 
         app = self._open_nastenka_predmetu()
 
+        fakulta = fakulty.split(',')[0]
         fakulta_index = find_option(app.d.fakultaComboBox.options, id=fakulta)
         if app.d.fakultaComboBox.selected_index != fakulta_index:
             app.d.fakultaComboBox.select(fakulta_index)
