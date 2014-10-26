@@ -8,6 +8,7 @@ import time
 
 votrfront_path = os.path.dirname(__file__) or '.'
 watch_paths = ['buildstatic.sh', 'static/src', 'css']
+watch_extensions = ['.sh', '.js', '.scss']
 
 
 def build():
@@ -37,6 +38,8 @@ def watch(interval=1):
 
         for root in watch_paths:
             for filename in walk(os.path.join(votrfront_path, root)):
+                if os.path.splitext(filename)[1] not in watch_extensions:
+                    continue
                 try:
                     mtime = os.stat(filename).st_mtime
                     if mtime > last_build:
