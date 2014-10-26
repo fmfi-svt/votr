@@ -9,10 +9,14 @@ from . import sessions
 
 template = '''
 <!DOCTYPE html>
+<html lang="sk">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Votr</title>
 <link rel="stylesheet" type="text/css" href="static/build/style.css">
+</head>
+<body>
 <div id="votr"></div>
 <noscript>
 <div class="login-page">
@@ -24,6 +28,9 @@ vaše hodnotenia, a skontrolujte si počet kreditov, bez zbytočného klikania.<
 </div>
 </noscript>
 <script>/*INSERT*/</script>
+/*JS_INCLUDES*/
+</body>
+</html>
 '''.lstrip()
 
 build_path = os.path.join(os.path.dirname(__file__), 'static/build/')
@@ -42,10 +49,11 @@ def app_response(request, **my_data):
     with open(build_path + ('jsdeps-dev' if is_debug else 'jsdeps-prod')) as f:
         scripts = f.read().split()
 
-    content = template.replace('/*INSERT*/',
+    content = template.replace('/*JS_INCLUDES*/', ''.join(
+        '<script src="static/build/{}"></script>\n'.format(script)
+        for script in scripts))
+    content = content.replace('/*INSERT*/',
         'Votr = ' + json.dumps({ 'settings': my_data }).replace('</', '<\\/'))
-    for script in scripts:
-        content += '<script src="static/build/{}"></script>\n'.format(script)
     return Response(content, content_type='text/html; charset=UTF-8')
 
 
