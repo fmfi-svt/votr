@@ -154,7 +154,9 @@ def assert_ops(operations, *expected_methods):
     if real_methods != expected_methods:
         raise AISBehaviorError(
             "We expected %r but AIS did something different: %r" %
-            (expected_methods, operations))
+                (expected_methods, operations),
+            expected_methods=expected_methods,
+            operations=operations)
 
 
 class Application:
@@ -306,10 +308,9 @@ class Application:
                     operation)
 
             if self.collector is None:
-                exc = AISBehaviorError(
-                    "AIS did an unexpected operation: {}".format(operations))
-                exc.operations = operations
-                raise exc
+                raise AISBehaviorError(
+                    "AIS did an unexpected operation: {}".format(operations),
+                    operations=operations)
 
             self.collector.extend(operations)
 

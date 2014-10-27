@@ -90,7 +90,7 @@ Votr.CacheRequester = function () {
 Votr.CacheRequester.prototype.get = function () {
   var request = Array.prototype.slice.call(arguments);
   var cacheKey = request.join('\0');
-  if (Votr.RequestCache[cacheKey]) {
+  if (Votr.RequestCache[cacheKey] !== undefined) {
     return Votr.RequestCache[cacheKey];
   } else {
     this.missing.push(request);

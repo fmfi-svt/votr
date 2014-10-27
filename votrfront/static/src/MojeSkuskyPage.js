@@ -29,6 +29,17 @@ Votr.MojeSkuskyPageContent = React.createClass({
   renderContent: function () {
     var cache = new Votr.CacheRequester();
     var {studiumKey, zapisnyListKey} = this.props.query;
+
+    var vidim = cache.get('get_vidim_terminy_hodnotenia', studiumKey, zapisnyListKey);
+
+    if (!cache.loadedAll) {
+      return <Votr.Loading requests={cache.missing} />;
+    }
+
+    if (!vidim) {
+      return <p>Skúšky pre tento zápisný list už nie sú k dispozícii.</p>;
+    }
+
     var terminy = cache.get('get_prihlasene_terminy', studiumKey, zapisnyListKey);
 
     if (!terminy) {

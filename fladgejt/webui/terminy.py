@@ -13,6 +13,18 @@ class WebuiTerminyMixin:
             app.d.filterAction.execute()
 
     @with_key_args(True, True)
+    def get_vidim_terminy_hodnotenia(self, studium_key, zapisny_list_key):
+        if zapisny_list_key == ('2010/2011',): return False
+        try:
+            self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
+        except AISBehaviorError as e:
+            if (getattr(e, 'operations', None) == [] and
+                getattr(e, 'expected_methods', None) == ['startApp']):
+                return False
+            raise
+        return True
+
+    @with_key_args(True, True)
     def get_predmety(self, studium_key, zapisny_list_key):
         app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
 
