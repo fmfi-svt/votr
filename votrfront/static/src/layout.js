@@ -98,13 +98,18 @@ Votr.MainMenu = React.createClass({
   render: function () {
     var {studiumKey, zapisnyListKey} = this.props.query;
 
+    var cache = new Votr.CacheRequester();
+    var somStudent = cache.get('get_som_student');
+
     return <ul className="main-menu nav nav-pills nav-stacked">
       <li><strong className="text-pill">Moje štúdium</strong></li>
-      {this.renderDisabled("Prehľad štúdia")}
-      {this.renderMenuItem("Moje predmety", { action: 'mojePredmety', studiumKey, zapisnyListKey })}
-      {this.renderMenuItem("Moje skúšky", { action: 'mojeSkusky', studiumKey, zapisnyListKey })}
-      {this.renderMenuItem("Moje hodnotenia", { action: 'mojeHodnotenia', studiumKey })}
-      {/*this.renderDisabled("Môj rozvrh")*/}
+      {somStudent === false && <li><span className="text-pill">Nie ste študentom.</span></li>}
+      {somStudent && this.renderDisabled("Prehľad štúdia")}
+      {somStudent && this.renderMenuItem("Moje predmety", { action: 'mojePredmety', studiumKey, zapisnyListKey })}
+      {somStudent && this.renderMenuItem("Moje skúšky", { action: 'mojeSkusky', studiumKey, zapisnyListKey })}
+      {somStudent && this.renderMenuItem("Moje hodnotenia", { action: 'mojeHodnotenia', studiumKey })}
+      {/*somStudent && this.renderDisabled("Môj rozvrh")*/}
+      {!cache.loadedAll && <li><span className="text-pill"><Votr.Loading requests={cache.missing} /></span></li>}
       <li><hr/></li>
       <li><strong className="text-pill">Registre</strong></li>
       {this.renderDisabled("Register osôb")}

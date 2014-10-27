@@ -15,6 +15,15 @@ class WebuiStudiumMixin:
         app.awaited_open_main_dialog(ops)
         return app
 
+    def get_som_student(self):
+        try:
+            self._open_administracia_studia()
+        except AISBehaviorError as e:
+            if 'Neautorizovaný prístup!' in str(e):
+                return False
+            raise
+        return True
+
     def get_studia(self):
         app = self._open_administracia_studia()
 
