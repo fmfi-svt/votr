@@ -56,4 +56,17 @@ Votr.renderWeightedStudyAverage = function (hodnotenia) {
   return <span title="Neoficiálny vážený študijný priemer z doteraz ohodnotených predmetov">{average.toFixed(2)}</span>
 };
 
+Votr.currentAcademicYear = function() {
+  var date = new Date();
+
+  var year = date.getFullYear();
+  var month = date.getMonth() + 1;
+
+  if (month < 8) {
+    return (year - 1) + '/' + year;
+  } else {
+    return year + '/' + (year + 1);
+  }
+};
+
 })();

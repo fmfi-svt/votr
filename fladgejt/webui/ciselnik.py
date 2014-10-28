@@ -1,4 +1,5 @@
 from aisikl.app import assert_ops
+from fladgejt.helpers import find_row
 
 
 # Ciselnik typu SSSC001
@@ -21,24 +22,25 @@ class WebuiCiselnikMixin:
 
                 app.awaited_open_dialog(ops)
                 try:
-                    index = find_row(app.d.table.all_rows(), compare_column=text)
+                    index = find_row(app.d.table.all_rows(), **{compare_column: text})
                 except KeyError:
-                    index = None
                     with app.collect_operations() as ops:
                         app.d.closeButton.click()
+
+                    app.awaited_close_dialog(ops)
+
+                    return False
                 else:
                     app.d.table.select(index)
 
                     with app.collect_operations() as ops:
                         app.d.enterButton.click()
 
-                app.awaited_close_dialog(ops)
-
-                return index
+                    app.awaited_close_dialog(ops)
         else:
             if app.d.components[text_field].is_editable():
                 app.d.components[text_field].write('')
             else:
                 app.d.components[erase_button].click()
 
-            return True
+        return True

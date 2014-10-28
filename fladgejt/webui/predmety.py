@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 
 from aisikl.app import Application, assert_ops
 from fladgejt.webui.pool import pooled_app
@@ -13,15 +14,11 @@ class WebuiPredmetyMixin:
         app.awaited_open_main_dialog(ops)
         return app
 
-    def get_informacny_list(self, kod_predmetu, akademicky_rok=None):
+    def get_informacny_list(self, kod_predmetu, akademicky_rok):
         app = self._open_register_predmetov()
 
-        # Vyberieme akademicky rok.
-        if akademicky_rok is None:
-            index = 0
-        else:
-            index = find_option(
-                app.d.akRokComboBox.options, title=akademicky_rok)
+        index = find_option(
+            app.d.akRokComboBox.options, title=akademicky_rok)
         app.d.akRokComboBox.select(index)
 
         # Napiseme kod predmetu.
@@ -200,3 +197,69 @@ class WebuiPredmetyMixin:
                                       typ=row['typVyucujuceho'])
                     for row in app.d.vyucujuciTable.all_rows()]
         return ucitelia
+
+    def vyhladaj_predmety(self, akademicky_rok, fakulta, stredisko, skratka_sp,
+                          skratka_predmetu, nazov_predmetu, semester, stupen):
+        app = self._open_register_predmetov()
+
+        message = None
+        predmety = []
+
+        message = self.__query_dialog(app,
+                                      akademicky_rok,
+                                      fakulta=fakulta,
+                                      semester=semester,
+                                      stupen_predmetu=stupen,
+                                      skratka_predmetu=skratka_predmetu,
+                                      nazov_predmetu=nazov_predmetu,
+                                      stredisko=stredisko,
+                                      skratka_sp=skratka_sp)
+
+        if message:
+            return [predmety, message]
+
+        with app.collect_operations() as ops:
+            app.d.zobrazitPredmetyButton.click()
+
+        if ops:
+            assert_ops(ops, 'messageBox')
+
+            return [predmety, ops[0].args[0]]
+
+        while not app.d.zoznamPredmetovTable.is_end_of_data:
+            app.d.zoznamPredmetovTable.scroll_down(10)
+        if app.d.zoznamPredmetovTable.truncated:
+            message = "Neboli načítané všetky dáta. Upresnite kritériá vyhľadávania."
+
+        predmety = [RegPredmet(skratka=row['skratka'],
+                               nazov=row['nazov'],
+                               semester=row['kodSemester'],
+                               stredisko=row['stredisko'],
+                               fakulta=row['FakUniv'],
+                               rozsah_vyucby=row['rozsah'],
+                               konanie=row['konanie'],
+                               cudzi_nazov=row['nazovJ'],
+                               kredit=row['kredit'])
+                    for row in app.d.zoznamPredmetovTable.loaded_rows]
+
+        return [predmety, message]
+
+    def get_register_predmetov_fakulta_options(self):
+        app = self._open_register_predmetov()
+
+        return app.d.fakultaUniverzitaComboBox.options
+
+    def get_register_predmetov_akademicky_rok_options(self):
+        app = self._open_register_predmetov()
+
+        return app.d.akRokComboBox.options
+
+    def get_register_predmetov_semester_options(self):
+        app = self._open_register_predmetov()
+
+        return app.d.semesterComboBox.options
+
+    def get_register_predmetov_stupen_options(self):
+        app = self._open_register_predmetov()
+
+        return app.d.stupenPredmetuComboBox.options
