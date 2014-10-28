@@ -114,7 +114,7 @@ Votr.Loading = React.createClass({
   },
 
   render: function () {
-    return <span>Loading...</span>;
+    return <span>Načítavam...</span>;
   }
 });
 
