@@ -82,8 +82,8 @@ class WebuiObdobiaMixin:
             A :class:`~Obdobie` object.
         '''
         if semester == "L":
-            return self.get_obdobie('06', akademicky_rok)
-        elif semester == "Z":
             return self.get_obdobie('08', akademicky_rok)
+        elif semester == "Z":
+            return self.get_obdobie('06', akademicky_rok)
         else:
             raise ValueError('Wrong type of semester "{0}"'.format(semester))

@@ -25,7 +25,8 @@ Votr.actions = {
   index: Votr.TestPage,
   mojeHodnotenia: Votr.MojeHodnoteniaPage,
   mojePredmety: Votr.MojePredmetyPage,
-  mojeSkusky: Votr.MojeSkuskyPage
+  mojeSkusky: Votr.MojeSkuskyPage,
+  prehladStudia: Votr.PrehladStudiaPage
 };
 
 

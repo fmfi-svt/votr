@@ -104,7 +104,7 @@ Votr.MainMenu = React.createClass({
     return <ul className="main-menu nav nav-pills nav-stacked">
       <li><strong className="text-pill">Moje štúdium</strong></li>
       {somStudent === false && <li><span className="text-pill">Nie ste študentom.</span></li>}
-      {somStudent && this.renderDisabled("Prehľad štúdia")}
+      {somStudent && this.renderMenuItem("Prehľad štúdia", { action: 'prehladStudia' })}
       {somStudent && this.renderMenuItem("Moje predmety", { action: 'mojePredmety', studiumKey, zapisnyListKey })}
       {somStudent && this.renderMenuItem("Moje skúšky", { action: 'mojeSkusky', studiumKey, zapisnyListKey })}
       {somStudent && this.renderMenuItem("Moje hodnotenia", { action: 'mojeHodnotenia', studiumKey })}

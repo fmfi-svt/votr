@@ -77,6 +77,10 @@ a {
   }
 }
 
+.table-narrow {
+  width: auto;
+}
+
 th.sort {
   cursor: pointer;
   &.asc, &.desc {
