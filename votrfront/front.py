@@ -12,6 +12,7 @@ template = '''
 <html lang="sk">
 <head>
 <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Votr</title>
 <link rel="stylesheet" type="text/css" href="static/build/style.css">
@@ -23,7 +24,7 @@ template = '''
 <h1>Votr</h1>
 <p><strong>Votr</strong> ponúka študentom jednoduchší a pohodlnejší spôsob, ako
 robiť najčastejšie činnosti zo systému AIS. Zapíšte sa na skúšky, prezrite si
-vaše hodnotenia, a skontrolujte si počet kreditov, bez zbytočného klikania.</p>
+vaše hodnotenia a skontrolujte si počet kreditov bez zbytočného klikania.</p>
 <p><strong>Na používanie Votr musí byť zapnutý JavaScript.</strong></p>
 </div>
 </noscript>

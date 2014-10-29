@@ -133,12 +133,13 @@ th.sort {
 }
 
 .login-page {
+  position: absolute;
+  top: 30%;
+  left: 0;
+  right: 0;
   max-width: 30em;
   padding: 2em 15px;
   margin: auto;
-  input, select {
-    font-weight: normal;
-  }
 }
 
 .central-box {

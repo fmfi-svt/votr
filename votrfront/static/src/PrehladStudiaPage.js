@@ -10,7 +10,6 @@
 
 Votr.PrehladStudiumColumns = [
   ["Študijný program", 'sp_popis'],
-  ["Číslo programu", 'sp_cislo', Votr.sortAs.number],
   ["Rok štúdia", 'rok_studia', Votr.sortAs.number],
   ["Dĺžka v semestroch", 'sp_dlzka', Votr.sortAs.number],
   ["Začiatok štúdia", 'zaciatok', Votr.sortAs.date],
@@ -22,8 +21,8 @@ Votr.PrehladStudiumColumns.defaultOrder = 'd4';
 
 Votr.PrehladZapisnyListColumns = [
   ["Akademický rok", 'akademicky_rok'],
-  ["Ročník", 'rocnik', Votr.sortAs.number],
   ["Študijný program", 'sp_popis'],
+  ["Ročník", 'rocnik', Votr.sortAs.number],
   ["Dátum zápisu", 'datum_zapisu', Votr.sortAs.date]
 ];
 Votr.PrehladZapisnyListColumns.defaultOrder = 'd0d3';
@@ -76,12 +75,11 @@ Votr.PrehladStudiaPage = React.createClass({
         {studia.map((studium) =>
           <tr key={studium.key}>
             <td>{studium.sp_popis} ({studium.sp_skratka})</td>
-            <td>{studium.sp_cislo}</td>
             <td>{studium.rok_studia}</td>
             <td>{studium.sp_dlzka}</td>
             <td>{studium.zaciatok}</td>
             <td>{studium.koniec}</td>
-            <td>{studium.sp_doplnujuce_udaje}</td>
+            <td>{studium.sp_doplnujuce_udaje.replace(/^\((.*)\)$/, '$1')}</td>
           </tr>
         )}
       </tbody>
@@ -121,8 +119,8 @@ Votr.PrehladStudiaPage = React.createClass({
             {zapisneListy.map((zapisnyList, index) =>
               <tr key={index}>
                 <td>{zapisnyList.akademicky_rok}</td>
-                <td>{zapisnyList.rocnik}</td>
                 <td>{zapisnyList.sp_popis} ({zapisnyList.sp_skratka})</td>
+                <td>{zapisnyList.rocnik}</td>
                 <td>{zapisnyList.datum_zapisu}</td>
               </tr>
             )}
@@ -134,7 +132,6 @@ Votr.PrehladStudiaPage = React.createClass({
   render: function () {
     return <Votr.PageLayout query={this.props.query}>
       <Votr.PageTitle>Prehľad štúdia</Votr.PageTitle>
-      <h2>Harmonogram štúdia</h2>
       {this.renderObdobia()}
       <h2>Zoznam štúdií</h2>
       {this.renderStudia()}

@@ -129,7 +129,7 @@ Votr.LoginPage = React.createClass({
         <p>
           <strong>Votr</strong> ponúka študentom jednoduchší a pohodlnejší
           spôsob, ako robiť najčastejšie činnosti zo systému AIS. Zapíšte sa na
-          skúšky, prezrite si vaše hodnotenia, a skontrolujte si počet kreditov,
+          skúšky, prezrite si vaše hodnotenia a skontrolujte si počet kreditov
           bez zbytočného klikania.
         </p>
         <hr />

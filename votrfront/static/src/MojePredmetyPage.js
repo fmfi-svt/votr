@@ -4,16 +4,16 @@
 
 
 Votr.MojePredmetyColumns = [
-  ["Semester", 'semester', null, true],
-  ["Skratka", 'skratka'],
+  [<abbr title="Semester">Sem.</abbr>, 'semester', null, true],
   ["Názov predmetu", 'nazov'],
+  ["Skratka predmetu", 'skratka'],
   ["Kredit", 'kredit', Votr.sortAs.number],
   ["Typ výučby", 'typ_vyucby'],
   ["Hodnotenie", 'hodn_znamka'],
   ["Dátum hodnotenia", 'hodn_datum', Votr.sortAs.date],
   ["Termín hodnotenia", 'hodn_termin']
 ];
-Votr.MojePredmetyColumns.defaultOrder = 'd0a2';
+Votr.MojePredmetyColumns.defaultOrder = 'd0a1';
 
 
 Votr.MojePredmetyPageContent = React.createClass({
@@ -41,10 +41,10 @@ Votr.MojePredmetyPageContent = React.createClass({
         {hodnotenia.map((hodnotenie) =>
           <tr key={hodnotenie.key} className={hodnotenie.semester == 'Z' ? 'zima' : 'leto'}>
             <td>{hodnotenie.semester}</td>
-            <td>{hodnotenie.skratka}</td>
             <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: hodnotenie.key, modalAkademickyRok: hodnotenie.akademicky_rok})}>
               {hodnotenie.nazov}
             </Votr.Link></td>
+            <td>{hodnotenie.skratka}</td>
             <td>{hodnotenie.kredit}</td>
             <td>{Votr.humanizeTypVyucby(hodnotenie.typ_vyucby)}</td>
             <td>

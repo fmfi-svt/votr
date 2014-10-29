@@ -45,6 +45,15 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
 
   ./node_modules/.bin/jsx --harmony static/src/ static/build/
 
+  sed -i "
+    # Don't use pointer cursor on buttons.
+    # http://lists.w3.org/Archives/Public/public-css-testsuite/2010Jul/0024.html
+    s@cursor: pointer; // 3@@
+    # Don't inherit color and font on inputs and selects.
+    s@color: inherit; // 1@@
+    s@font: inherit; // 2@@
+    " $bs/stylesheets/bootstrap/_normalize.scss
+
   compressed='-s compressed'
   sassc $compressed -I $bs/stylesheets css/main.scss static/build/style.css
 

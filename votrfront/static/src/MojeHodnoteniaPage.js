@@ -6,22 +6,21 @@
 Votr.MojeHodnoteniaColumns = [
   ["Akademický rok", 'akademicky_rok']
 ].concat(Votr.MojePredmetyColumns);
-Votr.MojeHodnoteniaColumns.defaultOrder = 'a0d1a3';
+Votr.MojeHodnoteniaColumns.defaultOrder = 'a0d1a2';
 
 
 Votr.MojePriemeryColumns = [
-  ["Akademický rok", 'akademicky_rok'],
+  ["Dátum výpočtu priemeru", 'datum_vypoctu', Votr.sortAs.date],
   ["Názov priemeru", 'nazov'],
+  ["Akademický rok", 'akademicky_rok'],
   ["Semester", 'semester', null, true],
   ["Získaný kredit", 'ziskany_kredit', Votr.sortAs.number],
   ["Celkový počet predmetov", 'predmetov', Votr.sortAs.number],
   ["Počet neabsolvovaných predmetov", 'neabsolvovanych', Votr.sortAs.number],
   ["Študijný priemer", 'studijny_priemer', Votr.sortAs.number],
-  ["Vážený priemer", 'vazeny_priemer', Votr.sortAs.number],
-  ["Priemer na koľký pokus", 'pokusy_priemer', Votr.sortAs.number],
-  ["Dátum výpočtu priemeru", 'datum_vypoctu', Votr.sortAs.date]
+  ["Vážený priemer", 'vazeny_priemer', Votr.sortAs.number]
 ];
-Votr.MojePriemeryColumns.defaultOrder = 'a9a0a1';
+Votr.MojePriemeryColumns.defaultOrder = 'a0a2a1';
 
 
 Votr.MojeHodnoteniaPageContent = React.createClass({
@@ -50,10 +49,10 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
           <tr key={hodnotenie.key} className={hodnotenie.semester == 'Z' ? 'zima' : 'leto'}>
             <td>{hodnotenie.akademicky_rok}</td>
             <td>{hodnotenie.semester}</td>
-            <td>{hodnotenie.skratka}</td>
             <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: hodnotenie.key, modalAkademickyRok: hodnotenie.akademicky_rok })}>
               {hodnotenie.nazov}
             </Votr.Link></td>
+            <td>{hodnotenie.skratka}</td>
             <td>{hodnotenie.kredit}</td>
             <td>{Votr.humanizeTypVyucby(hodnotenie.typ_vyucby)}</td>
             <td>
@@ -106,16 +105,15 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
       <tbody>
         {priemery.map((priemer, index) =>
           <tr key={index}>
+            <td>{priemer.datum_vypoctu}</td>
+            <td>{Votr.humanizeNazovPriemeru(priemer.nazov)}</td>
             <td>{priemer.akademicky_rok}</td>
-            <td>{priemer.nazov}</td>
             <td>{priemer.semester}</td>
             <td>{priemer.ziskany_kredit}</td>
             <td>{priemer.predmetov}</td>
             <td>{priemer.neabsolvovanych}</td>
             <td>{priemer.studijny_priemer}</td>
             <td>{priemer.vazeny_priemer}</td>
-            <td>{priemer.pokusy_priemer}</td>
-            <td>{priemer.datum_vypoctu}</td>
           </tr>
         )}
       </tbody>

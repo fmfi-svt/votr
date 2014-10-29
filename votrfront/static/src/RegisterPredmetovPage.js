@@ -7,7 +7,7 @@ Votr.RegisterPredmetovColumns = [
   ["Názov predmetu", 'nazov'],
   ["Skratka predmetu", 'skratka'],
   ["Fakulta", 'fakulta'],
-  ["Semester", 'semester'],
+  [<abbr title="Semester">Sem.</abbr>, 'semester'],
   ["Rozsah výučby", 'rozsah_vyucby'],
   ["Počet kreditov", 'kredit', Votr.sortAs.number],
   ["Konanie", 'konanie']
@@ -69,16 +69,16 @@ Votr.RegisterPredmetovForm = React.createClass({
     var semestre = cache.get('get_register_predmetov_semester_options');
 
     return <form onSubmit={this.handleSubmit}>
+      {this.renderTextInput("Názov predmetu: ", "nazovPredmetu", true)}
+      {this.renderTextInput("Skratka predmetu: ", "skratkaPredmetu", false)}
+      {this.renderTextInput("Študijný program: ", "studijnyProgramSkratka", false)}
       {this.renderSelect("Fakulta: ", "fakulta", fakulty, cache)}
       {this.renderTextInput("Stredisko: ", "stredisko", false)}
-      {this.renderTextInput("Študijný program: ", "studijnyProgramSkratka", false)}
-      {this.renderTextInput("Skratka predmetu: ", "skratkaPredmetu", false)}
-      {this.renderTextInput("Názov predmetu: ", "nazovPredmetu", true)}
-      {this.renderSelect("Semester: ", "semester", semestre, cache)}
-      {this.renderSelect("Akademický rok: ", "akademickyRok", rocniky, cache)}
       {this.renderSelect("Stupeň: ", "stupen", stupne, cache)}
+      {this.renderSelect("Akademický rok: ", "akademickyRok", rocniky, cache)}
+      {this.renderSelect("Semester: ", "semester", semestre, cache)}
       <div>
-        <button type="submit">Vyhľadaj</button>
+        <button className="btn btn-primary" type="submit">Vyhľadaj</button>
       </div>
     </form>;
   }
@@ -137,7 +137,7 @@ Votr.RegisterPredmetovResultTable = React.createClass({
               <td>{predmet.semester}</td>
               <td>{predmet.rozsah_vyucby}</td>
               <td>{predmet.kredit}</td>
-              <td>{predmet.konanie}</td>
+              <td>{Votr.humanizeBoolean(predmet.konanie)}</td>
             </tr>
           )}
         </tbody>

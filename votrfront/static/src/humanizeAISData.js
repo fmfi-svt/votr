@@ -2,25 +2,32 @@
 
 (function () {
 
+function humanizeWith(table) {
+  return function (value) {
+    return table[value] || value;
+  }
+}
 
-var TYPY_VYUCBY = {
+Votr.humanizeTypVyucby = humanizeWith({
   'A': 'povinné (A)',
   'B': 'povinne voliteľné (B)',
   'C': 'výberové (C)'
-};
+});
 
-var TERMIN_HODNOTENIA = {
+Votr.humanizeTerminHodnotenia = humanizeWith({
   'R - Riadny termín': 'riadny',
   '1 - Prvý opravný termín': 'prvý opravný',
   '2 - Druhý opravný termín': 'druhý opravný'
-};
+});
 
-Votr.humanizeTypVyucby = function (skratka) {
-  return TYPY_VYUCBY[skratka] || skratka;
-};
+Votr.humanizeNazovPriemeru = humanizeWith({
+  'Sem ?': 'Semester',
+  'AkadR ?' : 'Akademický rok'
+});
 
-Votr.humanizeTerminHodnotenia = function (skratka) {
-  return TERMIN_HODNOTENIA[skratka] || skratka;
-};
+Votr.humanizeBoolean = humanizeWith({
+  'A': 'áno',
+  'N': 'nie'
+});
 
 })();
