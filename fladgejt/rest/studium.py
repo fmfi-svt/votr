@@ -3,9 +3,14 @@ from fladgejt.helpers import with_key_args
 from fladgejt.structures import Studium, ZapisnyList
 
 
+def convert(rows):
+    # For now, votrfront expects all columns to be strings, not numbers or null.
+    return [{ k: '' if v is None else str(v) for k, v in row.items() } for row in rows]
+
+
 class RestStudiumMixin:
     def get_studia(self):
-        studia = self.context.request_json('studium')
+        studia = convert(self.context.request_json('studium'))
 
         result = [Studium(sp_skratka=row['studijnyProgramSkratka'],
                           sp_popis=row['studijnyProgramPopis'],
@@ -14,7 +19,7 @@ class RestStudiumMixin:
                           koniec=row['koniecStudia'],
                           sp_dlzka=row['studijnyProgramDlzka'],
                           sp_cislo=row['studijnyProgramIdProgramCRS'],
-                          rok_studia=row['rokStudia']) 
+                          rok_studia=row['rokStudia'])
                   for row in studia]
         return result
 
@@ -22,10 +27,10 @@ class RestStudiumMixin:
     def get_zapisne_listy(self, studium_key):
         sp_skratka, zaciatok = studium_key
 
-        zapisne_listy = self.context.request_json(
+        zapisne_listy = convert(self.context.request_json(
             "studium/zapisneListy",
             skratkaStudijnehoProgramu=sp_skratka,
-            zaciatokStudia=zaciatok)
+            zaciatokStudia=zaciatok))
 
         result = [ZapisnyList(akademicky_rok=row['popisAkadRok'],
                               rocnik=row['rokRocnik'],
