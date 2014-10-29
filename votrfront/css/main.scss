@@ -70,6 +70,13 @@ a {
   }
 }
 
+.loading {
+  background-image: url(spinner.svg);
+  background-repeat: no-repeat;
+  background-size: contain;
+  padding-left: 1.5em;
+}
+
 .table-bordered {
   th, td {
     border-left-style: none !important;

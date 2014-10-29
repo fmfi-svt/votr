@@ -35,6 +35,10 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     npm install react-tools@^0.11
   fi
 
+  if ! [ -f static/build/spinner.svg ]; then
+    wget https://raw.githubusercontent.com/kvakes/spinner.svg/master/spinner2.svg -O static/build/spinner.svg
+  fi
+
   if ! [ -d node_modules/bootstrap-sass ]; then
     npm install bootstrap-sass@^3.2
   fi
