@@ -15,8 +15,8 @@ servers = [
         login_types=('cosignpassword', 'cosigncookie'),
         ais_cookie='cosign-filter-ais2.uniba.sk',
         ais_url='https://ais2.uniba.sk/',
-        rest_cookie='cosign-filter-int-dev.uniba.sk',
-        rest_url='https://int-dev.uniba.sk:8443/'
+        rest_cookie='cosign-filter-votr-api.uniba.sk',
+        rest_url='https://votr-api.uniba.sk/',
     ),
     dict(
         title='ais2.uniba.sk',
@@ -25,10 +25,32 @@ servers = [
         ais_url='https://ais2.uniba.sk/',
     ),
     dict(
+        title='ais2-beta.uniba.sk + REST',
+        login_types=('cosignpassword', 'cosigncookie'),
+        ais_cookie='cosign-filter-ais2-beta.uniba.sk',
+        ais_url='https://ais2-beta.uniba.sk/',
+        rest_cookie='cosign-filter-int-dev.uniba.sk',
+        rest_url='https://int-dev.uniba.sk:8443/beta/',
+    ),
+    dict(
         title='ais2-beta.uniba.sk',
         login_types=('cosignpassword', 'cosigncookie'),
         ais_cookie='cosign-filter-ais2-beta.uniba.sk',
         ais_url='https://ais2-beta.uniba.sk/',
+    ),
+    dict(
+        title='ais2-test.uniba.sk + REST',
+        login_types=('cosignpassword', 'cosigncookie'),
+        ais_cookie='cosign-filter-ais2-test.uniba.sk',
+        ais_url='https://ais2-test.uniba.sk/',
+        rest_cookie='cosign-filter-int-dev.uniba.sk',
+        rest_url='https://int-dev.uniba.sk:8443/test/',
+    ),
+    dict(
+        title='ais2-test.uniba.sk',
+        login_types=('cosignpassword', 'cosigncookie'),
+        ais_cookie='cosign-filter-ais2-test.uniba.sk',
+        ais_url='https://ais2-test.uniba.sk/',
     ),
     dict(
         title='ais2.euba.sk',
