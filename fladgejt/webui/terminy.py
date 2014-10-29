@@ -14,7 +14,6 @@ class WebuiTerminyMixin:
 
     @with_key_args(True, True)
     def get_vidim_terminy_hodnotenia(self, studium_key, zapisny_list_key):
-        if zapisny_list_key == ('2010/2011',): return False
         try:
             self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
         except AISBehaviorError as e:
