@@ -10,7 +10,7 @@ class RestTerminyMixin:
         (akademicky_rok,) = zapisny_list_key
 
         predmety = self.context.request_json(
-            "/zapisnyList/predmety",
+            "zapisnyList/predmety",
             skratkaStudijnehoProgramu=sp_skratka,
             zaciatokStudia=zaciatok,
             akademickyRok=akademicky_rok)
@@ -29,7 +29,7 @@ class RestTerminyMixin:
         (akademicky_rok,) = zapisny_list_key
 
         terminy = self.context.request_json(
-            "/zapisnyList/terminyHodnotenia",
+            "zapisnyList/terminyHodnotenia",
             skratkaStudijnehoProgramu=sp_skratka,
             zaciatokStudia=zaciatok,
             akademickyRok=akademicky_rok)
@@ -72,7 +72,7 @@ class RestTerminyMixin:
         (skratka,) = predmet_key
 
         terminy = self.context.request_json(
-            "/predmet/aktualneTerminyHodnotenia",
+            "predmet/aktualneTerminyHodnotenia",
             skratkaStudijnehoProgramu=sp_skratka,
             zaciatokStudia=zaciatok,
             akademickyRok=akademicky_rok,

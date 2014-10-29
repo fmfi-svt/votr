@@ -5,7 +5,7 @@ from fladgejt.structures import Studium, ZapisnyList
 
 class RestStudiumMixin:
     def get_studia(self):
-        studia = self.context.request_json('/studium')
+        studia = self.context.request_json('studium')
 
         result = [Studium(sp_skratka=row['studijnyProgramSkratka'],
                           sp_popis=row['studijnyProgramPopis'],
@@ -23,7 +23,7 @@ class RestStudiumMixin:
         sp_skratka, zaciatok = studium_key
 
         zapisne_listy = self.context.request_json(
-            "/studium/zapisneListy",
+            "studium/zapisneListy",
             skratkaStudijnehoProgramu=sp_skratka,
             zaciatokStudia=zaciatok)
 
