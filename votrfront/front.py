@@ -55,7 +55,13 @@ def app_response(request, **my_data):
         for script in scripts))
     content = content.replace('/*INSERT*/',
         'Votr = ' + json.dumps({ 'settings': my_data }).replace('</', '<\\/'))
-    return Response(content, content_type='text/html; charset=UTF-8')
+    return Response(content,
+        content_type='text/html; charset=UTF-8',
+        headers={
+            # no-store == force refresh even after pressing the back button.
+            # http://blog.55minutes.com/2011/10/how-to-defeat-the-browser-back-button-cache/
+            'Cache-Control': 'no-cache, max-age=0, must-revalidate, no-store',
+        })
 
 
 def front(request):
