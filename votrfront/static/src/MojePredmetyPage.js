@@ -39,7 +39,7 @@ Votr.MojePredmetyPageContent = React.createClass({
       <thead>{header}</thead>
       <tbody>
         {hodnotenia.map((hodnotenie) =>
-          <tr key={hodnotenie.key} className={hodnotenie.semester == 'Z' ? 'zima' : 'leto'}>
+          <tr key={hodnotenie.key} className={Votr.classForSemester(hodnotenie.semester)}>
             <td>{hodnotenie.semester}</td>
             <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: hodnotenie.key, modalAkademickyRok: hodnotenie.akademicky_rok})}>
               {hodnotenie.nazov}

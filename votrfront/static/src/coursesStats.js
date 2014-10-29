@@ -25,7 +25,8 @@ Votr.coursesStats = function (hodnotenia) {
     if (row.semester == 'Z') {
       result.zima.count += 1;
       result.zima.creditsCount += credits;
-    } else {
+    }
+    if (row.semester == 'L') {
       result.leto.count += 1;
       result.leto.creditsCount += credits;
     }

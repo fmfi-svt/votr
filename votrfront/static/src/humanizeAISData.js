@@ -30,4 +30,10 @@ Votr.humanizeBoolean = humanizeWith({
   'N': 'nie'
 });
 
+Votr.classForSemester = function (semester) {
+  if (semester == 'Z') return 'zima';
+  if (semester == 'L') return 'leto';
+  return undefined;
+};
+
 })();
