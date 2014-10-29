@@ -80,10 +80,15 @@ class WebuiPredmetyMixin:
 
         app.d.cisloPredmetuNumberControl.write(cislo_predmetu or '')
 
-        if not self._select_ciselnik(app, stredisko, 'skratkaStrediskaTextField', 'zmazatStrediskoButton', 'vybratStrediskoAction', 'skratka'):
+        if not self._select_text_ciselnik(
+                app, stredisko, 'skratkaStrediskaTextField',
+                'zmazatStrediskoButton', 'vybratStrediskoButton', 'skratka'):
             message.append("Stredisko neexistuje.")
 
-        if not self._select_ciselnik(app, skratka_sp, 'skratkaStudProgramuTextField', 'zmazatStudProgramButton', 'vybratStudProgramAction', 'skratka'):
+        if not self._select_text_ciselnik(
+                app, skratka_sp, 'skratkaStudProgramuTextField',
+                'zmazatStudProgramButton', 'vybratStudProogramButton',
+                'skratka'):
             message.append("Študijný program neexistuje.")
 
         if app.d.vyucujuciTextField.value:

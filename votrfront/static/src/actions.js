@@ -18,6 +18,7 @@ Votr.actions = {
   mojePredmety: Votr.MojePredmetyPage,
   mojeSkusky: Votr.MojeSkuskyPage,
   prehladStudia: Votr.PrehladStudiaPage,
+  registerOsob: Votr.RegisterOsobPage,
   registerPredmetov: Votr.RegisterPredmetovPage
 };
 

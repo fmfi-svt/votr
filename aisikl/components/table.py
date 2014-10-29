@@ -74,6 +74,7 @@ class Table(Control):
         self.selected_column_alias = None
         self.inverted_selection = False
         self.selection_changed = False
+        self.active_index_changed = False
 
         self.buffer_size = int(element.get('buffersize', '50'))
 
@@ -472,6 +473,9 @@ class Table(Control):
         self.dialog.app.send_events(ev)
 
     def all_rows(self):
+        if self.declared_row_count > 0:
+            self.scroll_down(self.declared_row_count // self.buffer_size + 1)
+
         while not self.is_end_of_data:
             self.scroll_down(10)
         if self.truncated:

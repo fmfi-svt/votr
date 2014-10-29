@@ -16,3 +16,12 @@ class DialogBody(Component):
 
         # TODO: Seeing as this class does so little, consider just using
         # Component for jsct="body" and moving the rest to Dialog.__init__().
+
+    def _ais_setWidth(self, value):
+        pass
+
+    def _ais_setHeight(self, value):
+        pass
+
+    def _ais_setFocusedComponent(self, value):
+        pass

@@ -4,15 +4,10 @@ from fladgejt.helpers import find_row
 
 # Ciselnik typu SSSC001
 class WebuiCiselnikMixin:
-    def _select_ciselnik(self, app, text, text_field, erase_button, select_action, compare_column):
+    def _select_ciselnik(self, app, text, select_button, compare_column):
         if text is not None:
-            if not app.d.components[text_field].is_editable():
-                app.d.components[erase_button].click()
-
-            app.d.components[text_field].write(text)
-
             with app.collect_operations() as ops:
-                app.d.components[select_action].execute()
+                app.d.components[select_button].click()
 
             if ops:
                 assert_ops(ops, 'openDialog')
@@ -37,10 +32,12 @@ class WebuiCiselnikMixin:
                         app.d.enterButton.click()
 
                     app.awaited_close_dialog(ops)
-        else:
-            if app.d.components[text_field].is_editable():
-                app.d.components[text_field].write('')
-            else:
-                app.d.components[erase_button].click()
 
         return True
+
+    def _select_text_ciselnik(self, app, text, text_field, delete_button, select_button, compare_column):
+        if not app.d.components[text_field].is_editable():
+            app.d.components[delete_button].click()
+        app.d.components[text_field].write(text or '')
+
+        return self._select_ciselnik(app, text, select_button, compare_column)

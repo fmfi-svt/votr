@@ -113,7 +113,7 @@ Votr.MainMenu = React.createClass({
       {!cache.loadedAll && <li><span className="text-pill"><Votr.Loading requests={cache.missing} /></span></li>}
       <li><hr/></li>
       <li><strong className="text-pill">Registre</strong></li>
-      {this.renderDisabled("Register osôb")}
+      {this.renderMenuItem("Register osôb", { action: 'registerOsob' })}
       {this.renderMenuItem("Register predmetov", { action: 'registerPredmetov' })}
       {/*this.renderDisabled("Register miestností")*/}
       {/*this.renderDisabled("Register študijných programov")*/}

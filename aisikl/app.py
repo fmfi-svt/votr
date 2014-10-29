@@ -44,11 +44,11 @@ _useless_res = [
     re.compile(r'^if \(dm\(\)!=null\) \w+=dm\(\)\.getDialog\(\'\w+\'\)$'),
     re.compile(r'^if \(\w+!=null\) \w+=\w+\.getDialogContext\(\)$'),
     re.compile(r'^dm\(\)\.setActiveDialogName\(\'\w+\'\)$'),
-    re.compile(r'^\w+\.getDialogJSObject\(\)\.setFocusedComponent\("\w+"\)$'),
 ]
 _main_re = re.compile(r'^function main0?\(\) \{$')
 _operation_re = re.compile(r'^(webui|dm)\(\)\.(\w+)\((.*)\)$')
 _update_re = re.compile(r'^f\(\)\.getEnsuredJSOById\("(\w+)", *(\w+)\)\.(\w+)\((.*)\)$')
+_dialog_update_re = re.compile(r'^(\w+)\.getDialogJSObject\(\)\.(\w+)\((.*)\)$')
 
 
 def _parse_args(args_str):
@@ -130,6 +130,13 @@ def parse_response(soup):
             target, dialog, method, args_str = match.groups()
             args = _parse_args(args_str)
             updates.append(Update(dialog, target, method, args))
+            continue
+
+        match = _dialog_update_re.match(line)
+        if match:
+            target, method, args_str = match.groups()
+            args = _parse_args(args_str)
+            updates.append(Update(target, target, method, args))
             continue
 
         raise AISParseError("Couldn't parse script line: {}".format(line))
@@ -328,6 +335,8 @@ class Application:
             try:
                 component = dialog.components[update.target]
             except KeyError:
+                if update.target == "HeaderView":
+                    continue   # a mysterious non-existent component
                 raise AISParseError("Component %r doesn't exist in %r." %
                     (update.target, update.dialog)) from None
 
@@ -608,4 +617,3 @@ class Application:
         assert_ops(ops,
                    'serverCloseApplication', 'closeDialog', 'closeApplication')
         self.close_all_dialogs()
-

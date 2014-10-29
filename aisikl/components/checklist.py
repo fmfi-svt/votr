@@ -3,7 +3,14 @@ from collections import namedtuple
 from .control import Control
 
 
-Item = namedtuple('Item', 'title id sid rid tool_tip_text checked')
+class Item:
+    def __init__(self, title, id, sid, rid, tool_tip_text, checked):
+        self.title = title
+        self.id = id
+        self.sid = sid
+        self.rid = rid
+        self.tool_tip_text = tool_tip_text
+        self.checked = checked
 
 
 class CheckList(Control):

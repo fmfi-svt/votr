@@ -45,3 +45,5 @@ PrihlasenyStudent = namedtuple('PrihlasenyStudent', [
 Obdobie = namedtuple('Obdobie', ['obdobie_od', 'obdobie_do', 'id_akcie'])
 
 RegUcitelPredmetu = namedtuple('RegUcitelPredmetu', ['plne_meno', 'typ'])
+
+RegOsoba = namedtuple('RegOsoba', ['meno', 'priezvisko', 'plne_meno', 'email'])
