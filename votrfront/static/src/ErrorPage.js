@@ -30,18 +30,18 @@ Votr.ErrorModal = React.createClass({
     var description = "Vyskytla sa chyba a vaša požiadavka nebola spracovaná.";
 
     if (Votr.settings.error) {
-      if (type == "LoggedOutError") {
+      if (type == "aisikl.exceptions.LoggedOutError") {
         title = "Prihlásenie vypršalo";
-        description = "Vaše prihlásenie vypršalo. Prihláste sa znova.";
+        description = "Vaše prihlásenie vypršalo. Skúste znova.";
       } else {
         title = "Chyba pripojenia";
         description = "Votr sa nevie pripojiť na AIS.";
       }
     } else {
-      if (type == "AISParseError") {
+      if (type == "aisikl.exceptions.AISParseError") {
         description = "Votr nerozumie, čo spravil AIS. V novej verzii AISu sa asi niečo zmenilo.";
       }
-      if (type == "AISBehaviorError") {
+      if (type == "aisikl.exceptions.AISBehaviorError") {
         description = "AIS spravil niečo nečakané. V novej verzii AISu sa možno niečo zmenilo.";
       }
     }
