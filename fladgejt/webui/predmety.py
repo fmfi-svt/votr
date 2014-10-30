@@ -121,8 +121,16 @@ class WebuiPredmetyMixin:
 
         app.awaited_open_dialog(ops)
 
-        app.d.dataTable.select(
-            find_row(app.d.dataTable.all_rows(), skratka=skratka_predmetu))
+        try:
+            app.d.dataTable.select(
+                find_row(app.d.dataTable.all_rows(), skratka=skratka_predmetu))
+        except KeyError:
+            with app.collect_operations() as ops:
+                app.d.closeButton.click()
+
+            app.awaited_close_dialog(ops)
+
+            return [[], predmet]
 
         with app.collect_operations() as ops:
             app.d.zoznamStudentovAction.execute()
@@ -169,10 +177,6 @@ class WebuiPredmetyMixin:
             app.d.fakultaComboBox.select(fakulta_index)
             app.d.potvrditOrgJednotkuButton.click()
 
-        semester_index = find_option(app.d.semesterComboBox.options, id=semester)
-        if app.d.semesterComboBox.selected_index != semester_index:
-            app.d.semesterComboBox.select(semester_index)
-
         # automaticky nacitavanie ucitelov do tabulky
         app.d.nacitavatAutomatickyCheckBox.set_to(True)
 
@@ -188,15 +192,27 @@ class WebuiPredmetyMixin:
         if app.d.zobrazitComboBox.selected_index != zobrazit_index:
             app.d.zobrazitComboBox.select(zobrazit_index)
 
-        app.d.nacitatPredmetyButton.click()
+        mozne_semestre = [semester] if semester else ["Z", "L"]
+        for semester in mozne_semestre:
+            semester_index = find_option(app.d.semesterComboBox.options, id=semester)
+            if app.d.semesterComboBox.selected_index != semester_index:
+                app.d.semesterComboBox.select(semester_index)
 
-        app.d.skupinaPredmetovTable.select(
-            find_row(app.d.skupinaPredmetovTable.all_rows(), skratka=skratka_predmetu))
+            with app.collect_operations() as ops:
+                app.d.nacitatPredmetyButton.click()
 
-        ucitelia = [RegUcitelPredmetu(plne_meno=row['plneMeno'],
-                                      typ=row['typVyucujuceho'])
-                    for row in app.d.vyucujuciTable.all_rows()]
-        return ucitelia
+            if ops:
+                assert_ops(ops, 'messageBox')
+            else:
+                app.d.skupinaPredmetovTable.select(
+                    find_row(app.d.skupinaPredmetovTable.all_rows(), skratka=skratka_predmetu))
+
+                ucitelia = [RegUcitelPredmetu(plne_meno=row['plneMeno'],
+                                              typ=row['typVyucujuceho'])
+                            for row in app.d.vyucujuciTable.all_rows()]
+                return ucitelia
+
+        return []
 
     def vyhladaj_predmety(self, akademicky_rok, fakulta, stredisko, skratka_sp,
                           skratka_predmetu, nazov_predmetu, semester, stupen):
