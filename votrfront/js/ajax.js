@@ -1,7 +1,4 @@
-/**
- * @jsx React.DOM
- * @dontdepend Votr.ajaxError
- */
+// @dontdepend Votr.ajaxError
 
 (function () {
 

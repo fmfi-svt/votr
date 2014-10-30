@@ -1,5 +1,3 @@
-/** @jsx React.DOM */
-
 (function () {
 
 // TODO: Reduce code duplication with ZapisnyListSelector.
@@ -26,7 +24,7 @@ Votr.StudiumSelector = React.createClass({
     });
 
     items = _.sortBy(items, (item) => Votr.sortAs.date(item.studium.zaciatok)).reverse();
-    
+
     return items;
   },
 

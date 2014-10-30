@@ -1,5 +1,3 @@
-/** @jsx React.DOM */
-
 (function () {
 
 var ZNAMKY = {'A': 1, 'B': 1.5, 'C': 2, 'D': 2.5, 'E': 3, 'F': 4};

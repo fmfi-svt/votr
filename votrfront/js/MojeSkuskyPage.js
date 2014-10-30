@@ -1,5 +1,3 @@
-/** @jsx React.DOM */
-
 (function () {
 
 
@@ -70,7 +68,7 @@ Votr.MojeSkuskyPageContent = React.createClass({
             <td>{termin.miestnost}</td>
             <td>{termin.hodnotiaci}</td>
             <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'zoznamPrihlasenychNaTermin', modalStudiumKey: studiumKey, modalZapisnyListKey: zapisnyListKey, modalPredmetKey: termin.predmet_key, modalTerminKey: termin.key })}>
-              {termin.pocet_prihlasenych + 
+              {termin.pocet_prihlasenych +
                (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
             </Votr.Link></td>
             <td>{termin.poznamka}</td>
@@ -147,7 +145,7 @@ Votr.SkuskyRegisterButton = React.createClass({
 
     var now = new Date().toJSON().replace(/-/g, '');
     if (now > Votr.sortAs.date(termin.datum)) return null;
-    
+
     var buttonClass = "btn btn-xs " + (this.isSigninButton() ? "btn-success" : "btn-danger") + (this.isDisabled() ? " appear-disabled" : "");
     var buttonText = this.state.pressed ? <Votr.Loading /> : this.isSigninButton() ? "Prihlásiť" : "Odhlásiť";
 

@@ -1,5 +1,3 @@
-/** @jsx React.DOM */
-
 (function () {
 
 
@@ -162,12 +160,12 @@ Votr.ModalBase = React.createClass({
   },
 
   render: function () {
-    var component = this.props.component;
+    var C = this.props.component;
 
-    return <div data-show={Boolean(component)} className="modal fade"
+    return <div data-show={Boolean(C)} className="modal fade"
                 tabIndex="-1" role="dialog" aria-hidden="true">
       <div className="modal-dialog modal-lg">
-        {component && <component query={this.props.query} />}
+        {C && <C query={this.props.query} />}
       </div>
     </div>;
   }
@@ -177,8 +175,8 @@ Votr.ModalBase = React.createClass({
 Votr.Modal = React.createClass({
   propTypes: {
     closeButton: React.PropTypes.bool.isRequired,
-    title: React.PropTypes.renderable.isRequired,
-    footer: React.PropTypes.renderable
+    title: React.PropTypes.node.isRequired,
+    footer: React.PropTypes.node
   },
 
   getDefaultProps: function () {

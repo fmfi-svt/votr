@@ -1,5 +1,3 @@
-/** @jsx React.DOM */
-
 (function () {
 
 
@@ -88,10 +86,8 @@ Votr.Link = React.createClass({
   },
 
   render: function () {
-    return this.transferPropsTo(
-        <a href={Votr.buildUrl(this.props.href)} onClick={this.handleClick}>
-          {this.props.children}
-        </a>);
+    return <a {...this.props} href={Votr.buildUrl(this.props.href)}
+              onClick={this.handleClick} />;
   }
 });
 
@@ -114,10 +110,8 @@ Votr.FakeLink = React.createClass({
   },
 
   render: function () {
-    return this.transferPropsTo(
-        <a onKeyUp={this.handleKeyUp} tabIndex="0" role="button">
-          {this.props.children}
-        </a>);
+    return <a {...this.props} onKeyUp={this.handleKeyUp}
+              tabIndex="0" role="button" />;
   }
 });
 

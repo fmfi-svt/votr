@@ -27,12 +27,12 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   fi
 
   if ! [ -f static/libs/react.js ]; then
-    npm install react@^0.11
+    npm install react@^0.12
     cp -p node_modules/react/dist/*.* static/libs/
   fi
 
   if ! [ -f node_modules/.bin/jsx ]; then
-    npm install react-tools@^0.11
+    npm install react-tools@^0.12
   fi
 
   if ! [ -f node_modules/.bin/uglifyjs ]; then

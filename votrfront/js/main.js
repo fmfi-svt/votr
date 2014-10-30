@@ -1,8 +1,5 @@
-/**
- * @jsx React.DOM
- * @dontdepend Votr.settings
- * @dontdepend Votr.appRoot
- */
+// @dontdepend Votr.settings
+// @dontdepend Votr.appRoot
 
 (function () {
 
@@ -29,7 +26,7 @@ var root =
     Votr.settings.error ? <Votr.ErrorPage /> :
     <Votr.Root app={Votr.App} />;
 
-Votr.appRoot = React.renderComponent(root, document.getElementById('votr'));
+Votr.appRoot = React.render(root, document.getElementById('votr'));
 
 
 })();

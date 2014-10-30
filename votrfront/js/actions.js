@@ -1,5 +1,3 @@
-/** @jsx React.DOM */
-
 (function () {
 
 
@@ -47,8 +45,9 @@ Votr.App = React.createClass({
     var mainComponent = Votr.actions[action] || Votr.NotFoundPage;
     var modalComponent = Votr.ajaxError ? Votr.ErrorModal : Votr.modalActions[query.modal];
 
+    var C = mainComponent;
     return <div>
-      <mainComponent query={query} />
+      <C query={query} />
       <Votr.ModalBase query={query} component={modalComponent} onClose={this.handleClose} />
       <Votr.LogViewer />
     </div>;
