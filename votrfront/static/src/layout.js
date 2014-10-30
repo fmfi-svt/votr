@@ -121,6 +121,22 @@ Votr.MainMenu = React.createClass({
 });
 
 
+Votr.FormItem = React.createClass({
+  render: function () {
+    if (this.props.label) {
+      return <label className="form-item">
+        <div className="col-sm-4 form-item-label">{this.props.label}</div>
+        <div className="col-sm-8">{this.props.children}</div>
+      </label>;
+    } else {
+      return <div className="form-item">
+        <div className="col-sm-offset-4 col-sm-8">{this.props.children}</div>
+      </div>;
+    }
+  }
+});
+
+
 Votr.ModalBase = React.createClass({
   propTypes: {
     component: React.PropTypes.func,

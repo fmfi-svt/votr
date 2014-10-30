@@ -39,26 +39,21 @@ Votr.RegisterPredmetovForm = React.createClass({
   },
 
   renderTextInput: function(label, name, focus) {
-    return <div>
-      <label>
-        {label}
-        <input name={name} autoFocus={focus} value={this.state[name]} type="text" onChange={this.handleFieldChange} />
-      </label>
-    </div>;
+    return <Votr.FormItem label={label}>
+      <input className="form-item-control" name={name} autoFocus={focus}
+             value={this.state[name]} type="text" onChange={this.handleFieldChange} />
+    </Votr.FormItem>;
   },
 
   renderSelect: function(label, name, items, cache) {
-    return <div>
-      <label>
-        {label}
-        {items ?
-          <select name={name} value={this.state[name]} onChange={this.handleFieldChange}>
-            {items.map((item) =>
-              <option key={item.id} value={item.id}>{item.title}</option>
-            )}
-          </select> : <Votr.Loading requests={cache.missing} />}
-      </label>
-    </div>;
+    return <Votr.FormItem label={label}>
+      {items ?
+        <select className="form-item-control" name={name} value={this.state[name]} onChange={this.handleFieldChange}>
+          {items.map((item) =>
+            <option key={item.id} value={item.id}>{item.title}</option>
+          )}
+        </select> : <Votr.Loading requests={cache.missing} />}
+    </Votr.FormItem>;
   },
 
   render: function () {
@@ -77,9 +72,9 @@ Votr.RegisterPredmetovForm = React.createClass({
       {this.renderSelect("Stupeň: ", "stupen", stupne, cache)}
       {this.renderSelect("Akademický rok: ", "akademickyRok", rocniky, cache)}
       {this.renderSelect("Semester: ", "semester", semestre, cache)}
-      <div>
+      <Votr.FormItem>
         <button className="btn btn-primary" type="submit">Vyhľadaj</button>
-      </div>
+      </Votr.FormItem>
     </form>;
   }
 });
@@ -123,7 +118,8 @@ Votr.RegisterPredmetovResultTable = React.createClass({
       rows, Votr.RegisterPredmetovColumns, this.props.query, 'predmetSort');
 
     return <div>
-      <div>{message}</div>
+      <h2>Výsledky</h2>
+      <p>{message}</p>
       <table className="table table-condensed table-bordered table-striped table-hover">
         <thead>{header}</thead>
         <tbody>

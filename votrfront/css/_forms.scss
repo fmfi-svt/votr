@@ -1,0 +1,36 @@
+
+.form-item {
+  display: block;
+  margin-bottom: ($line-height-computed / 2);
+  @include make-row();
+  max-width: 40em;
+}
+
+.form-item-label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+  @media (min-width: $screen-sm-min) {
+    text-align: right;
+    margin-bottom: 0;
+  }
+}
+
+.form-item-control {
+  display: block;
+  width: 100%;
+}
+
+.form-item.has-error {
+  color: $state-danger-text;
+  input, select, textarea {
+    border: solid $state-danger-text 1px;
+  }
+}
+
+// Taken from bootstrap's _forms.scss
+input[type="radio"],
+input[type="checkbox"] {
+  margin: 4px 0 0;
+  line-height: normal;
+}
