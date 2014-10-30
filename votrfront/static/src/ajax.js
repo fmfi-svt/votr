@@ -30,8 +30,8 @@ Votr.sendRpc = function (name, args, callback) {
     }
     if (xhr.readyState == 4) {
       if (processed != xhr.responseText.length || result === undefined) {
-        console.log('INCOMPLETE!'); // TODO
-        alert('INCOMPLETE!')
+        console.log('INCOMPLETE!');
+        fail("Network error: Incomplete response");
       }
       if (callback) {
         callback(result);
@@ -45,7 +45,7 @@ Votr.sendRpc = function (name, args, callback) {
     failed = true;
     console.log("FAILED!", e);
     if (!Votr.ajaxError) {
-      Votr.ajaxError = e;
+      Votr.ajaxError = _.isString(e) ? e : "Network error";
       Votr.appRoot.forceUpdate();
     }
   }
