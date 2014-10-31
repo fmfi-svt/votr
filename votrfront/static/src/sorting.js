@@ -68,7 +68,7 @@ Votr.sortTable = function (items, columns, query, queryKey) {
   items = items.map((a) => a.item);
 
   function handleClick(event) {
-    var index = event.target.getAttribute('data-index');
+    var index = event.currentTarget.getAttribute('data-index');
     var [label, prop, process, preferDesc] = columns[index];
 
     var newOrder = _.without(order, 'a' + index, 'd' + index);
