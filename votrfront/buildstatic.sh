@@ -40,7 +40,7 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   fi
 
   if ! [ -d node_modules/bootstrap-sass ]; then
-    npm install bootstrap-sass@^3.2
+    npm install bootstrap-sass@~3.2
   fi
   bs=node_modules/bootstrap-sass/assets
   if ! [ -f static/build/modal.js ]; then
