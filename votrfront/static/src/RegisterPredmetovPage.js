@@ -88,7 +88,6 @@ Votr.RegisterPredmetovResultTable = React.createClass({
        !query.studijnyProgramSkratka &&
        !query.skratkaPredmetu &&
        !query.nazovPredmetu &&
-       !query.akademickyRok &&
        !query.semester &&
        !query.stupen) {
       return null;
