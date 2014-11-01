@@ -3,6 +3,27 @@
 (function () {
 
 
+Votr.trackPageView = function () {
+  if (!window.ga) return;
+  var current = location.protocol + '//' + location.hostname +
+                location.pathname + location.search;
+  if (current == Votr.trackPageView.last) return;
+  Votr.trackPageView.last = current;
+  ga('send', 'pageview', { location: current });
+};
+
+
+Votr.AnalyticsMixin = {
+  componentDidMount: function () {
+    Votr.trackPageView();
+  },
+
+  componentDidUpdate: function () {
+    Votr.trackPageView();
+  }
+};
+
+
 function parseQueryString(queryString) {
   if (!queryString) return {};
   var result = {};
@@ -21,6 +42,8 @@ function parseQueryString(queryString) {
 
 
 Votr.Root = React.createClass({
+  mixins: [Votr.AnalyticsMixin],
+
   handlePopState: function () {
     this.forceUpdate();
   },

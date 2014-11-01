@@ -9,6 +9,8 @@ cosign_proxy = None
 
 cosign_proxy_logout = 'https://login.uniba.sk/logout.cgi'
 
+ua_code = None
+
 servers = [
     dict(
         title='ais2.uniba.sk + REST',

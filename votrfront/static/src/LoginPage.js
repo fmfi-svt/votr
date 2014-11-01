@@ -13,6 +13,8 @@ var TYPE_NAMES = {
 
 
 Votr.LoginForm = React.createClass({
+  mixins: [Votr.AnalyticsMixin],
+
   getInitialState: function () {
     return {
       server: Votr.settings.server || 0,

@@ -71,6 +71,8 @@ Votr.ErrorModal = React.createClass({
 
 
 Votr.ErrorPage = React.createClass({
+  mixins: [Votr.AnalyticsMixin],
+
   render: function () {
     // TODO: ModalBase should probably use transferPropsTo() instead of requiring query.
     return <Votr.ModalBase query={{}} component={Votr.ErrorModal} onClose={_.noop} />

@@ -16,6 +16,7 @@ template = '''
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Votr</title>
 <link rel="stylesheet" type="text/css" href="static/build/style.css">
+%(analytics)s
 </head>
 <body>
 <div id="votr"></div>
@@ -28,11 +29,22 @@ vaše hodnotenia a skontrolujte si počet kreditov bez zbytočného klikania.</p
 <p><strong>Na používanie Votr musí byť zapnutý JavaScript.</strong></p>
 </div>
 </noscript>
-<script>/*INSERT*/</script>
-/*JS_INCLUDES*/
+<script>Votr = %(init_json)s</script>
+%(scripts)s
 </body>
 </html>
 '''.lstrip()
+
+analytics_template = '''
+<script>
+(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+})(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+ga('create', '%(ua_code)s', 'auto');
+</script>
+'''.strip()
 
 build_path = os.path.join(os.path.dirname(__file__), 'static/build/')
 
@@ -50,11 +62,14 @@ def app_response(request, **my_data):
     with open(build_path + ('jsdeps-dev' if is_debug else 'jsdeps-prod')) as f:
         scripts = f.read().split()
 
-    content = template.replace('/*JS_INCLUDES*/', ''.join(
-        '<script src="static/build/{}"></script>\n'.format(script)
-        for script in scripts))
-    content = content.replace('/*INSERT*/',
-        'Votr = ' + json.dumps({ 'settings': my_data }).replace('</', '<\\/'))
+    content = template % dict(
+        init_json=json.dumps({ 'settings': my_data }).replace('</', '<\\/'),
+        scripts='\n'.join(
+            '<script src="static/build/{}"></script>'.format(script)
+            for script in scripts),
+        analytics=('' if not request.app.settings.ua_code else
+            analytics_template % dict(ua_code=request.app.settings.ua_code)))
+
     return Response(content,
         content_type='text/html; charset=UTF-8',
         headers={
