@@ -18,7 +18,7 @@ Votr.AboutModal = React.createClass({
         skontrolovať počet kreditov a podobne. Votr používa tie isté dáta, ako
         AIS2, ale podáva ich prehľadnejším spôsobom.
       </p>
-      <h3>Pomoc a technická podpora</h3>
+      <h4>Pomoc a technická podpora</h4>
       <p>
         Votr je nová aplikácia a môžu sa v nej vyskytnúť chyby. Ak vám
         Votr nefunguje, ospravedlňujeme sa! Zavolajte na <a
@@ -31,7 +31,7 @@ Votr.AboutModal = React.createClass({
         zjednodušenie tých najčastejších činností. Ak hľadáte záverečné práce,
         štátne skúšky a ďalšie menej časté veci, musíte ísť cez AIS2.
       </p>
-      <h3>Autori projektu</h3>
+      <h4>Autori projektu</h4>
       <p>
         Votr je projektom Študentského vývojového tímu z Fakulty matematiky,
         fyziky a informatiky UK. Naprogramovali ho Tomáš Belan, Dušan Plavák a

@@ -110,9 +110,9 @@ Votr.DetailPredmetuModal = React.createClass({
 
   render: function () {
     return <Votr.Modal title={this.renderTitle()}>
-      <h2>Učitelia</h2>
+      <h4>Učitelia</h4>
       {this.renderUcitelia()}
-      <h2>Zapísaní študenti</h2>
+      <h4>Zapísaní študenti</h4>
       {this.renderZapisaniStudenti()}
     </Votr.Modal>;
   }
