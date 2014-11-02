@@ -28,6 +28,10 @@ Votr.DetailPredmetuModal = React.createClass({
 
     var [studenti, predmet] = data;
 
+    if (!predmet) {
+      return "Dáta pre predmet neboli nájdené.";
+    }
+
     var ucitelia = cache.get('get_ucitelia_predmetu', modalPredmetKey, modalAkademickyRok, predmet.semester, predmet.fakulta);
 
     if (!ucitelia) {
@@ -62,6 +66,10 @@ Votr.DetailPredmetuModal = React.createClass({
 
     var [studenti, predmet] = data;
 
+    if (!predmet) {
+      return "Dáta pre predmet neboli nájdené.";
+    }
+
     var [studenti, header] = Votr.sortTable(
       studenti, Votr.DetailPredmetuStudentiColumns, this.props.query, 'modalStudentiSort');
 
@@ -92,6 +100,10 @@ Votr.DetailPredmetuModal = React.createClass({
     }
 
     var [studenti, predmet] = data;
+
+    if (!predmet) {
+      return "Chyba";
+    }
 
     return predmet.nazov;
   },

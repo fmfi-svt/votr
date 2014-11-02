@@ -101,7 +101,15 @@ class WebuiPredmetyMixin:
 
         self.__query_dialog(app, akademicky_rok, skratka_predmetu=skratka_predmetu.split('/')[1])
 
-        app.d.zobrazitPredmetyButton.click()
+        with app.collect_operations() as ops:
+            app.d.zobrazitPredmetyButton.click()
+
+        if ops:
+            # predmet nebol najdeny (napriklad uz je prilis stary ale napriek
+            # tomu ho mam v mojom hodnoteni)
+            assert_ops(ops, 'messageBox')
+
+            return [[], None]
 
         predmet_index = find_row(app.d.zoznamPredmetovTable.all_rows(), skratka=skratka_predmetu)
         app.d.zoznamPredmetovTable.select(predmet_index)
