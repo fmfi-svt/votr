@@ -32,6 +32,7 @@ Votr.actions = {
 
 
 Votr.modalActions = {
+  about: Votr.AboutModal,
   detailPredmetu: Votr.DetailPredmetuModal,
   zoznamPrihlasenychNaTermin: Votr.ZoznamPrihlasenychNaTerminModal
 };

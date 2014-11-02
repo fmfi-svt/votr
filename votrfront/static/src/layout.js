@@ -10,7 +10,7 @@ Votr.PageLayout = React.createClass({
 
   render: function () {
     return <div>
-      <Votr.PageNavbar />
+      <Votr.PageNavbar query={this.props.query} />
       <div className="layout-container">
         <div className="layout-menu">
           <Votr.MainMenu query={this.props.query} />
@@ -38,6 +38,7 @@ Votr.PageNavbar = React.createClass({
         </div>
         <div className="navbar-right">
           <ul className="nav navbar-nav">
+            <li><Votr.Link href={_.assign({}, this.props.query, { modal: 'about' })}>O programe</Votr.Link></li>
             <li><Votr.FakeLink onClick={Votr.goReset} title="Znovu načítať všetky dáta">Obnoviť</Votr.FakeLink></li>
             <li><Votr.FakeLink onClick={Votr.goLogout}>Odhlásiť</Votr.FakeLink></li>
           </ul>
