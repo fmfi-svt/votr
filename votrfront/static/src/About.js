@@ -50,4 +50,38 @@ Votr.AboutModal = React.createClass({
 });
 
 
+Votr.IndexPage = React.createClass({
+  render: function () {
+    // TODO: Use PageTitle, but show different h1.
+    return <Votr.PageLayout query={this.props.query}>
+      <h1>Vitajte</h1>
+      <p>Cez ľavé menu sa dostanete ku týmto informáciam:</p>
+      <ul>
+        <li><p>
+          <strong>Prehľad štúdia</strong> &mdash; kedy prebieha výučba a kedy
+          skúškové obdobie, zoznam vašich štúdií a zápisných listov
+        </p></li>
+        <li><p>
+          <strong>Moje predmety</strong> &mdash; predmety, čo máte zapísané
+          v tomto alebo minulom akademickom roku, a získané hodnotenia
+        </p></li>
+        <li><p>
+          <strong>Moje skúšky</strong> &mdash; skúškové termíny, na ktorých ste
+          prihlásení a na ktoré sa môžete prihlásiť
+        </p></li>
+        <li><p>
+          <strong>Moje hodnotenia</strong> &mdash; hodnotenia predmetov a
+          získané študijné priemery za celé štúdium
+        </p></li>
+        {/* TODO Register osob */}
+        <li><p>
+          <strong>Register predmetov</strong> &mdash; vyhľadávanie predmetov,
+          informácie o ich učiteľoch a zoznamy zapísaných študentov
+        </p></li>
+      </ul>
+    </Votr.PageLayout>
+  }
+});
+
+
 })();
