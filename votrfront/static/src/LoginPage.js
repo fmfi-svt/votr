@@ -13,8 +13,6 @@ var TYPE_NAMES = {
 
 
 Votr.LoginForm = React.createClass({
-  mixins: [Votr.AnalyticsMixin],
-
   getInitialState: function () {
     return {
       server: Votr.settings.server || 0,
@@ -127,8 +125,18 @@ Votr.LoginForm = React.createClass({
 
 
 Votr.LoginPage = React.createClass({
+  mixins: [Votr.AnalyticsMixin],
+
+  getInitialState: function () {
+    return {};
+  },
+
+  toggleAbout: function () {
+    this.setState({ about: !this.state.about });
+  },
+
   render: function () {
-    return <div>
+    var content = <div className="login-page">
       <div className="navbar navbar-inverse navbar-static-top">
         <div className="container-fluid">
           <div className="navbar-header">
@@ -136,7 +144,7 @@ Votr.LoginPage = React.createClass({
           </div>
         </div>
       </div>
-      <div className="login-page">
+      <div className="login-content">
         <p>
           <strong>Votr</strong> ponúka študentom jednoduchší a pohodlnejší
           spôsob, ako robiť najčastejšie činnosti zo systému AIS. Zapíšte sa na
@@ -146,7 +154,21 @@ Votr.LoginPage = React.createClass({
         <hr />
         <Votr.LoginForm />
       </div>
+      <div className="text-center">
+        <ul className="list-inline">
+          <li><Votr.FakeLink className="btn btn-link" onClick={this.toggleAbout}>O aplikácii</Votr.FakeLink></li>
+          <li><a className="btn btn-link" href="https://uniba.sk/" target="_blank">Univerzita Komenského</a></li>
+          <li><a className="btn btn-link" href="https://moja.uniba.sk/" target="_blank">IT služby na UK</a></li>
+        </ul>
+      </div>
     </div>;
+
+    var modalComponent = this.state.about ? Votr.AboutModal : null;
+
+    return <span>
+      {content}
+      <Votr.ModalBase query={{}} component={modalComponent} onClose={this.toggleAbout} />
+    </span>;
   }
 });
 

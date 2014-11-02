@@ -19,14 +19,16 @@ template = '''
 %(analytics)s
 </head>
 <body>
-<div id="votr"></div>
+<span id="votr"></span>
 <noscript>
 <div class="login-page">
+<div class="login-content">
 <h1>Votr</h1>
 <p><strong>Votr</strong> ponúka študentom jednoduchší a pohodlnejší spôsob, ako
 robiť najčastejšie činnosti zo systému AIS. Zapíšte sa na skúšky, prezrite si
 vaše hodnotenia a skontrolujte si počet kreditov bez zbytočného klikania.</p>
 <p><strong>Na používanie Votr musí byť zapnutý JavaScript.</strong></p>
+</div>
 </div>
 </noscript>
 <script>Votr = %(init_json)s</script>

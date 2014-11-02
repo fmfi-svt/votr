@@ -23,7 +23,7 @@ $table-condensed-cell-padding: 4px;
 @import "forms";
 
 
-html {
+html, body {
   position: relative;
   height: 100%;
 }
@@ -141,13 +141,21 @@ th.sort {
 }
 
 .login-page {
-  position: absolute;
-  top: 30%;
-  left: 0;
-  right: 0;
-  max-width: 30em;
-  padding: 2em 15px;
-  margin: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100%;
+  .login-content {
+    max-width: 30em;
+    padding: 2em 15px;
+    margin: auto;
+  }
+  .list-inline a {
+    color: $navbar-default-link-color;
+    &:hover {
+      color: $navbar-default-link-hover-color;
+    }
+  }
 }
 
 .central-box {
