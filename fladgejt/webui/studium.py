@@ -10,7 +10,7 @@ from fladgejt.webui.pool import pooled_app
 class WebuiStudiumMixin:
     @pooled_app
     def _open_administracia_studia(self):
-        url = '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.es.VSES017App&kodAplikacie=VSES017&uiLang=SK'
+        url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.es.VSES017App&kodAplikacie=VSES017&uiLang=SK'
         app, ops = Application.open(self.context, url)
         app.awaited_open_main_dialog(ops)
         return app

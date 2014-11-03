@@ -9,7 +9,7 @@ from fladgejt.structures import RegUcitelPredmetu, PrihlasenyStudent, RegPredmet
 class WebuiPredmetyMixin:
     @pooled_app
     def _open_register_predmetov(self):
-        url = '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST060App&kodAplikacie=VSST060&uiLang=SK'
+        url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.st.VSST060App&kodAplikacie=VSST060&uiLang=SK'
         app, ops = Application.open(self.context, url)
         app.awaited_open_main_dialog(ops)
         return app
@@ -173,7 +173,7 @@ class WebuiPredmetyMixin:
 
     @pooled_app
     def _open_nastenka_predmetu(self):
-        url = '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST157App&kodAplikacie=VSST157&uiLang=SK'
+        url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.st.VSST157App&kodAplikacie=VSST157&uiLang=SK'
         app, ops = Application.open(self.context, url)
         app.awaited_open_main_dialog(ops)
         return app

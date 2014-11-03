@@ -14,7 +14,7 @@ class WebuiObdobiaMixin:
         :return: a :class:`~Application` object.
         '''
         url = '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST010App' \
-              '&kodAplikacie=VSST010&uiLang=SK'
+              '&fajr=A&kodAplikacie=VSST010&uiLang=SK'
         app, ops = Application.open(self.context, url)
         app.awaited_open_main_dialog(ops)
         return app

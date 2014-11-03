@@ -9,7 +9,7 @@ from fladgejt.structures import RegOsoba
 class WebuiOsobyMixin:
     @pooled_app
     def _open_register_osob(self):
-        url = '/ais/servlets/WebUIServlet?appClassName=ais.gui.lz.LZ014App&kodAplikacie=LZ014&uiLang=SK'
+        url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.lz.LZ014App&kodAplikacie=LZ014&uiLang=SK'
         app, ops = Application.open(self.context, url)
         assert_ops(ops, 'openMainDialog', 'openDialog')
 
