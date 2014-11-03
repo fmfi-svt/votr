@@ -73,7 +73,10 @@ Votr.IndexPage = React.createClass({
           <strong>Moje hodnotenia</strong> &mdash; hodnotenia predmetov a
           získané študijné priemery za celé štúdium
         </p></li>
-        {/* TODO Register osob */}
+        <li><p>
+          <strong>Register osôb</strong> &mdash; vyhľadávanie zamestnancov,
+          študentov a absolventov univerzity, e-mailové kontakty
+        </p></li>
         <li><p>
           <strong>Register predmetov</strong> &mdash; vyhľadávanie predmetov,
           informácie o ich učiteľoch a zoznamy zapísaných študentov
