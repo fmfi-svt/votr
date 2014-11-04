@@ -85,15 +85,15 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
     var priemery;
     var zapisneListy = cache.get('get_zapisne_listy', studiumKey);
 
-    if (zapisneListy) {
+    if (zapisneListy && zapisneListy.length == 0) {
+      priemery = [];
+    } else if (zapisneListy) {
       var zapisnyListKey = _.max(zapisneListy,
           (zapisnyList) => Votr.sortAs.date(zapisnyList.datum_zapisu)).key;
       priemery = cache.get('get_priemery', studiumKey, zapisnyListKey);
-    } else if (zapisneListy === []) {
-      priemery = [];
     }
 
-    if (!priemery && priemery !== []) {
+    if (!priemery) {
       return <Votr.Loading requests={cache.missing} />;
     }
 
