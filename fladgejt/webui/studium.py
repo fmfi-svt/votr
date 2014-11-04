@@ -98,6 +98,14 @@ class WebuiStudiumMixin:
         new_app.awaited_open_main_dialog(new_ops)
         return new_app
 
+    def get_hodnotenia_priemery_app(self, studium_key, zapisny_list_key):
+        app = self._open_administracia_studia()
+
+        if not app.d.hodnoteniaPriemeryAction.enabled:
+            return None
+
+        return self._open_hodnotenia_priemery_app(studium_key, zapisny_list_key)
+
     @pooled_app
     def _open_hodnotenia_priemery_app(self, studium_key, zapisny_list_key):
         app = self._open_administracia_studia()
