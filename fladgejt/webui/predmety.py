@@ -104,7 +104,7 @@ class WebuiPredmetyMixin:
         (skratka_predmetu,) = predmet_key
         app = self._open_register_predmetov()
 
-        self.__query_dialog(app, akademicky_rok, skratka_predmetu=skratka_predmetu.split('/')[1])
+        self.__query_dialog(app, akademicky_rok, skratka_predmetu='/'.join(skratka_predmetu.split('/')[1:-1]))
 
         with app.collect_operations() as ops:
             app.d.zobrazitPredmetyButton.click()
