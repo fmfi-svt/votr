@@ -50,6 +50,13 @@ def get_cosign_cookies(server, params):
             for line in f:
                 # Remove starting "x" and everything after the space.
                 name, _, value = line[1:].split()[0].partition('=')
+                # When connecting to the javacosign filter instead of apache's
+                # mod_cosign, we have to add a sufficiently large timestamp.
+                # Apache: grep cookietime filters/apache2/mod_cosign.c
+                # Java: grep -ER 'parseCosignCookie|cosignCookie.getTimestamp'
+                # We currently assume that REST API always uses javacosign.
+                if name == server.get('rest_cookie') and '/' not in value:
+                    value += '/99999999999999'
                 result[name] = value
         return result
 
