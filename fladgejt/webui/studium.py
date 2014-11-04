@@ -133,6 +133,9 @@ class WebuiStudiumMixin:
         with app.collect_operations() as ops:
             app.d.ziskaneMenuItem.click()
 
+        if len(ops) == 0:
+            return []
+
         # Otvori sa dialog s prehladom kreditov.
         app.awaited_open_dialog(ops)
 
