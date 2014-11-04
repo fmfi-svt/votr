@@ -12,6 +12,13 @@ class WebuiStudiumMixin:
     def _open_administracia_studia(self):
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.es.VSES017App&kodAplikacie=VSES017&uiLang=SK'
         app, ops = Application.open(self.context, url)
+
+        if len(ops) == 2:
+            assert_ops(ops, 'openMainDialog', 'messageBox')
+            if ops[1].args[0] != 'Štúdium je prerušené. Zvoľte aktívne štúdium.':
+                raise AISBehaviorError("AIS displayed an error: {}".format(ops))
+            ops = ops[0:1]
+
         app.awaited_open_main_dialog(ops)
         return app
 
@@ -69,6 +76,13 @@ class WebuiStudiumMixin:
 
             with app.collect_operations() as ops:
                 app.d.nacitatButton.click()
+
+            if len(ops) == 2:
+                assert_ops(ops, 'messageBox', 'refreshDialog')
+                if ops[0].args[0] != 'Štúdium je prerušené. Zvoľte aktívne štúdium.':
+                    raise AISBehaviorError("AIS displayed an error: {}".format(ops))
+                ops = ops[1:]
+
             if ops:
                 app.awaited_refresh_dialog(ops)
 
