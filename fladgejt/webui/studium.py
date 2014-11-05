@@ -101,7 +101,7 @@ class WebuiStudiumMixin:
     def get_hodnotenia_priemery_app(self, studium_key, zapisny_list_key):
         app = self._open_administracia_studia()
 
-        if not app.d.hodnoteniaPriemeryAction.enabled:
+        if not app.d.hodnoteniaPriemeryAction.accessible:
             return None
 
         return self._open_hodnotenia_priemery_app(studium_key, zapisny_list_key)
