@@ -49,3 +49,7 @@ class Component:
         self.title = value
     def _ais_setPopupMenu(self, value):
         self.popup_menu = value
+    def _ais_setForeground(self, value):
+        pass
+    def _ais_setBackground(self, value):
+        pass
