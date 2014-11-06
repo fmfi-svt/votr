@@ -66,7 +66,7 @@ Votr.RegisterPredmetovForm = React.createClass({
     return <form onSubmit={this.handleSubmit}>
       {this.renderTextInput("Názov predmetu: ", "nazovPredmetu", true)}
       {this.renderTextInput("Skratka predmetu: ", "skratkaPredmetu", false)}
-      {this.renderTextInput("Študijný program: ", "studijnyProgramSkratka", false)}
+      {this.renderTextInput("Študijný program (skratka): ", "studijnyProgramSkratka", false)}
       {this.renderSelect("Fakulta: ", "fakulta", fakulty, cache)}
       {this.renderTextInput("Stredisko: ", "stredisko", false)}
       {this.renderSelect("Stupeň: ", "stupen", stupne, cache)}
