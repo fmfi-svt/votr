@@ -10,6 +10,9 @@ class WebuiCiselnikMixin:
                 app.d.components[select_button].click()
 
             if ops:
+                if ops[0].method == 'messageBox' and ops[0].args[0] == 'Podmienkam nevyhovuje žiadny záznam.':
+                    return False
+
                 assert_ops(ops, 'openDialog')
 
                 if ops[0].args[2] != 'SSSC001':
