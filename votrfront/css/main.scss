@@ -150,6 +150,7 @@ th.sort {
     max-width: 30em;
     padding: 2em 15px;
     margin: auto;
+    align-self: center;   // "margin: auto" is not enough for IE11
   }
   .list-inline a {
     color: $navbar-default-link-color;
