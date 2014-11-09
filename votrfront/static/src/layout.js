@@ -38,7 +38,7 @@ Votr.PageNavbar = React.createClass({
         </div>
         <div className="navbar-right">
           <ul className="nav navbar-nav">
-            <li><Votr.Link href={_.assign({}, this.props.query, { modal: 'about' })}>O programe</Votr.Link></li>
+            <li><Votr.Link href={_.assign({}, this.props.query, { modal: 'about' })}>O aplikácii</Votr.Link></li>
             <li><Votr.FakeLink onClick={Votr.goReset} title="Znovu načítať všetky dáta">Obnoviť</Votr.FakeLink></li>
             <li><Votr.FakeLink onClick={Votr.goLogout}>Odhlásiť</Votr.FakeLink></li>
           </ul>
