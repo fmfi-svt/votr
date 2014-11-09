@@ -30,7 +30,7 @@ _functions_re = re.compile(r'\nfunction (\w+)')
 _var_re = re.compile(r'^var \w+;\s*')
 _trycatch_re = re.compile(r'^try {\s*|\s*} *catch *\(e\) *{ *(return;)? *}$')
 _multiline_res = [
-    re.compile(r'if *\( *dm\(\) *!= *null *\) *{ *\n *dm\(\)\.checkDialogStacksEmpty\(\);? *\n *}'),
+    re.compile(r'if *\( *dm\(\) *!= *null *\) *{\s*\n\s*dm\(\)\.checkDialogStacksEmpty\(\);?\s*\n\s*}'),
 ]
 _useless_res = [
     re.compile(r'^function [^{]*\{[^}]*\}$'),
