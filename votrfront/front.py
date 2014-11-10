@@ -15,7 +15,7 @@ template = '''
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Votr</title>
-<link rel="stylesheet" type="text/css" href="static/build/style.css">
+<link rel="stylesheet" type="text/css" href="%(css)s">
 %(analytics)s
 </head>
 <body>
@@ -51,6 +51,11 @@ ga('create', '%(ua_code)s', 'auto');
 build_path = os.path.join(os.path.dirname(__file__), 'static/build/')
 
 
+def static_url(filename):
+    mtime = int(os.path.getmtime(build_path + filename))
+    return 'static/build/{}?v={}'.format(filename, mtime)
+
+
 def app_response(request, **my_data):
     my_data['url_root'] = request.url_root
     my_data['instance_name'] = request.app.settings.instance_name
@@ -66,8 +71,9 @@ def app_response(request, **my_data):
 
     content = template % dict(
         init_json=json.dumps({ 'settings': my_data }).replace('</', '<\\/'),
+        css=static_url('style.css'),
         scripts='\n'.join(
-            '<script src="static/build/{}"></script>'.format(script)
+            '<script src="{}"></script>'.format(static_url(script))
             for script in scripts),
         analytics=('' if not request.app.settings.ua_code else
             analytics_template % dict(ua_code=request.app.settings.ua_code)))
