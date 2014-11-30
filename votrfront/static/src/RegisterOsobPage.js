@@ -81,7 +81,7 @@ Votr.RegisterOsobForm = React.createClass({
       {this.renderTextInput("Meno: ", "meno", false)}
       {this.renderTextInput("Priezvisko: ", "priezvisko", true)}
       {this.renderSelect("Fakulta: ", "fakulta", fakulty, cache)}
-      {this.renderTextInput("Študijný program: ", "skratkaSp", false)}
+      {this.renderTextInput("Študijný program (skratka): ", "skratkaSp", false)}
       {this.renderSelect("Akademický rok: ", "akademickyRok", akademickeRoky, cache)}
       <div className="form-item">
         <div className="col-sm-4 form-item-label">Typ osoby:</div>
