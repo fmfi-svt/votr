@@ -18,6 +18,10 @@ class Control(Component):
         self.tab_order = int(value)
     def _ais_setToolTipText(self, value):
         self.tool_tip_text = value
+    def _ais_setForeground(self, value):
+        pass
+    def _ais_setBackground(self, value):
+        pass
 
     def changed_properties(self):
         return ''

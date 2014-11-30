@@ -138,7 +138,8 @@ PARTIAL
     - Focus and blur is UNSUPPORTED. We never send focus information to AIS,
       and blur events must be triggered manually.
     - It seems these set*() methods aren't used in result frame updates. If
-      that's wrong, we just need to add empty _ais_set*() methods.
+      that's wrong, we just need to add empty _ais_set*() methods. (So far, we
+      added setForeground and setBackground.)
     - Instead of calling positionContextMenu() or showPopupMenu(), use the menu
       items directly.
 - getReadOnly(), setReadOnly() -> self.read_only
