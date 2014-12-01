@@ -31,7 +31,7 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
   renderHodnotenia: function () {
     var cache = new Votr.CacheRequester();
     var {studiumKey} = this.props.query;
-    var hodnotenia = cache.get('get_prehlad_kreditov', studiumKey);
+    var [hodnotenia, message] = cache.get('get_prehlad_kreditov', studiumKey) || [];
 
     if (!hodnotenia) {
       return <Votr.Loading requests={cache.missing} />;
@@ -74,6 +74,7 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
             <td></td>
             <td></td>
           </tr>
+          {message && <tr><td colSpan="9">{message}</td></tr>}
       </tfoot>
     </table>;
   },

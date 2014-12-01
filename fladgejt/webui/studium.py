@@ -139,6 +139,9 @@ class WebuiStudiumMixin:
         with app.collect_operations() as ops:
             app.d.ziskaneMenuItem.click()
 
+        if not ops:
+            return [[], "Prehľad hodnotenia pre toto štúdium nie je dostupný."]
+
         # Otvori sa dialog s prehladom kreditov.
         app.awaited_open_dialog(ops)
 
@@ -162,7 +165,7 @@ class WebuiStudiumMixin:
         # Dialog sa zavrie.
         app.awaited_close_dialog(ops)
 
-        return result
+        return [result, None]
 
     def __open_novy_zapisny_list_dialog(self, app, studium_key):
         # Vyberieme studium.
