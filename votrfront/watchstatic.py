@@ -7,7 +7,7 @@ import time
 
 
 votrfront_path = os.path.dirname(__file__) or '.'
-watch_paths = ['buildstatic.sh', 'static/src', 'css']
+watch_paths = ['buildstatic.sh', 'js', 'css']
 watch_extensions = ['.sh', '.js', '.scss']
 
 

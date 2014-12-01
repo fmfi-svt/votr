@@ -47,7 +47,7 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     cp $bs/javascripts/bootstrap/*.js static/build/
   fi
 
-  ./node_modules/.bin/jsx --harmony static/src/ static/build/
+  ./node_modules/.bin/jsx --harmony js/ static/build/
 
   sed -i "
     # Don't use pointer cursor on buttons.
