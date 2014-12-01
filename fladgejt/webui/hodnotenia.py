@@ -6,7 +6,11 @@ from fladgejt.structures import Hodnotenie, Priemer
 class WebuiHodnoteniaMixin:
     @with_key_args(True, True)
     def get_hodnotenia(self, studium_key, zapisny_list_key):
-        app = self._open_hodnotenia_priemery_app(studium_key, zapisny_list_key)
+        app = self.get_hodnotenia_priemery_app(studium_key, zapisny_list_key)
+
+        # Hodnotenia, priemery su nedostupne v AISe
+        if app is None:
+            return []
 
         (akademicky_rok,) = zapisny_list_key
 
@@ -26,7 +30,11 @@ class WebuiHodnoteniaMixin:
 
     @with_key_args(True, True)
     def get_priemery(self, studium_key, zapisny_list_key):
-        app = self._open_hodnotenia_priemery_app(studium_key, zapisny_list_key)
+        app = self.get_hodnotenia_priemery_app(studium_key, zapisny_list_key)
+
+        # Hodnotenia, priemery su nedostupne v AISe
+        if app is None:
+            return []
 
         result = [Priemer(akademicky_rok=row['priemerInfoPopisAkadRok'],
                           nazov=row['priemerNazov'],
