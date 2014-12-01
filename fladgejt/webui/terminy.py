@@ -1,7 +1,7 @@
 
-from aisikl.exceptions import AISBehaviorError
 from aisikl.app import assert_ops
-from fladgejt.helpers import find_row, find_option, with_key_args
+from fladgejt.helpers import (
+    CantOpenApplication, find_row, find_option, with_key_args)
 from fladgejt.structures import Predmet, Termin, PrihlasenyStudent
 
 
@@ -16,11 +16,8 @@ class WebuiTerminyMixin:
     def get_vidim_terminy_hodnotenia(self, studium_key, zapisny_list_key):
         try:
             self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
-        except AISBehaviorError as e:
-            if (getattr(e, 'operations', None) == [] and
-                getattr(e, 'expected_methods', None) == ['startApp']):
-                return False
-            raise
+        except CantOpenApplication:
+            return False
         return True
 
     @with_key_args(True, True)

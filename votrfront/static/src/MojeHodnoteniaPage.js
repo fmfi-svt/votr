@@ -83,7 +83,7 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
     var cache = new Votr.CacheRequester();
     var {studiumKey} = this.props.query;
 
-    var priemery;
+    var priemery, message;
     var zapisneListy = cache.get('get_zapisne_listy', studiumKey);
 
     if (zapisneListy && zapisneListy.length == 0) {
@@ -91,7 +91,7 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
     } else if (zapisneListy) {
       var zapisnyListKey = _.max(zapisneListy,
           (zapisnyList) => Votr.sortAs.date(zapisnyList.datum_zapisu)).key;
-      priemery = cache.get('get_priemery', studiumKey, zapisnyListKey);
+      [priemery, message] = cache.get('get_priemery', studiumKey, zapisnyListKey) || [];
     }
 
     if (!priemery) {
@@ -118,6 +118,7 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
           </tr>
         )}
       </tbody>
+      {message && <tfoot><tr><td colSpan="9">{message}</td></tr></tfoot>}
     </table>;
   },
 

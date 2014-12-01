@@ -2,7 +2,8 @@
 
 from aisikl.app import Application, assert_ops
 from aisikl.exceptions import AISBehaviorError
-from fladgejt.helpers import find_row, find_option, with_key_args
+from fladgejt.helpers import (
+    CantOpenApplication, find_row, find_option, with_key_args)
 from fladgejt.structures import Studium, ZapisnyList, Hodnotenie
 from fladgejt.webui.pool import pooled_app
 
@@ -107,6 +108,8 @@ class WebuiStudiumMixin:
         with app.collect_operations() as ops:
             app.d.terminyHodnoteniaAction.execute()
 
+        if not ops: raise CantOpenApplication()
+
         # Otvori sa nove okno a v nom hlavny dialog.
         new_app, new_ops = app.awaited_start_app(ops)
         new_app.awaited_open_main_dialog(new_ops)
@@ -122,6 +125,8 @@ class WebuiStudiumMixin:
         # Stlacime v menu "Hodnotenia, priemery".
         with app.collect_operations() as ops:
             app.d.hodnoteniaPriemeryAction.execute()
+
+        if not ops: raise CantOpenApplication()
 
         # Otvori sa nove okno a v nom hlavny dialog.
         new_app, new_ops = app.awaited_start_app(ops)

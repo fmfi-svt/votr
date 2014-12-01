@@ -3,6 +3,16 @@ from collections import namedtuple
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 
 
+class CantOpenApplication(Exception):
+    '''AIS didn't open the application we wanted.
+
+    Thrown from ``_open_...`` methods if AIS refuses to open the application
+    (e.g. the menu item is disabled for this user). The caller should catch
+    this and show a message to the user. This is only used when we know it can
+    happen -- unknown AIS behavior will cause an AISBehaviorError.
+    '''
+
+
 def find_row(objects, **conditions):
     '''Searches the list of objects for one that matches all given conditions.
 

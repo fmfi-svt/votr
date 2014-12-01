@@ -167,3 +167,9 @@ th.sort {
   top: 30%;
   text-align: center;
 }
+
+// ugly workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=217769
+// suggested in https://bugzilla.mozilla.org/show_bug.cgi?id=409254
+thead:empty, tbody:empty, tfoot:empty {
+  display: none;
+}
