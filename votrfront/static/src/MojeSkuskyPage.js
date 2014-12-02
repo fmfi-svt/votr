@@ -4,9 +4,9 @@
 
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
-// TODO: Prihlas/odhlas
 
 Votr.MojeSkuskyColumns = [
+  ["Moje?", null, (termin) => !termin.datum_prihlasenia || termin.datum_odhlasenia ? 'N' : 'A'],
   ["Predmet", 'nazov_predmetu'],
   ["Dátum", 'datum', Votr.sortAs.date],
   ["Čas", 'cas'],
@@ -17,7 +17,6 @@ Votr.MojeSkuskyColumns = [
   ["Prihlasovanie", 'prihlasovanie', Votr.sortAs.interval],
   ["Odhlasovanie", 'odhlasovanie', Votr.sortAs.interval],
   ["Známka", null, (termin) => termin.hodnotenie_terminu || termin.hodnotenie_predmetu]
-  // TODO: "Odhlás"
 ];
 
 
@@ -40,20 +39,29 @@ Votr.MojeSkuskyPageContent = React.createClass({
       return <p>Skúšky pre tento zápisný list už nie sú k dispozícii.</p>;
     }
 
-    var terminy = cache.get('get_prihlasene_terminy', studiumKey, zapisnyListKey);
+    var terminyPrihlasene = cache.get('get_prihlasene_terminy', studiumKey, zapisnyListKey);
+    var terminyVypisane = cache.get('get_vypisane_terminy', studiumKey, zapisnyListKey);
 
-    if (!terminy) {
+    if (!terminyPrihlasene || !terminyVypisane) {
       return <Votr.Loading requests={cache.missing} />;
     }
+
+    var terminy = {};
+    terminyVypisane.forEach((termin) => terminy[termin.key] = termin);
+    terminyPrihlasene.forEach((termin) => terminy[termin.key] = termin);
+    terminy = _.values(terminy);
 
     var [terminy, header] = Votr.sortTable(
       terminy, Votr.MojeSkuskyColumns, this.props.query, 'skuskySort');
 
-    return <table className="table table-condensed table-bordered table-striped table-hover">
+    return <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
       <thead>{header}</thead>
       <tbody>
         {terminy.map((termin) =>
           <tr key={termin.key}>
+            {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
+              <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
+              <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
             <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok })}>
               {termin.nazov_predmetu}
             </Votr.Link></td>
@@ -72,8 +80,8 @@ Votr.MojeSkuskyPageContent = React.createClass({
               {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
                termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
                null}
+               <Votr.SkuskyRegisterButton studiumKey={studiumKey} zapisnyListKey={zapisnyListKey} termin={termin}/>
             </td>
-            {/* TODO Odhlás */}
           </tr>
         )}
       </tbody>
@@ -85,6 +93,65 @@ Votr.MojeSkuskyPageContent = React.createClass({
       <Votr.PageTitle>Moje skúšky</Votr.PageTitle>
       {this.renderContent()}
     </div>;
+  }
+});
+
+
+Votr.SkuskyRegisterButton = React.createClass({
+  propTypes: {
+    studiumKey: React.PropTypes.string.isRequired,
+    zapisnyListKey: React.PropTypes.string.isRequired,
+    termin: React.PropTypes.object.isRequired
+  },
+
+  getInitialState: function () {
+    return {
+      pressed: false
+    };
+  },
+
+  handleClick: function() {
+    var command = this.isSigninButton() ? 'prihlas_na_termin' : 'odhlas_z_terminu';
+    var {studiumKey, zapisnyListKey, termin} = this.props;
+
+    Votr.sendRpc(command, [studiumKey, zapisnyListKey, termin.predmet_key, termin.key], (message) => {
+      if (message) {
+        this.setState({ pressed: false });
+        alert(message);
+      } else {
+        Votr.RequestCache.invalidate('get_prihlasene_terminy');
+        Votr.RequestCache.invalidate('get_vypisane_terminy');
+        Votr.RequestCache.invalidate('get_prihlaseni_studenti');
+      }
+    });
+
+    this.setState({ pressed: true });
+  },
+
+  isDisabled: function() {
+    var termin = this.props.termin;
+    return (this.isSigninButton() && termin.moznost_prihlasit !== 'A') || this.state.pressed;
+  },
+
+  isSigninButton: function() {
+    var termin = this.props.termin;
+    return !termin.datum_prihlasenia || termin.datum_odhlasenia;
+  },
+
+  render: function () {
+    var termin = this.props.termin;
+
+    if (termin.hodnotenie_terminu || termin.hodnotenie_predmetu) {
+      return null;
+    }
+
+    var now = new Date().toJSON().replace(/-/g, '');
+    if (now > Votr.sortAs.date(termin.datum)) return null;
+    
+    var buttonClass = "btn btn-xs " + (this.isSigninButton() ? "btn-success" : "btn-danger");
+    var buttonText = this.state.pressed ? <Votr.Loading /> : this.isSigninButton() ? "Prihlásiť" : "Odhlásiť";
+
+    return <button onClick={this.isDisabled() ? null : this.handleClick} className={buttonClass} disabled={this.isDisabled()}>{buttonText}</button>;
   }
 });
 

@@ -173,3 +173,15 @@ th.sort {
 thead:empty, tbody:empty, tfoot:empty {
   display: none;
 }
+
+.table.with-buttons-table td {
+  vertical-align: middle;
+}
+
+.text-positive {
+  color: rgb(35, 184, 35);
+}
+
+.text-negative {
+  color: rgb(179, 35, 27);
+}

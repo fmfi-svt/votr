@@ -81,6 +81,20 @@ Votr.RequestCache.sendRequest = function (request) {
   });
 };
 
+Votr.RequestCache.invalidate = function (command) {
+  for (var key in Votr.RequestCache) {
+    if (key.split('\0')[0] === command) {
+      delete Votr.RequestCache[key];
+    }
+  }
+
+  for (var key in Votr.RequestCache.pending) {
+    if (key.split('\0')[0] === command) {
+      delete Votr.RequestCache.pending[key];
+    }
+  }
+}
+
 
 Votr.CacheRequester = function () {
   this.missing = [];

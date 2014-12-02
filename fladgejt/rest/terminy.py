@@ -45,7 +45,12 @@ class RestTerminyMixin:
                          poznamka=row['poznamka'],
                          skratka_predmetu=row['skratkaPredmetu'],
                          nazov_predmetu=row['nazovPredmetu'],
-                         moznost_prihlasit=row['moznostPrihlasenia'])
+                         hodnotenie_terminu=row['hodnotenieTerminu'],
+                         hodnotenie_predmetu=row['hodnoteniePredmetu'],
+                         moznost_prihlasit=row['moznostPrihlasenia'],
+                         datum_prihlasenia=row['datumPrihlasenia'],
+                         datum_odhlasenia=row['datumOdhlasenia'],
+                         akademicky_rok=akademicky_rok)
                   for row in terminy
                   if not row['datumOdhlasenia']]
         return result
@@ -89,7 +94,12 @@ class RestTerminyMixin:
                          poznamka=row['poznamka'],
                          skratka_predmetu=row['skratkaPredmetu'],
                          nazov_predmetu=row['nazovPredmetu'],
-                         moznost_prihlasit=row['moznostPrihlasenia'])
+                         hodnotenie_terminu=row['hodnotenieTerminu'],
+                         hodnotenie_predmetu=row['hodnoteniePredmetu'],
+                         moznost_prihlasit=row['moznostPrihlasenia'],
+                         datum_prihlasenia="",
+                         datum_odhlasenia="",
+                         akademicky_rok=akademicky_rok)
                   for row in terminy]
 
         return result

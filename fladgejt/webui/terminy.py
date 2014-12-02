@@ -63,6 +63,8 @@ class WebuiTerminyMixin:
                          hodnotenie_terminu=row['znamka'],
                          hodnotenie_predmetu=row['hodnPredmetu'],
                          moznost_prihlasit=row['moznostPrihlasenia'],
+                         datum_prihlasenia=row['datumPrihlas'],
+                         datum_odhlasenia=row['datumOdhlas'],
                          akademicky_rok=akademicky_rok)
                   for row in app.d.terminyTable.all_rows()
                   if not row['datumOdhlas']]
@@ -122,7 +124,11 @@ class WebuiTerminyMixin:
                          poznamka=row['poznamka'],
                          skratka_predmetu=predmet_row['skratka'],
                          nazov_predmetu=predmet_row['nazov'],
+                         hodnotenie_terminu="",
+                         hodnotenie_predmetu="",
                          moznost_prihlasit=row['moznostPrihlasenia'],
+                         datum_prihlasenia="",
+                         datum_odhlasenia="",
                          akademicky_rok=akademicky_rok)
                   for row in app.d.zoznamTerminovTable.all_rows()]
 
@@ -224,7 +230,7 @@ class WebuiTerminyMixin:
     @with_key_args(True, True, True, True)
     def prihlas_na_termin(self, studium_key, zapisny_list_key, predmet_key, termin_key):
         app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
-        predmet_row = self.__select_predmet_row(app, predmet_key)
+        self.__select_predmet_row(app, predmet_key)
         self.__open_vyber_terminu_dialog(app)
 
         # Vyberieme spravny riadok.
@@ -237,8 +243,17 @@ class WebuiTerminyMixin:
         with app.collect_operations() as ops:
             app.d.enterButton.click()
 
+        message = None
+        if ops and ops[0].method == 'messageBox':
+            assert_ops(ops, 'messageBox')
+            message = ops[0].args[0]
+            with app.collect_operations() as ops:
+                app.d.click_close_button()
+
         # Dialog sa zavrie.
         app.awaited_close_dialog(ops)
+
+        return message
 
     @with_key_args(True, True, True, True)
     def odhlas_z_terminu(self, studium_key, zapisny_list_key, predmet_key, termin_key):
@@ -262,4 +277,11 @@ class WebuiTerminyMixin:
 
         # Vyskoci confirm box, ci sa naozaj chceme odhlasit. Stlacime "Ano".
         assert_ops(ops, 'confirmBox')
-        app.confirm_box(2)
+        with app.collect_operations() as ops:
+            app.confirm_box(2)
+
+        if ops:
+            assert_ops(ops, 'messageBox')
+            return ops[0].args[0]
+
+        return None

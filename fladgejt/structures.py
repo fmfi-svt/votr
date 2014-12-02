@@ -32,10 +32,12 @@ Priemer = namedtuple('Priemer', [
     'datum_vypoctu'])
 
 Termin = keyed_namedtuple('Termin', [
-    'datum', 'cas', 'miestnost', 'pocet_prihlasenych', 'maximalne_prihlasenych',
-    'hodnotiaci', 'prihlasovanie', 'odhlasovanie', 'poznamka', 'akademicky_rok',
-    'nazov_predmetu', 'skratka_predmetu', 'moznost_prihlasit',
-    'hodnotenie_terminu', 'hodnotenie_predmetu', 'key', 'predmet_key'],
+    'datum', 'cas', 'miestnost', 'pocet_prihlasenych',
+    'maximalne_prihlasenych', 'hodnotiaci', 'prihlasovanie', 'odhlasovanie',
+    'poznamka', 'akademicky_rok', 'nazov_predmetu', 'skratka_predmetu',
+    'moznost_prihlasit', 'datum_prihlasenia', 'datum_odhlasenia',
+    'hodnotenie_terminu', 'hodnotenie_predmetu', 'key',
+    'predmet_key'],
     key=['datum', 'cas', 'miestnost', 'poznamka'],
     predmet_key=['skratka_predmetu'])
 
