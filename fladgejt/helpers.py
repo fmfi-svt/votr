@@ -1,4 +1,5 @@
 
+import sys
 from collections import namedtuple
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 
@@ -119,6 +120,12 @@ def keyed_namedtuple(typename, field_names, **key_fields):
         encode_kwargs=', '.join(
             '{}=encode_key(self.{})'.format(key_name, key_name)
             for key_name in key_fields)))
+
+    # Fix pickling support (see namedtuple() source code)
+    try:
+        result_class.__module__ = sys._getframe(1).f_globals['__name__']
+    except (AttributeError, ValueError):
+        pass
 
     return result_class
 

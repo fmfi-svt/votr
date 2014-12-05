@@ -2,6 +2,7 @@
 import os
 import requests
 from aisikl.context import Context
+from fladgejt.demo import DemoClient
 from fladgejt.hybrid import HybridClient
 from fladgejt.rest import RestClient
 from fladgejt.webui import WebuiClient
@@ -102,7 +103,7 @@ def create_client(server, params):
     elif 'rest_url' in server:
         client = RestClient(ctx)
     else:
-        raise Exception('Demo client is not supported')
+        client = DemoClient(ctx)
 
     # Check that login was successful.
     client.check_connection()
