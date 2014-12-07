@@ -1,5 +1,5 @@
 from aisikl.app import assert_ops
-from fladgejt.helpers import find_row
+from fladgejt.helpers import find_row_insensitive
 
 
 # Ciselnik typu SSSC001
@@ -20,7 +20,7 @@ class WebuiCiselnikMixin:
 
                 app.awaited_open_dialog(ops)
                 try:
-                    index = find_row(app.d.table.all_rows(), **{compare_column: text})
+                    index = find_row_insensitive(app.d.table.all_rows(), **{compare_column: text})
                 except KeyError:
                     with app.collect_operations() as ops:
                         app.d.closeButton.click()

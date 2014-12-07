@@ -33,6 +33,15 @@ def find_row(objects, **conditions):
     raise KeyError("Object not found: {!r}".format(conditions))
 
 
+def find_row_insensitive(objects, **conditions):
+    '''Same as :func:`find_row` but case insensitive.'''
+    for index, obj in enumerate(objects):
+        if all(obj[key].lower() == value.lower()
+               for key, value in conditions.items()):
+            return index
+    raise KeyError("Object not found: {!r}".format(conditions))
+
+
 def find_option(objects, **conditions):
     '''Searches the list of objects for one that matches all given conditions.
 
