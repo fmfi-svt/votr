@@ -10,7 +10,10 @@ class WebuiTerminyMixin:
         index = find_option(app.d.semesterComboBox.options, title='')
         if app.d.semesterComboBox.selected_index != index:
             app.d.semesterComboBox.select(index)
-            app.d.filterAction.execute()
+            with app.collect_operations() as ops:
+                app.d.filterAction.execute()
+            if ops:
+                assert_ops(ops, 'messageBox')
 
     @with_key_args(True, True)
     def get_vidim_terminy_hodnotenia(self, studium_key, zapisny_list_key):
