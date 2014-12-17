@@ -148,10 +148,10 @@ Votr.SkuskyRegisterButton = React.createClass({
     var now = new Date().toJSON().replace(/-/g, '');
     if (now > Votr.sortAs.date(termin.datum)) return null;
     
-    var buttonClass = "btn btn-xs " + (this.isSigninButton() ? "btn-success" : "btn-danger");
+    var buttonClass = "btn btn-xs " + (this.isSigninButton() ? "btn-success" : "btn-danger") + (this.isDisabled() ? " appear-disabled" : "");
     var buttonText = this.state.pressed ? <Votr.Loading /> : this.isSigninButton() ? "Prihlásiť" : "Odhlásiť";
 
-    return <button onClick={this.isDisabled() ? null : this.handleClick} className={buttonClass} disabled={this.isDisabled()}>{buttonText}</button>;
+    return <button onClick={this.state.pressed ? null : this.handleClick} className={buttonClass}>{buttonText}</button>;
   }
 });
 

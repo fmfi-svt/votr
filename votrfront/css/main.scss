@@ -185,3 +185,8 @@ thead:empty, tbody:empty, tfoot:empty {
 .text-negative {
   color: rgb(179, 35, 27);
 }
+
+.appear-disabled {
+  @include opacity(.65);
+  @include box-shadow(none);
+}

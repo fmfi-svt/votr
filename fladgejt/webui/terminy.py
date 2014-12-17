@@ -282,6 +282,7 @@ class WebuiTerminyMixin:
 
         if ops:
             assert_ops(ops, 'messageBox')
-            return ops[0].args[0]
+            if ops[0].args[0] != 'Činnosť úspešne dokončená.':
+                return ops[0].args[0]
 
         return None
