@@ -39,6 +39,8 @@ Votr.DetailPredmetuModal = React.createClass({
     var [ucitelia, header] = Votr.sortTable(
       ucitelia, Votr.DetailPredmetuUciteliaColumns, this.props.query, 'modalUciteliaSort');
 
+    var message = ucitelia.length ? null : "Predmet nemá v AISe žiadnych učiteľov.";
+
     return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
@@ -49,6 +51,7 @@ Votr.DetailPredmetuModal = React.createClass({
           </tr>
         )}
       </tbody>
+      {message && <tfoot><tr><td colSpan={Votr.DetailPredmetuUciteliaColumns.length}>{message}</td></tr></tfoot>}
     </table>;
   },
 
@@ -71,6 +74,8 @@ Votr.DetailPredmetuModal = React.createClass({
     var [studenti, header] = Votr.sortTable(
       studenti, Votr.DetailPredmetuStudentiColumns, this.props.query, 'modalStudentiSort');
 
+    var message = studenti.length ? null : "Predmet nemá v AISe žiadnych zapísaných študentov.";
+
     return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
@@ -84,6 +89,7 @@ Votr.DetailPredmetuModal = React.createClass({
           </tr>
         )}
       </tbody>
+      {message && <tfoot><tr><td colSpan={Votr.DetailPredmetuStudentiColumns.length}>{message}</td></tr></tfoot>}
     </table>;
   },
 

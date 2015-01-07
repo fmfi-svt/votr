@@ -114,9 +114,12 @@ Votr.RegisterPredmetovResultTable = React.createClass({
     var [rows, header] = Votr.sortTable(
       rows, Votr.RegisterPredmetovColumns, this.props.query, 'predmetSort');
 
+    if (!message && !rows.length) {
+      message = "Podmienkam nevyhovuje žiadny záznam.";
+    }
+
     return <div>
       <h2>Výsledky</h2>
-      <p>{message}</p>
       <table className="table table-condensed table-bordered table-striped table-hover">
         <thead>{header}</thead>
         <tbody>
@@ -134,6 +137,7 @@ Votr.RegisterPredmetovResultTable = React.createClass({
             </tr>
           )}
         </tbody>
+        {message && <tfoot><tr><td colSpan={Votr.RegisterPredmetovColumns.length}>{message}</td></tr></tfoot>}
       </table>
     </div>;
   }

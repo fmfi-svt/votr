@@ -30,6 +30,8 @@ Votr.ZoznamPrihlasenychNaTerminModal = React.createClass({
       studenti, Votr.ZoznamPrihlasenychNaTerminColumns,
       this.props.query, 'modalStudentiSort');
 
+    var message = studenti.length ? null : "Na termín nie sú prihlásení žiadni študenti.";
+
     return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
@@ -43,6 +45,7 @@ Votr.ZoznamPrihlasenychNaTerminModal = React.createClass({
           </tr>
         )}
       </tbody>
+      {message && <tfoot><tr><td colSpan={Votr.ZoznamPrihlasenychNaTerminColumns.length}>{message}</td></tr></tfoot>}
     </table>;
   },
 

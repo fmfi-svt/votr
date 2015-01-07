@@ -167,9 +167,12 @@ Votr.RegisterOsobResultTable = React.createClass({
     var [osoby, header] = Votr.sortTable(
       osoby, Votr.RegisterOsobColumns, this.props.query, 'osobySort');
 
+    if (!message && !osoby.length) {
+      message = "Podmienkam nevyhovuje žiadny záznam.";
+    }
+
     return <div>
       <h2>Výsledky</h2>
-      <p>{message}</p>
       <table className="table table-condensed table-bordered table-striped table-hover">
         <thead>{header}</thead>
         <tbody>
@@ -180,6 +183,7 @@ Votr.RegisterOsobResultTable = React.createClass({
             </tr>
           )}
         </tbody>
+        {message && <tfoot><tr><td colSpan={Votr.RegisterOsobColumns.length}>{message}</td></tr></tfoot>}
       </table>
     </div>;
   }

@@ -52,6 +52,8 @@ Votr.MojeSkuskyPageContent = React.createClass({
     var [terminy, header] = Votr.sortTable(
       terminy, Votr.MojeSkuskyColumns, this.props.query, 'skuskySort');
 
+    var message = terminy.length ? null : "Zatiaľ nie sú vypísané žiadne termíny.";
+
     return <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
       <thead>{header}</thead>
       <tbody>
@@ -83,6 +85,7 @@ Votr.MojeSkuskyPageContent = React.createClass({
           </tr>
         )}
       </tbody>
+      {message && <tfoot><tr><td colSpan={Votr.MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
     </table>;
   },
 

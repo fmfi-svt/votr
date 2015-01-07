@@ -72,7 +72,7 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
             <td></td>
             <td></td>
           </tr>
-          {message && <tr><td colSpan="9">{message}</td></tr>}
+          {message && <tr><td colSpan={Votr.MojeHodnoteniaColumns.length}>{message}</td></tr>}
       </tfoot>
     </table>;
   },
@@ -99,6 +99,10 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
     var [priemery, header] = Votr.sortTable(
       priemery, Votr.MojePriemeryColumns, this.props.query, 'priemerySort');
 
+    if (!message && !priemery.length) {
+      message = "V AISe zatiaľ nie sú vypočítané žiadne priemery.";
+    }
+
     return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
@@ -116,7 +120,7 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
           </tr>
         )}
       </tbody>
-      {message && <tfoot><tr><td colSpan="9">{message}</td></tr></tfoot>}
+      {message && <tfoot><tr><td colSpan={Votr.MojePriemeryColumns.length}>{message}</td></tr></tfoot>}
     </table>;
   },
 

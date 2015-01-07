@@ -74,6 +74,8 @@ Votr.PrehladStudiaPage = React.createClass({
     var [studia, header] = Votr.sortTable(
       studia, Votr.PrehladStudiumColumns, this.props.query, 'studiaSort');
 
+    var message = studia.length ? null : "V AISe nemáte žiadne štúdiá.";
+
     return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
@@ -88,6 +90,7 @@ Votr.PrehladStudiaPage = React.createClass({
           </tr>
         )}
       </tbody>
+      {message && <tfoot><tr><td colSpan={Votr.PrehladStudiumColumns.length}>{message}</td></tr></tfoot>}
     </table>;
   },
 
@@ -115,6 +118,8 @@ Votr.PrehladStudiaPage = React.createClass({
 
     var showTable = zapisneListy.length || cache.loadedAll;
 
+    var message = zapisneListy.length ? null : "V AISe nemáte žiadne zápisné listy.";
+
     return <span>
       {!cache.loadedAll && <Votr.Loading requests={cache.missing} />}
       {showTable &&
@@ -130,6 +135,7 @@ Votr.PrehladStudiaPage = React.createClass({
               </tr>
             )}
           </tbody>
+          {message && <tfoot><tr><td colSpan={Votr.PrehladZapisnyListColumns.length}>{message}</td></tr></tfoot>}
         </table>}
     </span>;
   },

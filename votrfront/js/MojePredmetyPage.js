@@ -64,7 +64,7 @@ Votr.MojePredmetyPageContent = React.createClass({
             <td></td>
             <td></td>
           </tr>
-          {message && <tr><td colSpan="8">{message}</td></tr>}
+          {message && <tr><td colSpan={Votr.MojePredmetyColumns.length}>{message}</td></tr>}
       </tfoot>
     </table>;
   },
