@@ -48,7 +48,7 @@ class Context:
         :return: a :class:`~BeautifulSoup` object.
         '''
         self.log('http', 'Requesting {} {}'.format(
-            method, url.partition('?')[0]), url)
+            method, url.partition('?')[0]), [url, kwargs.get('data', None)])
         url = urljoin(self.ais_url, url)
         response = self.connection.request(method, url, **kwargs)
         response.raise_for_status()
@@ -66,7 +66,7 @@ class Context:
         :return: a dictionary.
         '''
         self.log('http', 'Requesting POST {}'.format(
-            url.partition('?')[0]), url)
+            url.partition('?')[0]), [url, data])
         url = urljoin(self.rest_url, url)
         response = self.connection.request("POST", url, data=data)
         response.raise_for_status()
