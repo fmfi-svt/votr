@@ -7,7 +7,7 @@ Votr.sortAs = {};
 Votr.sortAs.personName = function (text) {
   var words = text.replace(/,/g, '').split(' ');
   words = _.filter(words, (word) => !word.match(/\.$/));
-  words.push(words.shift());   // first name goes to the end
+  words.unshift(words.pop());   // last name goes to the beginning
   return words.join(' ').toLowerCase();
   // TODO: consider using latinise (see fajr).
 };
