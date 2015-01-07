@@ -6,8 +6,8 @@ from werkzeug.routing import Map
 from werkzeug.wrappers import Request
 from werkzeug.wsgi import SharedDataMiddleware
 
-from . import login, front, rpc, serve
-site_modules = [login, front, rpc, serve]
+from . import login, front, rpc, serve, cron, logutil
+site_modules = [login, front, rpc, serve, cron, logutil]
 
 class VotrApp(object):
     '''The main WSGI application class.'''
@@ -27,6 +27,10 @@ class VotrApp(object):
             if hasattr(module, 'get_routes'):
                 for rulefactory in module.get_routes():
                     self.url_map.add(rulefactory)
+
+    def var_path(self, *args):
+        '''Helper for constructing paths relative to ``settings.var_path``.'''
+        return os.path.join(self.settings.var_path, *args)
 
     def run_help(self, *args):
         '''Shows the usage when console.py is run with an unknown command.'''

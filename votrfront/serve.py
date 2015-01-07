@@ -12,8 +12,10 @@ def serve(app, *args):
     else:
         raise ValueError('wrong args')
 
-    os.makedirs(app.settings.log_path, exist_ok=True)
-    os.makedirs(app.settings.session_path, exist_ok=True)
+    os.makedirs(app.var_path('logs'), exist_ok=True)
+    os.makedirs(app.var_path('logdb'), exist_ok=True)
+    os.makedirs(app.var_path('oldlogs'), exist_ok=True)
+    os.makedirs(app.var_path('sessions'), exist_ok=True)
 
     if os.getenv('WERKZEUG_RUN_MAIN'):
         watch_in_background()

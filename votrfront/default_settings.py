@@ -1,9 +1,11 @@
 
 instance_name = 'votr'
 
-log_path = './logs/'
+var_path = '.'
 
-session_path = './sessions/'
+session_max_age = 60 * 60 * 24
+
+log_max_age = 60 * 60 * 24 * 3
 
 cosign_proxy = None
 

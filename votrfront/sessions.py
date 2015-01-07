@@ -23,7 +23,7 @@ def get_filename(request, sessid):
         if ch not in '0123456789abcdef':
             raise ValueError('Invalid sessid')
 
-    return os.path.join(request.app.settings.session_path, sessid)
+    return request.app.var_path('sessions', sessid)
 
 
 def create(request, session):
@@ -72,7 +72,7 @@ def logged_transaction(request, sessid=None):
     if not sessid: sessid = get_cookie(request)
 
     with transaction(request, sessid) as session:
-        log_filename = os.path.join(request.app.settings.log_path, sessid)
+        log_filename = app.var_path('logs', sessid)
         with open(log_filename, 'a', encoding='utf8') as log_file:
             client = session.get('client')
             if client: client.context.log_file = log_file

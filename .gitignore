@@ -13,5 +13,7 @@ docs/_build
 *.ipynb
 /sessions
 /logs
+/logdb
+/oldlogs
 *_settings.py
 !default_settings.py
