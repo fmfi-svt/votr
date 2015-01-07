@@ -76,8 +76,8 @@ Votr.RegisterOsobForm = React.createClass({
     var fakulty = cache.get('get_register_osob_fakulty');
 
     return <form onSubmit={this.handleSubmit}>
-      {this.renderTextInput("Meno: ", "meno", false)}
       {this.renderTextInput("Priezvisko: ", "priezvisko", true)}
+      {this.renderTextInput("Meno: ", "meno", false)}
       {this.renderSelect("Fakulta: ", "fakulta", fakulty, cache)}
       {this.renderTextInput("Študijný program (skratka): ", "skratkaSp", false)}
       {this.renderSelect("Akademický rok: ", "akademickyRok", akademickeRoky, cache)}
