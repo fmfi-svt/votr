@@ -45,6 +45,13 @@ Votr.PrehladStudiaPage = React.createClass({
   },
 
   renderObdobia: function () {
+    // Obdobia predsalen neukazujeme, lebo AIS ma vacsinou zle informacie
+    // (skuskove je umelo predlzene kvoli moznosti zapisovat znamky, apod) a
+    // nechceme byt matuci. Zapnut sa daju tymto schovanym query flagom.
+    if (!this.props.query.reallyShowDates) {
+      return null;
+    }
+
     return <table className="table table-narrow table-condensed table-bordered table-hover">
       <tbody>
         {this.renderObdobie("Zimný semester", 'get_semester_obdobie', 'Z')}

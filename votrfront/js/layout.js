@@ -103,11 +103,11 @@ Votr.MainMenu = React.createClass({
     return <ul className="main-menu nav nav-pills nav-stacked">
       <li><strong className="text-pill">Moje štúdium</strong></li>
       {somStudent === false && <li><span className="text-pill">Nie ste študentom.</span></li>}
-      {somStudent && this.renderMenuItem("Prehľad štúdia", { action: 'prehladStudia' })}
       {somStudent && this.renderMenuItem("Moje predmety", { action: 'mojePredmety', studiumKey, zapisnyListKey })}
       {somStudent && this.renderMenuItem("Moje skúšky", { action: 'mojeSkusky', studiumKey, zapisnyListKey })}
       {somStudent && this.renderMenuItem("Moje hodnotenia", { action: 'mojeHodnotenia', studiumKey })}
       {/*somStudent && this.renderDisabled("Môj rozvrh")*/}
+      {somStudent && this.renderMenuItem("Prehľad štúdia", { action: 'prehladStudia' })}
       {!cache.loadedAll && <li><span className="text-pill"><Votr.Loading requests={cache.missing} /></span></li>}
       <li><hr/></li>
       <li><strong className="text-pill">Registre</strong></li>

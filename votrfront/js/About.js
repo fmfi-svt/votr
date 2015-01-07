@@ -59,10 +59,6 @@ Votr.IndexPage = React.createClass({
       </p>
       <ul>
         <li><p>
-          <strong>Prehľad štúdia</strong> &mdash; kedy prebieha výučba a kedy
-          skúškové obdobie, zoznam vašich štúdií a zápisných listov
-        </p></li>
-        <li><p>
           <strong>Moje predmety</strong> &mdash; predmety, ktoré máte zapísané
           v tomto alebo minulom akademickom roku, a získané hodnotenia
         </p></li>
@@ -73,6 +69,10 @@ Votr.IndexPage = React.createClass({
         <li><p>
           <strong>Moje hodnotenia</strong> &mdash; hodnotenia predmetov a
           získané študijné priemery za celé štúdium
+        </p></li>
+        <li><p>
+          <strong>Prehľad štúdia</strong> &mdash; zoznam vašich štúdií a
+          zápisných listov
         </p></li>
         <li><p>
           <strong>Register osôb</strong> &mdash; vyhľadávanie zamestnancov,
