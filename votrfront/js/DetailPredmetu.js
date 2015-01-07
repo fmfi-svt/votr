@@ -100,7 +100,7 @@ Votr.DetailPredmetuModal = React.createClass({
     var [studenti, predmet] = data;
 
     if (!predmet) {
-      return "Chyba";
+      return "Dáta nenájdené";
     }
 
     return predmet.nazov;
