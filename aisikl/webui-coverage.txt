@@ -23,7 +23,7 @@ IRRELEVANT
 
 COMPLETE (removed)
 
-In AIS, each "component" consists of two object: the actual DOM node, and an
+In AIS, each "component" consists of two objects: the actual DOM node, and an
 `JSObject` that is created when it's needed. Current state is stored in DOM
 attributes. Votr creates all components in `Dialog._init()`, and only uses DOM
 nodes for initial parsing.
@@ -117,6 +117,8 @@ which does a type conversion and sets the attribute.
 - menuItemAction()
     - IRRELEVANT. Only used in SplitPane and TabbedPaneSelector, and can be
       worked around.
+- getAutosize()
+    - IRRELEVANT. Only used for positioning and sizing.
 
 
 
@@ -131,9 +133,10 @@ PARTIAL
   getFontSize(), setFontSize(), getForeground(), setForeground(),
   getBackground(), setBackground(), setComponentStyle(), getComponentStyle(),
   realizeComponentStyle(), getFontStyle(), setFontStyle(), init(),
-  resizeComponent(), canFocusNext, refocus(), focus(), deactivate(),
-  isPreparedToBlur(), blur(), getParentsToBlur(), blurOnParentContainers(),
-  positionContextMenu(), contextmenu(), click()
+  resizeComponent(), realizeResizeComponent(), ie8Patch(), canFocusNext(),
+  refocus(), focus(), deactivate(), isPreparedToBlur(), blur(),
+  getParentsToBlur(), blurOnParentContainers(), positionContextMenu(),
+  contextmenu(), click()
     - IRRELEVANT. Votr ignores positions, sizes and styles.
     - Focus and blur is UNSUPPORTED. We never send focus information to AIS,
       and blur events must be triggered manually.
@@ -148,8 +151,10 @@ PARTIAL
 - isDisabledDueToParents() -> not self.parent.is_really_enabled()
 - isDisabled() -> not self.is_really_enabled()
 - isUnvisible() -> not (self.visible and self.visible_in_ui)
-- getParentContainer() -> self.parent
+- getParentContainer(), getParentContainerJSO() -> self.parent
     - Moved to Component.
+- getAncestorAutosizeJSO()
+    - IRRELEVANT, because all functions that use it are IRRELEVANT.
 - getTabOrder(), setTabOrder() -> self.tab_order
 - getToolTipText(), setToolTipText() -> self.tool_tip_text
 - changedProperties() -> self.changed_properties()
@@ -162,11 +167,16 @@ PARTIAL
 COMPLETE (merged into Control)
 
 - getMinWidth(), setMinWidth(), getMinHeight(), setMinHeight(),
-  setElementAnchorAll()
+  getOverflowed(), setOverflowed(), setElementAnchorAll()
     - IRRELEVANT
+    - We should add `_ais_set...()` no-ops if webui uses the setters.
 - getVisibleForUser()
     - IRRELEVANT, because all functions that use it are IRRELEVANT. See their
       respective sections.
+- startChromeOverflowPatch(), endChromeOverflowPatch()
+    - IRRELEVANT, because all functions that use it are IRRELEVANT.
+- autosizeHeight()
+    - IRRELEVANT. (Also applies to subclasses.)
 
 
 
@@ -240,13 +250,14 @@ works. In some cases, it discards all waiting events, which doesn't seem safe.
 So for now, all of the above is UNSUPPORTED.
 
 We send every event immediately and block until it's done. There is no
-{get,set}WaitingMode() or {get,set}Mouse{Up,Down}Component(). Each request
-contains exactly one event. Blur events have to be sent manually when they're
-really needed.
+{get,set}WaitingMode() or {get,set}Mouse{Up,Down}Component() or a list of
+suspended events. Each request contains exactly the events you specify. Blur
+events have to be sent manually when they're really needed.
 
 - commitEvent, setWaitingMode(), getWaitingMode(), setMouseDownComponent(),
   getMouseDownComponent(), setMouseUpComponent(), getMouseUpComponent(),
-  addEventToFire(), onMouseOut(), onClick(), onDblClick(), clearSuspendedEvents()
+  addEventToFire(), onMouseOut(), onClick(), onDblClick(),
+  clearSuspendedEvents()
     - UNSUPPORTED
 - createEvent()
     - See EventPrototype above.
@@ -306,6 +317,8 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
 - keydownTryAction()
     - UNSUPPORTED, because findActionJSOForUseKeyDown() is UNSUPPORTED
       (see below).
+- keyup()
+    - Only used in Safari. UNSUPPORTED.
 - click(), dblclick(), contextmenu(), mousemove(), mousedown(), mouseup(),
   dtResetSelection(), testComp(), showPopupMenus(), mouseover(),
   keydownPopupMenus(), mouseupPopupMenus(), isMenuActivated()
@@ -358,14 +371,72 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
 
 PARTIAL
 
-TODO: document it.
-
+- setThis()
+    - Inlined into Dialog.__init__().
+- getName() -> self.name
+- getParentDialogName() -> self.parent_dialog_name
+- getModal() -> self.modal
+- getMainDialog() -> self.is_main_dialog
+- getResizeable()
+    - IRRELEVANT (only affecting positioning and visuals)
+- getMinimizeable()
+    - IRRELEVANT (unused in webui)
+- getDialogBase(), getDialogIframe(), dialogContext, getDialogContext(),
+  getDialogBody()
+    - IRRELEVANT (DOM objects)
+- getDialogBodyJSObject() -> self.body
+- dialogIframeLoaded, dialogContentIframeLoaded, childrenDialogIsWaiting
+    - IRRELEVANT (Votr is synchronous, opening a dialog is blocking)
+- getMyDialogStack()
+    - See below for DialogStack.
+- isNative
+    - UNSUPPORTED, see openDialog().
+- active, getActive() -> `self == self.app.active_dialog`
+- enabled
+    - Removed.
+    - Means whether the dialog reacts to mouse clicks. This is false if another
+      modal dialog is open. See DialogStack.
+    - Votr checks this in Application.activate_dialog(), so a dialog that isn't
+      "enabled" can't become active. But otherwise, Votr doesn't prevent the
+      user from accessing "disabled" dialogs. So it's best if the user only
+      uses the active dialog and switches between them with activate_dialog().
+- moved
+    - UNSUPPORTED
+- dialogArguments
+    - IRRELEVANT (only used in nativeDialogBody.js)
+- capturingElement, useTitleRow(), useResizers(), useDialogTitleFrame(),
+  getTitleRowHeight(), getFrameWidth(), getDoubleFrameWidth(),
+  createDialogIframeBody(), addResizer(), onLoad(), moveResizers(),
+  computeInitPosAndSize(), getAbsPosAndSizeOfControl(), setTitle()
+    - IRRELEVANT
+- init() -> Dialog.__init__(), Dialog._init()
+    - Largely IRRELEVANT.
+- refresh() -> Dialog._init()
+- activate()
+    - IRRELEVANT. Only handles focus and whether the dialog visually appears
+      active (focused window).
+- setEnabled()
+    - Shows or hides the "disable glass" to control whether the dialog responds
+      to mouse clicks.
+    - IRRELEVANT. See enabled above.
+    - For simplicity, Votr skips enabling/disabling the dialog body.
+- hideByJaws(), isHiddenByJaws(), showByJaws(), prepareUpdating(),
+  showDisableGlass(), hideDisableGlass(), onDialogBodyInit(),
+  onNativeDialogBodyInit()
+    - IRRELEVANT
 - closeButtonClick() -> self.click_close_button()
+- getInRequestEnabledComponents()
+    - IRRELEVANT. Votr is synchronous, nothing can happen during a request.
+- makeClip(), showGlassForMove(), titleRowMouseDown(), onMouseDown(),
+  resizerMouseDown(), moveDialogGlassMouseMove(), moveDialogGlassMouseUp(),
+  fillBaseAndBodySize(), resize(), resizeDialogBase(),
+  resizeDialogContentIframe(), setWidthFromBody(), setHeightFromBody(),
+  resizeByBody(), workspaceResize()
+    - IRRELEVANT
+- changedProperties() -> ""
+    - IRRELEVANT (dialog position and focus is unsupported)
 - close()
-    - Mostly IRRELEVANT, as it only destroys the DOM. The only interesting
-      information is that only the top dialog can be closed.
-    - Inlined into DialogManager.closeDialog() which is in
-      Application.close_dialog().
+    - IRRELEVANT. Only destroys the DOM.
 
 
 
@@ -373,36 +444,38 @@ TODO: document it.
 
 COMPLETE (merged into Application)
 
-A DialogManager has several DialogStacks, each of which has several Dialogs.
-The DialogStack is a chain of modal dialogs: the user can choose which stack to
-focus, but only the top dialog in a stack can be focused.
-
-Multiple dialog stacks in one Application are UNSUPPORTED.
+DialogStack keeps track of the list of dialogs. It also knows which is the
+"desired active dialog" and which is the "top modal dialog". (The real variable
+names were optimized away.) This is put to effect in reinit() and activate(). If
+any modal dialog exists, the "desired active dialog" doesn't matter and the top
+modal dialog wins -- only it is active (the window appears focused) and enabled
+(the content is clickable). Otherwise, all dialogs are enabled and the "active
+dialog" appears focused. However, in practice all dialogs except the main dialog
+are modal in AIS.
 
 Note that dialog.closeProgress is always false in Votr, as closing a dialog is
 a blocking operation. The code using dialogs is responsible for not using them
 after they are closed.
 
-Therefore, all DialogStack methods reduce to simple array operations.
-
 - activate()
-    - `dialog_stack[-1].activate(value)`
-    - TODO: Document whether activate() is reduced further.
-- enable()
-    - `dialog_stack[-1].set_enabled(value)`
+    - Implements the rules outlined above. Both Dialog.activate() and
+      Dialog.setEnabled() are IRRELEVANT (except for the call to
+      DialogBody.setEnabled(), which we skip for simplicity) and so this
+      function is also IRRELEVANT.
+- reinit()
+    - Implements the rules outlined above. Inlined in Application.open_dialog()
+      and Application.close_dialog().
 - pushDialog()
-    - `if dialog_stack: dialog_stack[-1].activate(False)`
-    - `if dialog_stack: dialog_stack[-1].set_enabled(False)`
-    - `dialog_stack.append(d)`
-- popDialog()
-    - `if dialog_stack: dialog_stack.pop()`
-    - `if dialog_stack: dialog_stack[-1].set_enabled(True)`
-- getDialog()
-    - Prefer using `app.dialogs[name]`.
-- getTopDialog() -> `dialog_stack[-1]`
-- getBaseDialog() ->  `dialog_stack[0]`
-- isEmpty() -> `not dialog_stack`
-- isTop() -> `d == dialog_stack[-1]`
+    - Inlined in Application.open_dialog().
+- removeDialog()
+    - Inlined in Application.close_dialog() and Application.close_all_dialogs().
+- getDialog() -> `app.dialogs[name]`
+- getTopDialog() -> `app.dialog_stack[-1]`
+- getBaseDialog() -> `app.dialog_stack[0]`
+- getActiveDialog() -> `app.active_dialog`
+- setActiveDialog() -> `app.activate_dialog(name)`
+- isEmpty() -> `not app.dialog_stack`
+- isTop() -> `d == app.dialog_stack[-1]`
 - workspaceResize()
     - IRRELEVANT
 - size() -> `len(dialog_stack)`
@@ -417,14 +490,12 @@ Therefore, all DialogStack methods reduce to simple array operations.
 
 PARTIAL (merged into Application)
 
-Multiple dialog stacks in one Application are UNSUPPORTED. See DialogStack.
-
 Opening and closing dialogs is blocking in Votr, so there's no need to handle
 dialogs that aren't fully loaded, queue waiting dialogs, etc.
 
 - getDialogTitleRowHeight(), getDialogFrameWidth(), areDialogsPrepared(),
-  onSomeDialogBodyInitialized(), resizeBrowser(), openWaitingDialogs(),
-  closeWaitingDialog(), workspaceResize(), hideByJaws(),
+  onSomeDialogBodyInitialized(), resizeBrowser(), resizeIframeHeight(),
+  openWaitingDialogs(), closeWaitingDialog(), workspaceResize(), hideByJaws(),
   prepareUpdatingDialogs()
     - IRRELEVANT
 - openMainDialog()
@@ -444,15 +515,14 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
 - getDialog() -> `app.dialogs[name]`
 - getActiveDialog() -> `app.dialog_stack[-1]`
 - getMainDialog()
+    - Unused in webui.js, but perhaps used elsewhere.
     - Removed. Store the result of open_main_dialog() in a variable.
-- closeDialog()
+- closeDialog(), checkDialogStacksEmpty()
     - Application.close_dialog()
     - Note that `isNative` is an optional argument.
     - Calling `webui.clean(true)` when no dialogs remain is TODO.
 - closeAllDialogs()
     - Application.close_all_dialogs()
-    - For each dialog stack, calls close() on every dialog from top to bottom.
-      But Dialog.close() is mostly IRRELEVANT, so we just clear the dialog list.
 - canKillApplication()
     - IRRELEVANT. Only used in beforeUnload().
 - disableAllDialogs() -> no-op
@@ -463,15 +533,14 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
 - reactivateDialogs()
     - IRRELEVANT -- only used in enableApplication(), which is not used in Votr
       (the API is synchronous and not reentrant)
-- refreshDialog()
-    - UNSUPPORTED (unused in webui.js)
+- refreshDialog() -> Application.refresh_dialog()
 - loadedAllDialogs() -> `True`
 - fillImageUrl() -> `'/ais/images/' + value + '.png'`
 - messageBox(), confirmBox(), fileUpload(), fileXUpload(), editDoc(),
   abortBox(), onLoadAbortBox(), showNativeDialog(), showNextNativeDialog(),
   onNativeDialogClosed(), onMessageBoxClose(), onConfirmBoxClose(),
-  closeAbortBox(), onFileUploadCancel(), closeFileUpload(),
-  onFileXUploadClose(), onEditDocClose()
+  closeAbortBox(), onFileUploadSubmit(), onFileUploadCancel(),
+  closeFileUpload(), onFileXUploadClose(), onEditDocClose()
     - TODO
 
 
@@ -492,7 +561,7 @@ IRRELEVANT
 
 
 
-# NativeDialog, 
+# NativeDialog
 
 TODO
 
@@ -532,6 +601,7 @@ buttons and menu items.
 - onExecute() -> self.execute()
     - The first argument was removed. Setting it to True is UNSUPPORTED,
       because DialogBody.keydownTryAction() is UNSUPPORTED.
+    - The fourth argument was removed, because addEventToFire is UNSUPPORTED.
 - getFirstFocusableComponent()
     - Removed. Only used in `onExecute(true, ...)` which is UNSUPPORTED.
 
@@ -571,7 +641,7 @@ COMPLETE
 - click()
     - self.click()
     - showPopupMenus() is IRRELEVANT. See PopupMenu below.
-- getMainClassName(), mousedown(), mouseover(), mouseout()
+- mousedown()
     - IRRELEVANT
 
 
@@ -581,7 +651,9 @@ COMPLETE
 COMPLETE
 
 - init() -> `__init__`
-- setTitle() is inherited
+- getTitle(), setTitle() is inherited
+    - The overridden getTitle() is not needed in practice, the _title attribute
+      (used by Component) contains the same text.
 - getSmoked(), setSmoked() -> self.smoked
 - getSelected(), setSelected() -> self.selected
 - realizeEnability(), realizeReadOnly(), realizeEnabilityAndReadOnly(),
@@ -615,16 +687,14 @@ Added `self.text` which is the actual text content.
 COMPLETE
 
 - getChildrenElements(), getOverflowElement(), getHasTmpPanel(),
-  startChromeOverflowPatch(), endChromeOverflowPatch()
+  tryParentStackedPaneAutosize(), autosizeHeight(), computeResizeDiff(),
+  resizeChildren()
     - IRRELEVANT, because all functions that use it are IRRELEVANT.
 - getTabId() -> self.tab_id
 - getTitle(), setTitle() -> self.title (`_ais_setTitle()` is inherited)
 - blur()
     - The call to componentChanges() might be TODO. (Ditto in StackedPane.)
 - getAutoscrolls() -> self.autoscrolls
-- getOverflowed(), setOverflowed()
-    - Removed. We should add `_ais_setOverflowed()` no-op if webui uses it.
-- getStacked() -> self.stacked
 - getCollapsed(), setCollapsed() -> self.collapsed
     - In webui, setCollapsed() calls realizeCollapsed() which can send an
       event. This was removed in votr so that it won't loop infinitely.
@@ -632,7 +702,8 @@ COMPLETE
       the last event are probably discarded.)
     - Instead, toggle_collapsed() calls _fire_event().
 - getCollapsable() -> self.collapsable
-- getCollapsedHeight(), getExpandedHeight(), getExpandCollapseButton()
+- getCollapsedHeight(), setExpandedHeight(), getExpandedHeight(),
+  getExpandCollapseButton()
     - IRRELEVANT
 - click() -> self.toggle_collapsed()
 - getFirstFocusableComponent()
@@ -660,8 +731,12 @@ IRRELEVANT, including fireUIChangesEvent() and changedProperties().
 
 COMPLETE
 
-Documentation is TODO, because this file currently covers webui.js as of AIS
-version 2.4.111.66, and StackedPane is from 2.4.209.62.
+- getChildrenElements(), getOverflowElement(), resizeChildren()
+    - IRRELEVANT, because all functions that use it are IRRELEVANT.
+- getTitle(), setTitle() -> self.title (`_ais_setTitle()` is inherited)
+- tryAutosize(), getFirstFocusableComponent()
+    - IRRELEVANT
+- IRRELEVANT methods of superclasses are still IRRELEVANT.
 
 
 
@@ -695,7 +770,7 @@ COMPLETE
     - IRRELEVANT, see TabbedPaneSelector above.
 - getSelectedIndex(), setSelectedIndex() -> self.selected_index
 - setSelectedIndexWithFire() -> self.select()
-- getSelectedPanel() -> self.get_selected_panel()
+- getSelectedPanel(), getSelectedPanelJSO() -> self.get_selected_panel()
 - panels -> self.get_panels()
     - This is to avoid issues with component initialization order.
 - arena -> local variable in `__init__`
@@ -750,9 +825,19 @@ COMPLETE
 
 # List
 
-UNSUPPORTED
+TODO
 
-We've only seen empty lists so far, so we don't know how to parse items.
+
+
+# UpDownList
+
+TODO
+
+
+
+# ListBox
+
+TODO
 
 
 
@@ -764,17 +849,20 @@ COMPLETE
     - The code doesn't make sense, so we just use the inherited method.
 - init() -> `__init__`
 - allwaysSelected -> self.always_selected (fixed webui typo)
-- mousedown(), mouseup(), mouseout(), refocus(), focus(), realizeEnability(),
-  realizeReadOnly(), realizeEnabilityAndReadOnly()
+- mousedown(), mouseup(), mouseout(), refocus(), focusOrSetActiveRadio(),
+  focus(), realizeEnability(), realizeReadOnly(), realizeEnabilityAndReadOnly()
     - IRRELEVANT
-- click(), changeSelection(), select() -> self.select() (kind of)
+- click(), changeSelection(), select(), selectId() -> self.select() (kind of)
     - The calculations in select() just convert index to td element (the table
       can have multiple rows and columns). We don't need that.
 - selectedItem -> self.selected_option
 - getSelectedIndex() -> self.selected_index
 - getSelectedId() -> self.selected_option.id
+- getSelectedTitle() -> self.selected_option.title
 - findItem() -> `element.find_parent("td")`
 - findRadioInput() -> `element.radio`
+- findRadioLabel()
+    - IRRELEVANT
 - fireUIChangesEvent() -> self._fire_event()
 - setDataView() -> self._ais_setDataView()
 - changedProperties() -> self.changed_properties()
@@ -784,6 +872,9 @@ COMPLETE
 # CheckList
 
 COMPLETE
+
+TODO: CheckList is currently based on an older version of webui.js where it
+wasn't a subclass of UpDownList.
 
 - mode, MSELECT, MMOVE
     - Removed. `this.mode` should've been just an argument to up() and down().
@@ -816,6 +907,12 @@ COMPLETE
 
 
 
+# HtmlList
+
+TODO
+
+
+
 # RadioButton, RadioGroup
 
 UNSUPPORTED
@@ -831,6 +928,8 @@ focus. (This is written here to show that getVisibleForUser() is IRRELEVANT.)
 
 COMPLETE
 
+- getText()
+    - IRRELEVANT (only used in )
 - getReadOnly(), setReadOnly() is inherited
 - getMaxLength(), setMaxLength() -> self.max_length
 - getToolTipLikeText(), setToolTipLikeText() -> self.tool_tip_like_text
@@ -839,8 +938,8 @@ COMPLETE
 - getIsEditable() -> self.is_editable()
 - getDefaultBackground(), setDefaultBackground(), getReadOnlyBackground(),
   setReadOnlyBackground(), initPlaceHolder(), hidePlaceHolder(),
-  showPlaceHolder(), realizeComponentStyle(), realizeEnability(),
-  refreshBackgroundColor()
+  showPlaceHolder(), adjustPlaceHolderVisibility(), realizeComponentStyle(),
+  realizeEnability(), refreshBackgroundColor()
     - IRRELEVANT
 - contextmenu(), regActualSelectionIE(), regActualSelection(), setPosition(),
   removeReplaceSelectedText(), removeReplaceCharacter()
@@ -852,7 +951,7 @@ COMPLETE
 
 COMPLETE
 
-- changingKeyPressEvent()
+- changingKeyUpEvent(), changingKeyPressEvent()
     - IRRELEVANT
 - changeHandler, setChangeHandler()
     - IRRELEVANT, because:
@@ -871,7 +970,8 @@ COMPLETE
 COMPLETE
 
 - getText(), setText() -> self.value
-- focus(), blur(), keydown(), keypress(), drop(), dragstart()
+- getResizeHeightByContent(), focus(), blur(), keydown(), keypress(), keyup(),
+  drop(), dragstart(), tryAutosize()
     - IRRELEVANT
 - countNewLines(), regActualSelectionIE(), setPosition(), paste(),
   afterPaste(), cut()
@@ -905,6 +1005,8 @@ COMPLETE
 - getBorderWidth(), initIframeWindow(), resizeComponent(), realizeEnability()
     - IRRELEVANT
 - initFromDataView() -> self._parse_content()
+- tryExecuteAction()
+    - Equivalent to ActionableControl's version.
 - fireUIChangesEvent()
     - IRRELEVANT, because canClose is UNSUPPORTED
 - changedProperties() -> self.changed_properties()
@@ -912,6 +1014,12 @@ COMPLETE
     - IRRELEVANT
 - getCanClose()
     - UNSUPPORTED, because we don't actually parse or execute the content.
+- tryExecuteActionFromHtmlArea() -> self.try_execute_action()
+- tryShowPopupMenuFromHtmlArea()
+    - Mostly IRRELEVANT, see PopupMenu below.
+    - If this function receives non-null params, WebUI stores the value in
+      PopupMenuManager and uses it in MenuItem.onAction(). This can be done in
+      Votr by calling MenuItem.click() with the needed params.
 
 
 
@@ -994,8 +1102,9 @@ bare minimum. In particular, masks and suggestion requests are not supported.
   getNextEditablePartPos(), getPreviousEditablePartPos(), keydown(),
   keypress(), keyup(), getPatternForSuggestionRequest(),
   setTextFromSuggestion(), setSuggestions(), suggestionClick(), drop(),
-  dragstart(), change(), getSubstituteMask(), afterPaste(), afterCut(),
-  checkMask(), fireSuggestionConfirm()
+  dragstart(), change(), getSubstituteMask(), isIdentifierChar(),
+  removeNotIdentifierChars(), afterPaste(), afterCut(), checkMask(),
+  fireSuggestionConfirm()
     - UNSUPPORTED for now
 
 
@@ -1069,6 +1178,8 @@ to Table. The row and cell coloring code is IRRELEVANT.
 - getSelectedRowsCount() -> `len(self.selected_row_indexes)`
 - getSelectedRowsAsString() ->
   `','.join(str(r) for r in self.selected_row_indexes)`
+- getSelectedRowsIdAsString() ->
+  `','.join(str(self.loaded_rows[r].rid) for r in self.selected_row_indexes)`
 - getCellSelection()
     - IRRELEVANT (unused in webui)
 - getCellSelectionAlias() -> self.selected_column_alias
@@ -1460,7 +1571,7 @@ COMPLETE
 - getLid() -> self.lid
 - realizeEnability(), realizeVisibility()
     - IRRELEVANT
-- getRightArrowElement(), select(), unselect()
+- getRightArrowElement(), select(), unselect(), setClassName()
     - IRRELEVANT (visual only)
 - isPopupTitle() -> `self.popup_menu_id != None`
 - getPopupMenuId() -> self.popup_menu_id
@@ -1468,7 +1579,11 @@ COMPLETE
 - getConfirmQuestion(), setConfirmQuestion() -> self.confirm_question
 - getImage(), setImage() -> self.image
 - onAction() -> self.click()
-    - menuItemAction() is IRRELEVANT, so we don't need to call it.
+    - The single function argument was removed. It is true if this is an
+      "internal" menu such as for split panes, tabbed panes or tables, and
+      controls whether to call menuItemAction(). This is IRRELEVANT.
+    - A new argument was added. Because votr doesn't have a PopupMenuManager,
+      params can be given directly to MenuItem.click().
 
 
 
@@ -1480,14 +1595,17 @@ Votr doesn't keep track of which PopupMenus are open, or what item is selected.
 The user can just access the wanted MenuItem directly in dialog.components,
 there's no need to simulate opening the right menu first.
 
-Some menus emit an "init" event when opened. Votr supports that, but you have
-to do it manually.
+Some menus emit an "init" event when opened or an "beforeclose" event when
+closed. Votr supports that, but you have to do it manually.
 
-- selectedItemJSObject, hasVisibleItems(), focus(), doShow(), hide(),
+- setIsInternal(), getIsInternal()
+    - IRRELEVANT. Votr doesn't handle internal popup menus.
+- selectedItemJSObject, hasVisibleItems(), focus(), doShow(),
   showHideSeparators(), getSelectedItemJSObject(), setSelectedItemJSObject(),
   isVisible(), resizeComponent(), realizeEnability(), realizeVisibility()
     - IRRELEVANT
 - show() -> self.show()
+- hide() -> self.hide()
 - getMenuItem() -> `self.dialog.components[id]`
 - setComponents()
     - UNSUPPORTED. Dynamically adding and removing components? No thanks.
@@ -1499,6 +1617,12 @@ to do it manually.
 IRRELEVANT
 
 See PopupMenu above.
+
+Note that PopupMenuManager.showPopupMenus() might receive non-null params and
+store them in the PopupMenuManager. (This currently only happens when called
+from tryShowPopupMenuFromHtmlArea() through HtmlArea.bodyContextMenu().) Votr
+doesn't want to store "the params value for the currently open menu", so the
+user must give params directly to MenuItem.click() instead.
 
 
 
@@ -1584,7 +1708,7 @@ Mostly covered by Application. No longer global.
     - In Votr, this is handled in parse_response() by raising
       AISApplicationClosedError. No other cleanup (closing dialog etc) is done.
 - setReturnValue()
-    - IRRELEVANT
+    - UNSUPPORTED
 - sendingEvent, getSendingEvent(), setSendingEvent()
     - IRRELEVANT (everything is synchronous)
 - sendEvent()
@@ -1646,8 +1770,9 @@ Mostly covered by Application. No longer global.
     - IRRELEVANT
 - setShellExecResult(), initCustomFrame(), setCustomFrameWindow()
     - UNSUPPORTED
-- dblClick(), keyDown(), workspaceResize(), setUpdateInterval(), setWidth(),
-  setHeight(), resizeBrowserByApp(), cancelEvent(), getSrcElement()
+- dblClick(), keyDown(), updateAppSizeProperties(), workspaceResize(),
+  setUpdateInterval(), getScrollBarWidth(), setWidth(), setHeight(),
+  resizeBrowserByApp(), cancelEvent(), getSrcElement()
     - IRRELEVANT
 - readCustomization(), getProperty(), getPropertyAsBoolean(),
   getPropertyAsInt()

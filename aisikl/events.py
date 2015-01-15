@@ -100,13 +100,13 @@ def row_edited_event(source, command, row_index):
         "</event>")
 
 def action_event(source, command=None, original_source_name=None,
-                 cancel=False):
+                 params=None, cancel=False):
     source.dialog.try_interactive(source, 'ActionEvent')
     # Note that <origSrcName> goes outside of <event>.
     return Event(source, EVENT_CANCEL if cancel else EVENT_ACTION,
         tag("origSrcName", original_source_name, True) +
         "<event class='avc.ui.event.AVCActionEvent'>" +
-        tag("command", command, True) +
+        tag("command", command, True) + tag("params", params, True) +
         "</event>")
 
 def selection_event(source, index=-1, selected=True):

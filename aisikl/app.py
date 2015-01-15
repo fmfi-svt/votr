@@ -44,6 +44,8 @@ _useless_res = [
     re.compile(r'^if \(dm\(\)!=null\) \w+=dm\(\)\.getDialog\(\'\w+\'\)$'),
     re.compile(r'^if \(\w+!=null\) \w+=\w+\.getDialogContext\(\)$'),
     re.compile(r'^dm\(\)\.setActiveDialogName\(\'\w+\'\)$'),
+    # TODO: Perhaps we should handle setActiveDialogName, or at least check if
+    # it's the same as the current active dialog.
 ]
 _main_re = re.compile(r'^function main0?\(\) \{$')
 _operation_re = re.compile(r'^(webui|dm)\(\)\.(\w+)\((.*)\)$')
@@ -177,8 +179,9 @@ class Application:
         ctx: The :class:`~aisikl.context.Context`.
         dialogs: The dict of open :class:`~aisikl.dialog.Dialog`\ s.
         dialog_stack:
-            The ordered list of open :class:`~aisikl.dialog.Dialog`\ s. Its
-            last item is the currently active dialog.
+            The ordered list of open :class:`~aisikl.dialog.Dialog`\ s.
+        active_dialog: The currently active dialog.
+        d: The currently active dialog.
         last_response_time: When did this app last receive a WebUI response.
     '''
 
@@ -216,6 +219,7 @@ class Application:
         self.serial = 0
         self.dialogs = {}
         self.dialog_stack = []
+        self.active_dialog = self.d = None
         self.collector = None
 
         match = re.search(r'appClassName=([a-zA-Z0-9_\.]*)', url)
@@ -242,12 +246,28 @@ class Application:
             self._do_request(rq)
         return ops
 
-    @property
-    def active_dialog(self):
-        '''The currently active dialog. Equal to `app.dialog_stack[-1]`.'''
-        return self.dialog_stack[-1] if self.dialog_stack else None
+    def activate_dialog(self, name):
+        '''Activates a dialog. This is like clicking a dialog in WebUI.
 
-    d = active_dialog
+        Aisikl doesn't prevent you from accessing inactive dialogs, but it's
+        recommended for users of aisikl to only use ``app.active_dialog``
+        (``app.d``) and call this method to change its value when needed.
+
+        However, WebUI only allows changing the active dialog if no modal
+        dialogs are open. So far we've never seen multiple open dialogs where
+        one wasn't modal. This method exists just for completeness.
+
+        Args:
+            name: Name of the dialog to activate.
+        Raises:
+            ValueError: Raised if a modal dialog is open.
+        '''
+        if self.active_dialog and self.active_dialog.name == name:
+            return
+        if any(d.modal for d in self.dialog_stack):
+            raise ValueError(
+                "Cannot change active dialog while a modal dialog is open")
+        self.active_dialog = self.d = self.dialogs[name]
 
     @contextmanager
     def collect_operations(self):
@@ -463,18 +483,6 @@ class Application:
             # (NativeDialog, i.e. MessageBox and the rest, is something else.)
             raise AISParseError("openDialog() with isNative is not supported")
 
-        if self.dialog_stack and not modal and not is_main_dialog:
-            # See webui's openDialog_().
-            #
-            # Webui's modal dialogs are implemented with DialogStacks. In
-            # a stack, only the topmost dialog can be active. But the user can
-            # switch between different stacks. A modal dialog only restricts
-            # access to others in its own stack.
-            #
-            # Multiple stacks seem to be uncommon in practice, so we ignore the
-            # whole thing for the moment to make the code simpler.
-            raise AISParseError("Multiple dialog stacks are not supported yet")
-
         self.ctx.log('operation', 'Opening dialog {} "{}"'.format(name, title))
 
         # Ignore arguments that only affect position and size: x, y, width,
@@ -485,6 +493,11 @@ class Application:
         self.dialog_stack.append(dialog)
         self.dialogs[name] = dialog
 
+        # The topmost modal dialog will be active. If no modals exist, this
+        # dialog will be active.
+        modals = [d for d in self.dialog_stack if d.modal]
+        self.active_dialog = self.d = modals[-1] if modals else dialog
+
         url = purl or ('/ais/servlets/WebUIServlet?appId={}&form={}&'
                        'antiCache={}').format(self.app_id, name, time.time())
         dialog._init(url)
@@ -492,6 +505,9 @@ class Application:
         return dialog
 
     def refresh_dialog(self, name):
+        '''Refreshes a dialog in response to the refreshDialog
+        :class:`Operation`.
+        '''
         dialog = self.dialogs[name]
 
         self.ctx.log('operation', 'Refreshing dialog {} "{}"'.format(
@@ -500,31 +516,26 @@ class Application:
         url = ('/ais/servlets/WebUIServlet?appId={}&form={}&antiCache={}'.
             format(self.app_id, dialog.name, time.time()))
         dialog._init(url)
-        # TODO: Document refresh_dialog in webui-coverage.txt when we update
-        # it to the current version of webui.js.
 
     def close_dialog(self, name, is_native=False):
         '''Closes a dialog in response to the closeDialog :class:`Operation`.
-
-        Only the top dialog can be closed.
-
-        Returns:
-            True if the dialog was closed, or if it had already been closed.
         '''
         if is_native:
             raise AISParseError("closeDialog() with isNative is not supported")
 
         dialog = self.dialogs.get(name)
         if not dialog:
-            return True
-        if dialog != self.active_dialog:
-            return False
+            return
 
         self.ctx.log('operation', 'Closing dialog {}'.format(name))
 
-        self.dialog_stack.pop()
+        self.dialog_stack.remove(dialog)
         del self.dialogs[name]
-        return True
+
+        if dialog == self.active_dialog or not self.active_dialog:
+            modals = [d for d in self.dialog_stack if d.modal]
+            self.active_dialog = self.d = (
+                modals or self.dialog_stack or [None])[-1]
 
     def close_all_dialogs(self):
         '''Closes all dialogs after they have been closed on the server.'''
@@ -532,6 +543,7 @@ class Application:
             self.ctx.log('operation', 'Closing all dialogs')
         self.dialogs.clear()
         self.dialog_stack.clear()
+        self.active_dialog = self.d = None
 
     def confirm_box(self, option_index):
         '''Sends an answer after receiving the confirmBox :class:`~Operation`.

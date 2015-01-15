@@ -9,12 +9,13 @@ class Panel(Control):
         self.tab_id = element.get('tabId')
         self.title = element.get('name')
         self.autoscrolls = element.get('autoscrolls', 'false') == 'true'
-        self.stacked = element.get('stacked', 'false') == 'true'
         self.collapsable = element.get('collapsable', 'false') == 'true'
         self.collapsed = element.get('collapsed', 'false') == 'true'
 
     def _ais_setCollapsed(self, value):
         self.collapsed = (value == 'true')
+    def _ais_setCollapsable(self, value):
+        self.collapsable = (value == 'true')
 
     def toggle_collapsed(self):
         if not self.collapsable: return

@@ -17,12 +17,12 @@ class MenuItem(ActionableControl):
     def _ais_setImage(self, value):
         self.image = value
 
-    def click(self):
+    def click(self, params=None):
         self.log('action', 'Clicking {}'.format(self.id))
 
-        if self.try_execute_action(): return
+        if self.try_execute_action(params): return
 
-        ev = action_event(self, None, self.id)
+        ev = action_event(self, None, self.id, params)
         # TODO: We should technically ask confirm_question before firing
         # (if ev.listening is True), but we probably don't care.
         self.dialog.app.send_events(ev)

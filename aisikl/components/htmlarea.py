@@ -3,9 +3,6 @@ from .actionablecontrol import ActionableControl
 
 
 class HtmlArea(ActionableControl):
-    # TODO: Find out if HtmlArea really should inherit from ActionableControl
-    # or if that's a webui bug.
-
     def __init__(self, dialog_soup, element, dialog):
         super().__init__(dialog_soup, element, dialog)
         self.tool_tip_like_data = element.get('tooltiplikedata')

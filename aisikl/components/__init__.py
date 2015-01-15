@@ -41,6 +41,7 @@ component_classes = {
     'dateControl': TODO,
     'eventInteractive': TODO,
     'htmlArea': HtmlArea,
+    'htmlList': TODO,
     'image': Image,
     'label': Label,
     'list': List,

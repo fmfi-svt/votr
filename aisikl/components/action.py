@@ -20,7 +20,7 @@ class Action(Component):
         return [o for o in self.get_components()
                 if o.jsct in ('button', 'menuItem')]
 
-    def execute(self, original_source_name=None):
+    def execute(self, original_source_name=None, params=None):
         '''Executes the action and emits the appropriate event.'''
         if not (self.accessible and self.enabled and self.enabled_in_ui and
                 self.visible and self.visible_in_ui):
@@ -31,7 +31,7 @@ class Action(Component):
         if not original_source_name:
             self.log('action', 'Executing {}'.format(self.id))
 
-        ev = action_event(self, None, original_source_name or self.id)
+        ev = action_event(self, None, original_source_name or self.id, params)
         # TODO: We should technically ask confirm_question before firing
         # (if ev.listening is True), but we probably don't care.
         self.dialog.app.send_events(ev)

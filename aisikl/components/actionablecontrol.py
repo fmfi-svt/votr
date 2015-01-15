@@ -12,11 +12,9 @@ class ActionableControl(Control):
         if not self.action_name: return None
         return self.dialog.components[self.action_name]
 
-    def try_execute_action(self):
-        # TODO: This isn't used in webui, but we might replace
-        # tryExecuteActionForElement() with it.
+    def try_execute_action(self, params=None):
         if self.action:
-            self.action.execute(self.id)
+            self.action.execute(self.id, params)
             return True
         return False
 
