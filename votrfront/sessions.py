@@ -72,7 +72,7 @@ def logged_transaction(request, sessid=None):
     if not sessid: sessid = get_cookie(request)
 
     with transaction(request, sessid) as session:
-        log_filename = app.var_path('logs', sessid)
+        log_filename = request.app.var_path('logs', sessid)
         with open(log_filename, 'a', encoding='utf8') as log_file:
             client = session.get('client')
             if client: client.context.log_file = log_file
