@@ -1554,13 +1554,135 @@ stores everything once, directly in Table.
 
 # Synchronizer, ExpansionSynchronizer, CheckedSynchronizer
 
-TODO
+COMPLETE (inlined in Tree)
+
+Synchronizer is stupidly implemented with strings instead of a
+`map<string,bool>`, but otherwise it doesn't do much, so it's inlined in Tree.
+
+- registerProPath(k)
+    - if sync.get(k) == False: del sync[k]
+    - elif sync.get(k) == None: sync[k] = True; return True
+- registerConPath(k)
+    - if sync.get(k) == True: del sync[k]
+    - elif sync.get(k) == None: sync[k] = False; return True
+- reset() -> `sync.clear()`
+- remove(), add(), contains()
+    - IRRELEVANT
+    - Note that remove() has a bug: `remove("|a|b|c|", "a") == "b|c|"` which
+      doesn't contain "|b|". (They chose the most inefficient way to do this,
+      and even then, they still didn't get it right.)
+
+ExpansionSynchronizer and CheckedSynchronizer are mostly the same:
+
+- getExpandedPaths() -> `"|" + "|".join(k for k in sync if sync[k]) + "|"`
+- getCollapsedPaths() -> `"|" + "|".join(k for k in sync if not sync[k]) + "|"`
+- registerExpandedPath() / registerCheckedPath()
+    - if registerProPath(k) then this.treeObject.onExpansionChanged(true)
+    - Inlined in Tree.toggle_expansion() / Tree.toggle_checkbox().
+- registerCollapsedPath() / registerUncheckedPath()
+    - if registerConPath(k) then this.treeObject.onExpansionChanged(false)
+    - Inlined in Tree.toggle_expansion() / Tree.toggle_checkbox().
 
 
 
-# TreeModel, Tree
+# TreeModel
 
-TODO
+COMPLETE (merged into Tree)
+
+The Votr version unifies the current selection, active path etc. into a single
+source of truth, like with Table and TableModel.
+
+- init()
+    - IRRELEVANT, because updateSelection() and updateActivePath() are
+      IRRELEVANT.
+- resize(), doesTreeLookAsFocused(), ensureTreeLooksAndIsKnownAsFocused(),
+  ensureTreeLooksAsBlured(), onBodyFocus(), onContainerFocus(),
+  onContainerDeactivate(), onContainerMouseDown(), onContainerMouseUp(),
+  onContainerClick(), onContainerDblClick(), onBodyContextMenu(),
+  onBodyKeyDown(), onBodyKeyUp(), isEventOnNodeExpander(),
+  onNodeExpanderMouseDown()
+    - IRRELEVANT
+- onNodeCheckBoxClick(), switchCheck() -> self.toggle_checkbox()
+- findMyNode(), getNodeText(), getNodeImageElement(), getNodeExpanderImage()
+    - IRRELEVANT
+- isNodeExpanded() -> node.expanded
+- getParentNode(), getChildrenNodes()
+    - UNSUPPORTED (use the id)
+- expandCollapse() -> self.toggle_expansion()
+- getNodeOffsetTop()
+    - IRRELEVANT
+- onNodeDescriptionClick(), realizeSelectOnNode() -> self.select()
+- repairSelectionAndActiveNodeOnCollapse()
+    - IRRELEVANT (returns immediately in webui.js)
+- setNodeActivity()
+    - IRRELEVANT (only changes this.activeNode and does visual stuff)
+    - Changing self.active_id is inlined in self.select()
+- scrollOnActiveNode()
+    - IRRELEVANT
+- getFirstNode()
+    - UNSUPPORTED
+- findPreviousVisibleNode(), findNextVisibleNode(), moveCursor()
+    - IRRELEVANT (aisikl can select nodes directly, without a "keyboard")
+- clearSelection()
+    - IRRELEVANT (webui only uses it right before selecting something else)
+- recolorSelection(), updateNodeImageElement(), recolorNodeSelection()
+    - IRRELEVANT
+- isNodeSelected() -> `node in self.selected`
+- getSelectionAsString()
+    - Inlined in self.changed_properties()
+- getSelectedNodesCount() -> `len(self.selected)`
+- getActivePathAsString() -> `self.active_path[1:]`
+- updateSelection(), updateActivePath()
+    - IRRELEVANT, as Votr only has a single source of truth.
+- update()
+    - Merged with _init_from_data_view().
+    - The "withChildren" attribute is UNSUPPORTED. Any nodeElement found in the
+      update completely replaces its previous version.
+- getSelectedNodeType() -> `self.nodes[self.selection[-1]].type`
+- cancelEvent(), updateAriaProperty()
+    - IRRELEVANT
+- htmlId2path() -> `id[1:]`
+
+
+# Tree
+
+COMPLETE
+
+- init() -> `__init__`
+- initFromDataView() -> self._init_from_data_view()
+    - Creating the iframe content is IRRELEVANT, but we still need to parse the
+      data view scripts instead.
+- resizeComponent(), resizeChildren()
+    - IRRELEVANT
+- initModel()
+    - Previously called from initTreeModel() in iframe onload.
+    - Inlined into _init_from_data_view().
+- getTreeModel() -> self
+- getExpansionSynchronizer() -> self.expansion_synchronizer
+- getCheckedSynchronizer() -> self.checked_synchronizer
+- deinitPropertiesAndModel()
+    - IRRELEVANT
+- onExpandCollapse(), onLoadChildren()
+    - Inlined in self.toggle_expansion()
+- setDataView() -> self._ais_setDataView()
+- changedProperties() -> self.changed_properties()
+- onSelectionChange()
+    - Inlined in self.select()
+- onExpansionChanged()
+    - Inlined in registerExpandedPath() and registerCollapsedPath(), which are
+      inlined in self.toggle_expansion().
+- onCheckedChanged()
+    - Inlined in registerCheckedPath() and registerUncheckedPath(), which are
+      inlined in self.toggle_checkbox().
+- onBodyDblClick() -> self.double_click()
+- onBodyMouseDown(), onBodyMouseUp(), onBodyClick(), onBodyContextMenu(),
+  onBodyKeyDown(), onBodyKeyUp(), realizeEnability(), refocus(), focus(),
+  onFocusIsInFrame()
+    - IRRELEVANT
+- getMultipleSelection(), setMultipleSelection() -> self.multiple_selection
+- getCommands(), setCommands() -> self.commands
+- getBorderWidth() -> self.border_width
+- getSelectedNodesCount() -> `len(self.selected)`
 
 
 
