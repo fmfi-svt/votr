@@ -23,8 +23,9 @@ RegPredmet = keyed_namedtuple('RegPredmet', [
 
 Hodnotenie = keyed_namedtuple('Hodnotenie', [
     'akademicky_rok', 'skratka', 'nazov', 'typ_vyucby', 'semester', 'kredit',
-    'hodn_znamka', 'hodn_termin', 'hodn_datum', 'hodn_znamka_popis', 'key'],
-    key=['skratka'])
+    'hodn_znamka', 'hodn_termin', 'hodn_datum', 'hodn_znamka_popis', 'key',
+    'predmet_key'],
+    key=['akademicky_rok', 'skratka'], predmet_key=['skratka'])
 
 Priemer = namedtuple('Priemer', [
     'akademicky_rok', 'nazov', 'semester', 'ziskany_kredit', 'predmetov',
