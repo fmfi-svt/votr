@@ -97,7 +97,7 @@ class WebuiPredmetyMixin:
         app.d.akRokComboBox.select(
             find_option(app.d.akRokComboBox.options, id=akademicky_rok))
 
-        return message
+        return ' '.join(message) or None
 
     @with_key_args(True, False)
     def get_studenti_zapisani_na_predmet(self, predmet_key, akademicky_rok):
