@@ -3,19 +3,9 @@ import json
 import traceback
 from werkzeug.routing import Rule
 from . import sessions
-from fladgejt.helpers import encode_key, decode_key
-
-
-def decode_args(method, args):
-    spec = getattr(method, 'key_args', None)
-    if not spec: return args
-    return tuple(decode_key(arg) if is_key and isinstance(arg, str) else arg
-                 for arg, is_key in zip(args, spec))
 
 
 def encode_result(thing):
-    if isinstance(thing, tuple) and hasattr(thing, '_encode'):
-        thing = thing._encode()
     if isinstance(thing, tuple) and hasattr(thing, '_asdict'):
         thing = thing._asdict()
 
@@ -34,7 +24,6 @@ def rpc_handle_call(request, session):
     log('rpc', 'RPC {} started'.format(name), args)
     try:
         method = getattr(session['client'], name)
-        args = decode_args(method, args)
         result = encode_result(method(*args))
     except Exception as e:
         log('rpc', 'RPC {} failed with {}'.format(name, type(e).__name__),

@@ -33,10 +33,10 @@ Votr.StudiumSelector = React.createClass({
       <li><span className="text-pill">Štúdium:</span></li>
       {items.map((item) => {
         var { studium } = item;
-        var key = studium.key;
-        var active = studium.key == query.studiumKey;
+        var key = studium.studium_key;
+        var active = studium.studium_key == query.studiumKey;
         return <li key={key} className={active ? "active" : ""}>
-          <Votr.Link href={withKeys(query, studium.key)}>
+          <Votr.Link href={withKeys(query, studium.studium_key)}>
             {studium.sp_skratka}
           </Votr.Link>
         </li>;
@@ -65,7 +65,7 @@ Votr.StudiumSelector = React.createClass({
 
     if (!query.studiumKey && cache.loadedAll && items.length) {
       var mostRecentItem = items[0];
-      query = withKeys(query, mostRecentItem.studium.key);
+      query = withKeys(query, mostRecentItem.studium.studium_key);
     }
 
     return <div>

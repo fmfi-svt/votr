@@ -1,7 +1,7 @@
 
 from aisikl.app import assert_ops
 from fladgejt.helpers import (
-    CantOpenApplication, find_row, find_option, with_key_args)
+    CantOpenApplication, find_row, find_option, encode_key, decode_key)
 from fladgejt.structures import Predmet, Termin, PrihlasenyStudent
 
 
@@ -15,17 +15,15 @@ class WebuiTerminyMixin:
             if ops:
                 assert_ops(ops, 'messageBox')
 
-    @with_key_args(True, True)
-    def get_vidim_terminy_hodnotenia(self, studium_key, zapisny_list_key):
+    def get_vidim_terminy_hodnotenia(self, zapisny_list_key):
         try:
-            self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
+            self._open_terminy_hodnotenia_app(zapisny_list_key)
         except CantOpenApplication:
             return False
         return True
 
-    @with_key_args(True, True)
-    def get_predmety(self, studium_key, zapisny_list_key):
-        app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
+    def get_predmety(self, zapisny_list_key):
+        app = self._open_terminy_hodnotenia_app(zapisny_list_key)
 
         self.__vyber_oba_semestre(app)
 
@@ -37,9 +35,8 @@ class WebuiTerminyMixin:
                   for row in app.d.predmetyTable.all_rows()]
         return result
 
-    @with_key_args(True, True)
-    def get_prihlasene_terminy(self, studium_key, zapisny_list_key):
-        app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
+    def get_prihlasene_terminy(self, zapisny_list_key):
+        app = self._open_terminy_hodnotenia_app(zapisny_list_key)
 
         # V dolnom combo boxe dame "Zobrazit terminy: Vsetkych predmetov".
         app.d.zobrazitTerminyComboBox.select(0)
@@ -47,8 +44,9 @@ class WebuiTerminyMixin:
         # Stlacime button vedla combo boxu.
         app.d.zobrazitTerminyAction.execute()
 
+        studium_key, akademicky_rok = decode_key(zapisny_list_key)
+
         # Vytiahneme tabulku terminov.
-        (akademicky_rok,) = zapisny_list_key
         result = [Termin(datum=row['dat'],
                          cas=row['cas'],
                          miestnost=row['miestnosti'],
@@ -65,14 +63,14 @@ class WebuiTerminyMixin:
                          moznost_prihlasit=row['moznostPrihlasenia'],
                          datum_prihlasenia=row['datumPrihlas'],
                          datum_odhlasenia=row['datumOdhlas'],
-                         akademicky_rok=akademicky_rok)
+                         akademicky_rok=akademicky_rok,
+                         zapisny_list_key=zapisny_list_key)
                   for row in app.d.terminyTable.all_rows()
                   if not row['datumOdhlas']]
         return result
 
-    @with_key_args(True, True)
-    def get_vypisane_terminy(self, studium_key, zapisny_list_key):
-        app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
+    def get_vypisane_terminy(self, zapisny_list_key):
+        app = self._open_terminy_hodnotenia_app(zapisny_list_key)
 
         self.__vyber_oba_semestre(app)
 
@@ -81,7 +79,7 @@ class WebuiTerminyMixin:
         for row in app.d.predmetyTable.all_rows():
             if row['pocetAktualnychTerminov'] == '0': continue
             result.extend(self.get_vypisane_terminy_predmetu(
-                studium_key, zapisny_list_key, (row['skratka'],)))
+                zapisny_list_key, encode_key((row['skratka'],))))
 
         return result
 
@@ -99,20 +97,20 @@ class WebuiTerminyMixin:
     def __select_predmet_row(self, app, predmet_key):
         self.__vyber_oba_semestre(app)
 
-        (skratka,) = predmet_key
+        (skratka,) = decode_key(predmet_key)
         index = find_row(app.d.predmetyTable.all_rows(), skratka=skratka)
         app.d.predmetyTable.select(index)
 
         return app.d.predmetyTable.all_rows()[index]
 
-    @with_key_args(True, True, True)
-    def get_vypisane_terminy_predmetu(self, studium_key, zapisny_list_key, predmet_key):
-        app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
+    def get_vypisane_terminy_predmetu(self, zapisny_list_key, predmet_key):
+        app = self._open_terminy_hodnotenia_app(zapisny_list_key)
 
         predmet_row = self.__select_predmet_row(app, predmet_key)
         self.__open_vyber_terminu_dialog(app)
 
-        (akademicky_rok,) = zapisny_list_key
+        studium_key, akademicky_rok = decode_key(zapisny_list_key)
+
         result = [Termin(datum=row['dat'],
                          cas=row['cas'],
                          miestnost=row['miestnosti'],
@@ -129,7 +127,8 @@ class WebuiTerminyMixin:
                          moznost_prihlasit=row['moznostPrihlasenia'],
                          datum_prihlasenia="",
                          datum_odhlasenia="",
-                         akademicky_rok=akademicky_rok)
+                         akademicky_rok=akademicky_rok,
+                         zapisny_list_key=zapisny_list_key)
                   for row in app.d.zoznamTerminovTable.all_rows()]
 
         # Stlacime zatvaraci button.
@@ -141,14 +140,14 @@ class WebuiTerminyMixin:
 
         return result
 
-    @with_key_args(True, True, True, True)
-    def get_prihlaseni_studenti(self, studium_key, zapisny_list_key, predmet_key, termin_key):
-        app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
+    def get_prihlaseni_studenti(self, termin_key):
+        zapisny_list_key, predmet_key, datum, cas, miestnost, poznamka = (
+            decode_key(termin_key))
+
+        app = self._open_terminy_hodnotenia_app(zapisny_list_key)
 
         self.__vyber_oba_semestre(app)
         self.__select_predmet_row(app, predmet_key)
-
-        datum, cas, miestnost, poznamka = termin_key
 
         app.d.zobrazitTerminyAction.execute()
         try:
@@ -168,12 +167,13 @@ class WebuiTerminyMixin:
 
             return self.__process_prihlaseni_studenti_list(app, ops)
         else:
-            return self.__get_prihlaseni_studenti_cez_vyber_terminu(app, termin_key)
+            # zapisny_list_key a predmet_key uz sme selectli predtym.
+            return self.__get_prihlaseni_studenti_cez_vyber_terminu(app,
+                datum, cas, miestnost, poznamka)
 
-    def __get_prihlaseni_studenti_cez_vyber_terminu(self, app, termin_key):
+    def __get_prihlaseni_studenti_cez_vyber_terminu(self, app, datum, cas,
+                                                    miestnost, poznamka):
         self.__open_vyber_terminu_dialog(app)
-
-        datum, cas, miestnost, poznamka = termin_key
 
         # Vyberieme spravny riadok. Ak v tabulke nie je, vypneme "Zobrazit len
         # aktualne terminy", stlacime nacitavaci button a skusime znovu.
@@ -227,14 +227,15 @@ class WebuiTerminyMixin:
 
         return result
 
-    @with_key_args(True, True, True, True)
-    def prihlas_na_termin(self, studium_key, zapisny_list_key, predmet_key, termin_key):
-        app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
+    def prihlas_na_termin(self, termin_key):
+        zapisny_list_key, predmet_key, datum, cas, miestnost, poznamka = (
+            decode_key(termin_key))
+
+        app = self._open_terminy_hodnotenia_app(zapisny_list_key)
         self.__select_predmet_row(app, predmet_key)
         self.__open_vyber_terminu_dialog(app)
 
         # Vyberieme spravny riadok.
-        datum, cas, miestnost, poznamka = termin_key
         app.d.zoznamTerminovTable.select(find_row(
             app.d.zoznamTerminovTable.all_rows(),
             dat=datum, cas=cas, miestnosti=miestnost, poznamka=poznamka))
@@ -255,9 +256,12 @@ class WebuiTerminyMixin:
 
         return message
 
-    @with_key_args(True, True, True, True)
-    def odhlas_z_terminu(self, studium_key, zapisny_list_key, predmet_key, termin_key):
-        app = self._open_terminy_hodnotenia_app(studium_key, zapisny_list_key)
+    def odhlas_z_terminu(self, termin_key):
+        zapisny_list_key, predmet_key, datum, cas, miestnost, poznamka = (
+            decode_key(termin_key))
+        (skratka_predmetu,) = decode_key(predmet_key)
+
+        app = self._open_terminy_hodnotenia_app(zapisny_list_key)
 
         # V dolnom combo boxe dame "Zobrazit terminy: Vsetkych predmetov".
         app.d.zobrazitTerminyComboBox.select(0)
@@ -266,10 +270,10 @@ class WebuiTerminyMixin:
         app.d.zobrazitTerminyAction.execute()
 
         # Vyberieme spravny riadok.
-        datum, cas, miestnost, poznamka = termin_key
         app.d.terminyTable.select(find_row(
             app.d.terminyTable.all_rows(),
-            dat=datum, cas=cas, miestnosti=miestnost, poznamka=poznamka))
+            dat=datum, cas=cas, miestnosti=miestnost, poznamka=poznamka,
+            predmetSkratka=skratka_predmetu))
 
         # Stlacime "Odhlasit sa z terminu".
         with app.collect_operations() as ops:

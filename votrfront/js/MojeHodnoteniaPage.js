@@ -44,7 +44,7 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
       <thead>{header}</thead>
       <tbody>
         {hodnotenia.map((hodnotenie) =>
-          <tr key={hodnotenie.key} className={Votr.classForSemester(hodnotenie.semester)}>
+          <tr key={hodnotenie.hodn_key} className={Votr.classForSemester(hodnotenie.semester)}>
             <td>{hodnotenie.akademicky_rok}</td>
             <td>{hodnotenie.semester}</td>
             <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: hodnotenie.predmet_key, modalAkademickyRok: hodnotenie.akademicky_rok })}>
@@ -88,8 +88,8 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
       priemery = [];
     } else if (zapisneListy) {
       var zapisnyListKey = _.max(zapisneListy,
-          (zapisnyList) => Votr.sortAs.date(zapisnyList.datum_zapisu)).key;
-      [priemery, message] = cache.get('get_priemery', studiumKey, zapisnyListKey) || [];
+          (zapisnyList) => Votr.sortAs.date(zapisnyList.datum_zapisu)).zapisny_list_key;
+      [priemery, message] = cache.get('get_priemery', zapisnyListKey) || [];
     }
 
     if (!priemery) {

@@ -124,8 +124,8 @@ Votr.RegisterPredmetovResultTable = React.createClass({
         <thead>{header}</thead>
         <tbody>
           {rows.map((predmet) =>
-            <tr key={predmet.key} className={Votr.classForSemester(predmet.semester)}>
-              <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: predmet.key, modalAkademickyRok: query.akademickyRok })}>
+            <tr key={predmet.predmet_key} className={Votr.classForSemester(predmet.semester)}>
+              <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: query.akademickyRok })}>
                 {predmet.nazov}
               </Votr.Link></td>
               <td>{predmet.skratka}</td>

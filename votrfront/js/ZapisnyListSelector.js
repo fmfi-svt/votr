@@ -1,8 +1,8 @@
 (function () {
 
 
-function withKeys(oldQuery, studiumKey, zapisnyListKey) {
-  return _.assign({}, oldQuery, { studiumKey, zapisnyListKey });
+function withKeys(oldQuery, zapisnyListKey) {
+  return _.assign({}, oldQuery, { zapisnyListKey });
 }
 
 
@@ -18,7 +18,7 @@ Votr.ZapisnyListSelector = React.createClass({
     var items = [];
 
     if (studia) studia.forEach((studium) => {
-      var zapisneListy = cache.get('get_zapisne_listy', studium.key);
+      var zapisneListy = cache.get('get_zapisne_listy', studium.studium_key);
       if (zapisneListy) zapisneListy.forEach((zapisnyList) => {
         items.push({ studium, zapisnyList });
       });
@@ -34,10 +34,10 @@ Votr.ZapisnyListSelector = React.createClass({
       <li><span className="text-pill">Zápisný list:</span></li>
       {items.map((item) => {
         var { studium, zapisnyList } = item;
-        var key = studium.key + '.' + zapisnyList.key;
-        var active = studium.key == query.studiumKey && zapisnyList.key == query.zapisnyListKey;
+        var key = zapisnyList.zapisny_list_key;
+        var active = zapisnyList.zapisny_list_key == query.zapisnyListKey;
         return <li key={key} className={active ? "active" : ""}>
-          <Votr.Link href={withKeys(query, studium.key, zapisnyList.key)}>
+          <Votr.Link href={withKeys(query, zapisnyList.zapisny_list_key)}>
             {zapisnyList.akademicky_rok} {zapisnyList.sp_skratka}
           </Votr.Link>
         </li>;
@@ -50,7 +50,7 @@ Votr.ZapisnyListSelector = React.createClass({
   },
 
   renderPage: function (cache, items, query) {
-    if (query.studiumKey && query.zapisnyListKey) {
+    if (query.zapisnyListKey) {
       return <this.props.component query={query} />;
     }
     if (cache.loadedAll && items.length == 0) {
@@ -64,9 +64,9 @@ Votr.ZapisnyListSelector = React.createClass({
     var items = this.getItems(cache);
     var query = this.props.query;
 
-    if (!(query.studiumKey && query.zapisnyListKey) && cache.loadedAll && items.length) {
+    if (!query.zapisnyListKey && cache.loadedAll && items.length) {
       var mostRecentItem = items[0];
-      query = withKeys(query, mostRecentItem.studium.key, mostRecentItem.zapisnyList.key);
+      query = withKeys(query, mostRecentItem.zapisnyList.zapisny_list_key);
     }
 
     return <div>

@@ -2,7 +2,7 @@
 
 from aisikl.app import Application, assert_ops
 from fladgejt.webui.pool import pooled_app
-from fladgejt.helpers import find_option, find_row, with_key_args
+from fladgejt.helpers import find_option, find_row, decode_key
 from fladgejt.structures import RegUcitelPredmetu, PrihlasenyStudent, RegPredmet
 
 
@@ -99,9 +99,8 @@ class WebuiPredmetyMixin:
 
         return ' '.join(message) or None
 
-    @with_key_args(True, False)
     def get_studenti_zapisani_na_predmet(self, predmet_key, akademicky_rok):
-        (skratka_predmetu,) = predmet_key
+        (skratka_predmetu,) = decode_key(predmet_key)
         app = self._open_register_predmetov()
 
         self.__query_dialog(app, akademicky_rok, skratka_predmetu='/'.join(skratka_predmetu.split('/')[1:-1]))
@@ -178,9 +177,8 @@ class WebuiPredmetyMixin:
         app.awaited_open_main_dialog(ops)
         return app
 
-    @with_key_args(True, False, False, False)
     def get_ucitelia_predmetu(self, predmet_key, akademicky_rok, semester, fakulty):
-        (skratka_predmetu,) = predmet_key
+        (skratka_predmetu,) = decode_key(predmet_key)
 
         app = self._open_nastenka_predmetu()
 

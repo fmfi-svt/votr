@@ -25,9 +25,9 @@ Votr.MojeSkuskyPageContent = React.createClass({
 
   renderContent: function () {
     var cache = new Votr.CacheRequester();
-    var {studiumKey, zapisnyListKey} = this.props.query;
+    var {zapisnyListKey} = this.props.query;
 
-    var vidim = cache.get('get_vidim_terminy_hodnotenia', studiumKey, zapisnyListKey);
+    var vidim = cache.get('get_vidim_terminy_hodnotenia', zapisnyListKey);
 
     if (!cache.loadedAll) {
       return <Votr.Loading requests={cache.missing} />;
@@ -37,16 +37,16 @@ Votr.MojeSkuskyPageContent = React.createClass({
       return <p>Skúšky pre tento zápisný list už nie sú k dispozícii.</p>;
     }
 
-    var terminyPrihlasene = cache.get('get_prihlasene_terminy', studiumKey, zapisnyListKey);
-    var terminyVypisane = cache.get('get_vypisane_terminy', studiumKey, zapisnyListKey);
+    var terminyPrihlasene = cache.get('get_prihlasene_terminy', zapisnyListKey);
+    var terminyVypisane = cache.get('get_vypisane_terminy', zapisnyListKey);
 
     if (!terminyPrihlasene || !terminyVypisane) {
       return <Votr.Loading requests={cache.missing} />;
     }
 
     var terminy = {};
-    terminyVypisane.forEach((termin) => terminy[termin.key] = termin);
-    terminyPrihlasene.forEach((termin) => terminy[termin.key] = termin);
+    terminyVypisane.forEach((termin) => terminy[termin.termin_key] = termin);
+    terminyPrihlasene.forEach((termin) => terminy[termin.termin_key] = termin);
     terminy = _.values(terminy);
 
     var [terminy, header] = Votr.sortTable(
@@ -58,7 +58,7 @@ Votr.MojeSkuskyPageContent = React.createClass({
       <thead>{header}</thead>
       <tbody>
         {terminy.map((termin) =>
-          <tr key={termin.key}>
+          <tr key={termin.termin_key}>
             {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
               <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
               <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
@@ -69,7 +69,7 @@ Votr.MojeSkuskyPageContent = React.createClass({
             <td>{termin.cas}</td>
             <td>{termin.miestnost}</td>
             <td>{termin.hodnotiaci}</td>
-            <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'zoznamPrihlasenychNaTermin', modalStudiumKey: studiumKey, modalZapisnyListKey: zapisnyListKey, modalPredmetKey: termin.predmet_key, modalTerminKey: termin.key })}>
+            <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key })}>
               {termin.pocet_prihlasenych +
                (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
             </Votr.Link></td>
@@ -80,7 +80,7 @@ Votr.MojeSkuskyPageContent = React.createClass({
               {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
                termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
                null}
-               <Votr.SkuskyRegisterButton studiumKey={studiumKey} zapisnyListKey={zapisnyListKey} termin={termin}/>
+               <Votr.SkuskyRegisterButton termin={termin}/>
             </td>
           </tr>
         )}
@@ -100,8 +100,6 @@ Votr.MojeSkuskyPageContent = React.createClass({
 
 Votr.SkuskyRegisterButton = React.createClass({
   propTypes: {
-    studiumKey: React.PropTypes.string.isRequired,
-    zapisnyListKey: React.PropTypes.string.isRequired,
     termin: React.PropTypes.object.isRequired
   },
 
@@ -113,9 +111,9 @@ Votr.SkuskyRegisterButton = React.createClass({
 
   handleClick: function() {
     var command = this.isSigninButton() ? 'prihlas_na_termin' : 'odhlas_z_terminu';
-    var {studiumKey, zapisnyListKey, termin} = this.props;
+    var termin = this.props.termin;
 
-    Votr.sendRpc(command, [studiumKey, zapisnyListKey, termin.predmet_key, termin.key], (message) => {
+    Votr.sendRpc(command, [termin.termin_key], (message) => {
       if (message) {
         this.setState({ pressed: false });
         alert(message);

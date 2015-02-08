@@ -80,7 +80,7 @@ Votr.PrehladStudiaPage = React.createClass({
       <thead>{header}</thead>
       <tbody>
         {studia.map((studium) =>
-          <tr key={studium.key}>
+          <tr key={studium.studium_key}>
             <td>{studium.sp_popis} ({studium.sp_skratka})</td>
             <td>{studium.rok_studia}</td>
             <td>{studium.sp_dlzka}</td>
@@ -106,7 +106,7 @@ Votr.PrehladStudiaPage = React.createClass({
     var zapisneListy = [];
 
     if (studia) studia.forEach((studium) => {
-      var mojeZapisneListy = cache.get('get_zapisne_listy', studium.key);
+      var mojeZapisneListy = cache.get('get_zapisne_listy', studium.studium_key);
       if (mojeZapisneListy) mojeZapisneListy.forEach((zapisnyList) => {
         zapisneListy.push(zapisnyList);
       });
@@ -126,8 +126,8 @@ Votr.PrehladStudiaPage = React.createClass({
         <table className="table table-condensed table-bordered table-striped table-hover">
           <thead>{header}</thead>
           <tbody>
-            {zapisneListy.map((zapisnyList, index) =>
-              <tr key={index}>
+            {zapisneListy.map((zapisnyList) =>
+              <tr key={zapisnyList.zapisny_list_key}>
                 <td>{zapisnyList.akademicky_rok}</td>
                 <td>{zapisnyList.sp_popis} ({zapisnyList.sp_skratka})</td>
                 <td>{zapisnyList.rocnik}</td>

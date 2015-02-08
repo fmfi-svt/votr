@@ -1,5 +1,5 @@
 
-from fladgejt.helpers import with_key_args
+from fladgejt.helpers import decode_key
 from fladgejt.structures import Studium, ZapisnyList
 
 
@@ -23,9 +23,8 @@ class RestStudiumMixin:
                   for row in studia]
         return result
 
-    @with_key_args(True)
     def get_zapisne_listy(self, studium_key):
-        sp_skratka, zaciatok = studium_key
+        sp_skratka, zaciatok = decode_key(studium_key)
 
         zapisne_listy = convert(self.context.request_json(
             "studium/zapisneListy",
@@ -36,7 +35,8 @@ class RestStudiumMixin:
                               rocnik=row['rokRocnik'],
                               sp_skratka=row['studProgramSkratka'],
                               sp_popis=row['studProgramPopis'],
-                              datum_zapisu=row['datumZapisu'])
+                              datum_zapisu=row['datumZapisu'],
+                              studium_key=studium_key)
                   for row in zapisne_listy]
 
         return result

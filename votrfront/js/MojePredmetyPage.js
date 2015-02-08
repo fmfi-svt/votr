@@ -21,8 +21,8 @@ Votr.MojePredmetyPageContent = React.createClass({
 
   renderContent: function () {
     var cache = new Votr.CacheRequester();
-    var {studiumKey, zapisnyListKey} = this.props.query;
-    var [hodnotenia, message] = cache.get('get_hodnotenia', studiumKey, zapisnyListKey) || [];
+    var {zapisnyListKey} = this.props.query;
+    var [hodnotenia, message] = cache.get('get_hodnotenia', zapisnyListKey) || [];
 
     if (!hodnotenia) {
       return <Votr.Loading requests={cache.missing} />;
@@ -37,7 +37,7 @@ Votr.MojePredmetyPageContent = React.createClass({
       <thead>{header}</thead>
       <tbody>
         {hodnotenia.map((hodnotenie) =>
-          <tr key={hodnotenie.key} className={Votr.classForSemester(hodnotenie.semester)}>
+          <tr key={hodnotenie.hodn_key} className={Votr.classForSemester(hodnotenie.semester)}>
             <td>{hodnotenie.semester}</td>
             <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: hodnotenie.predmet_key, modalAkademickyRok: hodnotenie.akademicky_rok})}>
               {hodnotenie.nazov}

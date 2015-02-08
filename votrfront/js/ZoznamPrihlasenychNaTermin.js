@@ -17,10 +17,10 @@ Votr.ZoznamPrihlasenychNaTerminModal = React.createClass({
 
   renderContent: function () {
     var cache = new Votr.CacheRequester();
-    var {modalStudiumKey, modalZapisnyListKey, modalPredmetKey, modalTerminKey} = this.props.query;
+    var {modalTerminKey} = this.props.query;
 
-    if (!(modalPredmetKey && modalTerminKey && modalStudiumKey && modalZapisnyListKey)) return null;
-    var studenti = cache.get('get_prihlaseni_studenti', modalStudiumKey, modalZapisnyListKey, modalPredmetKey, modalTerminKey);
+    if (!modalTerminKey) return null;
+    var studenti = cache.get('get_prihlaseni_studenti', modalTerminKey);
 
     if (!studenti) {
       return <Votr.Loading requests={cache.missing} />;

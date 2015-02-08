@@ -67,33 +67,26 @@ def __new__(_cls, {args_none}):
     {keys}
     return tuple.__new__(_cls, ({args},))
 result_class.__new__ = __new__
-
-def _encode(self):
-    return self._replace({encode_kwargs})
-result_class._encode = _encode
 '''
 
 _keyed_namedtuple_key_template = '''
-    if {key_name} is None: {key_name} = ({key_args},)
+    if {key_name} is None: {key_name} = encode_key(({key_args},))
 '''
 
 
 def keyed_namedtuple(typename, field_names, **key_fields):
-    '''A variant of namedtuple where "key fields" can have default values.
+    '''A variant of namedtuple where some "key fields" have default values.
 
-    If the value of the "key field" is not specified, it will default to a
-    normal tuple containing some of the other field values, as specified by the
-    kwargs (the ``key_fields`` dict). The name of each keyword argument must be
-    a tuple field and the value must be a list of other field names which are
-    to be used as the default value.
+    The value of each "key field" is computed from some other fields by
+    combining their values into an encoded string. The key field acts as a
+    shorthand for the original fields in situations where a single string is
+    easier to work with than multiple values. It can be decoded back when
+    needed::
 
-    Key names have to be at the end of the ``field_names`` list.
-
-    A key field can serve as an unique indetifier when a real ID is not
-    available, e.g., from a database.
-
-    The tuple is provided with an ``_encode()`` method which returns a new
-    tuple with all key fields encoded into strings using :func:`encode_key`.
+        T = keyed_namedtuple('T', ['a', 'b', 'c', 'k'], k=['a', 'c'])
+        t = T(a="foo", b="bar", c="baz")
+        assert t.k == encode_key((t.a, t.c))
+        assert decode_key(t.k) == (t.a, t.c)
 
     Args:
         typename: The class name, like in namedtuple.
@@ -115,54 +108,27 @@ def keyed_namedtuple(typename, field_names, **key_fields):
     field_names_none = [name + ("=None" if name in key_fields else "")
                         for name in field_names]
 
-    # Create assignements of list of field names to their keys
+    # Create code for computing the default values of key_fields
     key_defs = [_keyed_namedtuple_key_template.format(
-                    key_name=key_name, key_args=', '.join(key_args))
-                for key_name, key_args in key_fields.items()]
+                    key_name=key_name, key_args=', '.join(key_fields[key_name]))
+                for key_name in field_names if key_name in key_fields]
 
-    # Create custom __new__ method and _encode method
+    # Create custom __new__ method
     exec(_keyed_namedtuple_template.format(
         args_none=', '.join(field_names_none),
         args=', '.join(field_names),
-        keys=''.join(key_defs),
-        encode_kwargs=', '.join(
-            '{}=encode_key(self.{})'.format(key_name, key_name)
-            for key_name in key_fields)))
+        keys=''.join(key_defs)))
 
     return result_class
-
-
-def with_key_args(*spec):
-    '''Specify which arguments of this fladgejt method are structure keys.
-
-    Structure keys (see :func:`keyed_namedtuple`) are tuples of strings, but we
-    want the client to see plain strings, to simplify client-side code and to
-    enforce the keys' opaqueness. When a keyed namedtuple is sent to the client,
-    we encode the key as a string, and when the client does an RPC call of some
-    client method, we decode the strings back into tuples of strings. Thus, we
-    need to know which arguments should be decoded and which shouldn't (they
-    really are just strings). That can be specified using this decorator::
-
-        @with_key_args(True, True, False)
-        def some_method(self, some_key, another_key, normal_argument):
-            ...
-
-    :param \*spec: For each argument of the method except ``self``, specify
-        ``True`` if it's a key and should be decoded, and ``False`` otherwise.
-    '''
-    def decorator(method):
-        method.key_args = spec
-        return method
-    return decorator
 
 
 def encode_key(tuple):
     '''Reversibly encode a tuple of strings into a single string.
 
-    See :func:`with_key_args` for the rationale.
+    See :func:`keyed_namedtuple` for the rationale.
 
-    Empty tuples may be decoded incorrectly. You shouldn't have structures with
-    empty keys anyway.
+    Empty tuples may be decoded incorrectly. But :func:`keyed_namedtuple`
+    doesn't support empty keys anyway.
 
     The current encoding additionally always outputs URL-safe strings. But its
     reversibility is the more important property.
@@ -185,7 +151,7 @@ def encode_key(tuple):
 def decode_key(string):
     '''Decode the output of :func:`encode_key` back into a tuple of strings.
 
-    See :func:`with_key_args` for the rationale.
+    See :func:`keyed_namedtuple` for the rationale.
 
     Args:
         string: A string created with :func:`encode_key`.

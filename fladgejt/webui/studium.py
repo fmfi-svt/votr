@@ -3,7 +3,7 @@
 from aisikl.app import Application, assert_ops
 from aisikl.exceptions import AISBehaviorError
 from fladgejt.helpers import (
-    CantOpenApplication, find_row, find_option, with_key_args)
+    CantOpenApplication, find_row, find_option, encode_key, decode_key)
 from fladgejt.structures import Studium, ZapisnyList, Hodnotenie
 from fladgejt.webui.pool import pooled_app
 
@@ -46,7 +46,6 @@ class WebuiStudiumMixin:
                   for row in app.d.studiaTable.all_rows()]
         return result
 
-    @with_key_args(True)
     def get_zapisne_listy(self, studium_key):
         app = self._open_administracia_studia()
 
@@ -55,12 +54,13 @@ class WebuiStudiumMixin:
                               rocnik=row['rokRocnik'],
                               sp_skratka=row['studProgramSkratka'],
                               sp_popis=row['studProgramPopis'],
-                              datum_zapisu=row['datumZapisu'])
+                              datum_zapisu=row['datumZapisu'],
+                              studium_key=studium_key)
                   for row in app.d.zapisneListyTable.all_rows()]
         return result
 
     def __vyber_studium(self, app, studium_key):
-        sp_skratka, zaciatok = studium_key
+        sp_skratka, zaciatok = decode_key(studium_key)
 
         # Najdeme studium.
         studium_index = find_row(
@@ -87,22 +87,23 @@ class WebuiStudiumMixin:
             if ops:
                 app.awaited_refresh_dialog(ops)
 
-    def __vyber_zapisny_list(self, app, studium_key, zapisny_list_key):
+    def __vyber_zapisny_list(self, app, zapisny_list_key):
+        studium_key, akademicky_rok = decode_key(zapisny_list_key)
+
         # Ak este nie je vybrate spravne studium, vyberieme ho.
         self.__vyber_studium(app, studium_key)
 
         # Vyberieme zapisny list.
-        (akademicky_rok,) = zapisny_list_key
         zapisny_list_index = find_row(
             app.d.zapisneListyTable.all_rows(), popisAkadRok=akademicky_rok)
         app.d.zapisneListyTable.select(zapisny_list_index)
 
     @pooled_app
-    def _open_terminy_hodnotenia_app(self, studium_key, zapisny_list_key):
+    def _open_terminy_hodnotenia_app(self, zapisny_list_key):
         app = self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
-        self.__vyber_zapisny_list(app, studium_key, zapisny_list_key)
+        self.__vyber_zapisny_list(app, zapisny_list_key)
 
         # Stlacime v menu "Terminy hodnotenia".
         with app.collect_operations() as ops:
@@ -116,11 +117,11 @@ class WebuiStudiumMixin:
         return new_app
 
     @pooled_app
-    def _open_hodnotenia_priemery_app(self, studium_key, zapisny_list_key):
+    def _open_hodnotenia_priemery_app(self, zapisny_list_key):
         app = self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
-        self.__vyber_zapisny_list(app, studium_key, zapisny_list_key)
+        self.__vyber_zapisny_list(app, zapisny_list_key)
 
         # Stlacime v menu "Hodnotenia, priemery".
         with app.collect_operations() as ops:
@@ -133,7 +134,6 @@ class WebuiStudiumMixin:
         new_app.awaited_open_main_dialog(new_ops)
         return new_app
 
-    @with_key_args(True)
     def get_prehlad_kreditov(self, studium_key):
         app = self._open_administracia_studia()
 
@@ -160,7 +160,9 @@ class WebuiStudiumMixin:
                              hodn_znamka=row['znamka'],
                              hodn_termin=row['termin'],
                              hodn_datum=row['datum'],
-                             hodn_znamka_popis=row['znamkaPopis'])
+                             hodn_znamka_popis=row['znamkaPopis'],
+                             zapisny_list_key=encode_key(
+                                (studium_key, row['akRok'])))
                   for row in app.d.predmetyTable.all_rows()]
 
         # Stlacime zatvaraci button.
@@ -253,17 +255,16 @@ class WebuiStudiumMixin:
         if ops[1].args[0] != 'Činnosť úspešne dokončená.':
             raise AISBehaviorError("AIS displayed an error: {}".format(ops))
 
-    def delete_zapisny_list(self, studium_key, zapisny_list_key):
+    def delete_zapisny_list(self, zapisny_list_key):
         '''Deletes enrollment list.
 
         Args:
-            studium_key: studium identifier
             zapisny_list_key: enrollment list identifier
         '''
         app = self._open_administracia_studia()
 
         # Vyberieme zapisny list.
-        self.__vyber_zapisny_list(app, studium_key, zapisny_list_key)
+        self.__vyber_zapisny_list(app, zapisny_list_key)
 
         # Klikneme na tlacidlo zrusenia zapisneho listu.
         with app.collect_operations() as ops:
