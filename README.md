@@ -25,12 +25,6 @@ Quick start:
 Sourcing `activate` adds `venv/bin` to your PATH. You could also directly call
 `venv/bin/pip ...` and `venv/bin/python console.py ...` instead.
 
-Running IPython notebooks:
-
-    pip install ipython[all]
-    export AIS_COOKIE="your cosign-filter cookie value"
-    ipython notebook
-
 Building documentation:
 
     pip install sphinx sphinx-rtd-theme sphinxcontrib-napoleon
