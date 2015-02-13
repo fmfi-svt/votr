@@ -139,9 +139,11 @@ Votr.goLogout = function () {
 };
 
 Votr.goReset = function () {
-  // TODO: Since the query string itself might have errors (nonexistent keys
-  // and the like), consider always returning to the front page.
   Votr.goPost('reset?destination=' + encodeURIComponent(location.search));
+};
+
+Votr.goResetHome = function () {
+  Votr.goPost('reset?destination=');
 };
 
 

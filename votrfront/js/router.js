@@ -1,3 +1,5 @@
+// @dontdepend Votr.didNavigate
+
 (function () {
 
 
@@ -69,6 +71,7 @@ Votr.buildUrl = function (href) {
 
 
 Votr.navigate = function (href) {
+  Votr.didNavigate = true;
   history.pushState(null, '', Votr.settings.url_root + Votr.buildUrl(href));
   Votr.appRoot.forceUpdate();
 };

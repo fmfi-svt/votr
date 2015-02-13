@@ -44,12 +44,20 @@ Votr.ErrorModal = React.createClass({
       }
     }
 
+    // Some errors are caused by a malformed URL, so resetting won't help. If
+    // we haven't navigated since the last full reload (the user has probably
+    // reset just now), we redirect to the front page instead.
+    var goHome = !Votr.didNavigate && !Votr.settings.error && location.search.substring(1);
+
     // TODO: Restyle buttons to make them look less like bootstrap.
     return <Votr.Modal title={title} closeButton={false}>
       <p className="text-center"><big>{description}</big></p>
       <ul className="list-inline text-center">
-        <li><button type="button" className="btn btn-primary"
-                    onClick={Votr.goReset}>Skúsiť znova</button></li>
+        {goHome ?
+          <li><button type="button" className="btn btn-primary"
+                      onClick={Votr.goResetHome}>Späť na začiatok</button></li> :
+          <li><button type="button" className="btn btn-primary"
+                      onClick={Votr.goReset}>Skúsiť znova</button></li>}
         <li><button type="button" className="btn btn-default"
                     onClick={Votr.goLogout}>Odhlásiť</button></li>
       </ul>
