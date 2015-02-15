@@ -19,6 +19,9 @@ Votr.coursesStats = function (hodnotenia) {
 
   hodnotenia.forEach((row) => {
     var credits = parseInt(row.kredit);
+    if (row.hodn_znamka && row.hodn_znamka[0] === 'F') {
+        credits = 0;
+    }
     result.spolu.creditsCount += credits;
     if (row.semester == 'Z') {
       result.zima.count += 1;
