@@ -22,6 +22,13 @@ RegPredmet = keyed_namedtuple('RegPredmet', [
     'rozsah_vyucby', 'semester', 'kredit', 'predmet_key'],
     predmet_key=['skratka'])
 
+ZapisPredmet = keyed_namedtuple('ZapisPredmet', [
+    'skratka', 'nazov', 'typ_vyucby', 'semester', 'kredit', 'rozsah_vyucby',
+    'jazyk', 'datum_zapisu', 'aktualnost', 'pocet_prihlasenych',
+    'maximalne_prihlasenych', 'blok_skratka', 'blok_nazov', 'blok_index',
+    'v_bloku_index', 'odporucany_rocnik', 'cast', 'predmet_key'],
+    predmet_key=['skratka'])
+
 Hodnotenie = keyed_namedtuple('Hodnotenie', [
     'akademicky_rok', 'skratka', 'nazov', 'typ_vyucby', 'semester', 'kredit',
     'hodn_znamka', 'hodn_termin', 'hodn_datum', 'hodn_znamka_popis',

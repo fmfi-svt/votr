@@ -99,6 +99,24 @@ class WebuiStudiumMixin:
         app.d.zapisneListyTable.select(zapisny_list_index)
 
     @pooled_app
+    def _open_zapis_predmetov_app(self, zapisny_list_key):
+        app = self._open_administracia_studia()
+
+        # Vyberieme spravne studium a zapisny list.
+        self.__vyber_zapisny_list(app, zapisny_list_key)
+
+        # Stlacime v menu "Zapis predmetov, kredity".
+        with app.collect_operations() as ops:
+            app.d.zapisPredmetovKredityAction.execute()
+
+        if not ops: raise CantOpenApplication()
+
+        # Otvori sa nove okno a v nom hlavny dialog.
+        new_app, new_ops = app.awaited_start_app(ops)
+        new_app.awaited_open_main_dialog(new_ops)
+        return new_app
+
+    @pooled_app
     def _open_terminy_hodnotenia_app(self, zapisny_list_key):
         app = self._open_administracia_studia()
 
