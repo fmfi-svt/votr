@@ -104,12 +104,13 @@ class Table(Control):
 
         self.columns = []
 
+        index = 0
         for fixed in [True, False]:
             suffix = 'Fixed' if fixed else ''
             header_table = load_script(data_view, 'columnModel' + suffix)
             colgroup = load_script(data_view, 'dataTabColGroup' + suffix)
             if not header_table: continue
-            for index, col in enumerate(colgroup.find_all('col')):
+            for col in colgroup.find_all('col'):
                 td = header_table.find(shortname=col['shortname'])
                 sortable = col.get('sortable', 'true') == 'true'
                 width = int(col.get('width', '0').partition('px')[0])
@@ -119,6 +120,7 @@ class Table(Control):
                     header=td.get('header'), sortable=sortable, fixed=fixed,
                     width=width, visible=visible))
                 # TODO: col can have more attributes: editedBy, cbmode, model, sendEditCell, componentStyle, defaultValue
+                index += 1
 
         self.column_map = { col.alias: col for col in self.columns }
 
