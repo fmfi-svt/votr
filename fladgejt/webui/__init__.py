@@ -1,17 +1,17 @@
 
 from aisikl.exceptions import LoggedOutError
+from .commonui import WebuiCommonUIMixin
 from .hodnotenia import WebuiHodnoteniaMixin
+from .obdobia import WebuiObdobiaMixin
+from .osoby import WebuiOsobyMixin
 from .predmety import WebuiPredmetyMixin
 from .studium import WebuiStudiumMixin
 from .terminy import WebuiTerminyMixin
-from .obdobia import WebuiObdobiaMixin
-from .ciselnik import WebuiCiselnikMixin
-from .osoby import WebuiOsobyMixin
 
 
-class WebuiClient(WebuiHodnoteniaMixin, WebuiPredmetyMixin, WebuiStudiumMixin,
-                  WebuiTerminyMixin, WebuiObdobiaMixin, WebuiCiselnikMixin,
-                  WebuiOsobyMixin):
+class WebuiClient(WebuiCommonUIMixin, WebuiHodnoteniaMixin, WebuiObdobiaMixin,
+                  WebuiOsobyMixin, WebuiPredmetyMixin, WebuiStudiumMixin,
+                  WebuiTerminyMixin):
     def __init__(self, context):
         self.context = context
 

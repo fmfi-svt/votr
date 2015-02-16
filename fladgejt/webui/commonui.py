@@ -2,9 +2,9 @@ from aisikl.app import assert_ops
 from fladgejt.helpers import find_row_insensitive
 
 
-# Ciselnik typu SSSC001
-class WebuiCiselnikMixin:
+class WebuiCommonUIMixin:
     def _select_ciselnik(self, app, text, select_button, compare_column):
+        # Ciselnik typu SSSC001
         if text is not None:
             with app.collect_operations() as ops:
                 app.d.components[select_button].click()
@@ -44,3 +44,15 @@ class WebuiCiselnikMixin:
         app.d.components[text_field].write(text or '')
 
         return self._select_ciselnik(app, text, select_button, compare_column)
+
+    def _show_all_columns(self, app, table):
+        with app.collect_operations() as ops:
+            table._control_button_columns()
+
+        app.awaited_open_dialog(ops)
+
+        app.d.oznacitVsetkyButton.click()
+
+        with app.collect_operations() as ops:
+            app.d.enterButton.click()
+        app.awaited_close_dialog(ops)
