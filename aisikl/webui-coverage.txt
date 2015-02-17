@@ -1311,6 +1311,12 @@ See Table for an overview. TableModel has been merged into Table.
 - eventOnRow(), eventOnCell()
     - Inlined in select(), along with manageSelectionOnEvent() and
       onDataTabSelectionChange().
+    - The sendEditCell checkbox condition means that if we click a checkbox,
+      selecting the row and toggling the checkbox at the same time, we never
+      send both a selection event and a cell edited event (only the cell edited
+      event). The checkbox is handled in eventOnCheckBox(), called from
+      onDataTabClick(). In Votr, the selection event is prevented by the
+      `_send_event` argument of select() when called from edit_cell().
 - onDataTabClick()
     - Mainly calls eventOnCell(). Cell editor parts are IRRELEVANT, since we
       only support synchronous writing instead of an editing mode.
@@ -1334,12 +1340,30 @@ See Table for an overview. TableModel has been merged into Table.
     - IRRELEVANT
 - getCellValue(), addCellValuesOfSelectedRows()
     - Sadly used in ValueInteractive. UNSUPPORTED for now.
-- eventOnCheckBox(), addToChangedCells(), getChangedCellsToXML(),
-  getLastChangedCellRowIndex(), resetChangedCellsAddedRows(), getNewValue()
-    - Cell editing is TODO.
+- eventOnCheckBox()
+    - self.edit_cell()
+    - Combined with stopEditCell(). `in_checkbox` controls checkbox-specific
+      behavior.
+- addToChangedCells()
+    - Changes self.changed_cells and self.last_changed_row_index. Inlined in
+      self.edit_cell().
+    - The addedByUser check TODO when we implement addRow() etc.
+- getChangedCellsToXML()
+    - Inlined in self.changed_properties()
+    - addedRows and origId support is TODO when we implement addRow() etc.
+- getLastChangedCellRowIndex()
+    - self.last_changed_row_index
+    - addedRows and origId support is TODO when we implement addRow() etc.
+- resetChangedCellsAddedRows()
+    - Inlined in self.changed_properties()
+    - addedRows and origRowsCount are TODO when we implement addRow() etc.
 - getCheckBoxFromCell(), getImageFromCell()
-    - IRRELEVANT
-
+    - Sort of inlined in self._load_cell().
+- getNewValue()
+    - Inlined in self.changed_properties()
+    - Technically, we should check presence of a checkbox instead of comparing
+      editedBy to 'checkBox'. Instead, we set that value in self._load_cell().
+    - origId support is TODO when we implement addRow() etc.
 - onCellEditorDeactivate(), onCellEditorKeyDown(), onTextFieldEditKeyDown(),
   tryToAutoFocusNext(), onTextFieldButtonEditKeyDown()
     - IRRELEVANT
@@ -1352,12 +1376,16 @@ See Table for an overview. TableModel has been merged into Table.
   moveCellEditorByTab(), startEditRow(), validateCellEditor()
     - IRRELEVANT
 - startEditCell()
-    - Slightly TODO (such as that you have to select the row or cell first).
-      But mostly IRRELEVANT.
+    - Mostly IRRELEVANT.
+    - Note that you need to select the row/column you edit. This is done in
+      self.edit_cell().
 - stopEditCell()
-    - TODO
+    - self.edit_cell()
+    - Combined with eventOnCheckBox(). `in_checkbox` controls checkbox-specific
+      behavior.
+    - The last argument of stopEditCell() was named `_skip_event`.
 - startEditNewRow()
-    - TODO
+    - IRRELEVANT
 - getInvertedSelection() -> self.inverted_selection
 - switchSelectAll()
     - Inlined into select().
@@ -1505,7 +1533,9 @@ stores everything once, directly in Table.
     - IRRELEVANT, see EventManager above
 - onDataTabSelectionChange()
     - Inlined into select() under "if selection_changed".
-- onEditRow() -> self._on_edit_row() [TODO?]
+- onEditRow() -> self._on_edit_row()
+    - Note that onEditRow() is unused in webui.js. EDITED_ROW is instead sent
+      by onDataTabSelectionChange().
 - sort() -> self.sort() [TODO?]
 - switchSingleMultipleSelection() ->
   `self.dialog.try_interactive(self, "switchMultiple")`
@@ -1535,8 +1565,9 @@ stores everything once, directly in Table.
   `self.up_downed_rows = True; self.dialog.component_changes(self, False)`
 - onDeleteRow() ->
   `self.deleted_rows = True; self.dialog.component_changes(self, False)`
-- onEditCell() -> self._on_edit_cell() [TODO?]
-- onButtonNumCodeClick() -> self._on_button_num_code_click() [TODO?]
+- onEditCell() -> self._on_edit_cell()
+- onButtonNumCodeClick() -> self.button_num_code_click()
+    - Combined with the preceding call to stopEditCell().
 - canProcessEvent()
     - Is always True, because isMenuActivated() is IRRELEVANT.
 - onScrollSpanKeyDown(), onScrollSpanKeyDownTryShortCut(), refocus(), focus(),

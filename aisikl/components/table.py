@@ -8,8 +8,15 @@ from aisikl.events import (cell_edited_event, row_edited_event, action_event,
 from aisikl.exceptions import AISParseError, AISBehaviorError
 
 
-Column = namedtuple('Column',
-    ['alias', 'index', 'title', 'header', 'sortable', 'fixed', 'width', 'visible'])
+Column = namedtuple('Column', [
+    'alias', 'index', 'title', 'header', 'sortable', 'fixed', 'width',
+    'visible', 'edited_by', 'combo_box_mode', 'model', 'send_edit_cell',
+    'default_value'])
+
+
+Cell = namedtuple('Cell', [
+    'value', 'title', 'edited_by', 'combo_box_mode', 'model', 'send_edit_cell',
+    'disabled'])
 
 
 class Row(object):
@@ -21,8 +28,8 @@ class Row(object):
 
     def __getitem__(self, name):
         if isinstance(name, int):
-            return self.cells[name]
-        return self.cells[self.table.column_map[name].index]
+            return self.cells[name].value
+        return self.cells[self.table.column_map[name].index].value
 
     def __len__(self):
         return len(self.cells)
@@ -92,6 +99,8 @@ class Table(Control):
         self.loaded_buffers = set()
         self.loaded_rows = []
         self.combobox_options = {}
+        self.changed_cells = set()
+        self.last_changed_row_index = None
 
         self._init_from_data_view(element.find(id=self.id + '_dataView'))
 
@@ -118,8 +127,10 @@ class Table(Control):
                 self.columns.append(Column(
                     alias=col['shortname'], index=index, title=td.get('title'),
                     header=td.get('header'), sortable=sortable, fixed=fixed,
-                    width=width, visible=visible))
-                # TODO: col can have more attributes: editedBy, cbmode, model, sendEditCell, componentStyle, defaultValue
+                    width=width, visible=visible, edited_by=col.get('editedby'),
+                    combo_box_mode=col.get('cbmode'), model=col.get('model'),
+                    send_edit_cell=col.get('sendeditcell', 'false') == 'true',
+                    default_value=col.get('defaultvalue')))
                 index += 1
 
         self.column_map = { col.alias: col for col in self.columns }
@@ -315,7 +326,9 @@ class Table(Control):
         ev = cell_edited_event(self, 'EDITED_CELL', alias, row_index)
         self.dialog.app.send_events(ev)
 
-    def _on_button_num_code_click(self, alias, row_index):
+    def button_num_code_click(self, alias, row_index, value):
+        self.edit_cell(alias, row_index, value, _skip_event=True)
+
         self.edited_cells = True
         self.dialog.component_changes(self, False)
         if 'BUTTON_NUM_CODE|' not in self.supported_events: return
@@ -352,8 +365,25 @@ class Table(Control):
             self.scrolled_vertically = False
 
         if self.edited_cells:
-            cdata.append("<editedCells>{}</editedCells>".format(self._get_changed_cells_to_xml()))   # TODO
-            self._table_model_reset_changed_cells_and_rows()
+            cdata.append("<editedCells>")
+            for alias, row_index in self.changed_cells:
+                column = self.column_map[alias]
+                cell = self.loaded_rows[row_index].cells[column.index]
+                edited_by = cell.edited_by or column.edited_by
+                value = cell.value
+                if edited_by == 'checkBox':
+                    type = 'boolean'
+                    value = 'true' if value else 'false'
+                elif edited_by == 'dateControl':
+                    type = 'date'
+                elif edited_by == 'numberControl':
+                    type = 'number'
+                else:
+                    type = 'string'
+                cdata.append("<cell row='{}' alias='{}' type='{}'>{}</cell>".format(row_index, alias, type, value))
+            cdata.append("</editedCells>")
+            self.changed_cells.clear()
+            self.last_changed_row_index = None
             self.edited_cells = False
 
         if self.deleted_rows or self.up_downed_rows:
@@ -437,9 +467,8 @@ class Table(Control):
             tds = tr.find_all('td')
             if data_tab_bodies_fixed:
                 tds = fixed_trs[tr['id']].find_all('td') + tds
-            cells = [td.get_text() for td in tds]
-            cells = [('' if text == '\xa0' else text) for text in cells]
-            new_rows[id] = cells
+            cells = [self._load_cell(td) for td in tds]
+            new_rows[id] = [cell.value for cell in cells]
             row = Row(id, rid, cells, self)
 
             while len(self.loaded_rows) <= row.id:
@@ -450,6 +479,30 @@ class Table(Control):
             len(new_rows), self.id,
             ' (replacing old content)' if really_replaced else ''),
             new_rows)
+
+    def _load_cell(self, td):
+        value = td.get_text()
+        if value == '\xa0': value = ''
+
+        if td.get('datatype') == 'boolean':
+            value = bool(td.find(class_='booleanCellChecked'))
+
+        if td.get('datatype') == 'image':
+            value = td.img['src']
+
+        checkbox = td.find('input', type='checkbox')
+        if checkbox:
+            return Cell(
+                value=bool(checkbox.get('checked')), title=None,
+                edited_by='checkBox', combo_box_mode=None, model=None,
+                send_edit_cell=checkbox.get('sendeditcell', 'false') == 'true',
+                disabled=checkbox.get('disabled', 'false') == 'true')
+
+        return Cell(
+            value=value, title=td.get('title'), edited_by=td.get('editedby'),
+            combo_box_mode=td.get('cbmode'), model=td.get('model'),
+            send_edit_cell=td.get('sendeditcell', 'false') == 'true',
+            disabled=td.get('disabled', 'false') == 'true')
 
     def _load_edit_models(self, data_tab_edit_models):
         if not data_tab_edit_models: return
@@ -484,7 +537,7 @@ class Table(Control):
             raise AISBehaviorError("AIS did not return all table rows")
         return self.loaded_rows
 
-    def select(self, indexes, cursor=None, inverted=False, column_alias=None):
+    def select(self, indexes, cursor=None, inverted=False, column_alias=None, *, _skip_event=False):
         if isinstance(indexes, int):
             indexes = [indexes]
         else:
@@ -550,14 +603,15 @@ class Table(Control):
         if selection_changed:
             self.selection_changed = True
             self.dialog.component_changes(self, True)
+
+        if selection_changed and not _skip_event:
             evs = []
             if self.edited_cells:
-                changed_index = self._get_last_changed_cell_row_index()   # TODO: try to avoid this
-                if changed_index != -1:   # TODO: maybe use None instead
+                if self.last_changed_row_index is not None:
                     self.dialog.component_changes(self, False)
                     if 'EDITED_ROW|' in self.supported_events:
                         self.used_listeners_mask |= 64
-                        evs.append(row_edited_event(self, 'EDITED_ROW', changed_index))
+                        evs.append(row_edited_event(self, 'EDITED_ROW', self.last_changed_row_index))
             # This only emits a selection event for the final selected row (in
             # case of multiple selection). That is a bit unfortunate, but WebUI
             # already had this "problem" when Shift+selecting, so it should be
@@ -565,3 +619,30 @@ class Table(Control):
             evs.append(selection_event(self, cursor, cursor in indexes))
             self.dialog.app.send_events(*evs)
 
+    def edit_cell(self, alias, row_index, value, *, _skip_event=False):
+        column = self.column_map[alias]
+        row = self.loaded_rows[row_index]
+        cell = row.cells[column.index]
+        is_checkbox = cell.edited_by == 'checkBox'
+
+        if not is_checkbox:
+            send_edit_cell = cell.send_edit_cell or column.send_edit_cell
+        else:
+            # checkboxes ignore the column's send_edit_cell
+            send_edit_cell = cell.send_edit_cell
+            value = bool(value)
+
+        self.select(row_index,
+            column_alias=(alias if self.cell_selection_mode else None),
+            _skip_event=(is_checkbox and send_edit_cell))
+
+        self.log('action', 'Setting cell {} of row {} in {} to {!r}'.format(
+            alias, row_index, self.id, value))
+
+        cell = row.cells[column.index] = cell._replace(value=value)
+
+        self.changed_cells.add((alias, row_index))
+        self.last_changed_row_index = row_index
+
+        if not _skip_event:
+            self._on_edit_cell(send_edit_cell, alias, row_index)
