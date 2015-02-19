@@ -235,13 +235,17 @@ Votr.ZapisZPlanuPageContent = React.createClass({
       return [null, <Votr.Loading requests={cache.missing} />];
     }
 
+    var vidnoZimne = false;
+
     var predmety = {};
     ponukanePredmety.forEach((predmet) => {
       predmety[predmet.predmet_key] = _.assign({ moje: false }, predmet);
+      if (predmet.semester == 'Z') vidnoZimne = true;
     });
     zapisanePredmety.forEach((predmet) => {
       var predmet_key = predmet.predmet_key;
       if (!predmety[predmet_key]) {
+        if (predmet.semester == 'Z' && !vidnoZimne) return;
         predmety[predmet_key] = _.assign({ moje: true }, predmet);
       } else {
         for (var property in predmet) {
