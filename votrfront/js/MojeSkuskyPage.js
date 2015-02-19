@@ -91,7 +91,9 @@ Votr.MojeSkuskyPageContent = React.createClass({
 
   render: function () {
     return <div>
-      <Votr.PageTitle>Moje skúšky</Votr.PageTitle>
+      <div className="header">
+        <Votr.PageTitle>Moje skúšky</Votr.PageTitle>
+      </div>
       {this.renderContent()}
     </div>;
   }

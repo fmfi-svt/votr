@@ -147,7 +147,9 @@ Votr.RegisterPredmetovResultTable = React.createClass({
 Votr.RegisterPredmetovPage = React.createClass({
   render: function () {
     return <Votr.PageLayout query={this.props.query}>
-        <Votr.PageTitle>Register predmetov</Votr.PageTitle>
+        <div className="header">
+          <Votr.PageTitle>Register predmetov</Votr.PageTitle>
+        </div>
         <Votr.RegisterPredmetovForm query={this.props.query} />
         <Votr.RegisterPredmetovResultTable query={this.props.query} />
     </Votr.PageLayout>;

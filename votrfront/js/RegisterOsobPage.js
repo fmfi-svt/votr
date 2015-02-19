@@ -193,7 +193,9 @@ Votr.RegisterOsobResultTable = React.createClass({
 Votr.RegisterOsobPage = React.createClass({
   render: function () {
     return <Votr.PageLayout query={this.props.query}>
-        <Votr.PageTitle>Register osôb</Votr.PageTitle>
+        <div className="header">
+          <Votr.PageTitle>Register osôb</Votr.PageTitle>
+        </div>
         <Votr.RegisterOsobForm query={this.props.query} />
         <Votr.RegisterOsobResultTable query={this.props.query} />
     </Votr.PageLayout>;

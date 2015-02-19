@@ -33,12 +33,12 @@ body, .modal-open .modal {
   overflow-y: scroll;
 }
 
-a {
+a, .btn.btn-link {
   text-decoration: underline;
   cursor: pointer;   // for Votr.FakeLink
 }
 
-.nav a {
+.nav a, a.btn {
   text-decoration: none;
 }
 
@@ -70,6 +70,21 @@ a {
   .text-pill {
     color: $gray-light;
   }
+}
+
+.header {
+  @include clearfix();
+  margin-top: $line-height-computed;
+  margin-bottom: $line-height-computed;
+  h1 {
+    margin: 0;
+    float: left;
+  }
+}
+
+.section {
+  margin-top: $line-height-computed;
+  margin-bottom: $line-height-computed;
 }
 
 .loading {

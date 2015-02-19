@@ -142,7 +142,9 @@ Votr.PrehladStudiaPage = React.createClass({
 
   render: function () {
     return <Votr.PageLayout query={this.props.query}>
-      <Votr.PageTitle>Prehľad štúdia</Votr.PageTitle>
+      <div className="header">
+        <Votr.PageTitle>Prehľad štúdia</Votr.PageTitle>
+      </div>
       {this.renderObdobia()}
       <h2>Zoznam štúdií</h2>
       {this.renderStudia()}

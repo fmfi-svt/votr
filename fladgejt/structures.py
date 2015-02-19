@@ -29,6 +29,9 @@ ZapisPredmet = keyed_namedtuple('ZapisPredmet', [
     'v_bloku_index', 'odporucany_rocnik', 'cast', 'predmet_key'],
     predmet_key=['skratka'])
 
+ZapisVlastnost = namedtuple('ZapisVlastnost', [
+    'skratka', 'nazov', 'minimalny_kredit', 'poznamka'])
+
 Hodnotenie = keyed_namedtuple('Hodnotenie', [
     'akademicky_rok', 'skratka', 'nazov', 'typ_vyucby', 'semester', 'kredit',
     'hodn_znamka', 'hodn_termin', 'hodn_datum', 'hodn_znamka_popis',

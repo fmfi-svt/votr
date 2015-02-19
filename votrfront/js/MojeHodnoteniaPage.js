@@ -126,7 +126,9 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
 
   render: function () {
     return <div>
-      <Votr.PageTitle>Moje hodnotenia</Votr.PageTitle>
+      <div className="header">
+        <Votr.PageTitle>Moje hodnotenia</Votr.PageTitle>
+      </div>
       {this.renderHodnotenia()}
       <h2>Moje priemery</h2>
       {this.renderPriemery()}
