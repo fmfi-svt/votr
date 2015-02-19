@@ -64,20 +64,18 @@ Votr.ZapisMixin = {
     var predmetKey = event.target.name;
     var predmet = predmety[predmetKey];
 
-    var set = predmet.moje ? this.state.odoberanePredmety : this.state.pridavanePredmety;
-    var present = predmet.moje ? !event.target.checked : event.target.checked;
+    delete this.state.odoberanePredmety[predmetKey];
+    delete this.state.pridavanePredmety[predmetKey];
+    if (predmet.moje && !event.target.checked) this.state.odoberanePredmety[predmetKey] = true;
+    if (!predmet.moje && event.target.checked) this.state.pridavanePredmety[predmetKey] = true;
 
-    if (present) {
-      set[predmetKey] = true;
-    } else {
-      delete set[predmetKey];
-    }
     this.forceUpdate();
   },
 
   renderCheckbox: function (predmet) {
-    var set = predmet.moje ? this.state.odoberanePredmety : this.state.pridavanePredmety;
-    var checked = predmet.moje ? !set[predmet.predmet_key] : set[predmet.predmet_key];
+    var checked = predmet.moje ?
+        !this.state.odoberanePredmety[predmet.predmet_key] :
+        this.state.pridavanePredmety[predmet.predmet_key];
     return <input type="checkbox" name={predmet.predmet_key} checked={checked} onChange={this.handleChange} />;
   },
 
@@ -94,64 +92,66 @@ Votr.ZapisMixin = {
 
     var odoberanePredmety = [];
     for (var predmet_key in this.state.odoberanePredmety) {
-      if (predmety[predmet_key]) {
+      if (predmety[predmet_key] && predmety[predmet_key].moje) {
         odoberanePredmety.push(predmety[predmet_key]);
       }
     }
 
     var pridavanePredmety = [];
     for (var predmet_key in this.state.pridavanePredmety) {
-      if (predmety[predmet_key]) {
+      if (predmety[predmet_key] && !predmety[predmet_key].moje) {
         pridavanePredmety.push(predmety[predmet_key]);
       }
     }
 
     this.setState({ saving: true });
 
-    var spravilNieco = false;
-
-    var koniec = () => {
-      if (spravilNieco) {
-        pridavanePredmety.forEach((predmet) => {
-          Votr.RequestCache['pocet_prihlasenych_je_stary' + predmet.predmet_key] = true;
-        });
+    var koniec = (odobral, pridal) => {
+      if (odobral) {
         odoberanePredmety.forEach((predmet) => {
           Votr.RequestCache['pocet_prihlasenych_je_stary' + predmet.predmet_key] = true;
         });
-
-        Votr.RequestCache.invalidate('get_hodnotenia');
-        Votr.RequestCache.invalidate('get_predmety');
-        Votr.RequestCache.invalidate('get_prehlad_kreditov');
-        Votr.RequestCache.invalidate('get_studenti_zapisani_na_predmet');
-        Votr.RequestCache.invalidate('zapis_get_zapisane_predmety');
+        this.setState({ odoberanePredmety: {} });
       }
 
-      this.setState({ pridavanePredmety: {}, odoberanePredmety: {} });
+      if (pridal) {
+        pridavanePredmety.forEach((predmet) => {
+          Votr.RequestCache['pocet_prihlasenych_je_stary' + predmet.predmet_key] = true;
+        });
+        this.setState({ pridavanePredmety: {} });
+      }
+
+      // Aj ked skoncime neuspechom, je mozne, ze niektore predmety sa zapisali.
+      Votr.RequestCache.invalidate('get_hodnotenia');
+      Votr.RequestCache.invalidate('get_predmety');
+      Votr.RequestCache.invalidate('get_prehlad_kreditov');
+      Votr.RequestCache.invalidate('get_studenti_zapisani_na_predmet');
+      Votr.RequestCache.invalidate('zapis_get_zapisane_predmety');
     };
 
     this.odoberPredmety(odoberanePredmety, (message) => {
       if (message) {
         this.setState({ saving: false });
         alert(message);
-        koniec();
+        koniec(false, false);
       } else {
-        if (odoberanePredmety.length) spravilNieco = true;
         this.pridajPredmety(pridavanePredmety, (message) => {
           this.setState({ saving: false });
           if (message) {
             alert(message);
-            koniec();
+            koniec(true, false);
           } else {
-            if (pridavanePredmety.length) spravilNieco = true;
-            koniec();
+            koniec(true, true);
           }
         });
       }
     });
   },
 
-  renderSaveButton: function () {
-    var disabled = _.isEmpty(this.state.pridavanePredmety) && _.isEmpty(this.state.odoberanePredmety);
+  renderSaveButton: function (predmety) {
+    var disabled = !_.some(predmety, (predmet) =>
+        (this.state.pridavanePredmety[predmet.predmet_key] && !predmet.moje) ||
+        (this.state.odoberanePredmety[predmet.predmet_key] && predmet.moje));
     var content = this.state.saving ? <Votr.Loading /> : "Uložiť zmeny";
     return <div className="section">
       <button type="submit" className="btn btn-primary" disabled={disabled}>{content}</button>
@@ -164,12 +164,12 @@ Votr.ZapisMixin = {
       <tbody>
         {predmety.map((predmet) =>
           <tr key={predmet.predmet_key} className={
-              this.state.pridavanePredmety[predmet.predmet_key] ? 'success' :
-              this.state.odoberanePredmety[predmet.predmet_key] ? 'danger' : null}>
+              this.state.pridavanePredmety[predmet.predmet_key] && !predmet.moje ? 'success' :
+              this.state.odoberanePredmety[predmet.predmet_key] && predmet.moje ? 'danger' : null}>
             <td className="text-center">{this.renderCheckbox(predmet)}</td>
             <td><abbr title={Votr.humanizeTypVyucby(predmet.typ_vyucby)}>{predmet.typ_vyucby}</abbr></td>
             <td>{predmet.blok_nazov ? <abbr title={predmet.blok_nazov}>{predmet.blok_skratka}</abbr> : predmet.blok_skratka}</td>
-            <td>{predmet.nazov}</td>
+            <td>{predmet.moje ? <strong>{predmet.nazov}</strong> : predmet.nazov}</td>
             <td>{predmet.skratka}</td>
             <td>{predmet.semester}</td>
             <td>{predmet.rozsah_vyucby}</td>
@@ -307,9 +307,9 @@ Votr.ZapisZPlanuPageContent = React.createClass({
     }
 
     return <form onSubmit={this.handleSave}>
-      {this.renderSaveButton()}
+      {this.renderSaveButton(predmety)}
       {this.renderTable(header, Votr.ZapisZPlanuColumns, predmety, message, true)}
-      {this.renderSaveButton()}
+      {this.renderSaveButton(predmety)}
       <h2>Poznámky k študijnému plánu</h2>
       {this.renderNotes()}
     </form>;
@@ -472,9 +472,9 @@ Votr.ZapisZPonukyPageContent = React.createClass({
 
     return <form onSubmit={this.handleSave}>
       <h2>Výsledky</h2>
-      {this.renderSaveButton()}
+      {this.renderSaveButton(predmety)}
       {this.renderTable(header, Votr.ZapisZPonukyColumns, predmety, message, false)}
-      {this.renderSaveButton()}
+      {this.renderSaveButton(predmety)}
     </form>;
   },
 
