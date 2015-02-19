@@ -51,7 +51,9 @@ class WebuiCommonUIMixin:
 
         app.awaited_open_dialog(ops)
 
-        app.d.oznacitVsetkyButton.click()
+        for row in app.d.table.all_rows():
+            if row['check'] == False:
+                app.d.table.edit_cell('check', row.id, True)
 
         with app.collect_operations() as ops:
             app.d.enterButton.click()
