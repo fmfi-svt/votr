@@ -12,8 +12,7 @@ Votr.ZapisZPlanuColumns = [
   ["Kredit", 'kredit', Votr.sortAs.number],
   ["Prihlásení", 'pocet_prihlasenych', Votr.sortAs.number],
   [<abbr title="Odporúčaný ročník">Odp. ročník</abbr>, 'odporucany_rocnik'],
-  ["Jazyk", 'jazyk'],
-  ["Konanie", 'aktualnost']
+  ["Jazyk", 'jazyk']
 ];
 Votr.ZapisZPlanuColumns.defaultOrder = 'a1a2a9a3';
 
@@ -28,8 +27,7 @@ Votr.ZapisZPonukyColumns = [
   ["Rozsah výučby", 'rozsah_vyucby'],
   ["Kredit", 'kredit', Votr.sortAs.number],
   ["Prihlásení", 'pocet_prihlasenych', Votr.sortAs.number],
-  ["Jazyk", 'jazyk'],
-  ["Konanie", 'aktualnost']
+  ["Jazyk", 'jazyk']
 ];
 Votr.ZapisZPonukyColumns.defaultOrder = 'a3';
 
@@ -162,14 +160,17 @@ Votr.ZapisMixin = {
     return <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
       <thead>{header}</thead>
       <tbody>
-        {predmety.map((predmet) =>
-          <tr key={predmet.predmet_key} className={
+        {predmety.map((predmet) => {
+          var name = predmet.nazov;
+          if (predmet.moje) name = <strong>{name}</strong>;
+          if (predmet.aktualnost) name = <span><del>{name}</del> (nekoná sa)</span>;
+          return <tr key={predmet.predmet_key} className={
               this.state.pridavanePredmety[predmet.predmet_key] && !predmet.moje ? 'success' :
               this.state.odoberanePredmety[predmet.predmet_key] && predmet.moje ? 'danger' : null}>
             <td className="text-center">{this.renderCheckbox(predmet)}</td>
             <td><abbr title={Votr.humanizeTypVyucby(predmet.typ_vyucby)}>{predmet.typ_vyucby}</abbr></td>
             <td>{predmet.blok_nazov ? <abbr title={predmet.blok_nazov}>{predmet.blok_skratka}</abbr> : predmet.blok_skratka}</td>
-            <td>{predmet.moje ? <strong>{predmet.nazov}</strong> : predmet.nazov}</td>
+            <td>{name}</td>
             <td>{predmet.skratka}</td>
             <td>{predmet.semester}</td>
             <td>{predmet.rozsah_vyucby}</td>
@@ -179,9 +180,8 @@ Votr.ZapisMixin = {
                 {predmet.maximalne_prihlasenych && "/" + predmet.maximalne_prihlasenych}</td>
             {ajRocnik && <td>{predmet.odporucany_rocnik}</td>}
             <td>{predmet.jazyk.replace(/ ,/g, ', ')}</td>
-            <td>{predmet.aktualnost == '' ? 'áno' : 'nie'}</td>
-          </tr>
-        )}
+          </tr>;
+        })}
       </tbody>
       {message && <tfoot><tr><td colSpan={columns.length}>{message}</td></tr></tfoot>}
     </table>;
