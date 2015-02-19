@@ -74,9 +74,6 @@ Votr.MojePredmetyPageContent = React.createClass({
     return <div>
       <div className="header">
         <Votr.PageTitle>Moje predmety</Votr.PageTitle>
-        <div className="pull-right">
-          <Votr.Link className="btn btn-link" href={{ action: 'zapisZPlanu', zapisnyListKey }}>Zápis predmetov &raquo;</Votr.Link>
-        </div>
       </div>
       {this.renderContent()}
     </div>;

@@ -191,9 +191,6 @@ Votr.ZapisMixin = {
     var {action, cast, zapisnyListKey} = this.props.query;
     return <div>
       <div className="header">
-        <div>
-          <Votr.Link href={{ action: 'mojePredmety', zapisnyListKey }}>Moje predmety</Votr.Link> &raquo;
-        </div>
         <Votr.PageTitle>Zápis predmetov</Votr.PageTitle>
         <div className="pull-right">
           <div className="btn-group">

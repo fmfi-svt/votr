@@ -83,8 +83,8 @@ Votr.MainMenu = React.createClass({
     query: React.PropTypes.object.isRequired
   },
 
-  renderMenuItem: function (content, href) {
-    var isActive = href.action == this.props.query.action;
+  renderMenuItem: function (content, href, moreActions) {
+    var isActive = href.action == this.props.query.action || (moreActions && moreActions[this.props.query.action]);
     return <li className={isActive ? 'active' : null}>
       <Votr.Link href={href}>{content}</Votr.Link>
     </li>;
@@ -107,6 +107,7 @@ Votr.MainMenu = React.createClass({
       {somStudent && this.renderMenuItem("Moje skúšky", { action: 'mojeSkusky', zapisnyListKey })}
       {somStudent && this.renderMenuItem("Moje hodnotenia", { action: 'mojeHodnotenia', studiumKey })}
       {/*somStudent && this.renderDisabled("Môj rozvrh")*/}
+      {somStudent && this.renderMenuItem("Zápis predmetov", { action: 'zapisZPlanu', zapisnyListKey }, { zapisZPonuky: true })}
       {somStudent && this.renderMenuItem("Prehľad štúdia", { action: 'prehladStudia' })}
       {!cache.loadedAll && <li><span className="text-pill"><Votr.Loading requests={cache.missing} /></span></li>}
       <li><hr/></li>
