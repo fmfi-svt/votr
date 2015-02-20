@@ -58,7 +58,7 @@ class WebuiOsobyMixin:
                 app.d.odstranitFakultuButton.click()
 
             if ops:
-                assert_ops(ops, 'messageBox')
+                assert_ops(ops, 'messageBox')   # "Interna chyba: Nepodarilo sa osetrenie udalosti."
 
             if not self._select_ciselnik(app, fakulta or None, "VyberFakultaButton", "skratka"):
                 return 'Fakulta nebola nájdená.'
@@ -149,9 +149,4 @@ class WebuiOsobyMixin:
             with app.collect_operations() as ops:
                 app.d.enterButton.click()
 
-            if len(ops) > 1:
-                assert_ops(ops, 'closeDialog', 'messageBox')
-            else:
-                assert_ops(ops, "closeDialog")
-
-            app.close_dialog(*ops[0].args)
+            app.awaited_close_dialog(ops)

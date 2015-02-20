@@ -10,10 +10,7 @@ class WebuiTerminyMixin:
         index = find_option(app.d.semesterComboBox.options, title='')
         if app.d.semesterComboBox.selected_index != index:
             app.d.semesterComboBox.select(index)
-            with app.collect_operations() as ops:
-                app.d.filterAction.execute()
-            if ops:
-                assert_ops(ops, 'messageBox')
+            app.d.filterAction.execute()
 
     def get_vidim_terminy_hodnotenia(self, zapisny_list_key):
         try:
@@ -286,7 +283,6 @@ class WebuiTerminyMixin:
 
         if ops:
             assert_ops(ops, 'messageBox')
-            if ops[0].args[0] != 'Činnosť úspešne dokončená.':
-                return ops[0].args[0]
+            return ops[0].args[0]
 
         return None

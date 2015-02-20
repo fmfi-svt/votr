@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-from aisikl.app import Application, assert_ops
+from aisikl.app import Application, assert_ops, DEFAULT_IGNORED_MESSAGES
 from aisikl.exceptions import AISBehaviorError
 from fladgejt.helpers import (
     CantOpenApplication, find_row, find_option, encode_key, decode_key)
@@ -12,14 +12,8 @@ class WebuiStudiumMixin:
     @pooled_app
     def _open_administracia_studia(self):
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.es.VSES017App&kodAplikacie=VSES017&uiLang=SK'
-        app, ops = Application.open(self.context, url)
-
-        if len(ops) == 2:
-            assert_ops(ops, 'openMainDialog', 'messageBox')
-            if ops[1].args[0] != 'Štúdium je prerušené. Zvoľte aktívne štúdium.':
-                raise AISBehaviorError("AIS displayed an error: {}".format(ops))
-            ops = ops[0:1]
-
+        ignored_messages = DEFAULT_IGNORED_MESSAGES + ['Štúdium je prerušené. Zvoľte aktívne štúdium.']
+        app, ops = Application.open(self.context, url, ignored_messages)
         app.awaited_open_main_dialog(ops)
         return app
 
@@ -77,12 +71,6 @@ class WebuiStudiumMixin:
 
             with app.collect_operations() as ops:
                 app.d.nacitatButton.click()
-
-            if len(ops) == 2:
-                assert_ops(ops, 'messageBox', 'refreshDialog')
-                if ops[0].args[0] != 'Štúdium je prerušené. Zvoľte aktívne štúdium.':
-                    raise AISBehaviorError("AIS displayed an error: {}".format(ops))
-                ops = ops[1:]
 
             if ops:
                 app.awaited_refresh_dialog(ops)
@@ -267,11 +255,8 @@ class WebuiStudiumMixin:
         with app.collect_operations() as ops:
             app.d.enterButton.click()
 
-        # Dialog sa zavrie a vyskoci message box, ze cinnost bola uspesne dokoncena.
-        assert_ops(ops, 'closeDialog', 'messageBox')
-        app.close_dialog(app.d.name)
-        if ops[1].args[0] != 'Činnosť úspešne dokončená.':
-            raise AISBehaviorError("AIS displayed an error: {}".format(ops))
+        # Dialog sa zavrie.
+        app.awaited_close_dialog(ops)
 
     def delete_zapisny_list(self, zapisny_list_key):
         '''Deletes enrollment list.

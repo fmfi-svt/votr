@@ -15,10 +15,11 @@ Application
         - Showing a message box or another modal dialog
         - Opening and closing dialogs
 
-        It's not allowed to ignore an Operation -- AIS might be waiting for an
-        answer, or it could be an error popup. All Operations throw unless you
-        use :meth:`Application.collect_operations` to express that you expected
-        it to happen.
+        You can use :meth:`Application.collect_operations` to express that you
+        expected something to happen and are prepared to handle it, or use
+        :attr:`Application.ignored_messages` to specify that some ``messageBox``
+        Operations can be safely ignored. If an Operation isn't collected or
+        safely ignored, it throws an exception.
 
         .. attribute:: target
 

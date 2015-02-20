@@ -95,14 +95,6 @@ class WebuiZapisMixin:
             if len(ops) == 1 and ops[0].method == 'messageBox':
                 return [[], ops[0].args[0]]
 
-            # Mozno vyskoci ze ziadny zaznam.
-            # TODO: Zislo by sa to ignorovanie konkretnych messageboxov.
-            if len(ops) == 2:
-                assert_ops(ops, 'openDialog', 'messageBox')
-                if ops[1].args[0] != 'Podmienkam nevyhovuje žiadny záznam.':
-                    raise AISBehaviorError("AIS displayed an error: {}".format(ops))
-                ops = ops[0:1]
-
             # Otvori sa novy dialog.
             app.awaited_open_dialog(ops)
 
@@ -121,12 +113,7 @@ class WebuiZapisMixin:
                 app.d.typComboBox.select(index)
 
             # Nacitame vsetky predmety.
-            with app.collect_operations() as ops:
-                app.d.zobrazitPredmetyButton.click()
-            if ops:
-                assert_ops(ops, 'messageBox')
-                if ops[0].args[0] != 'Podmienkam nevyhovuje žiadny záznam.':
-                    raise AISBehaviorError("AIS displayed an error: {}".format(ops))
+            app.d.zobrazitPredmetyButton.click()
 
             result.extend(ZapisPredmet(skratka=row['skratkaPredmet'],
                                        nazov=row['nazovPredmet'],
@@ -179,14 +166,6 @@ class WebuiZapisMixin:
             if len(ops) == 1 and ops[0].method == 'messageBox':
                 return ops[0].args[0]
 
-            # Mozno vyskoci ze ziadny zaznam.
-            # TODO: Zislo by sa to ignorovanie konkretnych messageboxov.
-            if len(ops) == 2:
-                assert_ops(ops, 'openDialog', 'messageBox')
-                if ops[1].args[0] != 'Podmienkam nevyhovuje žiadny záznam.':
-                    raise AISBehaviorError("AIS displayed an error: {}".format(ops))
-                ops = ops[0:1]
-
             # Otvori sa novy dialog.
             app.awaited_open_dialog(ops)
 
@@ -206,12 +185,7 @@ class WebuiZapisMixin:
                 app.d.rocnikComboBox.select(index)
 
                 # Nacitame vsetky predmety.
-                with app.collect_operations() as ops:
-                    app.d.zobrazitPredmetyButton.click()
-                if ops:
-                    assert_ops(ops, 'messageBox')
-                    if ops[0].args[0] != 'Podmienkam nevyhovuje žiadny záznam.':
-                        raise AISBehaviorError("AIS displayed an error: {}".format(ops))
+                app.d.zobrazitPredmetyButton.click()
 
             # Teraz uz by sme mali vidiet vsetky predmety, co chceme zapisat.
             # Postupne ich najdeme a zapneme checkboxy.
@@ -294,12 +268,7 @@ class WebuiZapisMixin:
                 app.d.vybratStrediskoAction.component_ids[0], 'skratka'):
             return "Stredisko neexistuje."
 
-        with app.collect_operations() as ops:
-            app.d.zobrazitPredmetyAction.execute()
-        if ops:
-            assert_ops(ops, 'messageBox')
-            if ops[0].args[0] != 'Podmienkam nevyhovuje žiadny záznam.':
-                raise AISBehaviorError("AIS displayed an error: {}".format(ops))
+        app.d.zobrazitPredmetyAction.execute()
 
         while not app.d.predmetyTable.is_end_of_data:
             app.d.predmetyTable.scroll_down(10)

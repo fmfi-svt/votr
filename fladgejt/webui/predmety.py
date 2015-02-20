@@ -105,14 +105,11 @@ class WebuiPredmetyMixin:
 
         self.__query_dialog(app, akademicky_rok, skratka_predmetu='/'.join(skratka_predmetu.split('/')[1:-1]))
 
-        with app.collect_operations() as ops:
-            app.d.zobrazitPredmetyButton.click()
+        app.d.zobrazitPredmetyButton.click()
 
-        if ops:
+        if not app.d.zoznamPredmetovTable.all_rows():
             # predmet nebol najdeny (napriklad uz je prilis stary ale napriek
             # tomu ho mam v mojom hodnoteni)
-            assert_ops(ops, 'messageBox')
-
             return [[], None]
 
         predmet_index = find_row(app.d.zoznamPredmetovTable.all_rows(), skratka=skratka_predmetu)
@@ -209,12 +206,9 @@ class WebuiPredmetyMixin:
             if app.d.semesterComboBox.selected_index != semester_index:
                 app.d.semesterComboBox.select(semester_index)
 
-            with app.collect_operations() as ops:
-                app.d.nacitatPredmetyButton.click()
+            app.d.nacitatPredmetyButton.click()
 
-            if ops:
-                assert_ops(ops, 'messageBox')
-            else:
+            if app.d.skupinaPredmetovTable.all_rows():
                 app.d.skupinaPredmetovTable.select(
                     find_row(app.d.skupinaPredmetovTable.all_rows(), skratka=skratka_predmetu))
 
@@ -245,13 +239,7 @@ class WebuiPredmetyMixin:
         if message:
             return [predmety, message]
 
-        with app.collect_operations() as ops:
-            app.d.zobrazitPredmetyButton.click()
-
-        if ops:
-            assert_ops(ops, 'messageBox')
-
-            return [predmety, ops[0].args[0]]
+        app.d.zobrazitPredmetyButton.click()
 
         while not app.d.zoznamPredmetovTable.is_end_of_data:
             app.d.zoznamPredmetovTable.scroll_down(10)

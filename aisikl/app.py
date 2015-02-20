@@ -24,6 +24,13 @@ known_operations = {
 }
 
 
+#: The default value for :attr:`Application.ignored_messages`
+DEFAULT_IGNORED_MESSAGES = [
+    'Činnosť úspešne dokončená.',
+    'Podmienkam nevyhovuje žiadny záznam.',
+]
+
+
 # Regexes for parsing AIS JavaScript
 _onload_re = re.compile(r'^window\.setTimeout\("WebUI_init\(\\"([^"\\]+)\\", \\"ais\\", \\"ais\/webui2\\"\)", 1\)$')
 _functions_re = re.compile(r'\nfunction (\w+)')
@@ -183,28 +190,36 @@ class Application:
         active_dialog: The currently active dialog.
         d: The currently active dialog.
         last_response_time: When did this app last receive a WebUI response.
+        ignored_messages: List of ignored message patterns. When the application
+            receives a ``messageBox`` :class:`Operation` whose first argument
+            contains any of the patterns, the :class:`Operation` will be
+            ignored: it won't be returned by :meth:`collect_operations`, and
+            won't cause exceptions if left uncollected. This attribute can be
+            modified.
     '''
 
     @classmethod
-    def open(cls, ctx, url):
+    def open(cls, ctx, url, ignored_messages=None):
         '''Opens a new application.
 
         Returns an ``(app, ops)`` tuple containing the new Application instance
         and the initial list of operations caused by the "INIT" event. This
         list must be processed as usual -- see :meth:`collect_operations`. For
-        example, if the application should only open a main dialog, use ``dlg =
-        app.awaited_open_main_dialog(ops)``. (If the user isn't authorized,
+        example, if the application should only open a main dialog, use
+        ``app.awaited_open_main_dialog(ops)``. (If the user isn't authorized,
         ``ops`` will probably contain a message box saying so.)
 
         Args:
             ctx: The :class:`~aisikl.context.Context` to use.
             url: The main app URL. Can be relative to the server root.
+            ignored_messages: The initial value for :attr:`ignored_messages`.
+                Defaults to :data:`DEFAULT_IGNORED_MESSAGES`.
         Returns:
             An `(app, ops)` tuple with the new instance and the initial list of
             operations.
         '''
         app = super().__new__(cls)
-        ops = app._open(ctx, url)
+        ops = app._open(ctx, url, ignored_messages)
         return app, ops
 
     def __init__(self):
@@ -213,7 +228,7 @@ class Application:
         raise Exception(
             "The Application constructor is private, use open() instead")
 
-    def _open(self, ctx, url):
+    def _open(self, ctx, url, ignored_messages=None):
         '''Actually opens the new instance created by :meth:`open`.'''
         self.ctx = ctx
         self.serial = 0
@@ -221,6 +236,8 @@ class Application:
         self.dialog_stack = []
         self.active_dialog = self.d = None
         self.collector = None
+        self.ignored_messages = (
+            ignored_messages or DEFAULT_IGNORED_MESSAGES).copy()
 
         match = re.search(r'appClassName=([a-zA-Z0-9_\.]*)', url)
         self.class_name = match.group(1) if match else None
@@ -286,7 +303,7 @@ class Application:
         This function is used with the ``with`` keyword as a context manager::
 
             with app.collect_operations() as ops:
-                dlg.someButton.click()
+                app.d.someButton.click()
 
             assert_ops(ops, 'closeDialog', 'messageBox')
             app.close_dialog(*ops[0].args)
@@ -323,17 +340,24 @@ class Application:
         return self.ctx.request_html('/ais/servlets/WebUIServlet',
             method='POST', params=params, data=data, headers=headers)
 
+    def _filter_operations(self, operations):
+        return [operation for operation in operations
+                if not (operation.method == 'messageBox' and
+                        any(pattern in operation.args[0]
+                            for pattern in self.ignored_messages))]
+
     def _process_response(self, soup):
         self.last_response_time = time.time()
         operations, updates = parse_response(soup)
         body = soup.body
 
-        if operations:
-            for operation in operations:
-                self.ctx.log('operation',
-                    'Received operation {}'.format(operation.method),
-                    operation)
+        for operation in operations:
+            self.ctx.log('operation',
+                'Received operation {}'.format(operation.method), operation)
 
+        operations = self._filter_operations(operations)
+
+        if operations:
             if self.collector is None:
                 raise AISBehaviorError(
                     "AIS did an unexpected operation: {}".format(operations),
@@ -442,7 +466,7 @@ class Application:
                 return False
         return True
 
-    def start_app(self, url, params):
+    def start_app(self, url, params, *, ignored_messages=None):
         '''Opens a new application in response to the startApp
         :class:`Operation`.
 
@@ -451,7 +475,7 @@ class Application:
         '''
         url = ('/ais/servlets/WebUIServlet?appClassName={}{}&'
                'antiCache={}').format(url, params, time.time())
-        return self.open(self.ctx, url)
+        return self.open(self.ctx, url, ignored_messages)
 
     def open_main_dialog(self, name, title, code, x, y, min_width, min_height,
                          width, height, resizeable, minimizeable, closeable,
@@ -571,14 +595,14 @@ class Application:
             '</nameValue></propertyValues></changedProperties></changedProps>'
         )
 
-    def awaited_start_app(self, ops):
+    def awaited_start_app(self, ops, ignored_messages=None):
         '''Combines :func:`assert_ops` and :meth:`start_app` in one step.
 
         If ``ops`` really contains a single startApp :class:`Operation` as
         expected, opens the application. Throws otherwise.
         '''
         assert_ops(ops, 'startApp')
-        return self.start_app(*ops[0].args)
+        return self.start_app(*ops[0].args, ignored_messages=ignored_messages)
 
     def awaited_open_dialog(self, ops):
         '''Combines :func:`assert_ops` and :meth:`open_dialog` in one step.

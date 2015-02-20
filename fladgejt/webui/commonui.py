@@ -6,8 +6,13 @@ class WebuiCommonUIMixin:
     def _select_ciselnik(self, app, text, select_button, compare_column):
         # Ciselnik typu SSSC001
         if text is not None:
-            with app.collect_operations() as ops:
-                app.d.components[select_button].click()
+            old_ignored_messages = app.ignored_messages
+            app.ignored_messages = []
+            try:
+                with app.collect_operations() as ops:
+                    app.d.components[select_button].click()
+            finally:
+                app.ignored_messages = old_ignored_messages
 
             if ops:
                 if len(ops) == 1 and ops[0].method == 'messageBox' and ops[0].args[0] == 'Podmienkam nevyhovuje žiadny záznam.':
