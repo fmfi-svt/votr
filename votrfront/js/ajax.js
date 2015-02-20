@@ -7,10 +7,10 @@ Votr.sendRpc = function (name, args, callback) {
   var HEADER_LENGTH = 10;
   var processed = 0;
   var result = undefined;
-  var failed = false;
+  var finished = false;
 
-  function update(e) {
-    if (failed) return;
+  function update() {
+    if (finished) return;
     while (true) {
       var waiting = xhr.responseText.length - processed;
       if (waiting < HEADER_LENGTH) break;
@@ -28,8 +28,9 @@ Votr.sendRpc = function (name, args, callback) {
     if (xhr.readyState == 4) {
       if (processed != xhr.responseText.length || result === undefined) {
         console.log('INCOMPLETE!');
-        fail("Network error: Incomplete response");
+        return fail("Network error: Incomplete response");
       }
+      finished = true;
       if (callback) {
         callback(result);
       }
@@ -38,8 +39,8 @@ Votr.sendRpc = function (name, args, callback) {
   }
 
   function fail(e) {
-    if (failed) return;
-    failed = true;
+    if (finished) return;
+    finished = true;
     console.log("FAILED!", e);
     if (!Votr.ajaxError) {
       Votr.ajaxError = _.isString(e) ? e : "Network error";
