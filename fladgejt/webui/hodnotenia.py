@@ -10,6 +10,12 @@ class WebuiHodnoteniaMixin:
         except CantOpenApplication:
             return [[], "Predmety a hodnotenia pre tento zápisný list nie sú dostupné."]
 
+        # Ak uz bola aplikacia otvorena pred tymto volanim, stlacime "Refresh".
+        if getattr(app, 'freshly_opened', True):
+            app.freshly_opened = False
+        else:
+            app.d.refreshButton.click()
+
         studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
         result = [Hodnotenie(akademicky_rok=akademicky_rok,
@@ -32,6 +38,8 @@ class WebuiHodnoteniaMixin:
             app = self._open_hodnotenia_priemery_app(zapisny_list_key)
         except CantOpenApplication:
             return [[], "Priemery pre toto štúdium nie sú dostupné."]
+
+        app.freshly_opened = False
 
         result = [Priemer(akademicky_rok=row['priemerInfoPopisAkadRok'],
                           nazov=row['priemerNazov'],
