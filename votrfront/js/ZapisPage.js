@@ -105,7 +105,7 @@ Votr.ZapisTableFooter = React.createClass({
           <td colSpan="2">{skratka ? "Súčet bloku" : "Dokopy"}</td>
           <td>{nazvy[skratka] ? <abbr title={nazvy[skratka]}>{skratka}</abbr> : skratka}</td>
           <td colSpan="4">
-            {stats.spolu.count} predmetov
+            {stats.spolu.count} {Votr.plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
             {!jedinySemester && " ("+stats.zima.count+" v zime, "+stats.leto.count+" v lete)"}
           </td>
           <td>

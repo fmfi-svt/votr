@@ -57,7 +57,10 @@ Votr.MojePredmetyPageContent = React.createClass({
       </tbody>
       <tfoot>
           <tr>
-            <td colSpan="3">Celkom {coursesStats.spolu.count} predmetov ({coursesStats.zima.count} v zime, {coursesStats.leto.count} v lete)</td>
+            <td colSpan="3">
+              Celkom {coursesStats.spolu.count} {Votr.plural(coursesStats.spolu.count, "predmet", "predmety", "predmetov")}
+              {" ("}{coursesStats.zima.count} v zime, {coursesStats.leto.count} v lete)
+            </td>
             <td>{coursesStats.spolu.creditsCount} ({coursesStats.zima.creditsCount}+{coursesStats.leto.creditsCount})</td>
             <td></td>
             <td>{Votr.renderWeightedStudyAverage(hodnotenia)}</td>
