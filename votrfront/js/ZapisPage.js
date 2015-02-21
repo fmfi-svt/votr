@@ -78,6 +78,7 @@ Votr.ZapisTable = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired,
     predmety: React.PropTypes.object,
+    akademickyRok: React.PropTypes.string,
     message: React.PropTypes.node,
     columns: React.PropTypes.array.isRequired,
     odoberPredmety: React.PropTypes.func.isRequired,
@@ -166,7 +167,7 @@ Votr.ZapisTable = React.createClass({
     // nevidno, lebo sme prave zapisali predmety a obnovujeme zoznam predmetov.
     // Takze komponent ZapisTable sa bude renderovat vzdy, aby nikdy nezanikol
     // a neprisiel o state. Niekedy proste nedostane this.props.predmety.
-    if (!this.props.predmety) {
+    if (!this.props.predmety || !this.props.akademickyRok) {
       return <span />;
     }
 
@@ -200,7 +201,8 @@ Votr.ZapisTable = React.createClass({
         <tbody>
           {predmety.map((predmet) => {
             var predmet_key = predmet.predmet_key;
-            var nazov = predmet.nazov;
+            var href = _.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: this.props.akademickyRok});
+            var nazov = <Votr.Link href={href}>{predmet.nazov}</Votr.Link>;
             if (predmet.moje) nazov = <strong>{nazov}</strong>;
             if (predmet.aktualnost) nazov = <span><del>{nazov}</del> (nekoná sa)</span>;
             var blok = predmet.blok_skratka;
@@ -286,6 +288,7 @@ Votr.ZapisZPlanuPageContent = React.createClass({
 
     var [zapisanePredmety, zapisaneMessage] = cache.get('zapis_get_zapisane_predmety', zapisnyListKey, cast) || [];
     var [ponukanePredmety, ponukaneMessage] = cache.get('zapis_plan_vyhladaj', zapisnyListKey, cast) || [];
+    var akademickyRok = cache.get('zapisny_list_key_to_akademicky_rok', zapisnyListKey);
 
     var outerMessage, tableMessage, predmety;
 
@@ -325,6 +328,7 @@ Votr.ZapisZPlanuPageContent = React.createClass({
       {outerMessage}
       <Votr.ZapisTable
           query={this.props.query} predmety={predmety} message={tableMessage}
+          akademickyRok={akademickyRok}
           odoberPredmety={this.odoberPredmety}
           pridajPredmety={this.pridajPredmety}
           columns={Votr.ZapisZPlanuColumns} />
@@ -433,7 +437,7 @@ Votr.ZapisZPonukyPageContent = React.createClass({
     var cache = new Votr.CacheRequester();
     var query = this.props.query;
 
-    var outerMessage, tableMessage, predmety;
+    var outerMessage, tableMessage, predmety, akademickyRok;
 
     if (query.fakulta ||
         query.stredisko ||
@@ -445,6 +449,7 @@ Votr.ZapisZPonukyPageContent = React.createClass({
           query.stredisko || null,
           query.skratkaPredmetu || null,
           query.nazovPredmetu || null) || [];
+      akademickyRok = cache.get('zapisny_list_key_to_akademicky_rok', query.zapisnyListKey);
 
       if (zapisaneMessage) {
         outerMessage = <p>{zapisaneMessage}</p>;
@@ -474,6 +479,7 @@ Votr.ZapisZPonukyPageContent = React.createClass({
       {predmety && <h2>Výsledky</h2>}
       <Votr.ZapisTable
           query={this.props.query} predmety={predmety} message={tableMessage}
+          akademickyRok={akademickyRok}
           odoberPredmety={this.odoberPredmety}
           pridajPredmety={this.pridajPredmety}
           columns={Votr.ZapisZPonukyColumns} />

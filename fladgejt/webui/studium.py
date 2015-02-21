@@ -53,6 +53,11 @@ class WebuiStudiumMixin:
                   for row in app.d.zapisneListyTable.all_rows()]
         return result
 
+    def zapisny_list_key_to_akademicky_rok(self, zapisny_list_key):
+        studium_key, akademicky_rok = decode_key(zapisny_list_key)
+
+        return akademicky_rok
+
     def __vyber_studium(self, app, studium_key):
         sp_skratka, zaciatok = decode_key(studium_key)
 
