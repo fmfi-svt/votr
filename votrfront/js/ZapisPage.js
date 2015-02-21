@@ -40,7 +40,7 @@ Votr.ZapisVlastnostiColumns = [
 ];
 
 
-Votr.ZapisMixin = {
+Votr.ZapisMenu = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired
   },
@@ -49,18 +49,48 @@ Votr.ZapisMixin = {
     return <Votr.Link className={"btn btn-default" + (active ? " active" : "")} href={href}>{content}</Votr.Link>;
   },
 
+  render: function () {
+    var {action, cast, zapisnyListKey} = this.props.query;
+    return <div>
+      <div className="header">
+        <Votr.PageTitle>Zápis predmetov</Votr.PageTitle>
+        <div className="pull-right">
+          <div className="btn-group">
+            {this.renderLink("Môj študijný plán",
+              { action: 'zapisZPlanu', cast: 'SC', zapisnyListKey },
+              action == 'zapisZPlanu' && cast != 'SS')}
+            {this.renderLink("Predmety štátnej skúšky",
+              { action: 'zapisZPlanu', cast: 'SS', zapisnyListKey },
+              action == 'zapisZPlanu' && cast == 'SS')}
+            {this.renderLink("Hľadať ďalšie predmety",
+              { action: 'zapisZPonuky', zapisnyListKey },
+              action == 'zapisZPonuky')}
+          </div>
+        </div>
+      </div>
+      <div>{this.props.children}</div>
+    </div>;
+  }
+});
+
+
+Votr.ZapisTable = React.createClass({
+  propTypes: {
+    query: React.PropTypes.object.isRequired,
+    predmety: React.PropTypes.object,
+    message: React.PropTypes.node,
+    columns: React.PropTypes.array.isRequired,
+    odoberPredmety: React.PropTypes.func.isRequired,
+    pridajPredmety: React.PropTypes.func.isRequired
+  },
+
   getInitialState: function () {
-    return { pridavanePredmety: {}, odoberanePredmety: {} };
+    return { odoberanePredmety: {}, pridavanePredmety: {} };
   },
 
   handleChange: function (event) {
-    var cache = new Votr.CacheRequester();
-    var [predmety, message] = this.getPredmety(cache);
-
-    if (!predmety) return;
-
     var predmetKey = event.target.name;
-    var predmet = predmety[predmetKey];
+    var predmet = this.props.predmety[predmetKey];
 
     delete this.state.odoberanePredmety[predmetKey];
     delete this.state.pridavanePredmety[predmetKey];
@@ -70,34 +100,19 @@ Votr.ZapisMixin = {
     this.forceUpdate();
   },
 
-  renderCheckbox: function (predmet) {
-    var checked = predmet.moje ?
-        !this.state.odoberanePredmety[predmet.predmet_key] :
-        this.state.pridavanePredmety[predmet.predmet_key];
-    return <input type="checkbox" name={predmet.predmet_key} checked={checked} onChange={this.handleChange} />;
-  },
-
   handleSave: function (event) {
     event.preventDefault();
 
     if (this.state.saving) return;
 
-    var cache = new Votr.CacheRequester();
-    var {zapisnyListKey, cast} = this.getQuery();
-    var [predmety, message] = this.getPredmety(cache);
+    var predmety = this.props.predmety;
 
-    if (!predmety) return;
-
-    var odoberanePredmety = [];
-    for (var predmet_key in this.state.odoberanePredmety) {
-      if (predmety[predmet_key] && predmety[predmet_key].moje) {
+    var odoberanePredmety = [], pridavanePredmety = [];
+    for (var predmet_key in predmety) {
+      if (this.state.odoberanePredmety[predmet_key] && predmety[predmet_key].moje) {
         odoberanePredmety.push(predmety[predmet_key]);
       }
-    }
-
-    var pridavanePredmety = [];
-    for (var predmet_key in this.state.pridavanePredmety) {
-      if (predmety[predmet_key] && !predmety[predmet_key].moje) {
+      if (this.state.pridavanePredmety[predmet_key] && !predmety[predmet_key].moje) {
         pridavanePredmety.push(predmety[predmet_key]);
       }
     }
@@ -127,13 +142,13 @@ Votr.ZapisMixin = {
       Votr.RequestCache.invalidate('zapis_get_zapisane_predmety');
     };
 
-    this.odoberPredmety(odoberanePredmety, (message) => {
+    this.props.odoberPredmety(odoberanePredmety, (message) => {
       if (message) {
         this.setState({ saving: false });
         alert(message);
         koniec(false, false);
       } else {
-        this.pridajPredmety(pridavanePredmety, (message) => {
+        this.props.pridajPredmety(pridavanePredmety, (message) => {
           this.setState({ saving: false });
           if (message) {
             alert(message);
@@ -146,121 +161,84 @@ Votr.ZapisMixin = {
     });
   },
 
-  renderSaveButton: function (predmety) {
-    var disabled = !_.some(predmety, (predmet) =>
-        (this.state.pridavanePredmety[predmet.predmet_key] && !predmet.moje) ||
-        (this.state.odoberanePredmety[predmet.predmet_key] && predmet.moje));
-    var content = this.state.saving ? <Votr.Loading /> : "Uložiť zmeny";
-    return <div className="section">
-      <button type="submit" className="btn btn-primary" disabled={disabled}>{content}</button>
-    </div>;
-  },
+  render: function () {
+    // Chceme, aby sa pre ZapisTable zachoval this.state aj vtedy, ked tabulku
+    // nevidno, lebo sme prave zapisali predmety a obnovujeme zoznam predmetov.
+    // Takze komponent ZapisTable sa bude renderovat vzdy, aby nikdy nezanikol
+    // a neprisiel o state. Niekedy proste nedostane this.props.predmety.
+    if (!this.props.predmety) {
+      return <span />;
+    }
 
-  renderTable: function (header, columns, predmety, message, ajRocnik) {
-    return <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
-      <thead>{header}</thead>
-      <tbody>
-        {predmety.map((predmet) => {
-          var name = predmet.nazov;
-          if (predmet.moje) name = <strong>{name}</strong>;
-          if (predmet.aktualnost) name = <span><del>{name}</del> (nekoná sa)</span>;
-          return <tr key={predmet.predmet_key} className={
-              this.state.pridavanePredmety[predmet.predmet_key] && !predmet.moje ? 'success' :
-              this.state.odoberanePredmety[predmet.predmet_key] && predmet.moje ? 'danger' : null}>
-            <td className="text-center">{this.renderCheckbox(predmet)}</td>
-            <td><abbr title={Votr.humanizeTypVyucby(predmet.typ_vyucby)}>{predmet.typ_vyucby}</abbr></td>
-            <td>{predmet.blok_nazov ? <abbr title={predmet.blok_nazov}>{predmet.blok_skratka}</abbr> : predmet.blok_skratka}</td>
-            <td>{name}</td>
-            <td>{predmet.skratka}</td>
-            <td>{predmet.semester}</td>
-            <td>{predmet.rozsah_vyucby}</td>
-            <td>{predmet.kredit}</td>
-            <td>{Votr.RequestCache['pocet_prihlasenych_je_stary' + predmet.predmet_key] ?
-                    <del>{predmet.pocet_prihlasenych}</del> : predmet.pocet_prihlasenych}
-                {predmet.maximalne_prihlasenych && "/" + predmet.maximalne_prihlasenych}</td>
-            {ajRocnik && <td>{predmet.odporucany_rocnik}</td>}
-            <td>{predmet.jazyk.replace(/ ,/g, ', ')}</td>
-          </tr>;
-        })}
-      </tbody>
-      {message && <tfoot><tr><td colSpan={columns.length}>{message}</td></tr></tfoot>}
-    </table>;
+    var {predmety, columns, query, message} = this.props;
+
+    var classes = {}, checked = {};
+    for (var predmet_key in predmety) {
+      checked[predmet_key] = predmety[predmet_key].moje;
+      if (this.state.odoberanePredmety[predmet_key] && predmety[predmet_key].moje) {
+        classes[predmet_key] = 'danger';
+        checked[predmet_key] = false;
+      }
+      if (this.state.pridavanePredmety[predmet_key] && !predmety[predmet_key].moje) {
+        classes[predmet_key] = 'success';
+        checked[predmet_key] = true;
+      }
+    }
+
+    var saveButton = <div className="section">
+      <button type="submit" className="btn btn-primary" disabled={_.isEmpty(classes)}>
+        {this.state.saving ? <Votr.Loading /> : "Uložiť zmeny"}
+      </button>
+    </div>;
+
+    var [predmety, header] = Votr.sortTable(_.values(predmety), columns, query, 'predmetySort');
+
+    return <form onSubmit={this.handleSave}>
+      {saveButton}
+      <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
+        <thead>{header}</thead>
+        <tbody>
+          {predmety.map((predmet) => {
+            var predmet_key = predmet.predmet_key;
+            var nazov = predmet.nazov;
+            if (predmet.moje) nazov = <strong>{nazov}</strong>;
+            if (predmet.aktualnost) nazov = <span><del>{nazov}</del> (nekoná sa)</span>;
+            var blok = predmet.blok_skratka;
+            if (predmet.blok_nazov) blok = <abbr title={predmet.blok_nazov}>{blok}</abbr>;
+
+            return <tr key={predmet_key} className={classes[predmet_key]}>
+              <td className="text-center">
+                <input type="checkbox" name={predmet_key} checked={checked[predmet_key]} onChange={this.handleChange} />
+              </td>
+              <td><abbr title={Votr.humanizeTypVyucby(predmet.typ_vyucby)}>{predmet.typ_vyucby}</abbr></td>
+              <td>{blok}</td>
+              <td>{nazov}</td>
+              <td>{predmet.skratka}</td>
+              <td>{predmet.semester}</td>
+              <td>{predmet.rozsah_vyucby}</td>
+              <td>{predmet.kredit}</td>
+              <td>{Votr.RequestCache['pocet_prihlasenych_je_stary' + predmet_key] ?
+                      <del>{predmet.pocet_prihlasenych}</del> : predmet.pocet_prihlasenych}
+                  {predmet.maximalne_prihlasenych && "/" + predmet.maximalne_prihlasenych}</td>
+              {columns == Votr.ZapisZPlanuColumns && <td>{predmet.odporucany_rocnik}</td>}
+              <td>{predmet.jazyk.replace(/ ,/g, ', ')}</td>
+            </tr>;
+          })}
+        </tbody>
+        {message && <tfoot><tr><td colSpan={columns.length}>{message}</td></tr></tfoot>}
+      </table>
+      {saveButton}
+    </form>;
+  }
+});
+
+
+Votr.ZapisVlastnostiTable = React.createClass({
+  propTypes: {
+    query: React.PropTypes.object.isRequired
   },
 
   render: function () {
-    var {action, cast, zapisnyListKey} = this.props.query;
-    return <div>
-      <div className="header">
-        <Votr.PageTitle>Zápis predmetov</Votr.PageTitle>
-        <div className="pull-right">
-          <div className="btn-group">
-            {this.renderLink("Môj študijný plán",
-              { action: 'zapisZPlanu', cast: 'SC', zapisnyListKey },
-              action == 'zapisZPlanu' && cast != 'SS')}
-            {this.renderLink("Predmety štátnej skúšky",
-              { action: 'zapisZPlanu', cast: 'SS', zapisnyListKey },
-              action == 'zapisZPlanu' && cast == 'SS')}
-            {this.renderLink("Hľadať ďalšie predmety",
-              { action: 'zapisZPonuky', zapisnyListKey },
-              action == 'zapisZPonuky')}
-          </div>
-        </div>
-      </div>
-      <div>{this.renderContent()}</div>
-    </div>;
-  }
-};
-
-
-Votr.ZapisZPlanuPageContent = React.createClass({
-  mixins: [Votr.ZapisMixin],
-
-  getQuery: function () {
-    var {zapisnyListKey, cast} = this.props.query;
-    cast = (cast == 'SS' ? 'SS' : 'SC');
-    return {zapisnyListKey, cast};
-  },
-
-  getPredmety: function (cache) {
-    var {zapisnyListKey, cast} = this.getQuery();
-
-    var [zapisanePredmety, message1] = cache.get('zapis_get_zapisane_predmety', zapisnyListKey, cast) || [];
-    var [ponukanePredmety, message2] = cache.get('zapis_plan_vyhladaj', zapisnyListKey, cast) || [];
-
-    if (message1 || message2) {
-      return [null, <p>{message1 || message2}</p>];
-    }
-
-    if (!zapisanePredmety || !ponukanePredmety) {
-      return [null, <Votr.Loading requests={cache.missing} />];
-    }
-
-    var vidnoZimne = false;
-
-    var predmety = {};
-    ponukanePredmety.forEach((predmet) => {
-      predmety[predmet.predmet_key] = _.assign({ moje: false }, predmet);
-      if (predmet.semester == 'Z') vidnoZimne = true;
-    });
-    zapisanePredmety.forEach((predmet) => {
-      var predmet_key = predmet.predmet_key;
-      if (!predmety[predmet_key]) {
-        if (predmet.semester == 'Z' && !vidnoZimne) return;
-        predmety[predmet_key] = _.assign({ moje: true }, predmet);
-      } else {
-        for (var property in predmet) {
-          if (predmet[property] !== null && predmet[property] !== undefined) {
-            predmety[predmet_key][property] = predmet[property];
-          }
-        }
-        predmety[predmet_key].moje = true;
-      }
-    });
-
-    return [predmety, null];
-  },
-
-  renderNotes: function () {
     var cache = new Votr.CacheRequester();
     var {zapisnyListKey} = this.props.query;
 
@@ -291,28 +269,68 @@ Votr.ZapisZPlanuPageContent = React.createClass({
       </tbody>
       {message && <tfoot><tr><td colSpan={Votr.ZapisVlastnostiColumns.length}>{message}</td></tr></tfoot>}
     </table>;
+  }
+});
+
+
+Votr.ZapisZPlanuPageContent = React.createClass({
+  getQuery: function () {
+    var {zapisnyListKey, cast} = this.props.query;
+    cast = (cast == 'SS' ? 'SS' : 'SC');
+    return {zapisnyListKey, cast};
   },
 
-  renderContent: function () {
+  render: function () {
     var cache = new Votr.CacheRequester();
-    var [predmety, message] = this.getPredmety(cache);
+    var {zapisnyListKey, cast} = this.getQuery();
 
-    if (!predmety) return message;
+    var [zapisanePredmety, zapisaneMessage] = cache.get('zapis_get_zapisane_predmety', zapisnyListKey, cast) || [];
+    var [ponukanePredmety, ponukaneMessage] = cache.get('zapis_plan_vyhladaj', zapisnyListKey, cast) || [];
 
-    var [predmety, header] = Votr.sortTable(
-      _.values(predmety), Votr.ZapisZPlanuColumns, this.props.query, 'predmetySort');
+    var outerMessage, tableMessage, predmety;
 
-    if (!message && !predmety.length) {
-      message = "Zoznam ponúkaných predmetov je prázdny.";
+    if (zapisaneMessage || ponukaneMessage) {
+      outerMessage = <p>{zapisaneMessage || ponukaneMessage}</p>;
+    } else if (!cache.loadedAll) {
+      outerMessage = <Votr.Loading requests={cache.missing} />;
+    } else {
+      var vidnoZimne = false;
+
+      predmety = {};
+      ponukanePredmety.forEach((predmet) => {
+        predmety[predmet.predmet_key] = _.assign({ moje: false }, predmet);
+        if (predmet.semester == 'Z') vidnoZimne = true;
+      });
+      zapisanePredmety.forEach((predmet) => {
+        var predmet_key = predmet.predmet_key;
+        if (!predmety[predmet_key]) {
+          if (predmet.semester == 'Z' && !vidnoZimne) return;
+          predmety[predmet_key] = _.assign({ moje: true }, predmet);
+        } else {
+          for (var property in predmet) {
+            if (predmet[property] !== null && predmet[property] !== undefined) {
+              predmety[predmet_key][property] = predmet[property];
+            }
+          }
+          predmety[predmet_key].moje = true;
+        }
+      });
+
+      if (_.isEmpty(predmety)) {
+        tableMessage = "Zoznam ponúkaných predmetov je prázdny.";
+      }
     }
 
-    return <form onSubmit={this.handleSave}>
-      {this.renderSaveButton(predmety)}
-      {this.renderTable(header, Votr.ZapisZPlanuColumns, predmety, message, true)}
-      {this.renderSaveButton(predmety)}
+    return <Votr.ZapisMenu query={this.props.query}>
+      {outerMessage}
+      <Votr.ZapisTable
+          query={this.props.query} predmety={predmety} message={tableMessage}
+          odoberPredmety={this.odoberPredmety}
+          pridajPredmety={this.pridajPredmety}
+          columns={Votr.ZapisZPlanuColumns} />
       <h2>Poznámky k študijnému plánu</h2>
-      {this.renderNotes()}
-    </form>;
+      <Votr.ZapisVlastnostiTable query={this.props.query} />
+    </Votr.ZapisMenu>;
   },
 
   pridajPredmety: function (predmety, callback) {
@@ -411,87 +429,63 @@ Votr.ZapisZPonukyForm = React.createClass({
 
 
 Votr.ZapisZPonukyPageContent = React.createClass({
-  mixins: [Votr.ZapisMixin],
-
-  getQuery: function () {
-    var {zapisnyListKey} = this.props.query;
-    return { zapisnyListKey, cast: 'SC' };
-  },
-
-  getPredmety: function (cache) {
-    var query = this.props.query;
-    var {zapisnyListKey, cast} = this.getQuery();
-
-    if (!query.fakulta &&
-        !query.stredisko &&
-        !query.skratkaPredmetu &&
-        !query.nazovPredmetu) {
-      return [null, null];
-    }
-
-    var [zapisanePredmety, message1] = cache.get('zapis_get_zapisane_predmety', zapisnyListKey, cast) || [];
-    var [ponukanePredmety, message2] = cache.get('zapis_ponuka_vyhladaj', zapisnyListKey,
-        query.fakulta || null,
-        query.stredisko || null,
-        query.skratkaPredmetu || null,
-        query.nazovPredmetu || null) || [];
-
-    if (message1) {
-      return [null, <p>{message1}</p>];
-    }
-
-    if (!zapisanePredmety || !ponukanePredmety) {
-      return [null, <Votr.Loading requests={cache.missing} />];
-    }
-
-    var predmety = {};
-    ponukanePredmety.forEach((predmet) => {
-      predmety[predmet.predmet_key] = _.assign({ moje: false }, predmet);
-    });
-    zapisanePredmety.forEach((predmet) => {
-      if (predmety[predmet.predmet_key]) {
-        predmety[predmet.predmet_key].moje = true;
-      }
-    });
-
-    return [predmety, message2];
-  },
-
-  renderResults: function () {
+  render: function () {
     var cache = new Votr.CacheRequester();
-    var [predmety, message] = this.getPredmety(cache);
+    var query = this.props.query;
 
-    if (!predmety) return message;
+    var outerMessage, tableMessage, predmety;
 
-    var [predmety, header] = Votr.sortTable(
-      _.values(predmety), Votr.ZapisZPonukyColumns, this.props.query, 'predmetySort');
+    if (query.fakulta ||
+        query.stredisko ||
+        query.skratkaPredmetu ||
+        query.nazovPredmetu) {
+      var [zapisanePredmety, zapisaneMessage] = cache.get('zapis_get_zapisane_predmety', query.zapisnyListKey, 'SC') || [];
+      var [ponukanePredmety, ponukaneMessage] = cache.get('zapis_ponuka_vyhladaj', query.zapisnyListKey,
+          query.fakulta || null,
+          query.stredisko || null,
+          query.skratkaPredmetu || null,
+          query.nazovPredmetu || null) || [];
 
-    if (!message && !predmety.length) {
-      message = "Podmienkam nevyhovuje žiadny záznam.";
+      if (zapisaneMessage) {
+        outerMessage = <p>{zapisaneMessage}</p>;
+      } else if (!cache.loadedAll) {
+        outerMessage = <Votr.Loading requests={cache.missing} />;
+      } else {
+        var predmety = {};
+        ponukanePredmety.forEach((predmet) => {
+          predmety[predmet.predmet_key] = _.assign({ moje: false }, predmet);
+        });
+        zapisanePredmety.forEach((predmet) => {
+          if (predmety[predmet.predmet_key]) {
+            predmety[predmet.predmet_key].moje = true;
+          }
+        });
+
+        tableMessage = ponukaneMessage;
+        if (_.isEmpty(predmety) && !tableMessage) {
+          tableMessage = "Podmienkam nevyhovuje žiadny záznam.";
+        }
+      }
     }
 
-    return <form onSubmit={this.handleSave}>
-      <h2>Výsledky</h2>
-      {this.renderSaveButton(predmety)}
-      {this.renderTable(header, Votr.ZapisZPonukyColumns, predmety, message, false)}
-      {this.renderSaveButton(predmety)}
-    </form>;
-  },
-
-  renderContent: function () {
-    return <div>
+    return <Votr.ZapisMenu query={this.props.query}>
       <Votr.ZapisZPonukyForm query={this.props.query} />
-      {this.renderResults()}
-    </div>;
+      {outerMessage}
+      {predmety && <h2>Výsledky</h2>}
+      <Votr.ZapisTable
+          query={this.props.query} predmety={predmety} message={tableMessage}
+          odoberPredmety={this.odoberPredmety}
+          pridajPredmety={this.pridajPredmety}
+          columns={Votr.ZapisZPonukyColumns} />
+    </Votr.ZapisMenu>;
   },
 
   pridajPredmety: function (predmety, callback) {
     if (!predmety.length) return callback(null);
 
     var query = this.props.query;
-    var {zapisnyListKey, cast} = this.getQuery();
     var skratky = predmety.map((predmet) => predmet.skratka);
-    Votr.sendRpc('zapis_ponuka_pridaj_predmety', [zapisnyListKey,
+    Votr.sendRpc('zapis_ponuka_pridaj_predmety', [query.zapisnyListKey,
         query.fakulta || null,
         query.stredisko || null,
         query.skratkaPredmetu || null,
@@ -502,9 +496,9 @@ Votr.ZapisZPonukyPageContent = React.createClass({
   odoberPredmety: function (predmety, callback) {
     if (!predmety.length) return callback(null);
 
-    var {zapisnyListKey, cast} = this.getQuery();
+    var query = this.props.query;
     var kluce = predmety.map((predmet) => predmet.predmet_key);
-    Votr.sendRpc('zapis_odstran_predmety', [zapisnyListKey, cast, kluce], callback);
+    Votr.sendRpc('zapis_odstran_predmety', [query.zapisnyListKey, 'SC', kluce], callback);
   }
 });
 
