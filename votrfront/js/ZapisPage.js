@@ -74,6 +74,52 @@ Votr.ZapisMenu = React.createClass({
 });
 
 
+Votr.ZapisTableFooter = React.createClass({
+  propTypes: {
+    predmety: React.PropTypes.object.isRequired,
+    moje: React.PropTypes.object.isRequired
+  },
+
+  render: function () {
+    var bloky = {}, nazvy = {}, semestre = {};
+    _.forEach(this.props.predmety, (predmet) => {
+      semestre[predmet.semestre] = true;
+      nazvy[predmet.blok_skratka] = predmet.blok_nazov;
+    });
+
+    _.forEach(_.sortBy(_.keys(nazvy)), (skratka) => bloky[skratka] = []);
+    bloky[''] = [];
+
+    _.forEach(this.props.predmety, (predmet) => {
+      if (!this.props.moje[predmet.predmet_key]) return;
+      bloky[predmet.blok_skratka].push(predmet);
+      bloky[''].push(predmet);
+    });
+
+    var jedinySemester = _.keys(semestre).length <= 1;
+
+    return <tfoot>
+      {_.map(bloky, (blok, skratka) => {
+        var stats = Votr.coursesStats(blok);
+        return <tr key={skratka}>
+          <td colSpan="2">{skratka ? "Súčet bloku" : "Dokopy"}</td>
+          <td>{nazvy[skratka] ? <abbr title={nazvy[skratka]}>{skratka}</abbr> : skratka}</td>
+          <td colSpan="4">
+            {stats.spolu.count} predmetov
+            {!jedinySemester && " ("+stats.zima.count+" v zime, "+stats.leto.count+" v lete)"}
+          </td>
+          <td>
+            {stats.spolu.creditsCount}
+            {!jedinySemester && " ("+stats.zima.creditsCount+"+"+stats.leto.creditsCount+")"}
+          </td>
+          <td colSpan="3"></td>
+        </tr>;
+      })}
+    </tfoot>;
+  }
+});
+
+
 Votr.ZapisTable = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired,
@@ -81,6 +127,7 @@ Votr.ZapisTable = React.createClass({
     akademickyRok: React.PropTypes.string,
     message: React.PropTypes.node,
     columns: React.PropTypes.array.isRequired,
+    showFooter: React.PropTypes.bool,
     odoberPredmety: React.PropTypes.func.isRequired,
     pridajPredmety: React.PropTypes.func.isRequired
   },
@@ -227,6 +274,7 @@ Votr.ZapisTable = React.createClass({
             </tr>;
           })}
         </tbody>
+        {this.props.showFooter && <Votr.ZapisTableFooter predmety={this.props.predmety} moje={checked} />}
         {message && <tfoot><tr><td colSpan={columns.length}>{message}</td></tr></tfoot>}
       </table>
       {saveButton}
@@ -331,7 +379,7 @@ Votr.ZapisZPlanuPageContent = React.createClass({
           akademickyRok={akademickyRok}
           odoberPredmety={this.odoberPredmety}
           pridajPredmety={this.pridajPredmety}
-          columns={Votr.ZapisZPlanuColumns} />
+          columns={Votr.ZapisZPlanuColumns} showFooter={true} />
       <h2>Poznámky k študijnému plánu</h2>
       <Votr.ZapisVlastnostiTable query={this.props.query} />
     </Votr.ZapisMenu>;
