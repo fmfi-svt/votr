@@ -92,7 +92,7 @@ Votr.ZapisTableFooter = React.createClass({
 
     _.forEach(this.props.predmety, (predmet) => {
       if (!this.props.moje[predmet.predmet_key]) return;
-      bloky[predmet.blok_skratka].push(predmet);
+      if (predmet.blok_skratka) bloky[predmet.blok_skratka].push(predmet);
       bloky[''].push(predmet);
     });
 
