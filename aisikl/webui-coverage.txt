@@ -1930,7 +1930,7 @@ Mostly covered by Application. No longer global.
 - readCustomization(), getProperty(), getPropertyAsBoolean(),
   getPropertyAsInt()
     - Wasn't needed yet, except for reading initScript in Application._open(),
-      which is hardcoded.
+      which is hardcoded. controlerUrl and downloadContext is also hardcoded.
 - WebUI_init
     - Parsed in Application._open()
 - killApplication()

@@ -410,6 +410,15 @@ class Application:
         '''Sends a request without any events to AIS.'''
         self._do_request(self.collect_component_changes())
 
+    def _send_namevalue_request(self, name, value):
+        '''Helper function for small requests sent by some operations.
+        These requests don't contain any events or component changes.
+        '''
+        self._do_request(
+            '<changedProps><changedProperties><propertyValues><nameValue>' +
+            '<name>{}</name><value>{}</value>'.format(name, value) +
+            '</nameValue></propertyValues></changedProperties></changedProps>')
+
     def force_close(self):
         '''Tells the server to close the application.
 
@@ -588,12 +597,55 @@ class Application:
         Args:
             option_index: webui index of the button to be clicked
         '''
-        self._do_request(
-            '<changedProps><changedProperties><propertyValues>' +
-            '<nameValue><name>confirmResult</name>' +
-            '<value>' + str(option_index) + '</value>' +
-            '</nameValue></propertyValues></changedProperties></changedProps>'
-        )
+        self.ctx.log('operation', 'Selecting button {} in confirm box'.format(
+            option_index))
+        self._send_namevalue_request('confirmResult', option_index)
+
+    def abort_box(self, message, title=None):
+        '''Waits for AIS in response to the abortBox :class:`~Operation`.'''
+        self.ctx.log('operation', 'Waiting for abort box')
+        self._send_namevalue_request('confirmResult', -1)
+
+    def shell_exec(self, content_type, file_name, new_window_name, width,
+                   height):
+        '''Downloads a file in response to the shellExec :class:`Operation`.
+        Then sends a request to AIS saying that the shellExec was executed.
+
+        This method only supports the common use of shellExec -- downloading
+        files. Technically, shellExec can also run custom JavaScript code. If
+        you need that, don't use :meth:`shell_exec`, handle it manually and
+        call :meth:`send_shell_exec_result` afterwards.
+
+        Returns:
+            The downloaded :class:`requests.Response`.
+        '''
+        if content_type == 'webui/execCustomFunction':
+            raise AISParseError("webui/execCustomFunction is not supported")
+
+        if width or height:
+            raise AISParseError(
+                "shellExec with width or height is not supported")
+
+        file_name = file_name.rpartition('/')[2]
+        url = ('/ais/files/{}?appId={}&contentType={}&antiCache={}&file={}'
+            .format(file_name, self.app_id, content_type, time.time(),
+                    file_name))
+
+        self.ctx.log('operation', 'Downloading "{}"'.format(file_name))
+
+        response = self.ctx.request_ais(url)
+
+        self.send_shell_exec_result('')
+
+        return response
+
+    def send_shell_exec_result(self, shell_exec_result):
+        '''Informs AIS that a shellExec operation was executed.
+
+        Args:
+            shell_exec_result: The string value of ``shellExecResult``.
+        '''
+        self._send_namevalue_request('shellExecResult', shell_exec_result)
 
     def awaited_start_app(self, ops, ignored_messages=None):
         '''Combines :func:`assert_ops` and :meth:`start_app` in one step.
@@ -640,6 +692,24 @@ class Application:
         '''
         assert_ops(ops, 'closeDialog')
         return self.close_dialog(*ops[0].args)
+
+    def awaited_abort_box(self, ops):
+        '''Combines :func:`assert_ops` and :meth:`abort_box` in one step.
+
+        If ``ops`` really contains a single abortBox :class:`Operation` as
+        expected, waits for the box to close. Throws otherwise.
+        '''
+        assert_ops(ops, 'abortBox')
+        return self.abort_box(*ops[0].args)
+
+    def awaited_shell_exec(self, ops):
+        '''Combines :func:`assert_ops` and :meth:`shell_exec` in one step.
+
+        If ``ops`` really contains a single shellExec :class:`Operation` as
+        expected, downloads the file. Throws otherwise.
+        '''
+        assert_ops(ops, 'shellExec')
+        return self.shell_exec(*ops[0].args)
 
     def awaited_close_application(self, ops):
         '''Combines :func:`assert_ops` and :meth:`close_all_dialogs` in one

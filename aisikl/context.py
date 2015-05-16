@@ -39,6 +39,25 @@ class Context:
         for key in cookies:
             self.connection.cookies.set(key, cookies[key])
 
+    def request_ais(self, url, *, method='GET', **kwargs):
+        '''Sends a request to AIS and returns the :class:`requests.Response`.
+
+        :param url: the URL, either absolute or relative to the AIS server.
+        :param method: HTTP method for the request.
+        :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
+        :return: a :class:`requests.Response` object.
+        '''
+        self.log('http', 'Requesting {} {}'.format(
+            method, url.partition('?')[0]), [url, kwargs.get('data', None)])
+        url = urljoin(self.ais_url, url)
+        response = self.connection.request(method, url, **kwargs)
+        response.raise_for_status()
+        if response.headers.get('content-type', '').startswith('text'):
+            self.log('http', 'Received response', response.text)
+        else:
+            self.log('http', 'Received response (binary data)')
+        return response
+
     def request_html(self, url, *, method='GET', **kwargs):
         '''Sends a request to AIS and parses the response as HTML.
 
@@ -47,12 +66,7 @@ class Context:
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
         :return: a :class:`~BeautifulSoup` object.
         '''
-        self.log('http', 'Requesting {} {}'.format(
-            method, url.partition('?')[0]), [url, kwargs.get('data', None)])
-        url = urljoin(self.ais_url, url)
-        response = self.connection.request(method, url, **kwargs)
-        response.raise_for_status()
-        self.log('http', 'Received response', response.text)
+        response = self.request_ais(url, method=method, **kwargs)
         soup = BeautifulSoup(response.text)
         self.log('http', 'Parsed HTML data')
         return soup
