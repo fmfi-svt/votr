@@ -27,9 +27,9 @@ class RadioBox(Control):
                     "has unexpected index attribute.".format(self.id, index))
             self.options.append(Option(
                 title=td.label.get_text(),
-                id=td.radio['sid'],
+                id=td.input['sid'],
             ))
-            if td.radio.has_attr('checked'):
+            if td.input.has_attr('checked'):
                 self.selected_index = index
 
     @property
