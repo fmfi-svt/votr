@@ -19,8 +19,8 @@ class ComboBox(Control):
         for index, option in enumerate(element.find_all('option')):
             self.options.append(Option(
                 title=option.get_text(),
-                id=option['sid'],
-                tool_tip_text=option['title'],
+                id=option.get('sid', ''),
+                tool_tip_text=option.get('title', ''),
             ))
             if option.has_attr('selected'):
                 self.selected_index = index
