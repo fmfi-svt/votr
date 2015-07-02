@@ -110,19 +110,17 @@ th.sort {
   &.asc, &.desc {
     background: $gray-lighter;
   }
-  /* TODO: Decide if we want this.
   &:after {
     content: "\00a0↕";   // \00a0 is &nbsp;
-    color: $gray-light;
+    visibility: hidden;
   }
-  */
   &.asc:after {
     content: "\00a0↑";   // \00a0 is &nbsp;
-    color: inherit;
+    visibility: visible;
   }
   &.desc:after {
     content: "\00a0↓";   // \00a0 is &nbsp;
-    color: inherit;
+    visibility: visible;
   }
 }
 
