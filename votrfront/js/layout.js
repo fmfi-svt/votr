@@ -50,13 +50,16 @@ Votr.PageNavbar = React.createClass({
 Votr.LogStatus = React.createClass({
   render: function () {
     var entry = _.last(Votr.logs);
-    if (!entry) return null;
-    var message = "Spracovávam dáta... (" + entry.message + ")";
-    if (entry.log == 'http' && entry.message.match(/^Requesting/)) {
-      message = "Čakám na AIS..."
-    }
-    if (entry.log == 'rpc' && entry.message.match(/finished$/)) {
-      return null;
+    if (!entry) {
+      var message = "\xA0";
+    } else {
+      var message = "Spracovávam dáta... (" + entry.message + ")";
+      if (entry.log == 'http' && entry.message.match(/^Requesting/)) {
+        message = "Čakám na AIS...";
+	    }
+      if (entry.log == 'rpc' && entry.message.match(/finished$/)) {
+        message = "\xA0";
+      }
     }
     return <p className="navbar-text">{message}</p>;
   }
