@@ -21,7 +21,7 @@ def serve(app, *args):
         watch_in_background()
 
     app.wrap_static()
-    run_simple('127.0.0.1', os.getenv('PORT') or 5000, app,
+    run_simple('127.0.0.1', int(os.getenv('PORT') or 5000), app,
                use_debugger=debug, use_reloader=True, threaded=True)
 
 serve.help = '  $0 serve [--debug]'
