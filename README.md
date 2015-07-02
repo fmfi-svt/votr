@@ -13,7 +13,9 @@ actual communication by sending HTTP requests with fake mouse clicks and screen
 scraping the responses from WebUI (the framework AIS is based on).
 
 You will need Python 3 (with virtualenv and python3-dev headers) and Node.js
-(with npm).
+(with npm). You will also need headers for libxml and libxslt. For example, on
+Ubuntu, do `sudo apt-get install python-virtualenv python3-dev nodejs-legacy npm
+libxml2-dev libxslt1-dev`.
 
 Quick start:
 
