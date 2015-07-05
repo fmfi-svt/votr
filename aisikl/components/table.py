@@ -45,8 +45,7 @@ def load_script(data_view, id):
         raise AISParseError('Expected {} to be script instead of {}'.format(
             id, script_element.name))
     text = script_element.get_text()[4:-3]   # always "<!--" and "-->"
-    return BeautifulSoup(text)
-    # TODO: document that lxml might wrap the result in <html> and <body>.
+    return BeautifulSoup(text, 'lxml')   # note: will be wrapped in <html> and <body>
 
 
 class Table(Control):

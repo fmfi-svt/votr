@@ -67,7 +67,7 @@ class Context:
         :return: a :class:`~BeautifulSoup` object.
         '''
         response = self.request_ais(url, method=method, **kwargs)
-        soup = BeautifulSoup(response.text)
+        soup = BeautifulSoup(response.text, 'lxml')
         self.log('http', 'Parsed HTML data')
         return soup
 
