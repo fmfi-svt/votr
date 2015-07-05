@@ -7,6 +7,10 @@
   outline: thin dotted;
 }
 
+// We don't use bootstrap/forms, but navbar needs a mixin from it.
+@mixin form-inline() {
+}
+
 // Reset and dependencies
 @import "bootstrap/normalize";
 @import "bootstrap/print";

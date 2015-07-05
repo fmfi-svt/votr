@@ -22,17 +22,18 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   fi
 
   if ! [ -f static/libs/lodash.js ]; then
-    npm install lodash@^2.4
-    cp -p node_modules/lodash/dist/*.* static/libs/
+    version=$(npm view lodash@^3 version | tail -n1 | cut -d\' -f2)
+    wget https://raw.githubusercontent.com/lodash/lodash/$version/lodash.js -O static/libs/lodash.js
+    wget https://raw.githubusercontent.com/lodash/lodash/$version/lodash.min.js -O static/libs/lodash.min.js
   fi
 
   if ! [ -f static/libs/react.js ]; then
-    npm install react@^0.12
+    npm install react@^0.13
     cp -p node_modules/react/dist/*.* static/libs/
   fi
 
   if ! [ -f node_modules/.bin/jsx ]; then
-    npm install react-tools@^0.12
+    npm install react-tools@^0.13
   fi
 
   if ! [ -f node_modules/.bin/uglifyjs ]; then
@@ -40,7 +41,7 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   fi
 
   if ! [ -d node_modules/bootstrap-sass ]; then
-    npm install bootstrap-sass@~3.2
+    npm install bootstrap-sass@^3.3
   fi
   bs=node_modules/bootstrap-sass/assets
   if ! [ -f static/libs/modal.js ]; then
