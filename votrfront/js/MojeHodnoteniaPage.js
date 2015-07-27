@@ -38,7 +38,7 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
     var [hodnotenia, header] = Votr.sortTable(
       hodnotenia, Votr.MojeHodnoteniaColumns, this.props.query, 'predmetySort');
 
-    var coursesStats = Votr.coursesStats(hodnotenia);
+    var stats = Votr.coursesStats(hodnotenia);
 
     return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
@@ -65,8 +65,8 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
       </tbody>
       <tfoot>
           <tr>
-            <td colSpan="4">Celkom {coursesStats.spolu.count} {Votr.plural(coursesStats.spolu.count, "predmet", "predmety", "predmetov")}</td>
-            <td>{coursesStats.spolu.creditsCount}</td>
+            <td colSpan="4">Celkom {stats.spolu.count} {Votr.plural(stats.spolu.count, "predmet", "predmety", "predmetov")}</td>
+            <td>{stats.spolu.creditsCount}</td>
             <td></td>
             <td>{Votr.renderWeightedStudyAverage(hodnotenia)}</td>
             <td></td>
