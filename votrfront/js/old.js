@@ -1,4 +1,3 @@
-(function () {
 
 if (!history.pushState) {
   document.getElementById('votr').innerHTML = `
@@ -19,5 +18,3 @@ if (!history.pushState) {
   `;
   if (window.ga) ga('send', 'pageview');
 }
-
-})();

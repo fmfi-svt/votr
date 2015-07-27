@@ -1,84 +1,92 @@
-(function () {
+
+import { MojePredmetyColumns } from './MojePredmetyPage';
+import { StudiumSelector } from './StudiumSelector';
+import { CacheRequester, Loading } from './ajax';
+import { coursesStats, renderWeightedStudyAverage } from './coursesStats';
+import { classForSemester, humanizeNazovPriemeru, humanizeTerminHodnotenia, humanizeTypVyucby, plural } from './humanizeAISData';
+import { PageLayout, PageTitle } from './layout';
+import { Link } from './router';
+import { sortAs, sortTable } from './sorting';
 
 
-Votr.MojeHodnoteniaColumns = [
+export var MojeHodnoteniaColumns = [
   ["Akademický rok", 'akademicky_rok']
-].concat(Votr.MojePredmetyColumns);
-Votr.MojeHodnoteniaColumns.defaultOrder = 'a0d1a2';
+].concat(MojePredmetyColumns);
+MojeHodnoteniaColumns.defaultOrder = 'a0d1a2';
 
 
-Votr.MojePriemeryColumns = [
-  ["Dátum výpočtu priemeru", 'datum_vypoctu', Votr.sortAs.date],
+export var MojePriemeryColumns = [
+  ["Dátum výpočtu priemeru", 'datum_vypoctu', sortAs.date],
   ["Názov priemeru", 'nazov'],
   ["Akademický rok", 'akademicky_rok'],
   ["Semester", 'semester', null, true],
-  ["Získaný kredit", 'ziskany_kredit', Votr.sortAs.number],
-  ["Celkový počet predmetov", 'predmetov', Votr.sortAs.number],
-  ["Počet neabsolvovaných predmetov", 'neabsolvovanych', Votr.sortAs.number],
-  ["Študijný priemer", 'studijny_priemer', Votr.sortAs.number],
-  ["Vážený priemer", 'vazeny_priemer', Votr.sortAs.number]
+  ["Získaný kredit", 'ziskany_kredit', sortAs.number],
+  ["Celkový počet predmetov", 'predmetov', sortAs.number],
+  ["Počet neabsolvovaných predmetov", 'neabsolvovanych', sortAs.number],
+  ["Študijný priemer", 'studijny_priemer', sortAs.number],
+  ["Vážený priemer", 'vazeny_priemer', sortAs.number]
 ];
-Votr.MojePriemeryColumns.defaultOrder = 'a0a2a1';
+MojePriemeryColumns.defaultOrder = 'a0a2a1';
 
 
-Votr.MojeHodnoteniaPageContent = React.createClass({
+export var MojeHodnoteniaPageContent = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired
   },
 
-  renderHodnotenia: function () {
-    var cache = new Votr.CacheRequester();
+  renderHodnotenia() {
+    var cache = new CacheRequester();
     var {studiumKey} = this.props.query;
     var [hodnotenia, message] = cache.get('get_prehlad_kreditov', studiumKey) || [];
 
     if (!hodnotenia) {
-      return <Votr.Loading requests={cache.missing} />;
+      return <Loading requests={cache.missing} />;
     }
 
-    var [hodnotenia, header] = Votr.sortTable(
-      hodnotenia, Votr.MojeHodnoteniaColumns, this.props.query, 'predmetySort');
+    var [hodnotenia, header] = sortTable(
+      hodnotenia, MojeHodnoteniaColumns, this.props.query, 'predmetySort');
 
-    var stats = Votr.coursesStats(hodnotenia);
+    var stats = coursesStats(hodnotenia);
 
     return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
         {hodnotenia.map((hodnotenie) =>
-          <tr key={hodnotenie.hodn_key} className={Votr.classForSemester(hodnotenie.semester)}>
+          <tr key={hodnotenie.hodn_key} className={classForSemester(hodnotenie.semester)}>
             <td>{hodnotenie.akademicky_rok}</td>
             <td>{hodnotenie.semester}</td>
-            <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: hodnotenie.predmet_key, modalAkademickyRok: hodnotenie.akademicky_rok })}>
+            <td><Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: hodnotenie.predmet_key, modalAkademickyRok: hodnotenie.akademicky_rok })}>
               {hodnotenie.nazov}
-            </Votr.Link></td>
+            </Link></td>
             <td>{hodnotenie.skratka}</td>
             <td>{hodnotenie.kredit}</td>
-            <td>{Votr.humanizeTypVyucby(hodnotenie.typ_vyucby)}</td>
+            <td>{humanizeTypVyucby(hodnotenie.typ_vyucby)}</td>
             <td>
               {hodnotenie.hodn_znamka}
               {hodnotenie.hodn_znamka ? " - " : null}
               {hodnotenie.hodn_znamka_popis}
             </td>
             <td>{hodnotenie.hodn_datum}</td>
-            <td>{Votr.humanizeTerminHodnotenia(hodnotenie.hodn_termin)}</td>
+            <td>{humanizeTerminHodnotenia(hodnotenie.hodn_termin)}</td>
           </tr>
         )}
       </tbody>
       <tfoot>
           <tr>
-            <td colSpan="4">Celkom {stats.spolu.count} {Votr.plural(stats.spolu.count, "predmet", "predmety", "predmetov")}</td>
+            <td colSpan="4">Celkom {stats.spolu.count} {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}</td>
             <td>{stats.spolu.creditsCount}</td>
             <td></td>
-            <td>{Votr.renderWeightedStudyAverage(hodnotenia)}</td>
+            <td>{renderWeightedStudyAverage(hodnotenia)}</td>
             <td></td>
             <td></td>
           </tr>
-          {message && <tr><td colSpan={Votr.MojeHodnoteniaColumns.length}>{message}</td></tr>}
+          {message && <tr><td colSpan={MojeHodnoteniaColumns.length}>{message}</td></tr>}
       </tfoot>
     </table>;
   },
 
-  renderPriemery: function () {
-    var cache = new Votr.CacheRequester();
+  renderPriemery() {
+    var cache = new CacheRequester();
     var {studiumKey} = this.props.query;
 
     var priemery, message;
@@ -88,16 +96,16 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
       priemery = [];
     } else if (zapisneListy) {
       var zapisnyListKey = _.max(zapisneListy,
-          (zapisnyList) => Votr.sortAs.date(zapisnyList.datum_zapisu)).zapisny_list_key;
+          (zapisnyList) => sortAs.date(zapisnyList.datum_zapisu)).zapisny_list_key;
       [priemery, message] = cache.get('get_priemery', zapisnyListKey) || [];
     }
 
     if (!priemery) {
-      return <Votr.Loading requests={cache.missing} />;
+      return <Loading requests={cache.missing} />;
     }
 
-    var [priemery, header] = Votr.sortTable(
-      priemery, Votr.MojePriemeryColumns, this.props.query, 'priemerySort');
+    var [priemery, header] = sortTable(
+      priemery, MojePriemeryColumns, this.props.query, 'priemerySort');
 
     if (!message && !priemery.length) {
       message = "V AISe zatiaľ nie sú vypočítané žiadne priemery.";
@@ -109,7 +117,7 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
         {priemery.map((priemer, index) =>
           <tr key={index}>
             <td>{priemer.datum_vypoctu}</td>
-            <td>{Votr.humanizeNazovPriemeru(priemer.nazov)}</td>
+            <td>{humanizeNazovPriemeru(priemer.nazov)}</td>
             <td>{priemer.akademicky_rok}</td>
             <td>{priemer.semester}</td>
             <td>{priemer.ziskany_kredit}</td>
@@ -120,14 +128,14 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
           </tr>
         )}
       </tbody>
-      {message && <tfoot><tr><td colSpan={Votr.MojePriemeryColumns.length}>{message}</td></tr></tfoot>}
+      {message && <tfoot><tr><td colSpan={MojePriemeryColumns.length}>{message}</td></tr></tfoot>}
     </table>;
   },
 
-  render: function () {
+  render() {
     return <div>
       <div className="header">
-        <Votr.PageTitle>Moje hodnotenia</Votr.PageTitle>
+        <PageTitle>Moje hodnotenia</PageTitle>
       </div>
       {this.renderHodnotenia()}
       <h2>Moje priemery</h2>
@@ -137,17 +145,14 @@ Votr.MojeHodnoteniaPageContent = React.createClass({
 });
 
 
-Votr.MojeHodnoteniaPage = React.createClass({
+export var MojeHodnoteniaPage = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired
   },
 
-  render: function () {
-    return <Votr.PageLayout query={this.props.query}>
-      <Votr.StudiumSelector query={this.props.query} component={Votr.MojeHodnoteniaPageContent} />
-    </Votr.PageLayout>;
+  render() {
+    return <PageLayout query={this.props.query}>
+      <StudiumSelector query={this.props.query} component={MojeHodnoteniaPageContent} />
+    </PageLayout>;
   }
 });
-
-
-})();

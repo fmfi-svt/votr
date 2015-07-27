@@ -1,4 +1,3 @@
-(function () {
 
 function humanizeWith(table) {
   return function (value) {
@@ -6,38 +5,36 @@ function humanizeWith(table) {
   }
 }
 
-Votr.humanizeTypVyucby = humanizeWith({
+export var humanizeTypVyucby = humanizeWith({
   'A': 'povinné (A)',
   'B': 'povinne voliteľné (B)',
   'C': 'výberové (C)'
 });
 
-Votr.humanizeTerminHodnotenia = humanizeWith({
+export var humanizeTerminHodnotenia = humanizeWith({
   'R - Riadny termín': 'riadny',
   '1 - Prvý opravný termín': 'prvý opravný',
   '2 - Druhý opravný termín': 'druhý opravný'
 });
 
-Votr.humanizeNazovPriemeru = humanizeWith({
+export var humanizeNazovPriemeru = humanizeWith({
   'Sem ?': 'Semester',
   'AkadR ?' : 'Akademický rok'
 });
 
-Votr.humanizeBoolean = humanizeWith({
+export var humanizeBoolean = humanizeWith({
   'A': 'áno',
   'N': 'nie'
 });
 
-Votr.classForSemester = function (semester) {
+export function classForSemester(semester) {
   if (semester == 'Z') return 'zima';
   if (semester == 'L') return 'leto';
   return undefined;
 };
 
-Votr.plural = function (count, one, few, many) {
+export function plural(count, one, few, many) {
   if (count == 1) return one;
   if (count >= 2 && count <= 4) return few;
   return many;
 };
-
-})();

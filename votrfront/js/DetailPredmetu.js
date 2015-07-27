@@ -1,27 +1,32 @@
-(function () {
 
-Votr.DetailPredmetuUciteliaColumns = [
-  ["Meno", 'plne_meno', Votr.sortAs.personName],
+import { ZoznamPrihlasenychNaTerminColumns } from './ZoznamPrihlasenychNaTermin';
+import { CacheRequester, Loading } from './ajax';
+import { Modal } from './layout';
+import { sortAs, sortTable } from './sorting';
+
+
+export var DetailPredmetuUciteliaColumns = [
+  ["Meno", 'plne_meno', sortAs.personName],
   ["Typ", 'typ']
 ];
-Votr.DetailPredmetuUciteliaColumns.defaultOrder = 'a0';
+DetailPredmetuUciteliaColumns.defaultOrder = 'a0';
 
-Votr.DetailPredmetuStudentiColumns = Votr.ZoznamPrihlasenychNaTerminColumns.slice();
-Votr.DetailPredmetuStudentiColumns.defaultOrder = 'a0';
+export var DetailPredmetuStudentiColumns = ZoznamPrihlasenychNaTerminColumns.slice();
+DetailPredmetuStudentiColumns.defaultOrder = 'a0';
 
-Votr.DetailPredmetuModal = React.createClass({
-  getZapisaniStudenti: function(cache, predmetKey, akademickyRok){
+export var DetailPredmetuModal = React.createClass({
+  getZapisaniStudenti(cache, predmetKey, akademickyRok){
     return cache.get('get_studenti_zapisani_na_predmet', predmetKey, akademickyRok);
   },
 
-  renderUcitelia: function () {
-    var cache = new Votr.CacheRequester();
+  renderUcitelia() {
+    var cache = new CacheRequester();
     var {modalAkademickyRok, modalPredmetKey} = this.props.query;
 
     var data = this.getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 
     if (!data) {
-      return <Votr.Loading requests={cache.missing} />;
+      return <Loading requests={cache.missing} />;
     }
 
     var [studenti, predmet] = data;
@@ -33,11 +38,11 @@ Votr.DetailPredmetuModal = React.createClass({
     var ucitelia = cache.get('get_ucitelia_predmetu', modalPredmetKey, modalAkademickyRok, predmet.semester, predmet.fakulta);
 
     if (!ucitelia) {
-      return <Votr.Loading requests={cache.missing} />;
+      return <Loading requests={cache.missing} />;
     }
 
-    var [ucitelia, header] = Votr.sortTable(
-      ucitelia, Votr.DetailPredmetuUciteliaColumns, this.props.query, 'modalUciteliaSort');
+    var [ucitelia, header] = sortTable(
+      ucitelia, DetailPredmetuUciteliaColumns, this.props.query, 'modalUciteliaSort');
 
     var message = ucitelia.length ? null : "Predmet nemá v AISe žiadnych učiteľov.";
 
@@ -51,18 +56,18 @@ Votr.DetailPredmetuModal = React.createClass({
           </tr>
         )}
       </tbody>
-      {message && <tfoot><tr><td colSpan={Votr.DetailPredmetuUciteliaColumns.length}>{message}</td></tr></tfoot>}
+      {message && <tfoot><tr><td colSpan={DetailPredmetuUciteliaColumns.length}>{message}</td></tr></tfoot>}
     </table>;
   },
 
-  renderZapisaniStudenti: function () {
-    var cache = new Votr.CacheRequester();
+  renderZapisaniStudenti() {
+    var cache = new CacheRequester();
     var {modalAkademickyRok, modalPredmetKey} = this.props.query;
 
     var data = this.getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 
     if (!data) {
-      return <Votr.Loading requests={cache.missing} />;
+      return <Loading requests={cache.missing} />;
     }
 
     var [studenti, predmet] = data;
@@ -71,8 +76,8 @@ Votr.DetailPredmetuModal = React.createClass({
       return "Dáta pre predmet neboli nájdené.";
     }
 
-    var [studenti, header] = Votr.sortTable(
-      studenti, Votr.DetailPredmetuStudentiColumns, this.props.query, 'modalStudentiSort');
+    var [studenti, header] = sortTable(
+      studenti, DetailPredmetuStudentiColumns, this.props.query, 'modalStudentiSort');
 
     var message = studenti.length ? null : "Predmet nemá v AISe žiadnych zapísaných študentov.";
 
@@ -89,18 +94,18 @@ Votr.DetailPredmetuModal = React.createClass({
           </tr>
         )}
       </tbody>
-      {message && <tfoot><tr><td colSpan={Votr.DetailPredmetuStudentiColumns.length}>{message}</td></tr></tfoot>}
+      {message && <tfoot><tr><td colSpan={DetailPredmetuStudentiColumns.length}>{message}</td></tr></tfoot>}
     </table>;
   },
 
-  renderTitle: function() {
-    var cache = new Votr.CacheRequester();
+  renderTitle() {
+    var cache = new CacheRequester();
     var {modalAkademickyRok, modalPredmetKey} = this.props.query;
 
     var data = this.getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 
     if (!data) {
-      return <Votr.Loading requests={cache.missing} />;
+      return <Loading requests={cache.missing} />;
     }
 
     var [studenti, predmet] = data;
@@ -112,15 +117,12 @@ Votr.DetailPredmetuModal = React.createClass({
     return predmet.nazov;
   },
 
-  render: function () {
-    return <Votr.Modal title={this.renderTitle()}>
+  render() {
+    return <Modal title={this.renderTitle()}>
       <h4>Učitelia</h4>
       {this.renderUcitelia()}
       <h4>Zapísaní študenti</h4>
       {this.renderZapisaniStudenti()}
-    </Votr.Modal>;
+    </Modal>;
   }
 });
-
-
-})();

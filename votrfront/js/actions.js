@@ -1,60 +1,71 @@
-(function () {
+
+import { AboutModal, IndexPage } from './About';
+import { DetailPredmetuModal } from './DetailPredmetu';
+import { ErrorModal } from './ErrorPage';
+import { LogViewer } from './LogViewer';
+import { MojeHodnoteniaPage } from './MojeHodnoteniaPage';
+import { MojePredmetyPage } from './MojePredmetyPage';
+import { MojeSkuskyPage } from './MojeSkuskyPage';
+import { PrehladStudiaPage } from './PrehladStudiaPage';
+import { RegisterOsobPage } from './RegisterOsobPage';
+import { RegisterPredmetovPage } from './RegisterPredmetovPage';
+import { ZapisZPlanuPage, ZapisZPonukyPage } from './ZapisPage';
+import { ZoznamPrihlasenychNaTerminModal } from './ZoznamPrihlasenychNaTermin';
+import { ModalBase, PageLayout } from './layout';
+import { navigate } from './router';
 
 
-Votr.NotFoundPage = React.createClass({
-  render: function () {
-    return <Votr.PageLayout query={this.props.query}>
+export var NotFoundPage = React.createClass({
+  render() {
+    return <PageLayout query={this.props.query}>
       <p>Action not found!</p>
-    </Votr.PageLayout>;
+    </PageLayout>;
   }
 });
 
 
-Votr.actions = {
-  index: Votr.IndexPage,
-  mojeHodnotenia: Votr.MojeHodnoteniaPage,
-  mojePredmety: Votr.MojePredmetyPage,
-  mojeSkusky: Votr.MojeSkuskyPage,
-  prehladStudia: Votr.PrehladStudiaPage,
-  registerOsob: Votr.RegisterOsobPage,
-  registerPredmetov: Votr.RegisterPredmetovPage,
-  zapisZPlanu: Votr.ZapisZPlanuPage,
-  zapisZPonuky: Votr.ZapisZPonukyPage
+export var actions = {
+  index: IndexPage,
+  mojeHodnotenia: MojeHodnoteniaPage,
+  mojePredmety: MojePredmetyPage,
+  mojeSkusky: MojeSkuskyPage,
+  prehladStudia: PrehladStudiaPage,
+  registerOsob: RegisterOsobPage,
+  registerPredmetov: RegisterPredmetovPage,
+  zapisZPlanu: ZapisZPlanuPage,
+  zapisZPonuky: ZapisZPonukyPage
 };
 
 
-Votr.modalActions = {
-  about: Votr.AboutModal,
-  detailPredmetu: Votr.DetailPredmetuModal,
-  zoznamPrihlasenychNaTermin: Votr.ZoznamPrihlasenychNaTerminModal
+export var modalActions = {
+  about: AboutModal,
+  detailPredmetu: DetailPredmetuModal,
+  zoznamPrihlasenychNaTermin: ZoznamPrihlasenychNaTerminModal
 };
 
 
-Votr.App = React.createClass({
+export var App = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired
   },
 
-  handleClose: function () {
+  handleClose() {
     if (Votr.ajaxError) return;
-    Votr.navigate(_.omit(
+    navigate(_.omit(
         this.props.query, (value, key) => key.substring(0, 5) == 'modal'));
   },
 
-  render: function () {
+  render() {
     var query = this.props.query;
     var action = query.action || 'index';
-    var mainComponent = Votr.actions[action] || Votr.NotFoundPage;
-    var modalComponent = Votr.ajaxError ? Votr.ErrorModal : Votr.modalActions[query.modal];
+    var mainComponent = actions[action] || NotFoundPage;
+    var modalComponent = Votr.ajaxError ? ErrorModal : modalActions[query.modal];
 
     var C = mainComponent;
     return <div>
       <C query={query} />
-      <Votr.ModalBase query={query} component={modalComponent} onClose={this.handleClose} />
-      <Votr.LogViewer />
+      <ModalBase query={query} component={modalComponent} onClose={this.handleClose} />
+      <LogViewer />
     </div>;
   }
 });
-
-
-})();

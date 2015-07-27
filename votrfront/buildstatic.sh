@@ -13,7 +13,7 @@ cd "$(dirname "$0")"
 
 if [ "$1" == "build" ] || [ "$1" == "" ]; then
 
-  mkdir -p static/libs/
+  mkdir -p static/libs/ static/cache/
   rm -f static/ok
 
   if ! [ -f static/libs/jquery.js ]; then
@@ -32,12 +32,11 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     cp -p node_modules/react/dist/*.* static/libs/
   fi
 
-  if ! [ -f node_modules/.bin/jsx ]; then
-    npm install react-tools@^0.13
-  fi
-
-  if ! [ -f node_modules/.bin/uglifyjs ]; then
-    npm install uglify-js@^2.4
+  if ! [ -f node_modules/.bin/webpack ]; then
+    npm install node-libs-browser@^0.5   # from peerDependencies of webpack
+    npm install babel-core@^5   # from peerDependencies of babel-loader
+    npm install webpack@^1.10
+    npm install babel-loader@^5
   fi
 
   if ! [ -d node_modules/bootstrap-sass ]; then
@@ -52,8 +51,6 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     wget https://raw.githubusercontent.com/kvakes/spinner.svg/master/spinner2.svg -O static/spinner.svg
   fi
 
-  ./node_modules/.bin/jsx --harmony js/ static/dev/
-
   sed -i "
     # Don't use pointer cursor on buttons.
     # http://lists.w3.org/Archives/Public/public-css-testsuite/2010Jul/0024.html
@@ -66,13 +63,17 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   compressed='-s compressed'
   sassc $compressed -I $bs/stylesheets css/main.scss static/style.css
 
-  deps=$(python jsdeps.py dev/main.js)
-  ./node_modules/.bin/uglifyjs \
-      -o static/votr.min.js --source-map static/votr.min.js.map \
-      $(sed 's@^@static/@' <<<"$deps") --screw-ie8 -m -c -p relative
+  if ! [ -f static/webpacktime ] || [ "$(find js/ webpack.config.js -newer static/webpacktime)" ]; then
+    touch static/webpacktime
+    rm -f static/votr.min.js.*.map
+    ./node_modules/.bin/webpack
+  else
+    echo "webpack output is up to date."
+  fi
 
-  libs='dev/old.js libs/jquery.min.js libs/react.min.js libs/lodash.min.js libs/transition.js libs/modal.js'
-  echo ${libs//.min} $deps > static/jsdeps-dev
+  libs='prologue.js libs/jquery.min.js libs/react.min.js libs/lodash.min.js libs/transition.js libs/modal.js'
+  dev=(static/dev/*)
+  echo ${libs//.min} "${dev[@]//"static/"}" votr.dev.js > static/jsdeps-dev
   echo $libs votr.min.js > static/jsdeps-prod
 
   touch static/ok

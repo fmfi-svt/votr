@@ -1,19 +1,25 @@
-(function () {
+
+import { CacheRequester, Loading } from './ajax';
+import { currentAcademicYear } from './coursesStats';
+import { classForSemester, humanizeBoolean } from './humanizeAISData';
+import { FormItem, PageLayout, PageTitle } from './layout';
+import { Link, navigate } from './router';
+import { sortAs, sortTable } from './sorting';
 
 
-Votr.RegisterPredmetovColumns = [
+export var RegisterPredmetovColumns = [
   ["Názov predmetu", 'nazov'],
   ["Skratka predmetu", 'skratka'],
   ["Fakulta", 'fakulta'],
   [<abbr title="Semester">Sem.</abbr>, 'semester'],
   ["Rozsah výučby", 'rozsah_vyucby'],
-  ["Počet kreditov", 'kredit', Votr.sortAs.number],
+  ["Počet kreditov", 'kredit', sortAs.number],
   ["Konanie", 'konanie']
 ];
-Votr.RegisterPredmetovColumns.defaultOrder = 'a0';
+RegisterPredmetovColumns.defaultOrder = 'a0';
 
-Votr.RegisterPredmetovForm = React.createClass({
-  getInitialState: function () {
+export var RegisterPredmetovForm = React.createClass({
+  getInitialState() {
     var query = this.props.query;
     return {
       fakulta: query.fakulta,
@@ -23,39 +29,39 @@ Votr.RegisterPredmetovForm = React.createClass({
       studijnyProgramSkratka: query.studijnyProgramSkratka,
       skratkaPredmetu: query.skratkaPredmetu,
       nazovPredmetu: query.nazovPredmetu,
-      akademickyRok: query.akademickyRok || Votr.currentAcademicYear()
+      akademickyRok: query.akademickyRok || currentAcademicYear()
     };
   },
 
-  handleFieldChange: function (event) {
+  handleFieldChange(event) {
     this.setState(_.zipObject([[event.target.name, event.target.value]]));
   },
 
-  handleSubmit: function(event) {
+  handleSubmit(event) {
     event.preventDefault();
-    Votr.navigate(_.assign({ action: 'registerPredmetov' }, this.state));
+    navigate(_.assign({ action: 'registerPredmetov' }, this.state));
   },
 
-  renderTextInput: function(label, name, focus) {
-    return <Votr.FormItem label={label}>
+  renderTextInput(label, name, focus) {
+    return <FormItem label={label}>
       <input className="form-item-control" name={name} autoFocus={focus}
              value={this.state[name]} type="text" onChange={this.handleFieldChange} />
-    </Votr.FormItem>;
+    </FormItem>;
   },
 
-  renderSelect: function(label, name, items, cache) {
-    return <Votr.FormItem label={label}>
+  renderSelect(label, name, items, cache) {
+    return <FormItem label={label}>
       {items ?
         <select className="form-item-control" name={name} value={this.state[name]} onChange={this.handleFieldChange}>
           {items.map((item) =>
             <option key={item.id} value={item.id}>{item.title}</option>
           )}
-        </select> : <Votr.Loading requests={cache.missing} />}
-    </Votr.FormItem>;
+        </select> : <Loading requests={cache.missing} />}
+    </FormItem>;
   },
 
-  render: function () {
-    var cache = new Votr.CacheRequester();
+  render() {
+    var cache = new CacheRequester();
     var fakulty = cache.get('get_register_predmetov_fakulta_options');
     var rocniky = cache.get('get_register_predmetov_akademicky_rok_options');
     var stupne = cache.get('get_register_predmetov_stupen_options');
@@ -70,16 +76,16 @@ Votr.RegisterPredmetovForm = React.createClass({
       {this.renderSelect("Stupeň: ", "stupen", stupne, cache)}
       {this.renderSelect("Akademický rok: ", "akademickyRok", rocniky, cache)}
       {this.renderSelect("Semester: ", "semester", semestre, cache)}
-      <Votr.FormItem>
+      <FormItem>
         <button className="btn btn-primary" type="submit">Vyhľadaj</button>
-      </Votr.FormItem>
+      </FormItem>
     </form>;
   }
 });
 
-Votr.RegisterPredmetovResultTable = React.createClass({
-  render: function () {
-    var cache = new Votr.CacheRequester();
+export var RegisterPredmetovResultTable = React.createClass({
+  render() {
+    var cache = new CacheRequester();
     var query = this.props.query;
     if(!query.fakulta &&
        !query.stredisko &&
@@ -106,13 +112,13 @@ Votr.RegisterPredmetovResultTable = React.createClass({
           query.stupen || null);
 
     if (!response) {
-      return <Votr.Loading requests={cache.missing} />
+      return <Loading requests={cache.missing} />
     }
 
     var [rows, message] = response;
 
-    var [rows, header] = Votr.sortTable(
-      rows, Votr.RegisterPredmetovColumns, this.props.query, 'predmetSort');
+    var [rows, header] = sortTable(
+      rows, RegisterPredmetovColumns, this.props.query, 'predmetSort');
 
     if (!message && !rows.length) {
       message = "Podmienkam nevyhovuje žiadny záznam.";
@@ -124,37 +130,34 @@ Votr.RegisterPredmetovResultTable = React.createClass({
         <thead>{header}</thead>
         <tbody>
           {rows.map((predmet) =>
-            <tr key={predmet.predmet_key} className={Votr.classForSemester(predmet.semester)}>
-              <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: query.akademickyRok })}>
+            <tr key={predmet.predmet_key} className={classForSemester(predmet.semester)}>
+              <td><Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: query.akademickyRok })}>
                 {predmet.nazov}
-              </Votr.Link></td>
+              </Link></td>
               <td>{predmet.skratka}</td>
               <td>{predmet.fakulta}</td>
               <td>{predmet.semester}</td>
               <td>{predmet.rozsah_vyucby}</td>
               <td>{predmet.kredit}</td>
-              <td>{Votr.humanizeBoolean(predmet.konanie)}</td>
+              <td>{humanizeBoolean(predmet.konanie)}</td>
             </tr>
           )}
         </tbody>
-        {message && <tfoot><tr><td colSpan={Votr.RegisterPredmetovColumns.length}>{message}</td></tr></tfoot>}
+        {message && <tfoot><tr><td colSpan={RegisterPredmetovColumns.length}>{message}</td></tr></tfoot>}
       </table>
     </div>;
   }
 });
 
 
-Votr.RegisterPredmetovPage = React.createClass({
-  render: function () {
-    return <Votr.PageLayout query={this.props.query}>
+export var RegisterPredmetovPage = React.createClass({
+  render() {
+    return <PageLayout query={this.props.query}>
         <div className="header">
-          <Votr.PageTitle>Register predmetov</Votr.PageTitle>
+          <PageTitle>Register predmetov</PageTitle>
         </div>
-        <Votr.RegisterPredmetovForm query={this.props.query} />
-        <Votr.RegisterPredmetovResultTable query={this.props.query} />
-    </Votr.PageLayout>;
+        <RegisterPredmetovForm query={this.props.query} />
+        <RegisterPredmetovResultTable query={this.props.query} />
+    </PageLayout>;
   }
 });
-
-
-})();

@@ -1,31 +1,33 @@
-(function () {
+
+import { LocalSettings } from './LocalSettings';
+import { logs } from './ajax';
 
 
-Votr.LogViewerContent = React.createClass({
-  getInitialState: function () {
+export var LogViewerContent = React.createClass({
+  getInitialState() {
     return {
       http: true,
       table: true
     }
   },
 
-  handleChange: function (e) {
+  handleChange(e) {
     var update = {};
     update[e.target.name] = !e.target.checked;
     this.setState(update);
   },
 
-  componentDidUpdate: function () {
+  componentDidUpdate() {
     var div = this.getDOMNode().querySelector('.scroll');
-    var time = _.last(Votr.logs).time;
+    var time = _.last(logs).time;
     if (time != this.lastTime) {
       this.lastTime = time;
       div.scrollTop = div.scrollHeight;
     }
   },
 
-  render: function () {
-    var types = _.countBy(Votr.logs, 'log');
+  render() {
+    var types = _.countBy(logs, 'log');
 
     return <span>
       <ul className="list-inline options">
@@ -43,9 +45,9 @@ Votr.LogViewerContent = React.createClass({
       <div className="scroll">
         <table>
           <tbody>
-            {Votr.logs.map((entry, index) => !this.state[entry.log] &&
+            {logs.map((entry, index) => !this.state[entry.log] &&
               <tr key={index}>
-                <td className="text-right">{(entry.time - Votr.logs[0].time).toFixed(3)}</td>
+                <td className="text-right">{(entry.time - logs[0].time).toFixed(3)}</td>
                 <td><code>{entry.log}</code></td>
                 <td><code>{entry.message}</code></td>
               </tr>
@@ -58,32 +60,32 @@ Votr.LogViewerContent = React.createClass({
 });
 
 
-Votr.LogViewer = React.createClass({
-  toggle: function () {
-    Votr.LocalSettings.set("logViewer",
-      Votr.LocalSettings.get("logViewer") == "true" ? "false" : "true");
+export var LogViewer = React.createClass({
+  toggle() {
+    LocalSettings.set("logViewer",
+      LocalSettings.get("logViewer") == "true" ? "false" : "true");
   },
 
-  handleKeypress: function (e) {
+  handleKeypress(e) {
     if (e.ctrlKey && e.altKey && e.shiftKey && e.which == 76) {   // Ctrl+Alt+Shift+L
       this.toggle();
       e.preventDefault();
     }
   },
 
-  componentDidMount: function () {
+  componentDidMount() {
     $(window).on('keypress.logViewer', this.handleKeypress);
   },
 
-  componentWillUnmount: function () {
+  componentWillUnmount() {
     $(window).off('keypress.logViewer');
   },
 
-  render: function () {
-    if (Votr.LocalSettings.get("logViewer") != "true") return null;
+  render() {
+    if (LocalSettings.get("logViewer") != "true") return null;
 
     return <div className="log-viewer">
-      <Votr.LogViewerContent />
+      <LogViewerContent />
 
       <div className="right">
         <button type="button" className="close" onClick={this.toggle}>
@@ -94,6 +96,3 @@ Votr.LogViewer = React.createClass({
     </div>;
   }
 });
-
-
-})();

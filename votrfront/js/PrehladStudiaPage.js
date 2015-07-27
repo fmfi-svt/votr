@@ -1,4 +1,7 @@
-(function () {
+
+import { CacheRequester, Loading } from './ajax';
+import { PageLayout, PageTitle } from './layout';
+import { sortAs, sortTable } from './sorting';
 
 
 // TODO: Pridat kadejake sumarne informacie, aby to vyzeralo ako dashboard.
@@ -6,45 +9,45 @@
 // TODO: Zvyraznit aktualne obdobia a pisat kolko casu zostava do dalsich.
 
 
-Votr.PrehladStudiumColumns = [
+export var PrehladStudiumColumns = [
   ["Študijný program", 'sp_popis'],
-  ["Rok štúdia", 'rok_studia', Votr.sortAs.number],
-  ["Dĺžka v semestroch", 'sp_dlzka', Votr.sortAs.number],
-  ["Začiatok štúdia", 'zaciatok', Votr.sortAs.date],
-  ["Koniec štúdia", 'koniec', Votr.sortAs.date],
+  ["Rok štúdia", 'rok_studia', sortAs.number],
+  ["Dĺžka v semestroch", 'sp_dlzka', sortAs.number],
+  ["Začiatok štúdia", 'zaciatok', sortAs.date],
+  ["Koniec štúdia", 'koniec', sortAs.date],
   ["Doplňujúce údaje", 'sp_doplnujuce_udaje']
 ];
-Votr.PrehladStudiumColumns.defaultOrder = 'd4';
+PrehladStudiumColumns.defaultOrder = 'd4';
 
 
-Votr.PrehladZapisnyListColumns = [
+export var PrehladZapisnyListColumns = [
   ["Akademický rok", 'akademicky_rok'],
   ["Študijný program", 'sp_popis'],
-  ["Ročník", 'rocnik', Votr.sortAs.number],
-  ["Dátum zápisu", 'datum_zapisu', Votr.sortAs.date]
+  ["Ročník", 'rocnik', sortAs.number],
+  ["Dátum zápisu", 'datum_zapisu', sortAs.date]
 ];
-Votr.PrehladZapisnyListColumns.defaultOrder = 'd0d3';
+PrehladZapisnyListColumns.defaultOrder = 'd0d3';
 
 
-Votr.PrehladStudiaPage = React.createClass({
+export var PrehladStudiaPage = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired
   },
 
-  renderObdobie: function (label, rpcName, arg) {
-    var cache = new Votr.CacheRequester();
+  renderObdobie(label, rpcName, arg) {
+    var cache = new CacheRequester();
     var result = cache.get(rpcName, arg);
     return <tr>
       <th>{label}</th>
       <td>
         {result ?
           result.obdobie_od + " \u2013 " + result.obdobie_do :
-          <Votr.Loading requests={cache.missing} />}
+          <Loading requests={cache.missing} />}
       </td>
     </tr>;
   },
 
-  renderObdobia: function () {
+  renderObdobia() {
     // Obdobia predsalen neukazujeme, lebo AIS ma vacsinou zle informacie
     // (skuskove je umelo predlzene kvoli moznosti zapisovat znamky, apod) a
     // nechceme byt matuci. Zapnut sa daju tymto schovanym query flagom.
@@ -62,17 +65,17 @@ Votr.PrehladStudiaPage = React.createClass({
     </table>;
   },
 
-  renderStudia: function () {
-    var cache = new Votr.CacheRequester();
+  renderStudia() {
+    var cache = new CacheRequester();
 
     var studia = cache.get('get_studia');
 
     if (!studia) {
-      return <Votr.Loading requests={cache.missing} />;
+      return <Loading requests={cache.missing} />;
     }
 
-    var [studia, header] = Votr.sortTable(
-      studia, Votr.PrehladStudiumColumns, this.props.query, 'studiaSort');
+    var [studia, header] = sortTable(
+      studia, PrehladStudiumColumns, this.props.query, 'studiaSort');
 
     var message = studia.length ? null : "V AISe nemáte žiadne štúdiá.";
 
@@ -90,17 +93,17 @@ Votr.PrehladStudiaPage = React.createClass({
           </tr>
         )}
       </tbody>
-      {message && <tfoot><tr><td colSpan={Votr.PrehladStudiumColumns.length}>{message}</td></tr></tfoot>}
+      {message && <tfoot><tr><td colSpan={PrehladStudiumColumns.length}>{message}</td></tr></tfoot>}
     </table>;
   },
 
-  renderZapisneListy: function () {
-    var cache = new Votr.CacheRequester();
+  renderZapisneListy() {
+    var cache = new CacheRequester();
 
     var studia = cache.get('get_studia');
 
     if (!studia) {
-      return <Votr.Loading requests={cache.missing} />;
+      return <Loading requests={cache.missing} />;
     }
 
     var zapisneListy = [];
@@ -112,8 +115,8 @@ Votr.PrehladStudiaPage = React.createClass({
       });
     });
 
-    var [zapisneListy, header] = Votr.sortTable(
-      zapisneListy, Votr.PrehladZapisnyListColumns,
+    var [zapisneListy, header] = sortTable(
+      zapisneListy, PrehladZapisnyListColumns,
       this.props.query, 'zapisneListySort');
 
     var showTable = zapisneListy.length || cache.loadedAll;
@@ -121,7 +124,7 @@ Votr.PrehladStudiaPage = React.createClass({
     var message = zapisneListy.length ? null : "V AISe nemáte žiadne zápisné listy.";
 
     return <span>
-      {!cache.loadedAll && <Votr.Loading requests={cache.missing} />}
+      {!cache.loadedAll && <Loading requests={cache.missing} />}
       {showTable &&
         <table className="table table-condensed table-bordered table-striped table-hover">
           <thead>{header}</thead>
@@ -135,24 +138,21 @@ Votr.PrehladStudiaPage = React.createClass({
               </tr>
             )}
           </tbody>
-          {message && <tfoot><tr><td colSpan={Votr.PrehladZapisnyListColumns.length}>{message}</td></tr></tfoot>}
+          {message && <tfoot><tr><td colSpan={PrehladZapisnyListColumns.length}>{message}</td></tr></tfoot>}
         </table>}
     </span>;
   },
 
-  render: function () {
-    return <Votr.PageLayout query={this.props.query}>
+  render() {
+    return <PageLayout query={this.props.query}>
       <div className="header">
-        <Votr.PageTitle>Prehľad štúdia</Votr.PageTitle>
+        <PageTitle>Prehľad štúdia</PageTitle>
       </div>
       {this.renderObdobia()}
       <h2>Zoznam štúdií</h2>
       {this.renderStudia()}
       <h2>Zoznam zápisných listov</h2>
       {this.renderZapisneListy()}
-    </Votr.PageLayout>;
+    </PageLayout>;
   }
 });
-
-
-})();

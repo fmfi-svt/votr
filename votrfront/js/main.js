@@ -1,5 +1,9 @@
-// @dontdepend Votr.settings
-// @dontdepend Votr.appRoot
+
+import { ErrorPage } from './ErrorPage';
+import { LoginPage } from './LoginPage';
+import { App } from './actions';
+import { Root } from './router';
+
 
 (function () {
 
@@ -22,9 +26,9 @@ Votr.setDebug = function (enabled) {
 }
 
 var root =
-    Votr.settings.servers ? <Votr.LoginPage /> :
-    Votr.settings.error ? <Votr.ErrorPage /> :
-    <Votr.Root app={Votr.App} />;
+    Votr.settings.servers ? <LoginPage /> :
+    Votr.settings.error ? <ErrorPage /> :
+    <Root app={App} />;
 
 Votr.appRoot = React.render(root, document.getElementById('votr'));
 

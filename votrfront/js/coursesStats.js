@@ -1,8 +1,7 @@
-(function () {
 
 var ZNAMKY = {'A': 1, 'B': 1.5, 'C': 2, 'D': 2.5, 'E': 3, 'F': 4};
 
-Votr.coursesStats = function (hodnotenia) {
+export function coursesStats(hodnotenia) {
   var result = {};
 
   result.zima = {};
@@ -36,7 +35,7 @@ Votr.coursesStats = function (hodnotenia) {
   return result;
 };
 
-Votr.weightedStudyAverage = function (hodnotenia) {
+export function weightedStudyAverage(hodnotenia) {
   var weightedSum = 0;
   var creditsSum = 0;
 
@@ -52,13 +51,13 @@ Votr.weightedStudyAverage = function (hodnotenia) {
   return weightedSum / creditsSum;
 };
 
-Votr.renderWeightedStudyAverage = function (hodnotenia) {
-  var average = Votr.weightedStudyAverage(hodnotenia);
+export function renderWeightedStudyAverage(hodnotenia) {
+  var average = weightedStudyAverage(hodnotenia);
   if (average === null) return null;
   return <span title="Neoficiálny vážený študijný priemer z doteraz ohodnotených predmetov">{average.toFixed(2)}</span>
 };
 
-Votr.currentAcademicYear = function() {
+export function currentAcademicYear() {
   var date = new Date();
 
   var year = date.getFullYear();
@@ -70,5 +69,3 @@ Votr.currentAcademicYear = function() {
     return year + '/' + (year + 1);
   }
 };
-
-})();

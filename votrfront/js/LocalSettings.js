@@ -1,16 +1,11 @@
-(function () {
 
-
-Votr.LocalSettings = {
-  get: function (key) {
+export var LocalSettings = {
+  get(key) {
     return localStorage.getItem(Votr.settings.instance_name + "_" + key);
   },
 
-  set: function (key, value) {
+  set(key, value) {
     localStorage.setItem(Votr.settings.instance_name + "_" + key, value);
     Votr.appRoot.forceUpdate();
   }
 };
-
-
-})();

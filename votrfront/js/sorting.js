@@ -1,10 +1,11 @@
-(function () {
+
+import { navigate } from './router';
 
 
-Votr.sortAs = {};
+export var sortAs = {};
 
 
-Votr.sortAs.personName = function (text) {
+sortAs.personName = function (text) {
   var words = text.replace(/,/g, '').split(' ');
   words = _.filter(words, (word) => !word.match(/\.$/));
   words.unshift(words.pop());   // last name goes to the beginning
@@ -13,13 +14,13 @@ Votr.sortAs.personName = function (text) {
 };
 
 
-Votr.sortAs.number = function (text) {
+sortAs.number = function (text) {
   return +text.replace(/,/g, '.');
   // TODO: this won't be needed when fladgejt starts returning numbers
 };
 
 
-Votr.sortAs.date = function (date) {
+sortAs.date = function (date) {
   if (date.match(/^\d\d\.\d\d\.\d\d\d\d/)) {
     return date.substring(6, 10) + date.substring(3, 5) + date.substring(0, 2) + date.substring(10);
   }
@@ -27,14 +28,14 @@ Votr.sortAs.date = function (date) {
 };
 
 
-Votr.sortAs.interval = function (text) {
+sortAs.interval = function (text) {
   var index = text.indexOf('do ');
   if (index == -1) return '';
-  return Votr.sortAs.date(text.substring(index + 3));
+  return sortAs.date(text.substring(index + 3));
 };
 
 
-Votr.sortTable = function (items, columns, query, queryKey) {
+export function sortTable(items, columns, query, queryKey) {
   var orderString = query[queryKey] || columns.defaultOrder;
   var order = orderString ? orderString.split(/(?=[ad])/) : [];
   var orderLength = order.length;
@@ -77,7 +78,7 @@ Votr.sortTable = function (items, columns, query, queryKey) {
 
     var newQuery = _.assign({}, query);
     newQuery[queryKey] = newOrder.join('');
-    Votr.navigate(newQuery);
+    navigate(newQuery);
   }
 
   var header = <tr>
@@ -92,6 +93,3 @@ Votr.sortTable = function (items, columns, query, queryKey) {
 
   return [items, header];
 };
-
-
-})();

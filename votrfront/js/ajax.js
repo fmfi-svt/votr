@@ -1,9 +1,5 @@
-// @dontdepend Votr.ajaxError
 
-(function () {
-
-
-Votr.sendRpc = function (name, args, callback) {
+export function sendRpc(name, args, callback) {
   var HEADER_LENGTH = 10;
   var processed = 0;
   var result = undefined;
@@ -20,7 +16,7 @@ Votr.sendRpc = function (name, args, callback) {
       var payload = xhr.responseText.substr(processed + HEADER_LENGTH, length);
       var data = JSON.parse(payload);
       console.log('RECEIVED', data);
-      if (data.log !== undefined) Votr.logs.push(data);
+      if (data.log !== undefined) logs.push(data);
       if (data.result !== undefined) result = data.result;
       if (data.error !== undefined) return fail(data.error);
       processed += HEADER_LENGTH + length;
@@ -62,48 +58,48 @@ Votr.sendRpc = function (name, args, callback) {
 Votr.ajaxError = null;
 
 
-Votr.logs = [];
+export var logs = [];
 
 
-Votr.RequestCache = {};
+export var RequestCache = {};
 
-Votr.RequestCache.pending = {};
+RequestCache.pending = {};
 
-Votr.RequestCache.sendRequest = function (request) {
+RequestCache.sendRequest = function (request) {
   var cacheKey = request.join('\0');
-  if (Votr.RequestCache[cacheKey]) return;
-  if (Votr.RequestCache.pending[cacheKey]) return;
-  Votr.RequestCache.pending[cacheKey] = true;
-  Votr.sendRpc(request[0], request.slice(1), function (result) {
-    Votr.RequestCache[cacheKey] = result;
+  if (RequestCache[cacheKey]) return;
+  if (RequestCache.pending[cacheKey]) return;
+  RequestCache.pending[cacheKey] = true;
+  sendRpc(request[0], request.slice(1), function (result) {
+    RequestCache[cacheKey] = result;
   });
 };
 
-Votr.RequestCache.invalidate = function (command) {
-  for (var key in Votr.RequestCache) {
+RequestCache.invalidate = function (command) {
+  for (var key in RequestCache) {
     if (key.split('\0')[0] === command) {
-      delete Votr.RequestCache[key];
+      delete RequestCache[key];
     }
   }
 
-  for (var key in Votr.RequestCache.pending) {
+  for (var key in RequestCache.pending) {
     if (key.split('\0')[0] === command) {
-      delete Votr.RequestCache.pending[key];
+      delete RequestCache.pending[key];
     }
   }
 }
 
 
-Votr.CacheRequester = function () {
+export function CacheRequester() {
   this.missing = [];
   this.loadedAll = true;
 };
 
-Votr.CacheRequester.prototype.get = function () {
+CacheRequester.prototype.get = function () {
   var request = Array.prototype.slice.call(arguments);
   var cacheKey = request.join('\0');
-  if (Votr.RequestCache[cacheKey] !== undefined) {
-    return Votr.RequestCache[cacheKey];
+  if (RequestCache[cacheKey] !== undefined) {
+    return RequestCache[cacheKey];
   } else {
     this.missing.push(request);
     this.loadedAll = false;
@@ -112,40 +108,37 @@ Votr.CacheRequester.prototype.get = function () {
 };
 
 
-Votr.Loading = React.createClass({
-  componentDidMount: function () {
+export var Loading = React.createClass({
+  componentDidMount() {
     if (this.props.requests) this.props.requests.forEach((request) => {
-      Votr.RequestCache.sendRequest(request);
+      RequestCache.sendRequest(request);
     });
   },
 
-  componentDidUpdate: function () {
+  componentDidUpdate() {
     if (this.props.requests) this.props.requests.forEach((request) => {
-      Votr.RequestCache.sendRequest(request);
+      RequestCache.sendRequest(request);
     });
   },
 
-  render: function () {
+  render() {
     return <span className="loading">Načítavam...</span>;
   }
 });
 
 
-Votr.goPost = function (url) {
+export function goPost(url) {
   $('<form/>', { method: 'POST', action: url, appendTo: 'body' }).submit();
 };
 
-Votr.goLogout = function () {
-  Votr.goPost('logout');
+export function goLogout() {
+  goPost('logout');
 };
 
-Votr.goReset = function () {
-  Votr.goPost('reset?destination=' + encodeURIComponent(location.search));
+export function goReset() {
+  goPost('reset?destination=' + encodeURIComponent(location.search));
 };
 
-Votr.goResetHome = function () {
-  Votr.goPost('reset?destination=');
+export function goResetHome() {
+  goPost('reset?destination=');
 };
-
-
-})();

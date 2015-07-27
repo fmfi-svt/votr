@@ -1,36 +1,41 @@
-(function () {
+
+import { ZapisnyListSelector } from './ZapisnyListSelector';
+import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
+import { PageLayout, PageTitle } from './layout';
+import { Link } from './router';
+import { sortAs, sortTable } from './sorting';
 
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
 
-Votr.MojeSkuskyColumns = [
+export var MojeSkuskyColumns = [
   ["Moje?", null, (termin) => !termin.datum_prihlasenia || termin.datum_odhlasenia ? 'N' : 'A'],
   ["Predmet", 'nazov_predmetu'],
-  ["Dátum", 'datum', Votr.sortAs.date],
+  ["Dátum", 'datum', sortAs.date],
   ["Čas", 'cas'],
   ["Miestnosť", 'miestnost'],
-  ["Hodnotiaci", 'hodnotiaci', Votr.sortAs.personName],
-  ["Prihlásení", 'pocet_prihlasenych', Votr.sortAs.number],
+  ["Hodnotiaci", 'hodnotiaci', sortAs.personName],
+  ["Prihlásení", 'pocet_prihlasenych', sortAs.number],
   ["Poznámka", 'poznamka'],
-  ["Prihlasovanie", 'prihlasovanie', Votr.sortAs.interval],
-  ["Odhlasovanie", 'odhlasovanie', Votr.sortAs.interval],
+  ["Prihlasovanie", 'prihlasovanie', sortAs.interval],
+  ["Odhlasovanie", 'odhlasovanie', sortAs.interval],
   ["Známka", null, (termin) => termin.hodnotenie_terminu || termin.hodnotenie_predmetu]
 ];
 
 
-Votr.MojeSkuskyPageContent = React.createClass({
+export var MojeSkuskyPageContent = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired
   },
 
-  renderContent: function () {
-    var cache = new Votr.CacheRequester();
+  renderContent() {
+    var cache = new CacheRequester();
     var {zapisnyListKey} = this.props.query;
 
     var vidim = cache.get('get_vidim_terminy_hodnotenia', zapisnyListKey);
 
     if (!cache.loadedAll) {
-      return <Votr.Loading requests={cache.missing} />;
+      return <Loading requests={cache.missing} />;
     }
 
     if (!vidim) {
@@ -41,7 +46,7 @@ Votr.MojeSkuskyPageContent = React.createClass({
     var terminyVypisane = cache.get('get_vypisane_terminy', zapisnyListKey);
 
     if (!terminyPrihlasene || !terminyVypisane) {
-      return <Votr.Loading requests={cache.missing} />;
+      return <Loading requests={cache.missing} />;
     }
 
     var terminy = {};
@@ -49,8 +54,8 @@ Votr.MojeSkuskyPageContent = React.createClass({
     terminyPrihlasene.forEach((termin) => terminy[termin.termin_key] = termin);
     terminy = _.values(terminy);
 
-    var [terminy, header] = Votr.sortTable(
-      terminy, Votr.MojeSkuskyColumns, this.props.query, 'skuskySort');
+    var [terminy, header] = sortTable(
+      terminy, MojeSkuskyColumns, this.props.query, 'skuskySort');
 
     var message = terminy.length ? null : "Zatiaľ nie sú vypísané žiadne termíny.";
 
@@ -62,17 +67,17 @@ Votr.MojeSkuskyPageContent = React.createClass({
             {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
               <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
               <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
-            <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok })}>
+            <td><Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok })}>
               {termin.nazov_predmetu}
-            </Votr.Link></td>
+            </Link></td>
             <td>{termin.datum}</td>
             <td>{termin.cas}</td>
             <td>{termin.miestnost}</td>
             <td>{termin.hodnotiaci}</td>
-            <td><Votr.Link href={_.assign({}, this.props.query, { modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key })}>
+            <td><Link href={_.assign({}, this.props.query, { modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key })}>
               {termin.pocet_prihlasenych +
                (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
-            </Votr.Link></td>
+            </Link></td>
             <td>{termin.poznamka}</td>
             <td>{termin.prihlasovanie}</td>
             <td>{termin.odhlasovanie}</td>
@@ -80,19 +85,19 @@ Votr.MojeSkuskyPageContent = React.createClass({
               {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
                termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
                null}
-               <Votr.SkuskyRegisterButton termin={termin}/>
+               <SkuskyRegisterButton termin={termin}/>
             </td>
           </tr>
         )}
       </tbody>
-      {message && <tfoot><tr><td colSpan={Votr.MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
+      {message && <tfoot><tr><td colSpan={MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
     </table>;
   },
 
-  render: function () {
+  render() {
     return <div>
       <div className="header">
-        <Votr.PageTitle>Moje skúšky</Votr.PageTitle>
+        <PageTitle>Moje skúšky</PageTitle>
       </div>
       {this.renderContent()}
     </div>;
@@ -100,46 +105,46 @@ Votr.MojeSkuskyPageContent = React.createClass({
 });
 
 
-Votr.SkuskyRegisterButton = React.createClass({
+export var SkuskyRegisterButton = React.createClass({
   propTypes: {
     termin: React.PropTypes.object.isRequired
   },
 
-  getInitialState: function () {
+  getInitialState() {
     return {
       pressed: false
     };
   },
 
-  handleClick: function() {
+  handleClick() {
     var command = this.isSigninButton() ? 'prihlas_na_termin' : 'odhlas_z_terminu';
     var termin = this.props.termin;
 
-    Votr.sendRpc(command, [termin.termin_key], (message) => {
+    sendRpc(command, [termin.termin_key], (message) => {
       if (message) {
         this.setState({ pressed: false });
         alert(message);
       } else {
-        Votr.RequestCache.invalidate('get_prihlasene_terminy');
-        Votr.RequestCache.invalidate('get_vypisane_terminy');
-        Votr.RequestCache.invalidate('get_prihlaseni_studenti');
+        RequestCache.invalidate('get_prihlasene_terminy');
+        RequestCache.invalidate('get_vypisane_terminy');
+        RequestCache.invalidate('get_prihlaseni_studenti');
       }
     });
 
     this.setState({ pressed: true });
   },
 
-  isDisabled: function() {
+  isDisabled() {
     var termin = this.props.termin;
     return (this.isSigninButton() && termin.moznost_prihlasit !== 'A') || this.state.pressed;
   },
 
-  isSigninButton: function() {
+  isSigninButton() {
     var termin = this.props.termin;
     return !termin.datum_prihlasenia || termin.datum_odhlasenia;
   },
 
-  render: function () {
+  render() {
     var termin = this.props.termin;
 
     if (termin.hodnotenie_terminu || termin.hodnotenie_predmetu) {
@@ -147,27 +152,24 @@ Votr.SkuskyRegisterButton = React.createClass({
     }
 
     var today = new Date().toJSON().replace(/-/g, '').substring(0, 8);
-    if (today > Votr.sortAs.date(termin.datum)) return null;
+    if (today > sortAs.date(termin.datum)) return null;
 
     var buttonClass = "btn btn-xs " + (this.isSigninButton() ? "btn-success" : "btn-danger") + (this.isDisabled() ? " appear-disabled" : "");
-    var buttonText = this.state.pressed ? <Votr.Loading /> : this.isSigninButton() ? "Prihlásiť" : "Odhlásiť";
+    var buttonText = this.state.pressed ? <Loading /> : this.isSigninButton() ? "Prihlásiť" : "Odhlásiť";
 
     return <button onClick={this.state.pressed ? null : this.handleClick} className={buttonClass}>{buttonText}</button>;
   }
 });
 
 
-Votr.MojeSkuskyPage = React.createClass({
+export var MojeSkuskyPage = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired
   },
 
-  render: function () {
-    return <Votr.PageLayout query={this.props.query}>
-      <Votr.ZapisnyListSelector query={this.props.query} component={Votr.MojeSkuskyPageContent} />
-    </Votr.PageLayout>;
+  render() {
+    return <PageLayout query={this.props.query}>
+      <ZapisnyListSelector query={this.props.query} component={MojeSkuskyPageContent} />
+    </PageLayout>;
   }
 });
-
-
-})();

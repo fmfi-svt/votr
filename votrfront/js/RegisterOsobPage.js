@@ -1,14 +1,19 @@
-(function () {
+
+import { CacheRequester, Loading } from './ajax';
+import { currentAcademicYear } from './coursesStats';
+import { FormItem, PageLayout, PageTitle } from './layout';
+import { navigate } from './router';
+import { sortAs, sortTable } from './sorting';
 
 
-Votr.RegisterOsobColumns = [
-  ["Plné meno", 'plne_meno', Votr.sortAs.personName],
+export var RegisterOsobColumns = [
+  ["Plné meno", 'plne_meno', sortAs.personName],
   ["E-mail", 'email']
 ];
-Votr.RegisterOsobColumns.defaultOrder = 'a0';
+RegisterOsobColumns.defaultOrder = 'a0';
 
-Votr.RegisterOsobForm = React.createClass({
-  getInitialState: function () {
+export var RegisterOsobForm = React.createClass({
+  getInitialState() {
     var query = this.props.query;
     return {
       meno: query.meno,
@@ -16,7 +21,7 @@ Votr.RegisterOsobForm = React.createClass({
       absolventi: query.absolventi,
       studenti: query.studenti,
       zamestnanci: query.zamestnanci,
-      akademickyRok: query.akademickyRok || Votr.currentAcademicYear(),
+      akademickyRok: query.akademickyRok || currentAcademicYear(),
       fakulta: query.fakulta,
       skratkaSp: query.skratkaSp,
       uchadzaciRocnik: query.uchadzaciRocnik,
@@ -32,46 +37,46 @@ Votr.RegisterOsobForm = React.createClass({
     };
   },
 
-  handleFieldChange: function (event) {
+  handleFieldChange(event) {
     this.setState(_.zipObject([[event.target.name, event.target.value]]));
   },
 
-  handleCheckBoxChange: function (event) {
+  handleCheckBoxChange(event) {
     this.setState(_.zipObject([[event.target.name, String(event.target.checked)]]));
   },
 
-  handleSubmit: function(event) {
+  handleSubmit(event) {
     event.preventDefault();
-    Votr.navigate(_.assign({ action: 'registerOsob' }, this.state));
+    navigate(_.assign({ action: 'registerOsob' }, this.state));
   },
 
-  renderTextInput: function(label, name, focus) {
-    return <Votr.FormItem label={label}>
+  renderTextInput(label, name, focus) {
+    return <FormItem label={label}>
       <input className="form-item-control" name={name} autoFocus={focus}
              value={this.state[name]} type="text" onChange={this.handleFieldChange} />
-    </Votr.FormItem>;
+    </FormItem>;
   },
 
-  renderSelect: function(label, name, items, cache) {
-    return <Votr.FormItem label={label}>
+  renderSelect(label, name, items, cache) {
+    return <FormItem label={label}>
       {items ?
         <select className="form-item-control" name={name} value={this.state[name]} onChange={this.handleFieldChange}>
           {items.map((item) =>
             <option key={item.id} value={item.id}>{item.title}</option>
           )}
-        </select> : <Votr.Loading requests={cache.missing} />}
-    </Votr.FormItem>;
+        </select> : <Loading requests={cache.missing} />}
+    </FormItem>;
   },
 
-  renderCheckbox: function(label, name) {
+  renderCheckbox(label, name) {
     return <label>
       <input name={name} checked={this.state[name] == "true"} type="checkbox" onChange={this.handleCheckBoxChange} />
       {label}
     </label>;
   },
 
-  render: function () {
-    var cache = new Votr.CacheRequester();
+  render() {
+    var cache = new CacheRequester();
     var akademickeRoky = cache.get('get_register_osob_akademicky_rok_options');
     var fakulty = cache.get('get_register_osob_fakulty');
 
@@ -105,16 +110,16 @@ Votr.RegisterOsobForm = React.createClass({
           {this.renderCheckbox(" Absolventi ", 'absolventiRocnik')}
         </div>
       </div>
-      <Votr.FormItem>
+      <FormItem>
         <button className="btn btn-primary" type="submit">Vyhľadaj</button>
-      </Votr.FormItem>
+      </FormItem>
     </form>;
   },
 });
 
-Votr.RegisterOsobResultTable = React.createClass({
-  render: function () {
-    var cache = new Votr.CacheRequester();
+export var RegisterOsobResultTable = React.createClass({
+  render() {
+    var cache = new CacheRequester();
     var query = this.props.query;
 
     if(!query.akademickyRok ||
@@ -159,13 +164,13 @@ Votr.RegisterOsobResultTable = React.createClass({
           query.absolventiRocnik == "true");
 
     if (!response) {
-      return <Votr.Loading requests={cache.missing} />;
+      return <Loading requests={cache.missing} />;
     }
 
     var [osoby, message] = response;
 
-    var [osoby, header] = Votr.sortTable(
-      osoby, Votr.RegisterOsobColumns, this.props.query, 'osobySort');
+    var [osoby, header] = sortTable(
+      osoby, RegisterOsobColumns, this.props.query, 'osobySort');
 
     if (!message && !osoby.length) {
       message = "Podmienkam nevyhovuje žiadny záznam.";
@@ -183,24 +188,21 @@ Votr.RegisterOsobResultTable = React.createClass({
             </tr>
           )}
         </tbody>
-        {message && <tfoot><tr><td colSpan={Votr.RegisterOsobColumns.length}>{message}</td></tr></tfoot>}
+        {message && <tfoot><tr><td colSpan={RegisterOsobColumns.length}>{message}</td></tr></tfoot>}
       </table>
     </div>;
   }
 });
 
 
-Votr.RegisterOsobPage = React.createClass({
-  render: function () {
-    return <Votr.PageLayout query={this.props.query}>
+export var RegisterOsobPage = React.createClass({
+  render() {
+    return <PageLayout query={this.props.query}>
         <div className="header">
-          <Votr.PageTitle>Register osôb</Votr.PageTitle>
+          <PageTitle>Register osôb</PageTitle>
         </div>
-        <Votr.RegisterOsobForm query={this.props.query} />
-        <Votr.RegisterOsobResultTable query={this.props.query} />
-    </Votr.PageLayout>;
+        <RegisterOsobForm query={this.props.query} />
+        <RegisterOsobResultTable query={this.props.query} />
+    </PageLayout>;
   }
 });
-
-
-})();

@@ -1,4 +1,7 @@
-(function () {
+
+import { AboutModal } from './About';
+import { ModalBase } from './layout';
+import { AnalyticsMixin, FakeLink } from './router';
 
 
 var TYPE_NAMES = {
@@ -10,29 +13,29 @@ var TYPE_NAMES = {
 };
 
 
-Votr.LoginForm = React.createClass({
-  getInitialState: function () {
+export var LoginForm = React.createClass({
+  getInitialState() {
     return {
       server: Votr.settings.server || 0,
       type: Votr.settings.type
     };
   },
 
-  handleServerChange: function (event) {
+  handleServerChange(event) {
     this.replaceState({ server: event.target.value });
   },
 
-  handleTypeChange: function (event) {
+  handleTypeChange(event) {
     this.replaceState({ server: this.state.server, type: event.target.value });
   },
 
-  handleFieldChange: function (event) {
+  handleFieldChange(event) {
     var update = {};
     update[event.target.name] = event.target.value;
     this.setState(update)
   },
 
-  render: function () {
+  render() {
     var serverConfig = Votr.settings.servers[this.state.server];
     var currentType = this.state.type || serverConfig.login_types[0];
 
@@ -122,18 +125,18 @@ Votr.LoginForm = React.createClass({
 });
 
 
-Votr.LoginPage = React.createClass({
-  mixins: [Votr.AnalyticsMixin],
+export var LoginPage = React.createClass({
+  mixins: [AnalyticsMixin],
 
-  getInitialState: function () {
+  getInitialState() {
     return {};
   },
 
-  toggleAbout: function () {
+  toggleAbout() {
     this.setState({ about: !this.state.about });
   },
 
-  render: function () {
+  render() {
     var content = <div className="login-page">
       <div className="navbar navbar-inverse navbar-static-top">
         <div className="container-fluid">
@@ -150,25 +153,22 @@ Votr.LoginPage = React.createClass({
           bez zbytočného klikania.
         </p>
         <hr />
-        <Votr.LoginForm />
+        <LoginForm />
       </div>
       <div className="text-center">
         <ul className="list-inline">
-          <li><Votr.FakeLink className="btn btn-link" onClick={this.toggleAbout}>O aplikácii</Votr.FakeLink></li>
+          <li><FakeLink className="btn btn-link" onClick={this.toggleAbout}>O aplikácii</FakeLink></li>
           <li><a className="btn btn-link" href="https://uniba.sk/" target="_blank">Univerzita Komenského</a></li>
           <li><a className="btn btn-link" href="https://moja.uniba.sk/" target="_blank">IT služby na UK</a></li>
         </ul>
       </div>
     </div>;
 
-    var modalComponent = this.state.about ? Votr.AboutModal : null;
+    var modalComponent = this.state.about ? AboutModal : null;
 
     return <span>
       {content}
-      <Votr.ModalBase query={{}} component={modalComponent} onClose={this.toggleAbout} />
+      <ModalBase query={{}} component={modalComponent} onClose={this.toggleAbout} />
     </span>;
   }
 });
-
-
-})();

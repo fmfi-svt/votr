@@ -1,33 +1,36 @@
-(function () {
+
+import { CacheRequester, Loading } from './ajax';
+import { Modal } from './layout';
+import { sortAs, sortTable } from './sorting';
 
 
-Votr.ZoznamPrihlasenychNaTerminColumns = [
-  ["Meno", 'plne_meno', Votr.sortAs.personName],
+export var ZoznamPrihlasenychNaTerminColumns = [
+  ["Meno", 'plne_meno', sortAs.personName],
   ["Študijný program", 'sp_skratka'],
-  ["Ročník", 'rocnik', Votr.sortAs.number],
+  ["Ročník", 'rocnik', sortAs.number],
   ["E-mail", 'email'],
-  ["Dátum prihlásenia", 'datum_prihlasenia', Votr.sortAs.date]
+  ["Dátum prihlásenia", 'datum_prihlasenia', sortAs.date]
 ];
 
 
-Votr.ZoznamPrihlasenychNaTerminModal = React.createClass({
+export var ZoznamPrihlasenychNaTerminModal = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired
   },
 
-  renderContent: function () {
-    var cache = new Votr.CacheRequester();
+  renderContent() {
+    var cache = new CacheRequester();
     var {modalTerminKey} = this.props.query;
 
     if (!modalTerminKey) return null;
     var studenti = cache.get('get_prihlaseni_studenti', modalTerminKey);
 
     if (!studenti) {
-      return <Votr.Loading requests={cache.missing} />;
+      return <Loading requests={cache.missing} />;
     }
 
-    var [studenti, header] = Votr.sortTable(
-      studenti, Votr.ZoznamPrihlasenychNaTerminColumns,
+    var [studenti, header] = sortTable(
+      studenti, ZoznamPrihlasenychNaTerminColumns,
       this.props.query, 'modalStudentiSort');
 
     var message = studenti.length ? null : "Na termín nie sú prihlásení žiadni študenti.";
@@ -45,16 +48,13 @@ Votr.ZoznamPrihlasenychNaTerminModal = React.createClass({
           </tr>
         )}
       </tbody>
-      {message && <tfoot><tr><td colSpan={Votr.ZoznamPrihlasenychNaTerminColumns.length}>{message}</td></tr></tfoot>}
+      {message && <tfoot><tr><td colSpan={ZoznamPrihlasenychNaTerminColumns.length}>{message}</td></tr></tfoot>}
     </table>;
   },
 
-  render: function () {
-    return <Votr.Modal title="Zoznam prihlásených na termín">
+  render() {
+    return <Modal title="Zoznam prihlásených na termín">
       {this.renderContent()}
-    </Votr.Modal>;
+    </Modal>;
   }
 });
-
-
-})();

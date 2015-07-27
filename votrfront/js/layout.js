@@ -1,17 +1,19 @@
-(function () {
+
+import { CacheRequester, Loading, goLogout, goReset, logs } from './ajax';
+import { FakeLink, Link } from './router';
 
 
-Votr.PageLayout = React.createClass({
+export var PageLayout = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired
   },
 
-  render: function () {
+  render() {
     return <div>
-      <Votr.PageNavbar query={this.props.query} />
+      <PageNavbar query={this.props.query} />
       <div className="layout-container">
         <div className="layout-menu">
-          <Votr.MainMenu query={this.props.query} />
+          <MainMenu query={this.props.query} />
         </div>
         <div className="layout-content">
           <div className="container-fluid">
@@ -24,21 +26,21 @@ Votr.PageLayout = React.createClass({
 });
 
 
-Votr.PageNavbar = React.createClass({
-  render: function () {
+export var PageNavbar = React.createClass({
+  render() {
     return <div className="navbar navbar-inverse navbar-static-top">
       <div className="container-fluid">
         <div className="navbar-header">
-          <Votr.Link className="navbar-brand" href={{}}>Votr</Votr.Link>
+          <Link className="navbar-brand" href={{}}>Votr</Link>
         </div>
         <div className="navbar-left">
-          <Votr.LogStatus />
+          <LogStatus />
         </div>
         <div className="navbar-right">
           <ul className="nav navbar-nav">
-            <li><Votr.Link href={_.assign({}, this.props.query, { modal: 'about' })}>O aplikácii</Votr.Link></li>
-            <li><Votr.FakeLink onClick={Votr.goReset} title="Znovu načítať všetky dáta">Obnoviť</Votr.FakeLink></li>
-            <li><Votr.FakeLink onClick={Votr.goLogout}>Odhlásiť</Votr.FakeLink></li>
+            <li><Link href={_.assign({}, this.props.query, { modal: 'about' })}>O aplikácii</Link></li>
+            <li><FakeLink onClick={goReset} title="Znovu načítať všetky dáta">Obnoviť</FakeLink></li>
+            <li><FakeLink onClick={goLogout}>Odhlásiť</FakeLink></li>
           </ul>
         </div>
       </div>
@@ -47,9 +49,9 @@ Votr.PageNavbar = React.createClass({
 });
 
 
-Votr.LogStatus = React.createClass({
-  render: function () {
-    var entry = _.last(Votr.logs);
+export var LogStatus = React.createClass({
+  render() {
+    var entry = _.last(logs);
     var message;
     if (!entry) {
       message = "\xA0"; // nbsp
@@ -65,41 +67,41 @@ Votr.LogStatus = React.createClass({
 });
 
 
-Votr.PageTitle = React.createClass({
-  componentDidMount: function () {
+export var PageTitle = React.createClass({
+  componentDidMount() {
     document.title = this.getDOMNode().textContent;
   },
 
-  componentDidUpdate: function () {
+  componentDidUpdate() {
     document.title = this.getDOMNode().textContent;
   },
 
-  render: function () {
+  render() {
     return <h1>{this.props.children}</h1>;
   }
 });
 
 
-Votr.MainMenu = React.createClass({
+export var MainMenu = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired
   },
 
-  renderMenuItem: function (content, href, moreActions) {
+  renderMenuItem(content, href, moreActions) {
     var isActive = href.action == this.props.query.action || (moreActions && moreActions[this.props.query.action]);
     return <li className={isActive ? 'active' : null}>
-      <Votr.Link href={href}>{content}</Votr.Link>
+      <Link href={href}>{content}</Link>
     </li>;
   },
 
-  renderDisabled: function (content) {
+  renderDisabled(content) {
     return <li className="disabled"><a>{content}</a></li>;
   },
 
-  render: function () {
+  render() {
     var {studiumKey, zapisnyListKey} = this.props.query;
 
-    var cache = new Votr.CacheRequester();
+    var cache = new CacheRequester();
     var somStudent = cache.get('get_som_student');
 
     return <ul className="main-menu nav nav-pills nav-stacked">
@@ -111,7 +113,7 @@ Votr.MainMenu = React.createClass({
       {/*somStudent && this.renderDisabled("Môj rozvrh")*/}
       {somStudent && this.renderMenuItem("Zápis predmetov", { action: 'zapisZPlanu', zapisnyListKey }, { zapisZPonuky: true })}
       {somStudent && this.renderMenuItem("Prehľad štúdia", { action: 'prehladStudia' })}
-      {!cache.loadedAll && <li><span className="text-pill"><Votr.Loading requests={cache.missing} /></span></li>}
+      {!cache.loadedAll && <li><span className="text-pill"><Loading requests={cache.missing} /></span></li>}
       <li><hr/></li>
       <li><strong className="text-pill">Registre</strong></li>
       {this.renderMenuItem("Register osôb", { action: 'registerOsob' })}
@@ -123,8 +125,8 @@ Votr.MainMenu = React.createClass({
 });
 
 
-Votr.FormItem = React.createClass({
-  render: function () {
+export var FormItem = React.createClass({
+  render() {
     if (this.props.label) {
       return <label className="form-item">
         <div className="col-sm-4 form-item-label">{this.props.label}</div>
@@ -139,14 +141,14 @@ Votr.FormItem = React.createClass({
 });
 
 
-Votr.ModalBase = React.createClass({
+export var ModalBase = React.createClass({
   propTypes: {
     component: React.PropTypes.func,
     onClose: React.PropTypes.func.isRequired,
     query: React.PropTypes.object.isRequired
   },
 
-  componentDidMount: function () {
+  componentDidMount() {
     var $node = $(this.getDOMNode());
     $node.modal();
     $node.on('hide.bs.modal', (e) => {
@@ -157,12 +159,12 @@ Votr.ModalBase = React.createClass({
     });
   },
 
-  componentDidUpdate: function () {
+  componentDidUpdate() {
     var $node = $(this.getDOMNode());
     $node.modal($node.attr('data-show') == 'true' ? 'show' : 'hide');
   },
 
-  render: function () {
+  render() {
     var C = this.props.component;
 
     return <div data-show={Boolean(C)} className="modal fade"
@@ -175,20 +177,20 @@ Votr.ModalBase = React.createClass({
 });
 
 
-Votr.Modal = React.createClass({
+export var Modal = React.createClass({
   propTypes: {
     closeButton: React.PropTypes.bool.isRequired,
     title: React.PropTypes.node.isRequired,
     footer: React.PropTypes.node
   },
 
-  getDefaultProps: function () {
+  getDefaultProps() {
     return {
       closeButton: true
     };
   },
 
-  render: function () {
+  render() {
     return <div className="modal-content">
       <div className="modal-header">
         {this.props.closeButton &&
@@ -205,6 +207,3 @@ Votr.Modal = React.createClass({
     </div>;
   }
 });
-
-
-})();

@@ -1,4 +1,7 @@
-(function () {
+
+import { CacheRequester, Loading } from './ajax';
+import { Link } from './router';
+import { sortAs } from './sorting';
 
 
 function withKeys(oldQuery, zapisnyListKey) {
@@ -6,13 +9,13 @@ function withKeys(oldQuery, zapisnyListKey) {
 }
 
 
-Votr.ZapisnyListSelector = React.createClass({
+export var ZapisnyListSelector = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired,
     component: React.PropTypes.func.isRequired
   },
 
-  getItems: function (cache) {
+  getItems(cache) {
     var studia = cache.get('get_studia');
 
     var items = [];
@@ -24,12 +27,12 @@ Votr.ZapisnyListSelector = React.createClass({
       });
     });
 
-    items = _.sortBy(items, (item) => Votr.sortAs.date(item.zapisnyList.datum_zapisu)).reverse();
+    items = _.sortBy(items, (item) => sortAs.date(item.zapisnyList.datum_zapisu)).reverse();
 
     return items;
   },
 
-  renderSelector: function (cache, items, query) {
+  renderSelector(cache, items, query) {
     return <ul className="nav nav-pills selector">
       <li><span className="text-pill">Zápisný list:</span></li>
       {items.map((item) => {
@@ -37,19 +40,19 @@ Votr.ZapisnyListSelector = React.createClass({
         var key = zapisnyList.zapisny_list_key;
         var active = zapisnyList.zapisny_list_key == query.zapisnyListKey;
         return <li key={key} className={active ? "active" : ""}>
-          <Votr.Link href={withKeys(query, zapisnyList.zapisny_list_key)}>
+          <Link href={withKeys(query, zapisnyList.zapisny_list_key)}>
             {zapisnyList.akademicky_rok} {zapisnyList.sp_skratka}
-          </Votr.Link>
+          </Link>
         </li>;
       })}
       {cache.loadedAll ? null :
         <li><span className="text-pill">
-          <Votr.Loading requests={cache.missing} />
+          <Loading requests={cache.missing} />
         </span></li>}
     </ul>;
   },
 
-  renderPage: function (cache, items, query) {
+  renderPage(cache, items, query) {
     if (query.zapisnyListKey) {
       return <this.props.component query={query} />;
     }
@@ -59,8 +62,8 @@ Votr.ZapisnyListSelector = React.createClass({
     return null;
   },
 
-  render: function () {
-    var cache = new Votr.CacheRequester();
+  render() {
+    var cache = new CacheRequester();
     var items = this.getItems(cache);
     var query = this.props.query;
 
@@ -75,6 +78,3 @@ Votr.ZapisnyListSelector = React.createClass({
     </div>;
   }
 });
-
-
-})();

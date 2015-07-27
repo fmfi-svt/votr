@@ -1,4 +1,8 @@
-(function () {
+
+import { CacheRequester, Loading } from './ajax';
+import { Link } from './router';
+import { sortAs } from './sorting';
+
 
 // TODO: Reduce code duplication with ZapisnyListSelector.
 
@@ -8,13 +12,13 @@ function withKeys(oldQuery, studiumKey) {
 }
 
 
-Votr.StudiumSelector = React.createClass({
+export var StudiumSelector = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired,
     component: React.PropTypes.func.isRequired
   },
 
-  getItems: function (cache) {
+  getItems(cache) {
     var studia = cache.get('get_studia');
 
     var items = [];
@@ -23,12 +27,12 @@ Votr.StudiumSelector = React.createClass({
       items.push({ studium });
     });
 
-    items = _.sortBy(items, (item) => Votr.sortAs.date(item.studium.zaciatok)).reverse();
+    items = _.sortBy(items, (item) => sortAs.date(item.studium.zaciatok)).reverse();
 
     return items;
   },
 
-  renderSelector: function (cache, items, query) {
+  renderSelector(cache, items, query) {
     return <ul className="nav nav-pills selector">
       <li><span className="text-pill">Štúdium:</span></li>
       {items.map((item) => {
@@ -36,19 +40,19 @@ Votr.StudiumSelector = React.createClass({
         var key = studium.studium_key;
         var active = studium.studium_key == query.studiumKey;
         return <li key={key} className={active ? "active" : ""}>
-          <Votr.Link href={withKeys(query, studium.studium_key)}>
+          <Link href={withKeys(query, studium.studium_key)}>
             {studium.sp_skratka}
-          </Votr.Link>
+          </Link>
         </li>;
       })}
       {cache.loadedAll ? null :
         <li><span className="text-pill">
-          <Votr.Loading requests={cache.missing} />
+          <Loading requests={cache.missing} />
         </span></li>}
     </ul>;
   },
 
-  renderPage: function (cache, items, query) {
+  renderPage(cache, items, query) {
     if (query.studiumKey) {
       return <this.props.component query={query} />;
     }
@@ -58,8 +62,8 @@ Votr.StudiumSelector = React.createClass({
     return null;
   },
 
-  render: function () {
-    var cache = new Votr.CacheRequester();
+  render() {
+    var cache = new CacheRequester();
     var items = this.getItems(cache);
     var query = this.props.query;
 
@@ -74,6 +78,3 @@ Votr.StudiumSelector = React.createClass({
     </div>;
   }
 });
-
-
-})();
