@@ -22,6 +22,7 @@ $table-condensed-cell-padding: 4px;
 @import "votr-bootstrap";
 @import "layout";
 @import "forms";
+@import "spinner";
 
 
 html, body {
@@ -88,7 +89,7 @@ a, .btn.btn-link {
 }
 
 .loading {
-  background-image: url(spinner.svg);
+  background-image: $spinner;
   background-repeat: no-repeat;
   background-size: contain;
   padding-left: 1.5em;

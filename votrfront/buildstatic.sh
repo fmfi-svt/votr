@@ -50,6 +50,9 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   if ! [ -f static/spinner.svg ]; then
     wget https://raw.githubusercontent.com/kvakes/spinner.svg/master/spinner2.svg -O static/spinner.svg
   fi
+  if ! [ -f static/_spinner.scss ]; then
+    node -e 'console.log("$spinner: url(data:image/svg+xml;base64," + require("fs").readFileSync("static/spinner.svg", "base64") + ");")' > static/_spinner.scss
+  fi
 
   sed -i "
     # Don't use pointer cursor on buttons.
@@ -61,7 +64,7 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     " $bs/stylesheets/bootstrap/_normalize.scss
 
   compressed='-s compressed'
-  sassc $compressed -I $bs/stylesheets css/main.scss static/style.css
+  sassc $compressed -I $bs/stylesheets -I static css/main.scss static/style.css
 
   if ! [ -f static/webpacktime ] || [ "$(find js/ webpack.config.js -newer static/webpacktime)" ]; then
     touch static/webpacktime
