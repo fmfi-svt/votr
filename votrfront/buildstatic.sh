@@ -22,7 +22,7 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   fi
 
   if ! [ -f static/libs/lodash.js ]; then
-    version=$(npm view lodash@^3 version | tail -n1 | cut -d\' -f2)
+    version=$(npm view lodash versions | cut -d\' -f2 | grep '^3\.' | tail -n1)
     wget https://raw.githubusercontent.com/lodash/lodash/$version/lodash.js -O static/libs/lodash.js
     wget https://raw.githubusercontent.com/lodash/lodash/$version/lodash.min.js -O static/libs/lodash.min.js
   fi
