@@ -8,7 +8,7 @@ import { Root } from './router';
 (function () {
 
 if (!history.pushState) {
-  return;   // see old.js
+  return;   // see prologue.js
 }
 
 if (typeof __webpack_require__ !== 'undefined') {
@@ -22,11 +22,6 @@ if (query !== undefined && (query == '' || query.substring(0, 1) == '?')) {
   } catch (e) {
     console.error(e);
   }
-}
-
-Votr.setDebug = function (enabled) {
-  document.cookie = enabled ? 'votr_debug=true' : 'votr_debug=';
-  location.reload();
 }
 
 var root =

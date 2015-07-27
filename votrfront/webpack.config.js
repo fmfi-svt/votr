@@ -70,7 +70,7 @@ devConfig.module.loaders[0].query.retainLines = true;
 
 
 var prologueConfig = makeConfig();
-prologueConfig.entry = './old';
+prologueConfig.entry = './prologue';
 prologueConfig.output.filename = 'prologue.js';
 prologueConfig.plugins.push(new webpack.optimize.UglifyJsPlugin());
 prologueConfig.plugins.push(new webpack.optimize.OccurenceOrderPlugin());
