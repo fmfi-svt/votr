@@ -35,8 +35,7 @@ export var AboutModal = React.createClass({
         Votr je projektom Študentského vývojového tímu z Fakulty matematiky,
         fyziky a informatiky UK. Naprogramovali ho Tomáš Belan, Dušan Plavák a
         Kristián Valentín. Napísať nám môžete na <a
-        href="mailto:votr-devel@googlegroups.com"
-        >votr-devel@googlegroups.com</a>.
+        href="mailto:fmfi-svt@googlegroups.com">fmfi-svt@googlegroups.com</a>.
       </p>
       <p>
         Votr je aplikácia s otvoreným zdrojovým kódom. Vývoj prebieha verejne
