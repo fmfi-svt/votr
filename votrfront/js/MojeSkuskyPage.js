@@ -147,10 +147,6 @@ export var SkuskyRegisterButton = React.createClass({
   render() {
     var termin = this.props.termin;
 
-    if (termin.hodnotenie_terminu) {
-      return null;
-    }
-
     var today = new Date().toJSON().replace(/-/g, '').substring(0, 8);
     if (today > sortAs.date(termin.datum)) return null;
 
