@@ -462,7 +462,7 @@ class Table(Control):
         new_rows = {}
         for tr in data_tab_bodies.find_all('tr'):
             id = int(tr['id'][len('row_'):])
-            rid = int(tr['rid'])
+            rid = tr['rid']
             tds = tr.find_all('td')
             if data_tab_bodies_fixed:
                 tds = fixed_trs[tr['id']].find_all('td') + tds
