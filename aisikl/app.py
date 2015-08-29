@@ -258,7 +258,8 @@ class Application:
             raise AISParseError("initScript is not supported")
 
         rq = ("<events><ev><event class='avc.ui.event.AVCComponentEvent'>"
-              "<command>INIT</command></event></ev></events>\n")
+              "<command>INIT</command></event></ev></events>\n" +
+              self.collect_component_changes())
         with self.collect_operations() as ops:
             self._do_request(rq)
         return ops
@@ -486,9 +487,10 @@ class Application:
                'antiCache={}').format(url, params, time.time())
         return self.open(self.ctx, url, ignored_messages)
 
-    def open_main_dialog(self, name, title, code, x, y, min_width, min_height,
-                         width, height, resizeable, minimizeable, closeable,
-                         hide_title_bar):
+    def open_main_dialog(self, name, title, code, dlg_based_on_theme,
+                         dlg_style, is_dlg_default_style_used, x, y, min_width,
+                         min_height, width, height, resizeable, minimizeable,
+                         closeable, hide_title_bar):
         '''Opens the main dialog in response to the openMainDialog
         :class:`Operation`.
 
@@ -497,11 +499,13 @@ class Application:
         '''
         # We ignore webui's useDialogFrame, so we just call open_dialog.
         return self.open_dialog(
-            name, title, code, None, False, True, 0, 0, width, height,
+            name, title, code, dlg_based_on_theme, dlg_style,
+            is_dlg_default_style_used, None, False, True, 0, 0, width, height,
             resizeable, minimizeable, closeable, hide_title_bar, min_width,
             min_height, None, None, False)
 
-    def open_dialog(self, name, title, code, parent_dialog_name, modal,
+    def open_dialog(self, name, title, code, dlg_based_on_theme, dlg_style,
+                    is_dlg_default_style_used, parent_dialog_name, modal,
                     is_main_dialog, x, y, width, height, resizeable,
                     minimizeable, closeable, hide_title_bar, min_width,
                     min_height, for_control_of_parent, purl, is_native):
@@ -518,8 +522,9 @@ class Application:
 
         self.ctx.log('operation', 'Opening dialog {} "{}"'.format(name, title))
 
-        # Ignore arguments that only affect position and size: x, y, width,
-        # height, resizeable, min_width, min_height, and for_control_of_parent.
+        # Ignore arguments that only affect visuals: dlg_based_on_theme,
+        # dlg_style, is_dlg_default_style_used, x, y, width, height,
+        # resizeable, min_width, min_height, and for_control_of_parent.
         # (And minimizeable, which actually isn't used in webui at all.)
         dialog = Dialog(name, title, code, parent_dialog_name, modal,
                         is_main_dialog, closeable, hide_title_bar, self)

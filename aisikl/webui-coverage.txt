@@ -126,6 +126,8 @@ which does a type conversion and sets the attribute.
 
 PARTIAL
 
+- setHtmlTitle()
+    - IRRELEVANT
 - getX(), setX(), getY(), setY(), getInlineWidth(), getWidth(), setWidth(),
   getInlineHeight(), getHeight(), setHeight(), getPastWidth(), setPastWidth(),
   getPastHeight(), setPastHeight(), isAnchor(), getAnchorLeft(), getAnchorTop(),
@@ -153,6 +155,9 @@ PARTIAL
 - isUnvisible() -> not (self.visible and self.visible_in_ui)
 - getParentContainer(), getParentContainerJSO() -> self.parent
     - Moved to Component.
+- isParentContainerSplitPane()
+    - IRRELEVANT - only used to call SplitPane.childChangeVisibility(), which
+      is IRRELEVANT.
 - getAncestorAutosizeJSO()
     - IRRELEVANT, because all functions that use it are IRRELEVANT.
 - getTabOrder(), setTabOrder() -> self.tab_order
@@ -303,8 +308,9 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
 - componentCollapsingChanged()
     - IRRELEVANT -- only calls setMoveDueToOtherExpCol() which is IRRELEVANT.
 - getFocusedComponentId(), setFocusedComponentId(), initFocusedElement(),
-  registerFocusedComponent(), reactivateFocusedComponent(),
-  getFocusedComponent(), setFocusedComponent(), blurFocusedComponent()
+  registerFocusedComponent(), patchReactivateIE(), reactivate(),
+  reactivateFocusedComponent(), getFocusedComponent(), setFocusedComponent(),
+  blurFocusedComponent()
     - UNSUPPORTED. See Control above.
 - addExtraComponent(), extraComponents, reactivateExtraComponents()
     - TODO. (Seems to be some extra behavior for HtmlArea.)
@@ -354,6 +360,8 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
     - UNSUPPORTED
 - initializedComps, addToInitializedComps(), destroy()
     - IRRELEVANT
+- retrieveAllComponentIds(), retrieveIdAndComponentType()
+    - IRRELEVANT (seems to be unused in webui)
 - initCalendarSelector(), getCalendarSelector(), calendarBackButtonClick(),
   calendarForwardButtonClick(), calendarMiniTableClick(), calendarMouseDown()
     - UNSUPPORTED (likely IRRELEVANT)
@@ -406,9 +414,12 @@ PARTIAL
     - IRRELEVANT (only used in nativeDialogBody.js)
 - capturingElement, useTitleRow(), useResizers(), useDialogTitleFrame(),
   getTitleRowHeight(), getFrameWidth(), getDoubleFrameWidth(),
+  setMinBodyWidth(), setMinBodyHeight(),
   createDialogIframeBody(), addResizer(), onLoad(), moveResizers(),
   computeInitPosAndSize(), getAbsPosAndSizeOfControl(), setTitle()
     - IRRELEVANT
+- retrieveAllComponentIds(), retrieveIdAndComponentType()
+    - IRRELEVANT (seems to be unused in webui)
 - init() -> Dialog.__init__(), Dialog._init()
     - Largely IRRELEVANT.
 - refresh() -> Dialog._init()
@@ -498,6 +509,8 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
   openWaitingDialogs(), closeWaitingDialog(), workspaceResize(), hideByJaws(),
   prepareUpdatingDialogs()
     - IRRELEVANT
+- resizeNoAccessibleIframe()
+    - UNSUPPORTED
 - openMainDialog()
     - Application.open_main_dialog()
     - useDialogFrame is IRRELEVANT (it only affects positioning and visuals).
@@ -535,6 +548,9 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
       (the API is synchronous and not reentrant)
 - refreshDialog() -> Application.refresh_dialog()
 - loadedAllDialogs() -> `True`
+- retrieveAllComponentsIdsFromActiveDialog(),
+  retrieveIdAndComponentTypeOnActiveDialog()
+    - IRRELEVANT (seems to be unused in webui)
 - fillImageUrl() -> `'/ais/images/' + value + '.png'`
 - messageBox(), confirmBox(), fileUpload(), fileXUpload(), editDoc(),
   abortBox(), onLoadAbortBox(), showNativeDialog(), showNextNativeDialog(),
@@ -691,6 +707,8 @@ COMPLETE
   resizeChildren()
     - IRRELEVANT, because all functions that use it are IRRELEVANT.
 - getTabId() -> self.tab_id
+- getMyTabbedPaneJSO(), isOnTabbedPane(), setComponentStyle()
+    - IRRELEVANT
 - getTitle(), setTitle() -> self.title (`_ais_setTitle()` is inherited)
 - blur()
     - The call to componentChanges() might be TODO. (Ditto in StackedPane.)
@@ -757,8 +775,8 @@ Everything interesting is stored in TabbedPane. TabbedPaneSelector is just
 an UI. The `title`, `enabled` and `visible` of a tab is always the same as
 in the corresponding panel, so we don't store them in TabbedPane at all.
 
-setEnabledForPanelTab(), setVisibleForPanelTab() and setTitleForPanelTab()
-are thus IRRELEVANT.
+setEnabledForPanelTab(), setVisibleForPanelTab(), setTitleForPanelTab() and
+setComponentStyleForPanelTab() are thus IRRELEVANT.
 
 
 
@@ -778,7 +796,8 @@ COMPLETE
     - IRRELEVANT
 - changedProperties() -> self.changed_properties()
 - fireUIChangesEvent() -> self._fire_event()
-- setEnabledForPanelTab(), setVisibleForPanelTab() and setTitleForPanelTab()
+- setEnabledForPanelTab(), setVisibleForPanelTab(), setTitleForPanelTab(),
+  setComponentStyleForPanelTab()
     - IRRELEVANT, see TabbedPaneSelector above.
 
 
@@ -788,9 +807,11 @@ COMPLETE
 COMPLETE
 
 - getUpDownedComponent() -> self.up_downed_component
+- getTopBottomEnabled() -> self.top_bottom_enabled
 - udc -> local variable in `click`
-- click() -> self.click(), self.click_up(), self.click_down()
-- up(), down()
+- click() -> self.click(), self.click_up(), self.click_down(),
+  self.click_top(), self.click_bottom()
+- upDown()
     - Inlined in click()
 
 
@@ -879,14 +900,8 @@ wasn't a subclass of UpDownList.
 - mode, MSELECT, MMOVE
     - Removed. `this.mode` should've been just an argument to up() and down().
 - getUpDownEnabled(), setUpDownEnabled() -> self.up_down_enabled
-- upDownRow() -> self.up_down_row()
-- up(), down()
-    - Inlined in self.up_down_row(), because keydown() is IRRELEVANT.
-    - Thus, mode is always MMOVE, and can be removed.
-    - Use self.select() directly instead of up()/down() with MSELECT.
-- swapNode()
-    - Inlined in self.up_down_row()
-    - Note that it swaps id, title, checked, innerHTML and rid, but not sid.
+- upDownRow(), up(), down(), swapNode()
+    - TODO (make CheckList a subclass of UpDownList)
 - initSelectedRow()
     - IRRELEVANT
 - selectUnselectAll() -> self.select_unselect_all()
@@ -1104,7 +1119,7 @@ bare minimum. In particular, masks and suggestion requests are not supported.
   setTextFromSuggestion(), setSuggestions(), suggestionClick(), drop(),
   dragstart(), change(), getSubstituteMask(), isIdentifierChar(),
   removeNotIdentifierChars(), afterPaste(), afterCut(), checkMask(),
-  fireSuggestionConfirm()
+  checkMaskValue(), fireSuggestionConfirm()
     - UNSUPPORTED for now
 
 
@@ -1129,6 +1144,10 @@ visible, so it's largely IRRELEVANT. The rest was moved directly to Table.
     - UNSUPPORTED for now. It seems the first row of dataTab might be a header
       that doesn't count as a data row, but we've never seen it happen.
 - getDataRowsCount() -> len(self.loaded_rows)
+- getTableModelRowIdByIndex() -> self.loaded_rows[i].rid
+- getIndexByTableModelRowId()
+    - UNSUPPORTED for now. This iterates over all rows searching for the given
+      rid. Do it manually if needed.
 - getDataRowByIndex() -> self.loaded_rows[i]
 - getDataRowByIdFromTable(), getDataRowById(), getFixedDataRowById() -> TODO
 - setDataTabTopPosition(), resizeAreaHeight(), resizeDataArea(),
@@ -1292,8 +1311,8 @@ See Table for an overview. TableModel has been merged into Table.
     - Ctrl+Delete (to delete a row): TODO
     - Enter (to start edit mode): IRRELEVANT, editing is synchronous.
     - Ctrl+A (to select everything): self.select([], inverted=True)
-    - Ctrl+Up: self.up_down_row(True) (onUpDownRow is TODO)
-    - Ctrl+Down: self.up_down_row(False) (onUpDownRow is TODO)
+    - Ctrl+Up: self.up_down_row('UP') (onUpDownRow is TODO)
+    - Ctrl+Down: self.up_down_row('DOWN') (onUpDownRow is TODO)
     - Home, End, PageUp, PageDown, arrows, etc: self.select(...)
 - onTableContainerKeyPress()
     - IRRELEVANT
@@ -1336,6 +1355,8 @@ See Table for an overview. TableModel has been merged into Table.
     - IRRELEVANT
 - getSelectedRowsAsString()
     - See TableSelectionModel.getSelectedRowsAsString().
+- getSelectedRowIndexes() -> self.selected_row_indexes (we keep it sorted)
+    - Or reversed(self.selected_row_indexes) depending on the argument.
 - getRowTop()
     - IRRELEVANT
 - getCellValue(), addCellValuesOfSelectedRows()
@@ -1391,8 +1412,8 @@ See Table for an overview. TableModel has been merged into Table.
     - Inlined into select().
 - onTableContainerContextMenu(), activateCellEditorOnFocus()
     - IRRELEVANT
-- getRowsIds(), resetRowsIds(), swapNodes(), swapRows(), upDownRow(), addRow(),
-  deleteRow()
+- getRowsIds(), resetRowsIds(), moveRows(), upDown(), upDownRow(),
+  upDownSelection(), addRow(), deleteRow()
     - TODO
 - isRowEmpty(), cancelEvent(), destroy()
     - IRRELEVANT
@@ -1509,6 +1530,7 @@ stores everything once, directly in Table.
 - setSelection()
     - Seems to be unused, and doesn't look like an AIS update function (it
       calls componentChanges etc). UNSUPPORTED until more is known.
+- getSelectedOrEditedColumnAlias() -> self.selected_column_alias
 - getDataSendType()
     - Used in updateSelection(), but only for scrolling.
     - dataSendType was changed into a local variable in updateData().
@@ -1654,6 +1676,8 @@ source of truth, like with Table and TableModel.
     - UNSUPPORTED
 - findPreviousVisibleNode(), findNextVisibleNode(), moveCursor()
     - IRRELEVANT (aisikl can select nodes directly, without a "keyboard")
+- getNodeImageElement()
+    - IRRELEVANT
 - clearSelection()
     - IRRELEVANT (webui only uses it right before selecting something else)
 - recolorSelection(), updateNodeImageElement(), recolorNodeSelection()
@@ -1753,7 +1777,7 @@ closed. Votr supports that, but you have to do it manually.
 
 - setIsInternal(), getIsInternal()
     - IRRELEVANT. Votr doesn't handle internal popup menus.
-- selectedItemJSObject, hasVisibleItems(), focus(), doShow(),
+- selectedItemJSObject, hasVisibleItems(), focus(), showAsSubpopup(), doShow(),
   showHideSeparators(), getSelectedItemJSObject(), setSelectedItemJSObject(),
   isVisible(), resizeComponent(), realizeEnability(), realizeVisibility()
     - IRRELEVANT
@@ -1806,6 +1830,8 @@ Mostly covered by Application. No longer global.
 - controlerUrl -> "/ais/servlets/WebUIServlet" (currently hardcoded)
 - initializedByRefresh -> False (because initScript is UNSUPPORTED)
 - windowInFrame, isWindowInFrame(), isWindowInModalWindow() -> False
+    - UNSUPPORTED until we actually see it in use.
+- windowFrameAccessible, isWindowFrameAccessible() -> True
     - UNSUPPORTED until we actually see it in use.
 - getWindowFrame() -> None
     - Because isWindowInFrame() is False.
@@ -1872,6 +1898,8 @@ Mostly covered by Application. No longer global.
     - Calls to sendRequest() can be mostly replaced with app._do_request().
     - Application._send_request() composes and sends the request, while
       Application._process_response() processes the result frame.
+- updateStartTime, previousResponseProcessingTime
+    - UNSUPPORTED
 - sendFileUploadSubmit()
     - TODO
 - onSomeDialogBodyInitialized()
@@ -1883,6 +1911,8 @@ Mostly covered by Application. No longer global.
 - sendEmptyRequest() -> app.send_empty_request()
 - currentTimeMillis() -> time.time()
     - Used only in `antiCache`, so nobody cares whether it's a float.
+- prepareUpdatingDialogs()
+    - IRRELEVANT
 - popupMenuToShowAfterEnableJSO, setPopupMenuToShowAfterEnable()
     - IRRELEVANT, because Votr is synchronous, and PopupMenuManager is removed.
 - isDisabledApplication(), disableApplication(), enableApplication()
@@ -1919,14 +1949,14 @@ Mostly covered by Application. No longer global.
     - IRRELEVANT. Votr is synchronous, so a request can't be aborted.
 - sendSuggestionsRequest(), sendSuggestionsRequest_()
     - Suggestions are UNSUPPORTED
-- prepareUpdatingDialogs()
-    - IRRELEVANT
 - setShellExecResult(), initCustomFrame(), setCustomFrameWindow()
     - UNSUPPORTED
 - dblClick(), keyDown(), updateAppSizeProperties(), workspaceResize(),
   setUpdateInterval(), getScrollBarWidth(), setWidth(), setHeight(),
   resizeBrowserByApp(), cancelEvent(), getSrcElement()
     - IRRELEVANT
+- sendPostMessage()
+    - UNSUPPORTED
 - readCustomization(), getProperty(), getPropertyAsBoolean(),
   getPropertyAsInt()
     - Wasn't needed yet, except for reading initScript in Application._open(),

@@ -310,9 +310,9 @@ class Table(Control):
         self.dialog.component_changes(self, True)
         self._fire_action_command('DEBUG_INFO')
 
-    def up_down_row(self, is_up):
+    def up_down_row(self, command):
         if not self.up_down_enabled: return
-        if self._table_model_up_down_row(is_up):   # TODO
+        if self._table_model_up_down(command):   # TODO
             self.up_downed_rows = True
             self.dialog.component_changes(self, False)
 

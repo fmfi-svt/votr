@@ -33,20 +33,8 @@ class CheckList(Control):
             if 'selectedListRow' in tr.get('class', []):
                 self.selected_index = index
 
-    def up_down_row(self, is_up):
-        if not self.up_down_enabled: return
-        if self.selected_index == -1: return
-
-        items = self.items
-        old = self.selected_index
-        new = self.selected_index + (-1 if is_up else 1)
-        if not (0 <= new < len(self.items)): return
-
-        items[old], items[new] = items[new], items[old]
-        items[old].sid, items[new].sid = items[new].sid, items[old].sid
-        self.selected_index = new
-
-        self._mark_changed()
+    def up_down_row(self, command):
+        raise Exception('up_down_row not yet implemented.')   # TODO
 
     def select_unselect_all(self):
         if not self.items: return
