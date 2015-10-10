@@ -16,6 +16,10 @@ template = '''
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Votr</title>
 <link rel="stylesheet" type="text/css" href="%(css)s">
+<meta name="description" content="Votr ponúka študentom jednoduchší a \
+pohodlnejší spôsob, ako robiť najčastejšie činnosti zo systému AIS. Zapíšte \
+sa na skúšky, prezrite si vaše hodnotenia a skontrolujte si počet kreditov \
+bez zbytočného klikania.">
 %(analytics)s
 </head>
 <body>
