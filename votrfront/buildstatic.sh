@@ -28,8 +28,13 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   fi
 
   if ! [ -f static/libs/react.js ]; then
-    npm install react@^0.13
+    npm install react@^0.14
     cp -p node_modules/react/dist/*.* static/libs/
+  fi
+
+  if ! [ -f static/libs/react-dom.js ]; then
+    npm install react-dom@^0.14
+    cp -p node_modules/react-dom/dist/*.* static/libs/
   fi
 
   if ! [ -f node_modules/.bin/webpack ]; then
@@ -74,7 +79,7 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     echo "webpack output is up to date."
   fi
 
-  libs='prologue.js libs/jquery.min.js libs/react.min.js libs/lodash.min.js libs/transition.js libs/modal.js'
+  libs='prologue.js libs/jquery.min.js libs/react.min.js libs/react-dom.min.js libs/lodash.min.js libs/transition.js libs/modal.js'
   dev=(static/dev/*)
   echo ${libs//.min} "${dev[@]//"static/"}" votr.dev.js > static/jsdeps-dev
   echo $libs votr.min.js > static/jsdeps-prod
