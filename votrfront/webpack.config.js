@@ -46,7 +46,7 @@ function makeConfig() {
           loader: 'babel',
           query: {
             cacheDirectory: __dirname + '/static/cache',
-            loose: ['es6.destructuring', 'es6.properties.computed'],
+            loose: ['es6.destructuring', 'es6.properties.computed', 'es6.spread'],
           },
         },
       ],

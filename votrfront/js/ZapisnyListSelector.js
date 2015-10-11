@@ -4,11 +4,6 @@ import { Link } from './router';
 import { sortAs } from './sorting';
 
 
-function withKeys(oldQuery, zapisnyListKey) {
-  return { ...oldQuery, zapisnyListKey };
-}
-
-
 export var ZapisnyListSelector = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired,
@@ -22,25 +17,20 @@ export var ZapisnyListSelector = React.createClass({
 
     if (studia) studia.forEach((studium) => {
       var zapisneListy = cache.get('get_zapisne_listy', studium.studium_key);
-      if (zapisneListy) zapisneListy.forEach((zapisnyList) => {
-        items.push({ studium, zapisnyList });
-      });
+      if (zapisneListy) items.push(...zapisneListy);
     });
 
-    items = _.sortBy(items, (item) => sortAs.date(item.zapisnyList.datum_zapisu)).reverse();
-
-    return items;
+    return _.sortBy(items, (item) => sortAs.date(item.datum_zapisu)).reverse();
   },
 
   renderSelector(cache, items, query) {
     return <ul className="nav nav-pills selector">
       <li><span className="text-pill">Zápisný list:</span></li>
-      {items.map((item) => {
-        var { studium, zapisnyList } = item;
+      {items.map((zapisnyList) => {
         var key = zapisnyList.zapisny_list_key;
-        var active = zapisnyList.zapisny_list_key == query.zapisnyListKey;
+        var active = key == query.zapisnyListKey;
         return <li key={key} className={active ? "active" : ""}>
-          <Link href={withKeys(query, zapisnyList.zapisny_list_key)}>
+          <Link href={{ ...query, zapisnyListKey: key }}>
             {zapisnyList.akademicky_rok} {zapisnyList.sp_skratka}
           </Link>
         </li>;
@@ -69,7 +59,7 @@ export var ZapisnyListSelector = React.createClass({
 
     if (!query.zapisnyListKey && cache.loadedAll && items.length) {
       var mostRecentItem = items[0];
-      query = withKeys(query, mostRecentItem.zapisnyList.zapisny_list_key);
+      query = { ...query, zapisnyListKey: mostRecentItem.zapisny_list_key };
     }
 
     return <div>

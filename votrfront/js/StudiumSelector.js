@@ -7,11 +7,6 @@ import { sortAs } from './sorting';
 // TODO: Reduce code duplication with ZapisnyListSelector.
 
 
-function withKeys(oldQuery, studiumKey) {
-  return { ...oldQuery, studiumKey };
-}
-
-
 export var StudiumSelector = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired,
@@ -21,26 +16,19 @@ export var StudiumSelector = React.createClass({
   getItems(cache) {
     var studia = cache.get('get_studia');
 
-    var items = [];
+    var items = studia || [];
 
-    if (studia) studia.forEach((studium) => {
-      items.push({ studium });
-    });
-
-    items = _.sortBy(items, (item) => sortAs.date(item.studium.zaciatok)).reverse();
-
-    return items;
+    return _.sortBy(items, (item) => sortAs.date(item.zaciatok)).reverse();
   },
 
   renderSelector(cache, items, query) {
     return <ul className="nav nav-pills selector">
       <li><span className="text-pill">Štúdium:</span></li>
-      {items.map((item) => {
-        var { studium } = item;
+      {items.map((studium) => {
         var key = studium.studium_key;
-        var active = studium.studium_key == query.studiumKey;
+        var active = key == query.studiumKey;
         return <li key={key} className={active ? "active" : ""}>
-          <Link href={withKeys(query, studium.studium_key)}>
+          <Link href={{ ...query, studiumKey: key }}>
             {studium.sp_skratka}
           </Link>
         </li>;
@@ -69,7 +57,7 @@ export var StudiumSelector = React.createClass({
 
     if (!query.studiumKey && cache.loadedAll && items.length) {
       var mostRecentItem = items[0];
-      query = withKeys(query, mostRecentItem.studium.studium_key);
+      query = { ...query, studiumKey: mostRecentItem.studium_key };
     }
 
     return <div>
