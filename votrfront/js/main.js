@@ -29,7 +29,7 @@ var root =
     Votr.settings.error ? <ErrorPage /> :
     <Root app={App} />;
 
-Votr.appRoot = React.render(root, document.getElementById('votr'));
+Votr.appRoot = ReactDOM.render(root, document.getElementById('votr'));
 
 
 })();

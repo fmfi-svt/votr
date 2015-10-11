@@ -69,15 +69,15 @@ export var LogStatus = React.createClass({
 
 export var PageTitle = React.createClass({
   componentDidMount() {
-    document.title = this.getDOMNode().textContent;
+    document.title = this.refs.title.textContent;
   },
 
   componentDidUpdate() {
-    document.title = this.getDOMNode().textContent;
+    document.title = this.refs.title.textContent;
   },
 
   render() {
-    return <h1>{this.props.children}</h1>;
+    return <h1 ref="title">{this.props.children}</h1>;
   }
 });
 
@@ -149,7 +149,7 @@ export var ModalBase = React.createClass({
   },
 
   componentDidMount() {
-    var $node = $(this.getDOMNode());
+    var $node = $(this.refs.modal);
     $node.modal();
     $node.on('hide.bs.modal', (e) => {
       if ($node.attr('data-show') == 'true') {
@@ -160,14 +160,14 @@ export var ModalBase = React.createClass({
   },
 
   componentDidUpdate() {
-    var $node = $(this.getDOMNode());
+    var $node = $(this.refs.modal);
     $node.modal($node.attr('data-show') == 'true' ? 'show' : 'hide');
   },
 
   render() {
     var C = this.props.component;
 
-    return <div data-show={Boolean(C)} className="modal fade"
+    return <div data-show={Boolean(C)} className="modal fade" ref="modal"
                 tabIndex="-1" role="dialog" aria-hidden="true">
       <div className="modal-dialog modal-lg">
         {C && <C query={this.props.query} />}

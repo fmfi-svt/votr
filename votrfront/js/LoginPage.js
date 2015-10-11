@@ -22,17 +22,14 @@ export var LoginForm = React.createClass({
   },
 
   handleServerChange(event) {
-    this.replaceState({ server: event.target.value });
+    var server = event.target.value;
+    var newTypes = Votr.settings.servers[server].login_types;
+    var type = _.includes(newTypes, this.state.type) ? this.state.type : null;
+    this.setState({ server, type });
   },
 
   handleTypeChange(event) {
-    this.replaceState({ server: this.state.server, type: event.target.value });
-  },
-
-  handleFieldChange(event) {
-    var update = {};
-    update[event.target.name] = event.target.value;
-    this.setState(update)
+    this.setState({ type: event.target.value });
   },
 
   render() {
@@ -85,15 +82,13 @@ export var LoginForm = React.createClass({
           <p>
             <label>
               {"Meno: "}
-              <input name="username" value={this.state.username}
-                     onChange={this.handleFieldChange} />
+              <input name="username" />
             </label>
           </p>
           <p>
             <label>
               {"Heslo: "}
-              <input name="password" value={this.state.password}
-                     onChange={this.handleFieldChange} type="password" />
+              <input name="password" type="password" />
             </label>
           </p>
         </div>}
@@ -105,16 +100,14 @@ export var LoginForm = React.createClass({
             <p>
               <label>
                 {"Hodnota cookie " + serverConfig.ais_cookie + ": "}
-                <input name="ais_cookie" value={this.state.ais_cookie}
-                       onChange={this.handleFieldChange} />
+                <input name="ais_cookie" />
               </label>
             </p>}
           {serverConfig.rest_cookie &&
             <p>
               <label>
                 {"Hodnota cookie " + serverConfig.rest_cookie + ": "}
-                <input name="rest_cookie" value={this.state.rest_cookie}
-                       onChange={this.handleFieldChange} />
+                <input name="rest_cookie" />
               </label>
             </p>}
         </div>}

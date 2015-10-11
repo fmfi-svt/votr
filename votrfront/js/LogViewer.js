@@ -18,7 +18,7 @@ export var LogViewerContent = React.createClass({
   },
 
   componentDidUpdate() {
-    var div = this.getDOMNode().querySelector('.scroll');
+    var div = this.refs.scroll;
     var time = _.last(logs).time;
     if (time != this.lastTime) {
       this.lastTime = time;
@@ -42,7 +42,7 @@ export var LogViewerContent = React.createClass({
         )}
       </ul>
 
-      <div className="scroll">
+      <div className="scroll" ref="scroll">
         <table>
           <tbody>
             {logs.map((entry, index) => !this.state[entry.log] &&
