@@ -76,9 +76,7 @@ export function sortTable(items, columns, query, queryKey) {
       order[0] == 'd' + index ? 'a' :
       preferDesc ? 'd' : 'a') + index);
 
-    var newQuery = _.assign({}, query);
-    newQuery[queryKey] = newOrder.join('');
-    navigate(newQuery);
+    navigate({ ...query, [queryKey]: newOrder.join('') });
   }
 
   var header = <tr>

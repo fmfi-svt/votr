@@ -5,7 +5,7 @@ import { sortAs } from './sorting';
 
 
 function withKeys(oldQuery, zapisnyListKey) {
-  return _.assign({}, oldQuery, { zapisnyListKey });
+  return { ...oldQuery, zapisnyListKey };
 }
 
 

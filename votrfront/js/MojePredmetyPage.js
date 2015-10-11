@@ -46,7 +46,7 @@ export var MojePredmetyPageContent = React.createClass({
         {hodnotenia.map((hodnotenie) =>
           <tr key={hodnotenie.hodn_key} className={classForSemester(hodnotenie.semester)}>
             <td>{hodnotenie.semester}</td>
-            <td><Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: hodnotenie.predmet_key, modalAkademickyRok: hodnotenie.akademicky_rok})}>
+            <td><Link href={{ ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: hodnotenie.predmet_key, modalAkademickyRok: hodnotenie.akademicky_rok }}>
               {hodnotenie.nazov}
             </Link></td>
             <td>{hodnotenie.skratka}</td>

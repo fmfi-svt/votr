@@ -38,7 +38,7 @@ export var PageNavbar = React.createClass({
         </div>
         <div className="navbar-right">
           <ul className="nav navbar-nav">
-            <li><Link href={_.assign({}, this.props.query, { modal: 'about' })}>O aplikácii</Link></li>
+            <li><Link href={{ ...this.props.query, modal: 'about' }}>O aplikácii</Link></li>
             <li><FakeLink onClick={goReset} title="Znovu načítať všetky dáta">Obnoviť</FakeLink></li>
             <li><FakeLink onClick={goLogout}>Odhlásiť</FakeLink></li>
           </ul>

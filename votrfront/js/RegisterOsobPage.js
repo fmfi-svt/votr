@@ -38,16 +38,16 @@ export var RegisterOsobForm = React.createClass({
   },
 
   handleFieldChange(event) {
-    this.setState(_.zipObject([[event.target.name, event.target.value]]));
+    this.setState({ [event.target.name]: event.target.value });
   },
 
   handleCheckBoxChange(event) {
-    this.setState(_.zipObject([[event.target.name, String(event.target.checked)]]));
+    this.setState({ [event.target.name]: String(event.target.checked) });
   },
 
   handleSubmit(event) {
     event.preventDefault();
-    navigate(_.assign({ action: 'registerOsob' }, this.state));
+    navigate({ action: 'registerOsob', ...this.state });
   },
 
   renderTextInput(label, name, focus) {

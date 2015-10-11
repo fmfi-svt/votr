@@ -255,7 +255,7 @@ export var ZapisTable = React.createClass({
         <tbody>
           {predmety.map((predmet) => {
             var predmet_key = predmet.predmet_key;
-            var href = _.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: this.props.akademickyRok});
+            var href = { ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: this.props.akademickyRok };
             var nazov = <Link href={href}>{predmet.nazov}</Link>;
             if (predmet.moje) nazov = <strong>{nazov}</strong>;
             if (predmet.aktualnost) nazov = <span><del>{nazov}</del> (nekoná sa)</span>;
@@ -356,14 +356,14 @@ export var ZapisZPlanuPageContent = React.createClass({
 
       predmety = {};
       ponukanePredmety.forEach((predmet) => {
-        predmety[predmet.predmet_key] = _.assign({ moje: false }, predmet);
+        predmety[predmet.predmet_key] = { moje: false, ...predmet };
         if (predmet.semester == 'Z') vidnoZimne = true;
       });
       zapisanePredmety.forEach((predmet) => {
         var predmet_key = predmet.predmet_key;
         if (!predmety[predmet_key]) {
           if (predmet.semester == 'Z' && !vidnoZimne) return;
-          predmety[predmet_key] = _.assign({ moje: true }, predmet);
+          predmety[predmet_key] = { moje: true, ...predmet };
         } else {
           for (var property in predmet) {
             if (predmet[property] !== null && predmet[property] !== undefined) {
@@ -435,13 +435,13 @@ export var ZapisZPonukyForm = React.createClass({
   },
 
   handleFieldChange(event) {
-    this.setState(_.zipObject([[event.target.name, event.target.value]]));
+    this.setState({ [event.target.name]: event.target.value });
   },
 
   handleSubmit(event) {
     event.preventDefault();
     var {zapisnyListKey} = this.props.query;
-    navigate(_.assign({ action: 'zapisZPonuky', zapisnyListKey }, this.state));
+    navigate({ action: 'zapisZPonuky', zapisnyListKey, ...this.state });
   },
 
   renderTextInput(label, name, focus) {
@@ -513,7 +513,7 @@ export var ZapisZPonukyPageContent = React.createClass({
       } else {
         var predmety = {};
         ponukanePredmety.forEach((predmet) => {
-          predmety[predmet.predmet_key] = _.assign({ moje: false }, predmet);
+          predmety[predmet.predmet_key] = { moje: false, ...predmet };
         });
         zapisanePredmety.forEach((predmet) => {
           if (predmety[predmet.predmet_key]) {

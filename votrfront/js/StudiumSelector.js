@@ -8,7 +8,7 @@ import { sortAs } from './sorting';
 
 
 function withKeys(oldQuery, studiumKey) {
-  return _.assign({}, oldQuery, { studiumKey });
+  return { ...oldQuery, studiumKey };
 }
 
 

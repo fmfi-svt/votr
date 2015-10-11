@@ -34,12 +34,12 @@ export var RegisterPredmetovForm = React.createClass({
   },
 
   handleFieldChange(event) {
-    this.setState(_.zipObject([[event.target.name, event.target.value]]));
+    this.setState({ [event.target.name]: event.target.value });
   },
 
   handleSubmit(event) {
     event.preventDefault();
-    navigate(_.assign({ action: 'registerPredmetov' }, this.state));
+    navigate({ action: 'registerPredmetov', ...this.state });
   },
 
   renderTextInput(label, name, focus) {
@@ -131,7 +131,7 @@ export var RegisterPredmetovResultTable = React.createClass({
         <tbody>
           {rows.map((predmet) =>
             <tr key={predmet.predmet_key} className={classForSemester(predmet.semester)}>
-              <td><Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: query.akademickyRok })}>
+              <td><Link href={{ ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: query.akademickyRok }}>
                 {predmet.nazov}
               </Link></td>
               <td>{predmet.skratka}</td>

@@ -95,8 +95,7 @@ export function CacheRequester() {
   this.loadedAll = true;
 };
 
-CacheRequester.prototype.get = function () {
-  var request = Array.prototype.slice.call(arguments);
+CacheRequester.prototype.get = function (...request) {
   var cacheKey = request.join('\0');
   if (RequestCache[cacheKey] !== undefined) {
     return RequestCache[cacheKey];

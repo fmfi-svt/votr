@@ -67,14 +67,14 @@ export var MojeSkuskyPageContent = React.createClass({
             {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
               <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
               <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
-            <td><Link href={_.assign({}, this.props.query, { modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok })}>
+            <td><Link href={{ ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
               {termin.nazov_predmetu}
             </Link></td>
             <td>{termin.datum}</td>
             <td>{termin.cas}</td>
             <td>{termin.miestnost}</td>
             <td>{termin.hodnotiaci}</td>
-            <td><Link href={_.assign({}, this.props.query, { modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key })}>
+            <td><Link href={{ ...this.props.query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
               {termin.pocet_prihlasenych +
                (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
             </Link></td>
