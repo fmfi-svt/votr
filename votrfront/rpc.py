@@ -62,7 +62,13 @@ def rpc_handle_exceptions(request, send_json):
 
 def rpc_handle_partials(request):
     def wsgi_response(environ, start_response):
-        write = start_response('200 OK', [('Content-Type', 'text/plain')])
+        write = start_response('200 OK', [
+            ('Content-Type', 'text/plain'),
+            # Prevent https://code.google.com/p/chromium/issues/detail?id=2016
+            # (onprogress only happening after the client receives 1024 bytes)
+            # See also: ShouldSniffContent(), kMaxBytesToSniff
+            ('X-Content-Type-Options', 'nosniff'),
+        ])
         # TODO: Add explanation about write() - why it's bad to use it, why we
         # use it anyway, and why we hope it will be OK.
 
