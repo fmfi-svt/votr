@@ -43,7 +43,7 @@ export var ZoznamPrihlasenychNaTerminModal = React.createClass({
             <td>{student.plne_meno}</td>
             <td>{student.sp_skratka}</td>
             <td>{student.rocnik}</td>
-            <td>{student.email}</td>
+            <td><a href={"mailto:" + student.email}>{student.email}</a></td>
             <td>{student.datum_prihlasenia}</td>
           </tr>
         )}

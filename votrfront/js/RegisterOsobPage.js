@@ -184,7 +184,7 @@ export var RegisterOsobResultTable = React.createClass({
           {osoby.map((osoba, index) =>
             <tr key={index}>
               <td>{osoba.plne_meno}</td>
-              <td>{osoba.email}</td>
+              <td><a href={"mailto:" + osoba.email}>{osoba.email}</a></td>
             </tr>
           )}
         </tbody>
