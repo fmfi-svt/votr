@@ -50,6 +50,7 @@ _useless_res = [
     re.compile(r'^\w+=dm\(\)\.getDialog\(\'\w+\'\)\.getDialogContext\(\)$'),
     re.compile(r'^if \(dm\(\)!=null\) \w+=dm\(\)\.getDialog\(\'\w+\'\)$'),
     re.compile(r'^if \(\w+!=null\) \w+=\w+\.getDialogContext\(\)$'),
+    re.compile(r'^if \(\w+!=null\) \w+\.tryAutosize\(\)$'),
     re.compile(r'^dm\(\)\.setActiveDialogName\(\'\w+\'\)$'),
     # TODO: Perhaps we should handle setActiveDialogName, or at least check if
     # it's the same as the current active dialog.
