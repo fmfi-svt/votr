@@ -21,7 +21,7 @@ class RadioBox(Control):
         self.selected_index = -1
         self.options = []
         for index, td in enumerate(items.find_all('td')):
-            if td['index'] != str(index):
+            if self.enabled and td['index'] != str(index):
                 raise AISParseError(
                     "RadioBox '{}' item #{} "
                     "has unexpected index attribute.".format(self.id, index))
