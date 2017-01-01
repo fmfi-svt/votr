@@ -35,7 +35,7 @@ function convertToICAL(terminy) {
     "X-WR-CALDESC:Kalendár skúšok vyexportovaný z aplikácie Votr",
     "X-WR-TIMEZONE:Europe/Bratislava",
   ];
-  
+
   var dtstamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
 
   // VEVENTs
@@ -45,13 +45,13 @@ function convertToICAL(terminy) {
       continue;
     }
     lines.push("BEGIN:VEVENT");
-    
+
     lines.push("SUMMARY:" + termin.nazov_predmetu);
-    
+
     // unique identificator for each event (so we can identify copies of the same event)
     var uid = termin.termin_key + "@votr.uniba.sk";
     lines.push("UID:" + uid);
-    
+
     // DTSTAMP is when this VEVENT was created (exported), must be YYYYMMDDTHHMMSSZ
     lines.push("DTSTAMP:" + dtstamp);
 
