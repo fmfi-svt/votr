@@ -5,14 +5,10 @@ import { PageLayout, PageTitle } from './layout';
 import { Link } from './router';
 import { sortAs, sortTable } from './sorting';
 
-
-// TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
-
 export var MojeSkuskyColumns = [
   ["Moje?", null, (termin) => !termin.datum_prihlasenia || termin.datum_odhlasenia ? 'N' : 'A'],
   ["Predmet", 'nazov_predmetu'],
   ["Dátum", 'datum', sortAs.date],
-  ["Čas", 'cas'],
   ["Miestnosť", 'miestnost'],
   ["Hodnotiaci", 'hodnotiaci', sortAs.personName],
   ["Prihlásení", 'pocet_prihlasenych', sortAs.number],
@@ -26,6 +22,13 @@ export var MojeSkuskyColumns = [
 export var MojeSkuskyPageContent = React.createClass({
   propTypes: {
     query: React.PropTypes.object.isRequired
+  },
+
+  getInitialState() {
+    // v state.predmety je uložené, či zobraziť skúšky pre každý predmet
+    return {
+      predmety: {}
+    };
   },
 
   renderContent() {
@@ -55,43 +58,112 @@ export var MojeSkuskyPageContent = React.createClass({
     terminy = _.values(terminy);
 
     var [terminy, header] = sortTable(
-      terminy, MojeSkuskyColumns, this.props.query, 'skuskySort');
+      terminy, MojeSkuskyColumns, this.props.query, 'skuskySort'
+    );
 
     var message = terminy.length ? null : "Zatiaľ nie sú vypísané žiadne termíny.";
 
-    return <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
-      <thead>{header}</thead>
-      <tbody>
-        {terminy.map((termin) =>
-          <tr key={termin.termin_key}>
-            {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
-              <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
-              <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
-            <td><Link href={{ ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
-              {termin.nazov_predmetu}
-            </Link></td>
-            <td>{termin.datum}</td>
-            <td>{termin.cas}</td>
-            <td>{termin.miestnost}</td>
-            <td>{termin.hodnotiaci}</td>
-            <td><Link href={{ ...this.props.query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
-              {termin.pocet_prihlasenych +
-               (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
-            </Link></td>
-            <td>{termin.poznamka}</td>
-            <td>{termin.prihlasovanie}</td>
-            <td>{termin.odhlasovanie}</td>
-            <td>
-              {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
-               termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
-               null}
-               <SkuskyRegisterButton termin={termin}/>
-            </td>
-          </tr>
-        )}
-      </tbody>
-      {message && <tfoot><tr><td colSpan={MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
-    </table>;
+    var skuskyFiltrovane = {};
+    var zobrazenePredmety = {};
+    terminy.forEach(
+      (termin) => {
+        if (!skuskyFiltrovane[termin.nazov_predmetu]) {
+          skuskyFiltrovane[termin.nazov_predmetu] = [];
+          zobrazenePredmety[termin.nazov_predmetu] = false;
+        }
+        skuskyFiltrovane[termin.nazov_predmetu].push(termin);
+      }
+    );
+
+    if (_.isEmpty(this.state.predmety)) {
+      this.setState({predmety: zobrazenePredmety});
+    }
+
+    return (<div>
+      {Object.keys(skuskyFiltrovane).sort().map((predmet) => 
+        <div>
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={{marginBottom: '5px', width: '300px'}}
+            onClick={(e) => {
+              e.preventDefault();
+              this.setState({
+                predmety: {
+                  ...this.state.predmety,
+                  [predmet]: !this.state.predmety[predmet],
+                }
+              });
+            }}
+          >{predmet}<span className="caret pull-right" style={{marginTop: '7px'}} /></button>
+          {this.state.predmety[predmet] &&
+            <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
+              <thead>{header}</thead>
+              <tbody>
+                {skuskyFiltrovane[predmet].map((termin) => this.renderTermin(termin))}
+              </tbody>
+            </table>
+          }
+        </div>
+      )}
+    </div>);
+  },
+
+  renderTermin(termin) {
+    var today = new Date().toJSON().replace(/-/g, '').substring(0, 8);
+    var farbaRiadku;
+    
+    if (today > sortAs.date(termin.datum)) {
+      if (termin.hodnotenie_predmetu) {
+        farbaRiadku = termin.hodnotenie_predmetu.includes('F') ? 'danger' : 'success';
+      } else {
+        farbaRiadku = 'info';
+      }
+    };
+
+    var terminSkusky = termin.datum.split('.');
+    var den = [
+      'Nedeľa',
+      'Pondelok',
+      'Utorok',
+      'Streda',
+      'Štvrtok',
+      'Piatok',
+      'Sobota',
+    ][new Date(terminSkusky[2], terminSkusky[1] - 1, terminSkusky[0]).getDay()];
+    
+    return (
+      <tr key={termin.termin_key} className={farbaRiadku}>
+        {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
+          <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
+          <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
+        <td>
+          <Link href={{
+            ...this.props.query,
+            modal: 'detailPredmetu',
+            modalPredmetKey: termin.predmet_key,
+            modalAkademickyRok: termin.akademicky_rok
+          }}>{termin.nazov_predmetu}</Link>
+        </td>
+        <td>{`${den} ${termin.datum} ${termin.cas}`}</td>
+        <td>{termin.miestnost}</td>
+        <td>{termin.hodnotiaci}</td>
+        <td>
+          <Link href={{...this.props.query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key}}>
+            {termin.pocet_prihlasenych + (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
+          </Link>
+        </td>
+        <td>{termin.poznamka}</td>
+        <td>{termin.prihlasovanie}</td>
+        <td>{termin.odhlasovanie}</td>
+        <td>
+          {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
+          termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
+          null}
+          <SkuskyRegisterButton termin={termin}/>
+        </td>
+      </tr>
+    );
   },
 
   render() {
