@@ -37,6 +37,9 @@ vaše hodnotenia a skontrolujte si počet kreditov bez zbytočného klikania.</p
 </noscript>
 <script>Votr = %(init_json)s</script>
 %(scripts)s
+<script type="text/javascript" id="cookiebanner"
+src="//cdnjs.cloudflare.com/ajax/libs/cookie-banner/1.0.0/cookiebanner.min.js"
+data-position="top" data-message="Daj semestru ešte 10 minút" data-linkmsg="Hlasuj v ankete!" data-moreinfo="https://anketa.uniba.sk/?c" data-close-text="Zatvoriť, kašlem na to"></script>
 </body>
 </html>
 '''.lstrip()
