@@ -628,7 +628,7 @@ class Application:
         if content_type == 'webui/execCustomFunction':
             raise AISParseError("webui/execCustomFunction is not supported")
 
-        if width or height:
+        if (width or height) and not (width == -1 and height == -1):
             raise AISParseError(
                 "shellExec with width or height is not supported")
 

@@ -19,6 +19,20 @@ export var DetailPredmetuModal = React.createClass({
     return cache.get('get_studenti_zapisani_na_predmet', predmetKey, akademickyRok);
   },
 
+  renderInformacnyListPredmetu() {
+    var cache = new CacheRequester();
+    var {modalAkademickyRok, modalPredmetKey} = this.props.query;
+
+    var data = cache.get('get_informacny_list', modalPredmetKey, modalAkademickyRok);
+
+    if (!data) {
+      return <Loading requests={cache.missing} />;
+    }
+
+    var url = "data:application/pdf;base64," + escape(data);
+    return <a href={url} target="_blank">Otvoriť</a>;
+  },
+
   renderUcitelia() {
     var cache = new CacheRequester();
     var {modalAkademickyRok, modalPredmetKey} = this.props.query;
@@ -121,6 +135,9 @@ export var DetailPredmetuModal = React.createClass({
 
   render() {
     return <Modal title={this.renderTitle()}>
+
+      <h4>Informačný list predmetu</h4>
+      {this.renderInformacnyListPredmetu()}
       <h4>Učitelia</h4>
       {this.renderUcitelia()}
       <h4>Zapísaní študenti</h4>

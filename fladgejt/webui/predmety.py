@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import base64
 
 from aisikl.app import Application, assert_ops
 from fladgejt.webui.pool import pooled_app
@@ -21,8 +22,10 @@ class WebuiPredmetyMixin:
             app.d.akRokComboBox.options, title=akademicky_rok)
         app.d.akRokComboBox.select(index)
 
+        skratka_predmetu = '/'.join(decode_key(kod_predmetu)[0].split('/')[1:-1])
+
         # Napiseme kod predmetu.
-        app.d.skratkaPredmetuTextField.write(kod_predmetu)
+        app.d.skratkaPredmetuTextField.write(skratka_predmetu)
 
         # Stlacime nacitavaci button (sipku dole).
         app.d.zobrazitPredmetyButton.click()
@@ -51,11 +54,11 @@ class WebuiPredmetyMixin:
         assert_ops(ops, 'closeDialog', 'abortBox')
         app.close_dialog(*ops[0].args)
         with app.collect_operations() as ops:
-            app.abort_box()
+            app.abort_box('')
 
-        # Otvori sa vysledne PDF.
+        # Vratime zakodove PDF.
         url = app.awaited_shell_exec(ops)
-        return app.context.request_text(url)
+        return base64.b64encode(url.content).decode()
 
     def __query_dialog(self, app, akademicky_rok, fakulta=None, semester=None,
                        stupen_predmetu=None, typ_predmetu=None,
