@@ -4,6 +4,7 @@ import { DetailPredmetuModal } from './DetailPredmetu';
 import { ErrorModal } from './ErrorPage';
 import { LogViewer } from './LogViewer';
 import { MojeHodnoteniaPage } from './MojeHodnoteniaPage';
+import { PriebezneHodnoteniaPage } from './PriebezneHodnoteniaPage';
 import { MojePredmetyPage } from './MojePredmetyPage';
 import { MojeSkuskyPage } from './MojeSkuskyPage';
 import { PrehladStudiaPage } from './PrehladStudiaPage';
@@ -26,6 +27,7 @@ export var NotFoundPage = React.createClass({
 
 export var actions = {
   index: IndexPage,
+  priebezneHodnotenia: PriebezneHodnoteniaPage,
   mojeHodnotenia: MojeHodnoteniaPage,
   mojePredmety: MojePredmetyPage,
   mojeSkusky: MojeSkuskyPage,

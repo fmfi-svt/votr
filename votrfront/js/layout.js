@@ -110,6 +110,7 @@ export var MainMenu = React.createClass({
       {somStudent && this.renderMenuItem("Moje predmety", { action: 'mojePredmety', zapisnyListKey })}
       {somStudent && this.renderMenuItem("Moje skúšky", { action: 'mojeSkusky', zapisnyListKey })}
       {somStudent && this.renderMenuItem("Moje hodnotenia", { action: 'mojeHodnotenia', studiumKey })}
+      {somStudent && this.renderMenuItem("Priebežné hodnotenia", { action: 'priebezneHodnotenia', zapisnyListKey })}
       {/*somStudent && this.renderDisabled("Môj rozvrh")*/}
       {somStudent && this.renderMenuItem("Zápis predmetov", { action: 'zapisZPlanu', zapisnyListKey }, { zapisZPonuky: true })}
       {somStudent && this.renderMenuItem("Prehľad štúdia", { action: 'prehladStudia' })}

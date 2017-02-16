@@ -39,6 +39,11 @@ Hodnotenie = keyed_namedtuple('Hodnotenie', [
     predmet_key=['skratka'],
     hodn_key=['zapisny_list_key', 'skratka'])
 
+PriebezneHodnotenie = keyed_namedtuple('PriebezneHodnotenie', [
+    'akademicky_rok', 'skratka', 'nazov', 'semester', 'kredit', 'zaznamy',
+    'predmet_key'],
+    predmet_key=['skratka'])
+
 Priemer = namedtuple('Priemer', [
     'akademicky_rok', 'nazov', 'semester', 'ziskany_kredit', 'predmetov',
     'neabsolvovanych', 'studijny_priemer', 'vazeny_priemer', 'pokusy_priemer',
