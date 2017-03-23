@@ -39,7 +39,10 @@ Hodnotenie = keyed_namedtuple('Hodnotenie', [
     predmet_key=['skratka'],
     hodn_key=['zapisny_list_key', 'skratka'])
 
-PriebezneHodnotenie = keyed_namedtuple('PriebezneHodnotenie', [
+PriebezneHodnotenie = namedtuple('PriebezneHodnotenie', [
+    'dovod', 'poc_bodov', 'maximum', 'zaevidoval', 'zapocitavat', 'minimum'])
+
+PriebezneHodnoteniaPredmetu = keyed_namedtuple('PriebezneHodnoteniaPredmetu', [
     'akademicky_rok', 'skratka', 'nazov', 'semester', 'kredit', 'zaznamy',
     'predmet_key'],
     predmet_key=['skratka'])

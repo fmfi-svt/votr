@@ -19,8 +19,8 @@ export var PriebezneHodnoteniaPageContent = React.createClass({
       return <Loading requests={cache.missing} />;
     }
     
-    if (priebezneHodnotenia.length == 0) {
-      return <div>Žiadne priebežné hodnotenia.</div>;
+    if (!message && !priebezneHodnotenia.length) {
+      message = "Tento zápisný list nemá žiadne priebežné hodnotenia.";
     }
 
     return (
@@ -34,8 +34,7 @@ export var PriebezneHodnoteniaPageContent = React.createClass({
             <thead>
               <tr>
                 <th>Dôvod hodnotenia</th>
-                <th>Počet bodov</th>
-                <th>Maximum</th>
+                <th>Počet bodov / Maximum</th>
                 <th>Zaevidoval</th>
                 <th>Započítavať</th>
                 <th>Minimum</th>
@@ -45,8 +44,7 @@ export var PriebezneHodnoteniaPageContent = React.createClass({
             {priebHod.zaznamy.map((zaznam) =>
               <tr>
                 <td>{zaznam.dovod}</td>
-                <td>{zaznam.poc_bodov}</td>
-                <td>{zaznam.maximum}</td>
+                <td>{zaznam.poc_bodov} / {zaznam.maximum}</td>
                 <td>{zaznam.zaevidoval}</td>
                 <td>{zaznam.zapocitavat}</td>
                 <td>{zaznam.minimum}</td>
@@ -56,7 +54,7 @@ export var PriebezneHodnoteniaPageContent = React.createClass({
           </table>
         </div>
       )}
-      {message && <h5>{message}</h5>}
+      {message && <strong>{message}</strong>}
       </div>
     );
   },

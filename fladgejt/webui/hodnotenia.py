@@ -1,6 +1,6 @@
 
 from fladgejt.helpers import CantOpenApplication, decode_key
-from fladgejt.structures import Hodnotenie, Priemer, PriebezneHodnotenie
+from fladgejt.structures import Hodnotenie, Priemer, PriebezneHodnotenie, PriebezneHodnoteniaPredmetu
 
 
 class WebuiHodnoteniaMixin:
@@ -77,23 +77,20 @@ class WebuiHodnoteniaMixin:
                 app.awaited_refresh_dialog(ops)
 
             # Klikneme na button nacitatHodnotenie
-            with app.collect_operations() as ops:
-                app.d.nacitatHodnotenieButton.click()
-            if ops:
-                app.awaited_refresh_dialog(ops)
+            app.d.nacitatHodnotenieButton.click()
 
-            records = [{'dovod': prow['dovod'],
-                        'poc_bodov': prow['pocetBodov'],
-                        'maximum': prow['dovodPriebHodHranica'],
-                        'zaevidoval': prow['zapisalPlneMeno'],
-                        'zapocitavat': prow['zapocitat'],
-                        'minimum': prow['dovodPriebHodMinHranica']}
-                            for prow in app.d.hodnotenieTable.all_rows()]
+            records = [PriebezneHodnotenie(dovod=prow['dovod'],
+                                           poc_bodov=prow['pocetBodov'],
+                                           maximum=prow['dovodPriebHodHranica'],
+                                           zaevidoval=prow['zapisalPlneMeno'],
+                                           zapocitavat=prow['zapocitat'],
+                                           minimum=prow['dovodPriebHodMinHranica'])
+                       for prow in app.d.hodnotenieTable.all_rows()]
 
-            result.append(PriebezneHodnotenie(akademicky_rok=akademicky_rok,
-                                              skratka=row['skratka'],
-                                              nazov=row['predmetNazov'],
-                                              kredit=row['kredit'],
-                                              semester=row['semesterKodJ'],
-                                              zaznamy=records))
+            result.append(PriebezneHodnoteniaPredmetu(akademicky_rok=akademicky_rok,
+                                                      skratka=row['skratka'],
+                                                      nazov=row['predmetNazov'],
+                                                      kredit=row['kredit'],
+                                                      semester=row['semesterKodJ'],
+                                                      zaznamy=records))
         return [result, None]
