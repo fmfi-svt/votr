@@ -18,14 +18,11 @@ class WebuiPredmetyMixin:
     def get_informacny_list(self, kod_predmetu, akademicky_rok):
         app = self._open_register_predmetov()
 
-        index = find_option(
-            app.d.akRokComboBox.options, title=akademicky_rok)
-        app.d.akRokComboBox.select(index)
+        stredisko, skratka, _ = decode_key(kod_predmetu)[0].split('/')
 
-        skratka_predmetu = '/'.join(decode_key(kod_predmetu)[0].split('/')[1:-1])
-
-        # Napiseme kod predmetu.
-        app.d.skratkaPredmetuTextField.write(skratka_predmetu)
+        # Napiseme stredisko a skratku predmetu.
+        self.__query_dialog(app, akademicky_rok, stredisko=stredisko,
+            skratka_predmetu=skratka)
 
         # Stlacime nacitavaci button (sipku dole).
         app.d.zobrazitPredmetyButton.click()
@@ -53,11 +50,11 @@ class WebuiPredmetyMixin:
         # Dialog sa zavrie a otvori sa "prosim cakajte", tak cakame.
         assert_ops(ops, 'closeDialog', 'abortBox')
         app.close_dialog(*ops[0].args)
-        with app.collect_operations() as ops:
-            app.abort_box('')
+        with app.collect_operations() as ops2:
+            app.abort_box(*ops[1].args)
 
         # Vratime zakodove PDF.
-        url = app.awaited_shell_exec(ops)
+        url = app.awaited_shell_exec(ops2)
         return base64.b64encode(url.content).decode()
 
     def __query_dialog(self, app, akademicky_rok, fakulta=None, semester=None,
