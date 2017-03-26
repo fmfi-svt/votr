@@ -33,8 +33,8 @@ export var PriebezneHodnoteniaPageContent = React.createClass({
           <table className="table table-condensed table-bordered table-striped table-hover">
             <thead>
               <tr>
-                <th>Dôvod hodnotenia</th>
-                <th>Počet bodov / Maximum</th>
+                <th>Popis</th>
+                <th>Body</th>
                 <th>Zaevidoval</th>
                 <th>Započítavať</th>
                 <th>Minimum</th>
