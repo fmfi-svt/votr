@@ -71,6 +71,10 @@ export var IndexPage = React.createClass({
           získané študijné priemery za celé štúdium
         </p></li>
         <li><p>
+          <strong>Priebežné hodnotenia</strong> &mdash; priebežné hodnotenia
+          predmetov počas semestra
+        </p></li>
+        <li><p>
           <strong>Zápis predmetov</strong> &mdash; pridávanie a odoberanie
           predmetov zo súčasného zápisného listu
         </p></li>
