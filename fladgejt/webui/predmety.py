@@ -18,7 +18,8 @@ class WebuiPredmetyMixin:
     def get_informacny_list(self, kod_predmetu, akademicky_rok):
         app = self._open_register_predmetov()
 
-        stredisko, skratka, _ = decode_key(kod_predmetu)[0].split('/')
+        stredisko, _, zvysok = decode_key(kod_predmetu)[0].partition('/')
+        skratka = zvysok.rpartition('/')[0]
 
         # Napiseme stredisko a skratku predmetu.
         self.__query_dialog(app, akademicky_rok, stredisko=stredisko,
