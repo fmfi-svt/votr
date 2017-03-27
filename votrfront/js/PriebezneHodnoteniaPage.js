@@ -3,6 +3,7 @@ import { ZapisnyListSelector } from './ZapisnyListSelector';
 import { CacheRequester, Loading } from './ajax';
 import { PageLayout, PageTitle } from './layout';
 import { Link } from './router';
+import { humanizeBoolean } from './humanizeAISData';
 
 
 export var PriebezneHodnoteniaPageContent = React.createClass({
@@ -46,7 +47,7 @@ export var PriebezneHodnoteniaPageContent = React.createClass({
                 <td>{zaznam.dovod}</td>
                 <td>{zaznam.poc_bodov} / {zaznam.maximum}</td>
                 <td>{zaznam.zaevidoval}</td>
-                <td>{zaznam.zapocitavat}</td>
+                <td>{humanizeBoolean(zaznam.zapocitavat)}</td>
                 <td>{zaznam.minimum}</td>
               </tr>
             )}
