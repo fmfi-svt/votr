@@ -19,7 +19,8 @@ class RestStudiumMixin:
                           koniec=row['koniecStudia'],
                           sp_dlzka=row['studijnyProgramDlzka'],
                           sp_cislo=row['studijnyProgramIdProgramCRS'],
-                          rok_studia=row['rokStudia'])
+                          rok_studia=row['rokStudia'],
+                          organizacna_jednotka=row['organizacnaJednotka'])
                   for row in studia]
         return result
 
