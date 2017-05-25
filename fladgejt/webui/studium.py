@@ -36,7 +36,8 @@ class WebuiStudiumMixin:
                           koniec=row['koniecStudia'],
                           sp_dlzka=row['studijnyProgramDlzka'],
                           sp_cislo=row['studijnyProgramIdProgramCRS'],
-                          rok_studia=row['rokStudia'])
+                          rok_studia=row['rokStudia'],
+                          organizacna_jednotka=row['studijnyProgramSkratkaAkreditOJ'])
                   for row in app.d.studiaTable.all_rows()]
         return result
 
