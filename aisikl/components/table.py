@@ -461,6 +461,10 @@ class Table(Control):
 
         new_rows = {}
         for tr in data_tab_bodies.find_all('tr'):
+            # Skip trs added for accessibility reasons
+            if tr['id'] == 'aria-columns-row':
+                continue
+
             id = int(tr['id'][len('row_'):])
             rid = tr['rid']
             tds = tr.find_all('td')
