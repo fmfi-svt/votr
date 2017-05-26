@@ -53,7 +53,7 @@ function isFromFMFI(callback) {
     "url": '/rpc?name=get_studia',
     data: "[]",
     success: function (msg) {
-      if(msg.match(/"organizacna_jednotka": "FMFI"/).length > 0) {
+      if(msg.match(/"organizacna_jednotka": "FMFI"/) != null) {
         callback();
       }
     },
