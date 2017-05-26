@@ -79,8 +79,8 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     echo "webpack output is up to date."
   fi
 
-  DIR=$( dirname "${BASH_SOURCE[0]}" )
-  cp $DIR/js/ovce.js static/ovce.js
+  OVCEPATH=$(find js/ -name '*ovce.js' | head -n 1)
+  cp "$OVCEPATH" static/ovce.js
 
   libs='prologue.js libs/jquery.min.js libs/react.min.js libs/react-dom.min.js libs/lodash.min.js libs/transition.js libs/modal.js ovce.js'
   dev=(static/dev/*)
