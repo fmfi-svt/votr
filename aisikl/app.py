@@ -628,10 +628,6 @@ class Application:
         if content_type == 'webui/execCustomFunction':
             raise AISParseError("webui/execCustomFunction is not supported")
 
-        if width or height:
-            raise AISParseError(
-                "shellExec with width or height is not supported")
-
         file_name = file_name.rpartition('/')[2]
         url = ('/ais/files/{}?appId={}&contentType={}&antiCache={}&file={}'
             .format(file_name, self.app_id, content_type, time.time(),
