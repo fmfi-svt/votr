@@ -94,11 +94,121 @@ export var MojeSkuskyPageContent = React.createClass({
     </table>;
   },
 
+  renderSkuskyExport() {
+    var cache = new CacheRequester();
+    var {zapisnyListKey} = this.props.query;
+
+    var vidim = cache.get('get_vidim_terminy_hodnotenia', zapisnyListKey);
+
+    if (!cache.loadedAll) {
+      return <Loading requests={cache.missing} />;
+    }
+
+    if (!vidim) {
+      return <p></p>; // intentionally left blank
+    }
+
+    var terminyPrihlasene = cache.get('get_prihlasene_terminy', zapisnyListKey);
+    var terminyVypisane = cache.get('get_vypisane_terminy', zapisnyListKey);
+
+    if (!terminyPrihlasene || !terminyVypisane) {
+      return <Loading requests={cache.missing} />;
+    }
+
+    // @TODO vyfiltrovat skusky z minuleho semestra, resp. uz spravene?
+    var terminy = {};
+    terminyPrihlasene.forEach((termin) => terminy[termin.termin_key] = termin);
+    terminy = _.values(terminy);
+
+    console.log(terminy);
+
+    // nam stacia terminy, treba ich prekonvertovat do .ics formatu a dat link na stiahnutie
+
+    function convertToICAL(terminy) {
+      var header = [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//svt.fmph.uniba.sk//NONSMGL  votr-170615//",
+        "METHOD:PUBLISH",
+        "X-WR-CALNAME:Moje termíny hodnotenia",
+        "X-WR-CALDESC:Kalendár skúšok vyexportovaný z aplikácie VOTR",
+        "X-WR-TIMEZONE:Europe/Bratislava",
+      ].join("\n");
+
+      var events = {};
+      
+      function createVevent(termin) {
+        var header = "BEGIN:VEVENT";
+
+        // unique identificator for each event (so we can identify copies of the same event)
+        // @TODO is termin.termin_key a unique ID?
+        var uid = termin.miestnost + "-" + termin.cas + "-" + termin.datum + "-" + termin.skratka_predmetu + "@" + "votr.uniba.sk";
+        // @TODO I wonder, what is a proper way to converse to local time format?
+        var dtstart = termin.datum.split(".").reverse().join("") + "T" + termin.cas.split(":").join("") + "00";
+        // as for there is no info about duration, we'll set it for 4 hours
+        var hodina = (parseInt(termin.cas.split(":")[0]) + 4).toString();
+        // add leading zero
+        if (hodina.length == 1) {
+          hodina = "0" + hodina;
+        }
+        var dtend = termin.datum.split(".").reverse().join("") + "T" + hodina + termin.cas.split(":")[1] + "00";
+
+        function escapeSymbols(s) {
+          return s.replace(/\\n/g, "\\n");
+        }
+
+        //@TODO ake vsetky informacie chceme zobrazovat v popise eventu? (zatial su take, ako vo FAJR)
+        var desc = [
+          "Prihlasovanie:" + escapeSymbols(termin.prihlasovanie), 
+          "Odhlasovanie:" + escapeSymbols(termin.odhlasovanie),
+          "Poznámka:" + escapeSymbols(termin.poznamka),
+        ].join("\\n"); // double backquote is intentional
+
+        var fields = [
+          "SUMMARY:" + termin.nazov_predmetu,
+          "UID:" + uid,
+          "DTSTART;TZID=Europe/Bratislava:" + dtstart,
+          "DTEND;TZID=Europe/Bratislava:" + dtend,
+          "DESCRIPTION:" + desc,
+        ];
+
+        if (termin.miestnost !== null && termin.miestnost !== undefined && termin.miestnost.length > 0) {
+          fields.push("LOCATION:" + termin.miestnost);
+        }
+
+        var footer = "END:VEVENT";
+        return [header, fields.join("\n"), footer].join("\n");
+      }
+
+      terminy.forEach((termin) => events[termin.termin_key] = createVevent(termin));
+      events = _.values(events);
+
+      var footer = "END:VCALENDAR";
+      return [header, events.join("\n"), footer].join("\n");
+    }
+
+    function handleClickICal() {
+      var icalText = convertToICAL(terminy);
+
+      // @TODO pridat file-saver do dependencies celeho projektu
+      var FileSaver = require('file-saver');
+      var blob = new Blob([icalText], {type: "text/calendar;charset=utf-8"});
+      FileSaver.saveAs(blob, "skusky.ics");
+    }
+
+    // @TODO CSS ctyle for button(s)
+    var buttonClass = "btn btn-xs ";
+    return <div>
+      <button onClick={handleClickICal}  buttonClass={buttonClass}>Export(iCal)</button>
+    </div>;
+  },
+
   render() {
     return <div>
       <div className="header">
         <PageTitle>Moje skúšky</PageTitle>
       </div>
+      {this.renderSkuskyExport()}
       {this.renderContent()}
     </div>;
   }
