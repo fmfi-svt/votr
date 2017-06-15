@@ -30,14 +30,13 @@ export var ErrorModal = React.createClass({
     var title = "Chyba";
     var description = "Vyskytla sa chyba a vaša požiadavka nebola spracovaná.";
 
-    if (Votr.settings.error) {
-      if (type == "aisikl.exceptions.LoggedOutError") {
+    if (type == "aisikl.exceptions.LoggedOutError") {
         title = "Prihlásenie vypršalo";
         description = "Vaše prihlásenie vypršalo. Skúste znova.";
-      } else {
-        title = "Chyba pripojenia";
-        description = "Votr sa nevie pripojiť na AIS.";
-      }
+    } 
+    if (Votr.settings.error) {  
+      title = "Chyba pripojenia";
+      description = "Votr sa nevie pripojiť na AIS.";
     } else {
       if (type == "aisikl.exceptions.AISParseError") {
         description = "Votr nerozumie, čo spravil AIS. V novej verzii AISu sa asi niečo zmenilo.";
