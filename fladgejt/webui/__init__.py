@@ -1,5 +1,5 @@
 
-from aisikl.exceptions import LoggedOutError
+from aisikl.app import check_connection
 from .commonui import WebuiCommonUIMixin
 from .hodnotenia import WebuiHodnoteniaMixin
 from .obdobia import WebuiObdobiaMixin
@@ -17,10 +17,7 @@ class WebuiClient(WebuiCommonUIMixin, WebuiHodnoteniaMixin, WebuiObdobiaMixin,
         self.context = context
 
     def check_connection(self):
-        soup = self.context.request_html('/ais/portal/changeTab.do?tab=0')
-        username_element = soup.find(class_='user-name')
-        if not (username_element and username_element.get_text()):
-            raise LoggedOutError('AIS login expired.')
+        check_connection(self.context)
 
     def logout(self):
         self.context.request_html('/ais/logout.do')
