@@ -223,9 +223,9 @@ export var MojeSkuskyPageContent = React.createClass({
     }
 
     // @TODO CSS ctyle for button(s)
-    var buttonClass = "btn btn-xs ";
+    var buttonClass = "btn btn-primary";
     return <div>
-      <button onClick={handleClickICal}  buttonClass={buttonClass}>Export(iCal)</button>
+      <button onClick={handleClickICal}  className={buttonClass}>Export(iCal)</button>
     </div>;
   },
 
