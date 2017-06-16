@@ -82,7 +82,13 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   OVCEPATH=$(find js/ -name '*ovce.js' | head -n 1)
   cp "$OVCEPATH" static/ovce.js
 
-  libs='prologue.js libs/jquery.min.js libs/react.min.js libs/react-dom.min.js libs/lodash.min.js libs/transition.js libs/modal.js ovce.js'
+  # add file-saver
+  if ! [ -d static/libs/FileSaver.min.js ]; then
+    npm install file-saver
+    cp node_modules/file-saver/FileSaver.min.js static/libs/
+  fi
+
+  libs='prologue.js libs/jquery.min.js libs/react.min.js libs/react-dom.min.js libs/lodash.min.js libs/transition.js libs/modal.js ovce.js libs/FileSaver.min.js'
   dev=(static/dev/*)
   echo ${libs//.min} "${dev[@]//"static/"}" votr.dev.js > static/jsdeps-dev
   echo $libs votr.min.js > static/jsdeps-prod

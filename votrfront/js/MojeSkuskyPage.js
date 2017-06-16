@@ -217,11 +217,9 @@ export var MojeSkuskyPageContent = React.createClass({
 
     function handleClickICal() {
       var icalText = convertToICAL(terminy);
-
-      // @TODO pridat file-saver do dependencies celeho projektu
-      var FileSaver = require('file-saver');
       var blob = new Blob([icalText], {type: "text/calendar;charset=utf-8"});
-      FileSaver.saveAs(blob, "skusky.ics");
+      saveAs(blob, "skusky.ics");
+    
     }
 
     // @TODO CSS ctyle for button(s)
