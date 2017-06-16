@@ -129,7 +129,6 @@ export var MojeSkuskyPageContent = React.createClass({
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
         "PRODID:-//svt.fmph.uniba.sk//NONSMGL  votr-170615//",
-        "METHOD:PUBLISH",
         "X-WR-CALNAME:Moje termíny hodnotenia",
         "X-WR-CALDESC:Kalendár skúšok vyexportovaný z aplikácie VOTR",
         "X-WR-TIMEZONE:Europe/Bratislava",
@@ -142,6 +141,16 @@ export var MojeSkuskyPageContent = React.createClass({
 
         // unique identificator for each event (so we can identify copies of the same event)
         var uid = termin.termin_key + "@" + "votr.uniba.sk";
+
+        // DTSTAMP is something like LAST-MODFIFIED column (mandatory), must be in UTC time format
+        function getUTCTimeFormat(date) {
+          // dirty hack, as I don't now any normal way to convert Date() to UTC time format: YYYYMMDDTHHMMSSZ (Zulu time)
+          var s = date.toISOString();
+          var re = /(\d*)-(\d*)-(\d*)T(\d*):(\d*):(\d*)(\.\d*)*Z/;
+          var ss = s.replace(re, "$1$2$3T$4$5$6Z");
+          return ss;
+        }
+        var dtstamp = getUTCTimeFormat(new Date());
 
         var [den, mesiac, rok] = termin.datum.split(".");
         var [hodina, minuty] = termin.cas.split(":");
@@ -169,6 +178,7 @@ export var MojeSkuskyPageContent = React.createClass({
         var fields = [
           "SUMMARY:" + termin.nazov_predmetu,
           "UID:" + uid,
+          "DTSTAMP:" + dtstamp,
           "DTSTART;TZID=Europe/Bratislava:" + dtstart,
           "DTEND;TZID=Europe/Bratislava:" + dtend,
           "DESCRIPTION:" + desc,
