@@ -141,8 +141,8 @@ export var MojeSkuskyPageContent = React.createClass({
         var header = "BEGIN:VEVENT";
 
         // unique identificator for each event (so we can identify copies of the same event)
-        // @TODO is termin.termin_key a unique ID?
-        var uid = termin.miestnost + "-" + termin.cas + "-" + termin.datum + "-" + termin.skratka_predmetu + "@" + "votr.uniba.sk";
+        var uid = termin.termin_key + "@" + "votr.uniba.sk";
+
         // @TODO I wonder, what is a proper way to converse to local time format?
         var dtstart = termin.datum.split(".").reverse().join("") + "T" + termin.cas.split(":").join("") + "00";
         // as for there is no info about duration, we'll set it for 4 hours
