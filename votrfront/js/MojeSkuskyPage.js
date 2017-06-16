@@ -133,7 +133,7 @@ export var MojeSkuskyPageContent = React.createClass({
         "X-WR-CALNAME:Moje termíny hodnotenia",
         "X-WR-CALDESC:Kalendár skúšok vyexportovaný z aplikácie VOTR",
         "X-WR-TIMEZONE:Europe/Bratislava",
-      ].join("\n");
+      ].join("\r\n");
 
       var events = {};
       
@@ -179,14 +179,14 @@ export var MojeSkuskyPageContent = React.createClass({
         }
 
         var footer = "END:VEVENT";
-        return [header, fields.join("\n"), footer].join("\n");
+        return [header, fields.join("\r\n"), footer].join("\r\n");
       }
 
       terminy.forEach((termin) => events[termin.termin_key] = createVevent(termin));
       events = _.values(events);
 
       var footer = "END:VCALENDAR";
-      return [header, events.join("\n"), footer].join("\n");
+      return [header, events.join("\r\n"), footer].join("\r\n");
     }
 
     function handleClickICal() {
