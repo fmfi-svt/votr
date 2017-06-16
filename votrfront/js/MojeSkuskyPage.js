@@ -125,6 +125,8 @@ export var MojeSkuskyPageContent = React.createClass({
     // nam stacia terminy, treba ich prekonvertovat do .ics formatu a dat link na stiahnutie
 
     function convertToICAL(terminy) {
+      // standard: https://tools.ietf.org/html/rfc5545
+      // verificator: http://severinghaus.org/projects/icv/
       var header = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
