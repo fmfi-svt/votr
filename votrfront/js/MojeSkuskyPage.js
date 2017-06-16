@@ -143,15 +143,17 @@ export var MojeSkuskyPageContent = React.createClass({
         // unique identificator for each event (so we can identify copies of the same event)
         var uid = termin.termin_key + "@" + "votr.uniba.sk";
 
-        // @TODO I wonder, what is a proper way to converse to local time format?
-        var dtstart = termin.datum.split(".").reverse().join("") + "T" + termin.cas.split(":").join("") + "00";
+        var [den, mesiac, rok] = termin.datum.split(".");
+        var [hodina, minuty] = termin.cas.split(":");
+        var dtstart = `${rok}${mesiac}${den}T${hodina}${minuty}00`;
+
         // as for there is no info about duration, we'll set it for 4 hours
-        var hodina = (parseInt(termin.cas.split(":")[0]) + 4).toString();
+        var hodina_koniec = (parseInt(hodina) + 4).toString();
         // add leading zero
-        if (hodina.length == 1) {
-          hodina = "0" + hodina;
+        if (hodina_koniec.length == 1) {
+          hodina_koniec = "0" + hodina_koniec;
         }
-        var dtend = termin.datum.split(".").reverse().join("") + "T" + hodina + termin.cas.split(":")[1] + "00";
+        var dtend = `${rok}${mesiac}${den}T${hodina_koniec}${minuty}00`;
 
         function escapeSymbols(s) {
           return s.replace(/\\n/g, "\\n");
