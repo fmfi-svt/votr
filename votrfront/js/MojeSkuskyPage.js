@@ -44,6 +44,10 @@ function convertToICAL(terminy) {
 
   // VEVENTs
   for (var termin of terminy) {
+    if (!termin.datum_prihlasenia || termin.datum_odhlasenia) {
+      // nie je prihlaseny
+      continue;
+    }
     lines.push("BEGIN:VEVENT");
     
     lines.push("SUMMARY:" + termin.nazov_predmetu);
