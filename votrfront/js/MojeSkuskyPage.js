@@ -26,44 +26,33 @@ function convertToICAL(terminy) {
   // standard: https://tools.ietf.org/html/rfc5545
   // verificator: http://severinghaus.org/projects/icv/
 
-
-  // already with header
+  // header
   var lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
-    "PRODID:-//svt.fmph.uniba.sk//NONSGML  votr-2017//EN",
+    "PRODID:-//svt.fmph.uniba.sk//NONSGML votr-2017//EN",
     "X-WR-CALNAME:Moje termíny hodnotenia",
-    "X-WR-CALDESC:Kalendár skúšok vyexportovaný z aplikácie VOTR",
+    "X-WR-CALDESC:Kalendár skúšok vyexportovaný z aplikácie Votr",
     "X-WR-TIMEZONE:Europe/Bratislava",
   ];
-
-  // VEVENTs
-
-  function getUTCTimeFormat(date) {
-    // dirty hack, as I don't now any normal way to convert Date() to UTC time format: YYYYMMDDTHHMMSSZ (Zulu time)
-    var s = date.toISOString();
-    var re = /(\d*)-(\d*)-(\d*)T(\d*):(\d*):(\d*)(\.\d*)*Z/;
-    var ss = s.replace(re, "$1$2$3T$4$5$6Z");
-    return ss;
-  }
 
   function escapeSymbols(s) {
     return s.replace(/\n/g, "\\n");
   }
+  
+  var dtstamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
 
-  for (var i in terminy) {
-    var termin = terminy[i];
-
+  // VEVENTs
+  for (var termin of terminy) {
     lines.push("BEGIN:VEVENT");
     
     lines.push("SUMMARY:" + termin.nazov_predmetu);
     
     // unique identificator for each event (so we can identify copies of the same event)
-    var uid = termin.termin_key + "@" + "votr.uniba.sk";
+    var uid = termin.termin_key + "@votr.uniba.sk";
     lines.push("UID:" + uid);
     
-    // DTSTAMP is something like LAST-MODFIFIED column (mandatory), must be in UTC time format
-    var dtstamp = getUTCTimeFormat(new Date());
+    // DTSTAMP is when this VEVENT was created (exported), must be YYYYMMDDTHHMMSSZ
     lines.push("DTSTAMP:" + dtstamp);
 
     // DTSTART, DTEND
@@ -82,17 +71,16 @@ function convertToICAL(terminy) {
     lines.push("DTEND;TZID=Europe/Bratislava:" + dtend);
 
     // LOCATION
-    if (termin.miestnost !== null && termin.miestnost !== undefined && termin.miestnost.length > 0) {
+    if (termin.miestnost) {
       lines.push("LOCATION:" + termin.miestnost);
     }
 
     // DESCRIPTION
     //@TODO ake vsetky informacie chceme zobrazovat v popise eventu? (zatial su take, ako vo FAJR)
-    var desc = [
-      "Prihlasovanie:" + escapeSymbols(termin.prihlasovanie), 
-      "Odhlasovanie:" + escapeSymbols(termin.odhlasovanie),
-      "Poznámka:" + escapeSymbols(termin.poznamka),
-    ].join("\\n"); // double backquote is intentional
+    var desc = escapeSymbols(
+        "Prihlasovanie: " + termin.prihlasovanie + "\n" +
+        "Odhlasovanie: " + termin.odhlasovanie + "\n" +
+        "Poznámka: " + termin.poznamka);
     lines.push("DESCRIPTION:" + desc);
 
     lines.push("END:VEVENT");
@@ -140,50 +128,47 @@ export var MojeSkuskyPageContent = React.createClass({
 
     var message = terminy.length ? null : "Zatiaľ nie sú vypísané žiadne termíny.";
 
-    // "export as iCal" button
-    // uses data from `terminyPrihlasene`
     function handleClickICal() {
       var icalText = convertToICAL(terminyPrihlasene);
       var blob = new Blob([icalText], {type: "text/calendar;charset=utf-8"});
       saveAs(blob, "MojeTerminy.ics", true);
     }
 
-    var buttonClass = "btn";
-
-    return <div><table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
-      <thead>{header}</thead>
-      <tbody>
-        {terminy.map((termin) =>
-          <tr key={termin.termin_key}>
-            {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
-              <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
-              <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
-            <td><Link href={{ ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
-              {termin.nazov_predmetu}
-            </Link></td>
-            <td>{termin.datum}</td>
-            <td>{termin.cas}</td>
-            <td>{termin.miestnost}</td>
-            <td>{termin.hodnotiaci}</td>
-            <td><Link href={{ ...this.props.query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
-              {termin.pocet_prihlasenych +
-               (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
-            </Link></td>
-            <td>{termin.poznamka}</td>
-            <td>{termin.prihlasovanie}</td>
-            <td>{termin.odhlasovanie}</td>
-            <td>
-              {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
-               termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
-               null}
-               <SkuskyRegisterButton termin={termin}/>
-            </td>
-          </tr>
-        )}
-      </tbody>
-      {message && <tfoot><tr><td colSpan={MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
-    </table>
-    {terminy.length ? <button onClick={handleClickICal}  className={buttonClass}>Stiahnuť ako iCal</button> : ""}
+    return <div>
+      <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
+        <thead>{header}</thead>
+        <tbody>
+          {terminy.map((termin) =>
+            <tr key={termin.termin_key}>
+              {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
+                <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
+                <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
+              <td><Link href={{ ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
+                {termin.nazov_predmetu}
+              </Link></td>
+              <td>{termin.datum}</td>
+              <td>{termin.cas}</td>
+              <td>{termin.miestnost}</td>
+              <td>{termin.hodnotiaci}</td>
+              <td><Link href={{ ...this.props.query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
+                {termin.pocet_prihlasenych +
+                 (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
+              </Link></td>
+              <td>{termin.poznamka}</td>
+              <td>{termin.prihlasovanie}</td>
+              <td>{termin.odhlasovanie}</td>
+              <td>
+                {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
+                 termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
+                 null}
+                 <SkuskyRegisterButton termin={termin}/>
+              </td>
+            </tr>
+          )}
+        </tbody>
+        {message && <tfoot><tr><td colSpan={MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
+      </table>
+      {terminy.length && <button onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}
     </div>;
   },
 
