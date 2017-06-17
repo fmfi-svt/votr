@@ -115,27 +115,7 @@ export var MojeSkuskyPageContent = React.createClass({
       return <Loading requests={cache.missing} />;
     }
     
-
-    var terminy = [];
-    for (var i in terminyPrihlasene) {
-      // pick only future exams
-      var termin = terminyPrihlasene[i];
-      var now = new Date();
-      var now_year = now.getFullYear();
-      var now_month = now.getMonth() + 1; // getMonth returns range 0..11
-      var now_day = now.getDate(); // Date, not Day
-
-      var [tday, tmonth, tyear] = termin.datum.split(".");
-      tyear = parseInt(tyear);
-      tmonth = parseInt(tmonth);
-      tday = parseInt(tday);
-
-      if (tyear > now_year || (tyear == now_year && tmonth > now_month) || (tyear == now_year && tmonth == now_month && tday >= now_day)) {
-        terminy.push(termin);
-      }
-    }
-    
-    // nam stacia terminy, treba ich prekonvertovat do .ics formatu a dat link na stiahnutie
+    // nam stacia terminyPrihlasene, treba ich prekonvertovat do .ics formatu a dat link na stiahnutie
 
     function convertToICAL(terminy) {
       // standard: https://tools.ietf.org/html/rfc5545
@@ -215,9 +195,9 @@ export var MojeSkuskyPageContent = React.createClass({
     }
 
     function handleClickICal() {
-      var icalText = convertToICAL(terminy);
+      var icalText = convertToICAL(terminyPrihlasene);
       var blob = new Blob([icalText], {type: "text/calendar;charset=utf-8"});
-      saveAs(blob, "skusky.ics");
+      saveAs(blob, "MojeTerminy.ics");
     
     }
 
