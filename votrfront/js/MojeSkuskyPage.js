@@ -93,7 +93,7 @@ function convertToICAL(terminy) {
   // footer
   lines.push("END:VCALENDAR");
 
-  return lines.join("\r\n");
+  return lines.map((l) => l.replace(/\n/g, "\\n")).join("\r\n");
 }
 
 export var MojeSkuskyPageContent = React.createClass({
