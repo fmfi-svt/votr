@@ -146,7 +146,7 @@ export var MojeSkuskyPageContent = React.createClass({
     function handleClickICal() {
       var icalText = convertToICAL(terminyPrihlasene);
       var blob = new Blob([icalText], {type: "text/calendar;charset=utf-8"});
-      saveAs(blob, "MojeTerminy.ics");
+      saveAs(blob, "MojeTerminy.ics", true);
     }
 
     var buttonClass = "btn m-top-15";
