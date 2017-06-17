@@ -37,6 +37,11 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     cp -p node_modules/react-dom/dist/*.* static/libs/
   fi
 
+  if ! [ -f static/libs/FileSaver.min.js ]; then
+    npm install file-saver@^1.3.3
+    cp node_modules/file-saver/FileSaver.min.js static/libs/
+  fi
+
   if ! [ -f node_modules/.bin/webpack ]; then
     npm install node-libs-browser@^0.5   # from peerDependencies of webpack
     npm install babel-core@^5   # from peerDependencies of babel-loader
@@ -82,7 +87,7 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   OVCEPATH=$(find js/ -name '*ovce.js' | head -n 1)
   cp "$OVCEPATH" static/ovce.js
 
-  libs='prologue.js libs/jquery.min.js libs/react.min.js libs/react-dom.min.js libs/lodash.min.js libs/transition.js libs/modal.js ovce.js'
+  libs='prologue.js libs/jquery.min.js libs/react.min.js libs/react-dom.min.js libs/lodash.min.js libs/transition.js libs/modal.js ovce.js libs/FileSaver.min.js'
   dev=(static/dev/*)
   echo ${libs//.min} "${dev[@]//"static/"}" votr.dev.js > static/jsdeps-dev
   echo $libs votr.min.js > static/jsdeps-prod
