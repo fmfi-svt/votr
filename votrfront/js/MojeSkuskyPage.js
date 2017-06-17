@@ -149,7 +149,7 @@ export var MojeSkuskyPageContent = React.createClass({
       saveAs(blob, "MojeTerminy.ics", true);
     }
 
-    var buttonClass = "btn m-top-15";
+    var buttonClass = "btn";
 
     return <div><table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
       <thead>{header}</thead>
