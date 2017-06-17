@@ -22,6 +22,87 @@ export var MojeSkuskyColumns = [
   ["Známka", null, (termin) => termin.hodnotenie_terminu || termin.hodnotenie_predmetu]
 ];
 
+function convertToICAL(terminy) {
+  // standard: https://tools.ietf.org/html/rfc5545
+  // verificator: http://severinghaus.org/projects/icv/
+
+
+  // already with header
+  var lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//svt.fmph.uniba.sk//NONSGML  votr-2017//EN",
+    "X-WR-CALNAME:Moje termíny hodnotenia",
+    "X-WR-CALDESC:Kalendár skúšok vyexportovaný z aplikácie VOTR",
+    "X-WR-TIMEZONE:Europe/Bratislava",
+  ];
+
+  // VEVENTs
+
+  function getUTCTimeFormat(date) {
+    // dirty hack, as I don't now any normal way to convert Date() to UTC time format: YYYYMMDDTHHMMSSZ (Zulu time)
+    var s = date.toISOString();
+    var re = /(\d*)-(\d*)-(\d*)T(\d*):(\d*):(\d*)(\.\d*)*Z/;
+    var ss = s.replace(re, "$1$2$3T$4$5$6Z");
+    return ss;
+  }
+
+  function escapeSymbols(s) {
+    return s.replace(/\n/g, "\\n");
+  }
+
+  for (var i in terminy) {
+    var termin = terminy[i];
+
+    lines.push("BEGIN:VEVENT");
+    
+    lines.push("SUMMARY:" + termin.nazov_predmetu);
+    
+    // unique identificator for each event (so we can identify copies of the same event)
+    var uid = termin.termin_key + "@" + "votr.uniba.sk";
+    lines.push("UID:" + uid);
+    
+    // DTSTAMP is something like LAST-MODFIFIED column (mandatory), must be in UTC time format
+    var dtstamp = getUTCTimeFormat(new Date());
+    lines.push("DTSTAMP:" + dtstamp);
+
+    // DTSTART, DTEND
+    var [den, mesiac, rok] = termin.datum.split(".");
+    var [hodina, minuty] = termin.cas.split(":");
+    var dtstart = `${rok}${mesiac}${den}T${hodina}${minuty}00`;
+
+    // as for there is no info about duration, we'll set it for 4 hours
+    var hodina_koniec = (parseInt(hodina) + 4).toString();
+    // add leading zero
+    if (hodina_koniec.length == 1) {
+      hodina_koniec = "0" + hodina_koniec;
+    }
+    var dtend = `${rok}${mesiac}${den}T${hodina_koniec}${minuty}00`;
+    lines.push("DTSTART;TZID=Europe/Bratislava:" + dtstart);
+    lines.push("DTEND;TZID=Europe/Bratislava:" + dtend);
+
+    // LOCATION
+    if (termin.miestnost !== null && termin.miestnost !== undefined && termin.miestnost.length > 0) {
+      lines.push("LOCATION:" + termin.miestnost);
+    }
+
+    // DESCRIPTION
+    //@TODO ake vsetky informacie chceme zobrazovat v popise eventu? (zatial su take, ako vo FAJR)
+    var desc = [
+      "Prihlasovanie:" + escapeSymbols(termin.prihlasovanie), 
+      "Odhlasovanie:" + escapeSymbols(termin.odhlasovanie),
+      "Poznámka:" + escapeSymbols(termin.poznamka),
+    ].join("\\n"); // double backquote is intentional
+    lines.push("DESCRIPTION:" + desc);
+
+    lines.push("END:VEVENT");
+  }
+
+  // footer
+  lines.push("END:VCALENDAR");
+
+  return lines.join("\r\n");
+}
 
 export var MojeSkuskyPageContent = React.createClass({
   propTypes: {
@@ -61,88 +142,6 @@ export var MojeSkuskyPageContent = React.createClass({
 
     // "export as iCal" button
     // uses data from `terminyPrihlasene`
-    function convertToICAL(terminy) {
-      // standard: https://tools.ietf.org/html/rfc5545
-      // verificator: http://severinghaus.org/projects/icv/
-
-
-      // already with header
-      var lines = [
-        "BEGIN:VCALENDAR",
-        "VERSION:2.0",
-        "PRODID:-//svt.fmph.uniba.sk//NONSGML  votr-2017//EN",
-        "X-WR-CALNAME:Moje termíny hodnotenia",
-        "X-WR-CALDESC:Kalendár skúšok vyexportovaný z aplikácie VOTR",
-        "X-WR-TIMEZONE:Europe/Bratislava",
-      ];
-
-      // VEVENTs
-
-      function getUTCTimeFormat(date) {
-        // dirty hack, as I don't now any normal way to convert Date() to UTC time format: YYYYMMDDTHHMMSSZ (Zulu time)
-        var s = date.toISOString();
-        var re = /(\d*)-(\d*)-(\d*)T(\d*):(\d*):(\d*)(\.\d*)*Z/;
-        var ss = s.replace(re, "$1$2$3T$4$5$6Z");
-        return ss;
-      }
-
-      function escapeSymbols(s) {
-        return s.replace(/\n/g, "\\n");
-      }
-
-      for (var i in terminy) {
-        var termin = terminy[i];
-
-        lines.push("BEGIN:VEVENT");
-        
-        lines.push("SUMMARY:" + termin.nazov_predmetu);
-        
-        // unique identificator for each event (so we can identify copies of the same event)
-        var uid = termin.termin_key + "@" + "votr.uniba.sk";
-        lines.push("UID:" + uid);
-        
-        // DTSTAMP is something like LAST-MODFIFIED column (mandatory), must be in UTC time format
-        var dtstamp = getUTCTimeFormat(new Date());
-        lines.push("DTSTAMP:" + dtstamp);
-
-        // DTSTART, DTEND
-        var [den, mesiac, rok] = termin.datum.split(".");
-        var [hodina, minuty] = termin.cas.split(":");
-        var dtstart = `${rok}${mesiac}${den}T${hodina}${minuty}00`;
-
-        // as for there is no info about duration, we'll set it for 4 hours
-        var hodina_koniec = (parseInt(hodina) + 4).toString();
-        // add leading zero
-        if (hodina_koniec.length == 1) {
-          hodina_koniec = "0" + hodina_koniec;
-        }
-        var dtend = `${rok}${mesiac}${den}T${hodina_koniec}${minuty}00`;
-        lines.push("DTSTART;TZID=Europe/Bratislava:" + dtstart);
-        lines.push("DTEND;TZID=Europe/Bratislava:" + dtend);
-
-        // LOCATION
-        if (termin.miestnost !== null && termin.miestnost !== undefined && termin.miestnost.length > 0) {
-          lines.push("LOCATION:" + termin.miestnost);
-        }
-
-        // DESCRIPTION
-        //@TODO ake vsetky informacie chceme zobrazovat v popise eventu? (zatial su take, ako vo FAJR)
-        var desc = [
-          "Prihlasovanie:" + escapeSymbols(termin.prihlasovanie), 
-          "Odhlasovanie:" + escapeSymbols(termin.odhlasovanie),
-          "Poznámka:" + escapeSymbols(termin.poznamka),
-        ].join("\\n"); // double backquote is intentional
-        lines.push("DESCRIPTION:" + desc);
-
-        lines.push("END:VEVENT");
-      }
-
-      // footer
-      lines.push("END:VCALENDAR");
-
-      return lines.join("\r\n");
-    }
-
     function handleClickICal() {
       var icalText = convertToICAL(terminyPrihlasene);
       var blob = new Blob([icalText], {type: "text/calendar;charset=utf-8"});
