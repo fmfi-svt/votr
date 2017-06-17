@@ -67,7 +67,7 @@ export var MojeSkuskyPageContent = React.createClass({
       var header = [
         "BEGIN:VCALENDAR",
         "VERSION:2.0",
-        "PRODID:-//svt.fmph.uniba.sk//NONSMGL  votr-170615//",
+        "PRODID:-//svt.fmph.uniba.sk//NONSGML  votr-2017//EN",
         "X-WR-CALNAME:Moje termíny hodnotenia",
         "X-WR-CALDESC:Kalendár skúšok vyexportovaný z aplikácie VOTR",
         "X-WR-TIMEZONE:Europe/Bratislava",
