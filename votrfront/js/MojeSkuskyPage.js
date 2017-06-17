@@ -35,10 +35,6 @@ function convertToICAL(terminy) {
     "X-WR-CALDESC:Kalendár skúšok vyexportovaný z aplikácie Votr",
     "X-WR-TIMEZONE:Europe/Bratislava",
   ];
-
-  function escapeSymbols(s) {
-    return s.replace(/\n/g, "\\n");
-  }
   
   var dtstamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
 
