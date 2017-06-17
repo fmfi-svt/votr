@@ -81,10 +81,9 @@ function convertToICAL(terminy) {
 
     // DESCRIPTION
     //@TODO ake vsetky informacie chceme zobrazovat v popise eventu? (zatial su take, ako vo FAJR)
-    var desc = escapeSymbols(
-        "Prihlasovanie: " + termin.prihlasovanie + "\n" +
-        "Odhlasovanie: " + termin.odhlasovanie + "\n" +
-        "Poznámka: " + termin.poznamka);
+    var desc = "Prihlasovanie: " + termin.prihlasovanie + "\n" +
+      "Odhlasovanie: " + termin.odhlasovanie + "\n" +
+      "Poznámka: " + termin.poznamka;
     lines.push("DESCRIPTION:" + desc);
 
     lines.push("END:VEVENT");
