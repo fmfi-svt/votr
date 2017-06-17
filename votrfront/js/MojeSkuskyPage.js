@@ -31,7 +31,7 @@ function convertToICAL(terminy) {
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//svt.fmph.uniba.sk//NONSGML votr-2017//EN",
-    "X-WR-CALNAME:Moje termíny hodnotenia",
+    "X-WR-CALNAME:Moje skúšky",
     "X-WR-CALDESC:Kalendár skúšok vyexportovaný z aplikácie Votr",
     "X-WR-TIMEZONE:Europe/Bratislava",
   ];
