@@ -59,64 +59,8 @@ export var MojeSkuskyPageContent = React.createClass({
 
     var message = terminy.length ? null : "Zatiaľ nie sú vypísané žiadne termíny.";
 
-    return <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
-      <thead>{header}</thead>
-      <tbody>
-        {terminy.map((termin) =>
-          <tr key={termin.termin_key}>
-            {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
-              <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
-              <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
-            <td><Link href={{ ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
-              {termin.nazov_predmetu}
-            </Link></td>
-            <td>{termin.datum}</td>
-            <td>{termin.cas}</td>
-            <td>{termin.miestnost}</td>
-            <td>{termin.hodnotiaci}</td>
-            <td><Link href={{ ...this.props.query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
-              {termin.pocet_prihlasenych +
-               (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
-            </Link></td>
-            <td>{termin.poznamka}</td>
-            <td>{termin.prihlasovanie}</td>
-            <td>{termin.odhlasovanie}</td>
-            <td>
-              {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
-               termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
-               null}
-               <SkuskyRegisterButton termin={termin}/>
-            </td>
-          </tr>
-        )}
-      </tbody>
-      {message && <tfoot><tr><td colSpan={MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
-    </table>;
-  },
-
-  renderSkuskyExport() {
-    var cache = new CacheRequester();
-    var {zapisnyListKey} = this.props.query;
-
-    var vidim = cache.get('get_vidim_terminy_hodnotenia', zapisnyListKey);
-
-    if (!cache.loadedAll) {
-      return <Loading requests={cache.missing} />;
-    }
-
-    if (!vidim) {
-      return <p></p>; // intentionally left blank
-    }
-
-    var terminyPrihlasene = cache.get('get_prihlasene_terminy', zapisnyListKey);
-    var terminyVypisane = cache.get('get_vypisane_terminy', zapisnyListKey);
-
-    if (!terminyPrihlasene || !terminyVypisane) {
-      return <Loading requests={cache.missing} />;
-    }
-    
-    // nam stacia terminyPrihlasene, treba ich prekonvertovat do .ics formatu a dat link na stiahnutie
-
+    // "export as iCal" button
+    // uses data from `terminyPrihlasene`
     function convertToICAL(terminy) {
       // standard: https://tools.ietf.org/html/rfc5545
       // verificator: http://severinghaus.org/projects/icv/
@@ -198,12 +142,44 @@ export var MojeSkuskyPageContent = React.createClass({
       var icalText = convertToICAL(terminyPrihlasene);
       var blob = new Blob([icalText], {type: "text/calendar;charset=utf-8"});
       saveAs(blob, "MojeTerminy.ics");
-    
     }
 
     var buttonClass = "btn m-top-15";
-    return <div>
-      <button onClick={handleClickICal}  className={buttonClass}>Stiahnuť ako iCal</button>
+
+    return <div><table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
+      <thead>{header}</thead>
+      <tbody>
+        {terminy.map((termin) =>
+          <tr key={termin.termin_key}>
+            {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
+              <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
+              <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
+            <td><Link href={{ ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
+              {termin.nazov_predmetu}
+            </Link></td>
+            <td>{termin.datum}</td>
+            <td>{termin.cas}</td>
+            <td>{termin.miestnost}</td>
+            <td>{termin.hodnotiaci}</td>
+            <td><Link href={{ ...this.props.query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
+              {termin.pocet_prihlasenych +
+               (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
+            </Link></td>
+            <td>{termin.poznamka}</td>
+            <td>{termin.prihlasovanie}</td>
+            <td>{termin.odhlasovanie}</td>
+            <td>
+              {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
+               termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
+               null}
+               <SkuskyRegisterButton termin={termin}/>
+            </td>
+          </tr>
+        )}
+      </tbody>
+      {message && <tfoot><tr><td colSpan={MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
+    </table>
+    {terminy.length ? <button onClick={handleClickICal}  className={buttonClass}>Stiahnuť ako iCal</button> : ""}
     </div>;
   },
 
@@ -213,7 +189,6 @@ export var MojeSkuskyPageContent = React.createClass({
         <PageTitle>Moje skúšky</PageTitle>
       </div>
       {this.renderContent()}
-      {this.renderSkuskyExport()}
     </div>;
   }
 });
