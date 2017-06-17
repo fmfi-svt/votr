@@ -133,9 +133,8 @@ export var MojeSkuskyPageContent = React.createClass({
       if (tyear > now_year || (tyear == now_year && tmonth > now_month) || (tyear == now_year && tmonth == now_month && tday >= now_day)) {
         terminy.push(termin);
       }
-
     }
-
+    
     // nam stacia terminy, treba ich prekonvertovat do .ics formatu a dat link na stiahnutie
 
     function convertToICAL(terminy) {
@@ -222,10 +221,9 @@ export var MojeSkuskyPageContent = React.createClass({
     
     }
 
-    // @TODO CSS ctyle for button(s)
-    var buttonClass = "btn btn-primary";
+    var buttonClass = "btn m-top-15";
     return <div>
-      <button onClick={handleClickICal}  className={buttonClass}>Export(iCal)</button>
+      <button onClick={handleClickICal}  className={buttonClass}>Stiahnuť ako iCal</button>
     </div>;
   },
 
@@ -234,8 +232,8 @@ export var MojeSkuskyPageContent = React.createClass({
       <div className="header">
         <PageTitle>Moje skúšky</PageTitle>
       </div>
-      {this.renderSkuskyExport()}
       {this.renderContent()}
+      {this.renderSkuskyExport()}
     </div>;
   }
 });
