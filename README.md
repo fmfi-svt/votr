@@ -14,7 +14,7 @@ scraping the responses from WebUI (the framework AIS is based on).
 
 You will need Python 3 (with virtualenv and python3-dev headers) and Node.js
 (with npm). You will also need headers for libxml and libxslt. For example, on
-Ubuntu, do `sudo apt-get install python-virtualenv python3-dev nodejs-legacy npm
+Ubuntu, do `sudo apt-get install python-virtualenv python3-dev nodejs npm
 libxml2-dev libxslt1-dev`.
 
 Quick start:
