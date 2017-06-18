@@ -1,0 +1,4 @@
+﻿AISBehaviourError in get_terminy_hodnotenia(#66)
+
+* acording to easier workaround from issue description, i added condition in to the
+get_vidim_terminy_hodnotenia function. In condition i check if pridatButton is enabled. If it is not, then return False.   
