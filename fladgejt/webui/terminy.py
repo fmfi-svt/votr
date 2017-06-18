@@ -17,6 +17,9 @@ class WebuiTerminyMixin:
             self._open_terminy_hodnotenia_app(zapisny_list_key)
         except CantOpenApplication:
             return False
+        app = self._open_terminy_hodnotenia_app(zapisny_list_key)
+        if app.d.pridatButton.is_really_enabled() == False:
+            return False
         return True
 
     def get_predmety(self, zapisny_list_key):
