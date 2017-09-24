@@ -30,7 +30,7 @@ export var DetailPredmetuModal = React.createClass({
     }
 
     var url = "data:application/pdf;base64," + escape(data);
-    return <a href={url} target="_blank">Otvoriť</a>;
+    return <a href={url} download>Stiahnuť</a>;
   },
 
   renderUcitelia() {
