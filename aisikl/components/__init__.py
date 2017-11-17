@@ -5,6 +5,7 @@ from .button import Button
 from .checkbox import CheckBox
 from .checklist import CheckList
 from .combobox import ComboBox
+from .datecontrol import DateControl
 from .dialogbody import DialogBody
 from .htmlarea import HtmlArea
 from .image import Image
@@ -38,7 +39,7 @@ component_classes = {
     'checkBox': CheckBox,
     'checkList': CheckList,
     'comboBox': ComboBox,
-    'dateControl': TODO,
+    'dateControl': DateControl,
     'eventInteractive': TODO,
     'htmlArea': HtmlArea,
     'htmlList': TODO,

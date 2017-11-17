@@ -1002,8 +1002,57 @@ COMPLETE
 
 # DateControl
 
-TODO
+COMPLETE
 
+- validDate -> self.value
+- getText(), setText() -> self.value
+- setRawText()
+    - IRRELEVANT, only called from TableModel
+- XcrementDate()
+    - UNSUPPORTED, use Python date libraries instead if needed
+- initDateParts(), setDay, setMonth, setYear, adjustDay, incrementDay(),
+  decrementDay(), incrementMonth(), decrementMonth(), incrementYear(),
+  decrementYear(), zeroPad()
+    - UNSUPPORTED, only called from XcrementDate()
+- getDate()
+    - Converts value to a Date object.
+    - Only called in CalendarSelector.setDateControl.
+    - UNSUPPORTED
+- getMinValue() -> self.min_value
+- getMaxValue() -> self.max_value
+- getSubstituteChar(), setSubstituteChar() -> self.substitute_char
+- getSubstituteMask(), setSubstituteMask() -> self.substitute_mask
+- getMask(), setMask() -> self.mask
+- getCalendarEnabled(), setCalendarEnabled() -> self.calendar_enabled
+- getInvalidDateMessage(), setInvalidDateMessage()
+    - IRRELEVANT
+- fireUIChangesEvent()
+    - Inlined in self.write()
+- changedProperties() -> self.changed_properties()
+- dayStart, monthStart, yearStart, yearLength, hoursStart, minutesStart,
+  secondsStart
+    - UNSUPPORTED because all users are UNSUPPORTED
+- init() -> `__init__`
+- adjustCalendarButtonVisibility()
+    - IRRELEVANT
+- setCalendarVisible(), setDateFromCalendar()
+    - UNSUPPORTED
+- isPreparedToBlur(), alertAndFocusBadInput(), blur(), focus(), mousewheel(),
+  keydown(), keypress(), canFocusNext(), afterPaste(), afterCut(), drop(),
+  dragstart(), change(), getDatePosition()
+    - IRRELEVANT
+- showDate()
+    - Unused?
+- getShowDate()
+    - Converts a Date object to a string according to mask. UNSUPPORTED.
+- checkDateOnBlur(), checkDate()
+    - UNSUPPORTED
+- fillPartSubstituteChars()
+    - probably IRRELEVANT
+- fillSubstituteCharsInDateFormat()
+    - Converts value to a form understood by Date.parse(). UNSUPPORTED.
+- calendarButtonKeyDown(), click(), calendarButtonClick()
+    - IRRELEVANT
 
 
 # CalendarSelector
@@ -1103,7 +1152,7 @@ bare minimum. In particular, masks and suggestion requests are not supported.
 - getLabelDisplay(), setLabelDisplay() -> self.label_display
 - getText(), setText() -> self.value
 - setRawText()
-    - UNSUPPORTED for now
+    - IRRELEVANT, only called from TableModel
 - getType(), setType() -> self.type
 - getSelStart(), setSelStart()
     - IRRELEVANT, only used in focus()
