@@ -39,7 +39,7 @@ class RadioBox(Control):
 
     # If self.always_selected == False, select(-1) unselects the current item.
     # (Votr always allows select(-1), but AIS might not like it.)
-    def select(index):
+    def select(self, index):
         self.log('action', 'Selecting "{}" in {}'.format(
             self.options[index].title, self.id))
         self.selected_index = index
