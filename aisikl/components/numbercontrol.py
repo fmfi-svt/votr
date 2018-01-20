@@ -43,6 +43,8 @@ class NumberControl(TextInput):
         self.edit_max_length = int(edit_max_length)
     def _ais_setBDValue(self, value):
         self.bdvalue = value
+    def _ais_setText(self, value):
+        self.bdvalue = value
 
     def write(self, value):
         self.log('action', 'Writing {} in {}'.format(repr(value), self.id))

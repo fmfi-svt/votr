@@ -3,6 +3,7 @@ from collections import namedtuple
 from .control import Control
 from aisikl.events import selection_event
 from aisikl.exceptions import AISParseError
+from bs4.element import NavigableString
 
 
 Option = namedtuple('Option', ['title', 'id'])
@@ -60,6 +61,13 @@ class RadioBox(Control):
     def _ais_setDataView(self, id, body):
         data_view = body.find(id=id)
         container = data_view.contents[0]
+
+        # If we found a NavigableString, something is probably wrong
+        # and bailing by trying to find radioBox_container seems like
+        # the right thing to do
+        if type(container) == NavigableString:
+            container = data_view.find(id='radioBox_container')
+
         if container.get('id') != 'radioBox_container':
             raise AISParseError("Expected radioBox_container")
         if container.name == 'span':

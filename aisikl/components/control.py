@@ -22,6 +22,8 @@ class Control(Component):
         pass
     def _ais_setBackground(self, value):
         pass
+    def _ais_setComponentStyle(self, value):
+        pass
 
     def changed_properties(self):
         return ''
