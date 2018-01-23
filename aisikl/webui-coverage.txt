@@ -1124,8 +1124,14 @@ minimum needed to send requests and receive responses.
 - getEditMaxLength(), setEditMaxLength() -> self.edit_max_length
 - setLengths() -> self.show_max_length, self.edit_max_length
 - getBDValue(), setBDValue() -> self.bdvalue
-- getValue(), setValue(), getText(), setText()
+- getValue() -> self.bdvalue
+- setValue()
     - UNSUPPORTED for now, see above
+- getText()
+    - UNSUPPORTED for now, see above
+- setText() -> self._ais_setText()
+    - Votr assumes that AIS already produces mostly valid values, and doesn't
+      try to reproduce webui's exact normalization logic and corner cases.
 - switchMode(), stopEdit(), removeSeparators1000(), fillDecimalByNulls(),
   toBdValue(), fillBdvalue(), getBDValueAsText(), setShowValue(),
   setEditValue(),  focus(), isPreparedToBlur(), getValueNotInRangeMessage(),

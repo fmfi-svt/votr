@@ -43,10 +43,24 @@ class NumberControl(TextInput):
         self.edit_max_length = int(edit_max_length)
     def _ais_setBDValue(self, value):
         self.bdvalue = value
+    def _ais_setText(self, value):
+        # For simplicity, we only do the simplest possible locale conversion.
+        # Among other things, the setText function in AIS also:
+        # - deletes leading "+"
+        # - removes leading zeros
+        # - removes trailing zeros from the fractional part
+        # - removes decimal point if it's only followed by zeros
+        # - re-appends the decimal point and/or trailing zeros until there are
+        #   self.scale digits in the fractional part
+        # - sets the value to "" if the fractional part length > self.scale
+        # - sets the value to "" if length > self.edit_max_length
+        if self.separator_1000:
+            value = value.replace(self.separator_1000, '')
+        self.bdvalue = value.replace(self.decimal_point, '.')
 
-    def write(self, value):
-        self.log('action', 'Writing {} in {}'.format(repr(value), self.id))
-        self.bdvalue = value
+    def write(self, bdvalue):
+        self.log('action', 'Writing {} in {}'.format(repr(bdvalue), self.id))
+        self.bdvalue = bdvalue
         self.dialog.component_changes(self, False)
 
     def changed_properties(self):
