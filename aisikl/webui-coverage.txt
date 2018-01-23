@@ -142,9 +142,9 @@ PARTIAL
     - IRRELEVANT. Votr ignores positions, sizes and styles.
     - Focus and blur is UNSUPPORTED. We never send focus information to AIS,
       and blur events must be triggered manually.
-    - It seems these set*() methods aren't used in result frame updates. If
-      that's wrong, we just need to add empty _ais_set*() methods. (So far, we
-      added setForeground and setBackground.)
+    - So far we've only seen setForeground, setBackground and setComponentStyle
+      in result frame updates. But to be safe, all the _ais_set*() methods exist
+      as no-ops.
     - Instead of calling positionContextMenu() or showPopupMenu(), use the menu
       items directly.
 - getReadOnly(), setReadOnly() -> self.read_only
