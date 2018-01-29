@@ -2,33 +2,84 @@
 Votr
 ====
 
-The next version of the Fajr project. Votr provides easier access to AIS2,
-the academic information system used at Comenius University and many other
-universities in Slovakia.
+Votr is an alternative frontend providing easier access to AIS2, the academic
+information system used at many universities in Slovakia. If you are a student
+of Comenius University, you can try Votr at https://votr.uniba.sk. If you need
+help, write to us at fmfi-svt@googlegroups.com. If you're interested in the
+development of Votr, read on.
 
-Votr consists of three layers that build on each other. **Votrfront** is the web
-app that users interact with. **Fladgejt** contains the AIS-specific business
-logic and knows where to find which buttons and tables. And **Aisikl** does the
-actual communication by sending HTTP requests with fake mouse clicks and screen
-scraping the responses from WebUI (the framework AIS is based on).
+AIS2 doesn't have an official API, so Votr primarily uses web scraping. The AIS2
+servers think they're talking to a real user with a real web browser pressing
+buttons and navigating the endless popup windows that form AIS2's user
+interface. But it is in fact Votr, sending simulated button presses and parsing
+AIS2's mangled tag soup.
 
-You will need Python 3 (with virtualenv) and Node.js (with npm). For example, on
-Ubuntu, do `sudo apt-get install python-virtualenv nodejs-legacy npm`.
+Votr's code base consists of three layers that build on each other. **Aisikl**,
+the lowest layer, does the actual communication by sending HTTP requests with
+fake user actions and parsing the responses from WebUI (the framework AIS2 is
+based on). **Fladgejt** contains the business logic for various AIS2 tasks and
+knows where to find which buttons and tables. And **Votrfront** is the web app
+that Votr's users interact with.
 
-Quick start:
+Running Votr
+------------
 
-    virtualenv -p python3 venv
-    source venv/bin/activate
-    pip install -U pip
-    pip install -r requirements.txt
-    ./console.py serve --debug
+1.  Install Python 3.4+ and virtualenv. On recent Ubuntu or Debian, use:
 
-Sourcing `activate` adds `venv/bin` to your PATH. You could also directly call
-`venv/bin/pip ...` and `venv/bin/python console.py ...` instead.
+        sudo apt install virtualenv
+
+2.  Install node.js and npm. (Some Linux distributions bundle them together in
+    one package.) Check the version: npm 1 and 2 are too old. npm 3 and 4 are
+    probably OK. npm 5+ is ideal, but most Linux distributions don't have it yet
+    (including current Ubuntu and Debian). In that case, you can either:
+
+    *   Install npm 3 despite its age and hope for the best. E.g. on Ubuntu:
+        `sudo apt install nodejs-legacy npm`.
+    *   Use the unofficial up to date repositories from
+        https://nodejs.org/en/download/package-manager/, and install `nodejs`
+        (not `nodejs-legacy` and `npm`).
+
+3.  Create a virtualenv directory. A virtualenv is an isolated environment that
+    contains Python libraries, so that you don't have to install them
+    system-wide, and each project can use different versions without conflicts.
+
+        virtualenv -p python3 venv
+
+4.  Activate the virtualenv. (Basically, this just adds `venv/bin` to your
+    current shell's `$PATH`. Instead, you could just use `venv/bin/python`
+    instead of `python`, `venv/bin/pip` instead of `pip`, etc.)
+
+        source venv/bin/activate
+
+5.  Install the latest version of `pip` (earlier versions don't support wheels),
+    and then use it to install Python dependencies.
+
+        pip install -U pip
+        pip install -r requirements.txt
+
+6.  Start Votr. Remember to activate the virtualenv first if you haven't done it
+    yet in this terminal.
+
+        ./console.py serve --debug
+
+Contributing to Votr
+--------------------
+
+If you'd like to help improve Votr, please get in touch! E-mail us at
+fmfi-svt@googlegroups.com and we'll help you with anything you need -- whether
+it's [choosing a task](https://github.com/fmfi-svt/votr/issues) to work on,
+understanding Votr's code, implementing your changes, or sending a pull request
+on GitHub.
+
+Developer documentation
+-----------------------
+
+Some documentation is on the wiki: https://github.com/fmfi-svt/votr/wiki
+
+Some documentation is in docstrings in the source code and rendered with Sphinx:
+http://svt.fmph.uniba.sk/~tomi/votrdoc/
 
 Building documentation:
 
     pip install sphinx sphinx-rtd-theme sphinxcontrib-napoleon
     make -C docs html
-
-The HTML documentation is at <http://svt.fmph.uniba.sk/~tomi/votrdoc/>.
