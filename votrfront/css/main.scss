@@ -204,3 +204,107 @@ thead:empty, tbody:empty, tfoot:empty {
   @include opacity(.65);
   @include box-shadow(none);
 }
+
+.anketa__wrap {
+  background-color: #fff;
+  font-family: "Open Sans";
+  font-size: 15px;
+  border-left: 0;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  top: -230px;
+  animation: slideIn 0.5s forwards;
+  animation-delay: 0.1s;
+  z-index: 99999;
+}
+
+.anketa__container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 210px;
+}
+
+.anketa__text-block {
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  width: 100%;
+  padding: 15px 1px;
+  background-color: #ff7035;
+  background: linear-gradient(135deg, #ff7035 0%,#ff5862 100%);
+}
+
+.anketa__button-wrap {
+  padding-bottom: 5px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  border: 1px solid #ff6153;
+  border-top: none;
+}
+
+.anketa__button-wrap::before {
+  display: block;
+  content: '';
+  width: 0px;
+  height: 0px;
+  border: 10px solid transparent;
+  border-top-color: #fe5f54;
+}
+
+.anketa__image {
+  top: 15px;
+  height: 60px;
+  padding-bottom: 5px;
+}
+
+.anketa__button {
+  border: 2px solid #b51b1b;
+  padding: 5px 15px;
+  background-color: #cd2a2a;
+  text-decoration: none;
+  color: white;
+  transition: 0.3s ease all;
+}
+
+.anketa__button--main {
+  border-color: #cd513d;
+  background-color: #ff7035;
+  background: linear-gradient(135deg, #ff7035 0%,#ff5862 100%);
+  color: white;
+  margin-bottom: 5px;
+}
+
+.anketa__button--main:hover {
+  background-color: #d0420c;
+  background: linear-gradient(135deg, #d0420c 0%,#d0420c 100%);
+}
+
+.anketa__button--secondary {
+  border-color: transparent;
+  background-color: white;
+  color: black;
+  font-size: 14px;
+  font-weight: 300;
+}
+
+.anketa__button--secondary:hover {
+  background-color: #dedede;
+}
+
+.anketa__subtitle {
+  font-size: 14px;
+  font-weight: 130;
+}
+
+@keyframes slideIn {
+  100% {
+    top: 110px;
+  }
+}

@@ -23,6 +23,7 @@ bez zbytočného klikania.">
 %(analytics)s
 </head>
 <body>
+
 <span id="votr"></span>
 <noscript>
 <div class="login-page">
