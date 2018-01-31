@@ -16,6 +16,7 @@ template = '''
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Votr</title>
 <link rel="stylesheet" type="text/css" href="%(css)s">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700&amp;subset=latin-ext" rel="stylesheet">
 <meta name="description" content="Votr ponúka študentom jednoduchší a \
 pohodlnejší spôsob, ako robiť najčastejšie činnosti zo systému AIS. Zapíšte \
 sa na skúšky, prezrite si vaše hodnotenia a skontrolujte si počet kreditov \
@@ -23,7 +24,6 @@ bez zbytočného klikania.">
 %(analytics)s
 </head>
 <body>
-
 <span id="votr"></span>
 <noscript>
 <div class="login-page">
