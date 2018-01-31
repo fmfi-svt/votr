@@ -1,6 +1,4 @@
-Helpers
-=======
+fladgejt.helpers
+================
 
 .. automodule:: fladgejt.helpers
-    :members:
-    :undoc-members:

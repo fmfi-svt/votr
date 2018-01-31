@@ -64,7 +64,7 @@ class Context:
         :param url: the URL, either absolute or relative to the AIS server.
         :param method: HTTP method for the request.
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
-        :return: a :class:`~BeautifulSoup` object.
+        :return: a ``BeautifulSoup`` object.
         '''
         response = self.request_ais(url, method=method, **kwargs)
         soup = BeautifulSoup(response.text, 'lxml')

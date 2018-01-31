@@ -1,6 +1,4 @@
-Portal
-======
+aisikl.portal
+=============
 
 .. automodule:: aisikl.portal
-    :members:
-    :undoc-members:

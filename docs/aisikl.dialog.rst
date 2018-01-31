@@ -1,6 +1,4 @@
-Dialog
-======
+aisikl.dialog
+=============
 
 .. automodule:: aisikl.dialog
-    :members:
-    :undoc-members:

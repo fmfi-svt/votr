@@ -5,13 +5,22 @@
 Votr Documentation Overview
 ===========================
 
-Welcome to the Votr |version| documentation.
+Welcome to Votr's developer documentation.
+
+Learn more at https://github.com/fmfi-svt/votr.
 
 .. toctree::
    :maxdepth: 2
 
-   aisikl
-   fladgejt
+   aisikl.context
+   aisikl.app
+   aisikl.dialog
+   aisikl.events
+   aisikl.exceptions
+   aisikl.portal
+   aisikl.components
+   fladgejt.helpers
+   fladgejt.structures
 
 .. Indices and tables
 .. ==================

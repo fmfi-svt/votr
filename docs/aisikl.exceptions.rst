@@ -1,6 +1,4 @@
-Exceptions
-==========
+aisikl.exceptions
+=================
 
 .. automodule:: aisikl.exceptions
-    :members:
-    :undoc-members:

@@ -81,5 +81,5 @@ http://svt.fmph.uniba.sk/~tomi/votrdoc/
 
 Building documentation:
 
-    pip install sphinx sphinx-rtd-theme sphinxcontrib-napoleon
+    pip install sphinx sphinx-rtd-theme
     make -C docs html

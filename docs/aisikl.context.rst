@@ -1,6 +1,4 @@
-Context
-=======
+aisikl.context
+==============
 
 .. automodule:: aisikl.context
-    :members:
-    :undoc-members:

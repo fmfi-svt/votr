@@ -1,8 +1,4 @@
-Events
-======
+aisikl.events
+=============
 
 .. automodule:: aisikl.events
-    :members:
-    :undoc-members:
-
-    .. autoclass:: aisikl.events.Event
