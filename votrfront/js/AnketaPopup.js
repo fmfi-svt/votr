@@ -1,5 +1,5 @@
 
-import { sendRpc } from './ajax';
+import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
 
 var dropCookie = true;  // false disables the Cookie, allowing you to style the banner
 var cookieDurationClose = 3;
@@ -11,10 +11,12 @@ var cookieHideDate = Date.parse('19 February 2018'); // Starting this day the co
  
 export var AnketaPopup = React.createClass({
 
-  getInitialState() {return {showPopup: false}},
-
-  componentDidMount() {
-    showPopup(() => this.setState({showPopup: true}))
+  getInitialState() {
+    var today = new Date();
+    if ((checkCookie(cookieName) != cookieValue) && (cookieHideDate > today)) {
+        return {showPopup: true}
+    }
+    return {showPopup: false}
   },
 
   onClosePopup(flag) {
@@ -24,6 +26,11 @@ export var AnketaPopup = React.createClass({
 
   render() {
     if (!this.state.showPopup) return null;
+
+    var cache = new CacheRequester();
+    var studia = cache.get('get_studia');
+    if (!studia) return <div className="hidden"><Loading requests={cache.missing} /></div>;
+    if (!studia.some(s => s.organizacna_jednotka == 'FMFI')) return null;
 
     return <div className="anketa__wrap">
              <div className="anketa__container">
@@ -68,10 +75,6 @@ function eraseCookie(name) {
     createCookie(name,"",-1);
 }
 
-function isFromFMFI(callback) {
-  sendRpc('get_studia', [], function(result){ if(result) callback(); });
-}
- 
 function removeMe(action){
     if(action == 0) {
       createCookie(cookieName, cookieValue, cookieDurationVote); // Create vote cookie
@@ -81,8 +84,4 @@ function removeMe(action){
 }
 
 function showPopup(callback){
-    var today = new Date();
-    if ((checkCookie(cookieName) != cookieValue) && (cookieHideDate > today)) {
-        isFromFMFI(callback);
-    }
 }
