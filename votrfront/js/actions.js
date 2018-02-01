@@ -14,6 +14,7 @@ import { ZapisZPlanuPage, ZapisZPonukyPage } from './ZapisPage';
 import { ZoznamPrihlasenychNaTerminModal } from './ZoznamPrihlasenychNaTermin';
 import { ModalBase, PageLayout } from './layout';
 import { navigate } from './router';
+import { AnketaPopup } from './AnketaPopup';
 
 
 export var NotFoundPage = React.createClass({
@@ -68,6 +69,7 @@ export var App = React.createClass({
       <C query={query} />
       <ModalBase query={query} component={modalComponent} onClose={this.handleClose} />
       <LogViewer />
+      <AnketaPopup />
     </div>;
   }
 });
