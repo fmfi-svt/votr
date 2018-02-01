@@ -66,10 +66,10 @@ export var App = React.createClass({
 
     var C = mainComponent;
     return <div>
-        <C query={query} />
-        <ModalBase query={query} component={modalComponent} onClose={this.handleClose} />
-        <LogViewer />
-        <AnketaPopup />
-      </div>;
+      <C query={query} />
+      <ModalBase query={query} component={modalComponent} onClose={this.handleClose} />
+      <LogViewer />
+      <AnketaPopup />
+    </div>;
   }
 });
