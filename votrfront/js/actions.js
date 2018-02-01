@@ -14,7 +14,7 @@ import { ZapisZPlanuPage, ZapisZPonukyPage } from './ZapisPage';
 import { ZoznamPrihlasenychNaTerminModal } from './ZoznamPrihlasenychNaTermin';
 import { ModalBase, PageLayout } from './layout';
 import { navigate } from './router';
-import { showPopup, removeMe } from './AnketaPopup';
+import { AnketaPopup } from './AnketaPopup';
 
 
 export var NotFoundPage = React.createClass({
@@ -52,21 +52,10 @@ export var App = React.createClass({
     query: React.PropTypes.object.isRequired
   },
 
-  getInitialState() {return {showPopup: false}},
-
-  componentDidMount() {
-    showPopup(() => this.setState({showPopup: true}))
-  },
-
   handleClose() {
     if (Votr.ajaxError) return;
     navigate(_.omit(
         this.props.query, (value, key) => key.substring(0, 5) == 'modal'));
-  },
-
-  onClosePopup(flag) {
-    removeMe(flag)
-    this.setState({showPopup: false})
   },
 
   render() {
@@ -77,22 +66,10 @@ export var App = React.createClass({
 
     var C = mainComponent;
     return <div>
-      <C query={query} />
-      <ModalBase query={query} component={modalComponent} onClose={this.handleClose} />
-      <LogViewer />
-       {this.state.showPopup && (
-        <div className="anketa__wrap">
-            <div className="anketa__container">
-                <div className="anketa__text-block">
-                    <img src="http://svt.virpo.sk/smile.svg" className="anketa__image"/>
-                        <div className="anketa__subtitle">Daj semestru ešte chvíľu</div>
-                </div>
-                <div className="anketa__button-wrap">
-                    <a className="anketa__button anketa__button--main" onClick={() => {this.onClosePopup(0)}} href="https://anketa.fmph.uniba.sk/?anketaPopup" target="_blank" rel="noopener noreferrer" >Hlasuj v ankete</a>
-                    <a className="anketa__button anketa__button--secondary" onClick={() => {this.onClosePopup(1)}} href="javascript:void(0);">Neskôr</a>
-                </div>
-            </div>
-        </div>)}
-    </div>;
+        <C query={query} />
+        <ModalBase query={query} component={modalComponent} onClose={this.handleClose} />
+        <LogViewer />
+        <AnketaPopup />
+      </div>;
   }
 });
