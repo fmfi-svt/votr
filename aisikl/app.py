@@ -293,6 +293,10 @@ class Application:
               self.collect_component_changes())
         with self.collect_operations() as ops:
             self._do_request(rq)
+
+        methods = [op.method for op in ops]
+        if (methods == ['serverCloseApplication', 'messageBox', 'closeApplication']):
+            self.check_connection(ctx)
         return ops
 
     def activate_dialog(self, name):
@@ -755,3 +759,9 @@ class Application:
         assert_ops(ops,
                    'serverCloseApplication', 'closeDialog', 'closeApplication')
         self.close_all_dialogs()
+
+    def check_connection(context):
+        soup = context.request_html('/ais/portal/changeTab.do?tab=0')
+        username_element = soup.find(class_='user-name')
+        if not (username_element and username_element.get_text()):
+            raise LoggedOutError('AIS login expired.')
