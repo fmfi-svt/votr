@@ -559,20 +559,22 @@ class Table(Control):
 
         if self.cell_selection_mode:
             if column_alias is None:
-                raise TypeError('column_alias is None')
+                # If a user turns on JAWS support mode in AIS user preferences,
+                # all tables will be in cell selection mode.
+                column_alias = self.selected_column_alias
             if len(indexes) != 1:
-                raise ValueError('must specify exactly one row index')
+                raise AISBehaviorError('can\'t select multiple rows in cell selection mode')
         else:
             if column_alias is not None:
-                raise TypeError('column_alias is not None')
+                raise AISBehaviorError('column selection not supported for this table')
 
         if inverted and not (self.multiple_selection and self.select_all_enabled):
-            raise ValueError('inverted selection not supported for this table')
+            raise AISBehaviorError('inverted selection not supported for this table')
         if len(indexes) > 1 and not self.multiple_selection:
-            raise ValueError('multiple selection not supported for this table')
+            raise AISBehaviorError('multiple selection not supported for this table')
         if self.always_selected and ((not inverted and len(indexes) == 0) or
                 (inverted and len(indexes) == len(self.loaded_rows))):
-            raise ValueError('empty selection not supported for this table')
+            raise AISBehaviorError('empty selection not supported for this table')
 
         self.log('action', 'Selecting {}{}{} {}{} in {}'.format(
             'column {} of '.format(column_alias) if column_alias else '',
