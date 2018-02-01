@@ -1,5 +1,5 @@
 
-import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
+import { CacheRequester, Loading } from './ajax';
 
 var dropCookie = true;  // false disables the Cookie, allowing you to style the banner
 var cookieDurationClose = 3;
@@ -20,7 +20,11 @@ export var AnketaPopup = React.createClass({
   },
 
   onClosePopup(flag) {
-    removeMe(flag)
+    if(action == 0) {
+      createCookie(cookieName, cookieValue, cookieDurationVote); // Create vote cookie
+    } else {
+      createCookie(cookieName, cookieValue, cookieDurationClose); // Create close cookie
+    }
     this.setState({showPopup: false})
   },
 
@@ -73,15 +77,4 @@ function checkCookie(name) {
  
 function eraseCookie(name) {
     createCookie(name,"",-1);
-}
-
-function removeMe(action){
-    if(action == 0) {
-      createCookie(cookieName, cookieValue, cookieDurationVote); // Create vote cookie
-    } else {
-      createCookie(cookieName, cookieValue, cookieDurationClose); // Create close cookie
-    }
-}
-
-function showPopup(callback){
 }
