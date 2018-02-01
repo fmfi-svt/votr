@@ -19,7 +19,7 @@ export var AnketaPopup = React.createClass({
     return {showPopup: false}
   },
 
-  onClosePopup(flag) {
+  onClosePopup(action) {
     if(action == 0) {
       createCookie(cookieName, cookieValue, cookieDurationVote); // Create vote cookie
     } else {
