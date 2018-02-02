@@ -43,10 +43,6 @@ export var ErrorModal = React.createClass({
       if (type == "aisikl.exceptions.AISBehaviorError") {
         description = "AIS spravil niečo nečakané. V novej verzii AISu sa možno niečo zmenilo.";
       }
-      if (lastLine == "ValueError: Session cookie not found") {
-        title = "Boli ste odhlásení";
-        description = "Boli ste odhlásení z Votru. Prihláste sa znova.";
-      }
     }
 
     // Some errors are caused by a malformed URL, so resetting won't help. If

@@ -12,6 +12,7 @@ def do_logout(request):
     try:
         with sessions.logged_transaction(request) as session:
             session['client'].logout()
+            session.clear()
     except Exception:
         pass
 
