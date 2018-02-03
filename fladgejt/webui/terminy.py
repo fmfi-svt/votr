@@ -13,9 +13,15 @@ class WebuiTerminyMixin:
             app.d.filterAction.execute()
 
     def get_vidim_terminy_hodnotenia(self, zapisny_list_key):
+        app = self._open_terminy_hodnotenia_app(zapisny_list_key)
+        if app.d.pridatButton.is_really_enabled() == False:
+            return False
         try:
             self._open_terminy_hodnotenia_app(zapisny_list_key)
         except CantOpenApplication:
+            return False
+        app = self._open_terminy_hodnotenia_app(zapisny_list_key)
+        if app.d.pridatButton.is_really_enabled() == False:
             return False
         return True
 
