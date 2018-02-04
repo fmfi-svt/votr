@@ -65,7 +65,8 @@ def _connect(app):
 def locate(app, sessid):
     options = [
         app.var_path('logs', sessid),
-        app.var_path('oldlogs', sessid[0:2], sessid + '.gz')
+        app.var_path('oldlogs', sessid[0:2], sessid + '.gz'),
+        sessid,
     ]
     for option in options:
         if os.path.exists(option):
@@ -283,6 +284,7 @@ def cli(app, *args):
 cli.help = (
     '  $0 log tag +TAGNAME1 -TAGNAME2 SESSID1:LINENO1 SESSID2:LINENO2 ...\n'
     '  $0 log view SESSID\n'
+    '  $0 log view FILENAME\n'
     '  $0 log path SESSID1 SESSID2 ...\n'
     '  $0 log list PATTERN ...\n'
     '    -n, --not PATTERN     do not select lines matching PATTERN\n'
