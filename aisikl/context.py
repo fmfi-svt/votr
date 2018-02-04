@@ -131,20 +131,13 @@ else:
     from jinja2 import Markup
     from IPython.display import display, HTML
 
-    def data_link(title, content):
-        return Markup(' <a href="{}" target="_blank">{}</a>').format(
-            'data:text/plain;charset=UTF-8,' + quote(content), title)
-
     def ipython_log(self, timestamp, type, message, data):
-        parts = []
-        parts.append(Markup('<span style="background:#FF8">'))
-        parts.append(Markup('<b>{}</b> {}').format(type, message))
+        content = Markup('<span style="background:#FF8"><b>{}</b> {}</span>').format(type, message)
         if data is not None:
-            parts.append(data_link('JSON', json.dumps(data)))
-        if isinstance(data, str):
-            parts.append(data_link('Plain', data))
-        parts.append(Markup('</span>'))
-        display(HTML(''.join(parts)))
+            if not isinstance(data, str):
+                data = json.dumps(data)
+            content = Markup('<details><summary>{}</summary><pre>{}</pre></details>').format(content, data)
+        display(HTML(content))
 
     Context.send_log = ipython_log
     # TODO: Do not use HTML logs when running command line ipython.
