@@ -75,6 +75,13 @@ def create_client(server, params):
     if params['type'] not in server['login_types']:
         raise ValueError("Unsupported login type")
 
+    # If type is cosigncookie, but we only know ais_cookie, skip REST login.
+    if (params['type'] == 'cosigncookie' and 'rest_cookie' in server and
+            not (params.get('rest_cookie') or '').strip()):
+        server = server.copy()
+        server.pop('rest_url', None)
+        server.pop('rest_cookie', None)
+
     # Do the cosign login if required.
     cookies = get_cosign_cookies(server, params)
 
