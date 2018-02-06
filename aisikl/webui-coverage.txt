@@ -1655,6 +1655,11 @@ stores everything once, directly in Table.
 - changedProperties() -> self.changed_properties()
 - setDataView() -> self._ais_setDataView()
 - updateData() -> self._update_data()
+    - rowHeaderTable, rowHeaderDataTabBodies, rowHeaderDataTabTmp, etc are
+      IRRELEVANT - they're just the togglable row numbers.
+    - dataTabBodies might contain <thead>, but it is IRRELEVANT. It only exists
+      in accessibility mode and is never shown by WebUI (it is hidden under the
+      "nice" header row by setDataTabTopPosition()).
     - WebUI calls updateDataPositionProperties() in strange places. That's
       probably a bug. Votr calls it the same regardless of dataSendType.
 

@@ -432,9 +432,9 @@ class Table(Control):
             return
 
         if data_tab_bodies.find(id='dataTabTmp'):
-            if data_tab_bodies.thead:
-                raise AISParseError("Unsupported thead in dataTabTmp")
             if not data_tab_bodies.tbody:
+                # This might be a behavior difference - WebUI actually does
+                # `this.dataSendType == "update";`. We hope they meant `=`.
                 data_send_type = 'update'
             self._load_rows(data_tab_bodies, data_tab_bodies_fixed,
                             replace=(data_send_type == 'update'))
