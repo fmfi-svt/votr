@@ -29,18 +29,21 @@ export var LogViewerContent = React.createClass({
   render() {
     var types = _.countBy(logs, 'log');
 
-    return <span>
-      <ul className="list-inline options">
-        {_.sortBy(_.keys(types)).map((type) =>
-          <li key={type}>
-            <label>
-              <input type="checkbox" name={type} checked={!this.state[type]}
-                     onChange={this.handleChange} />
-              {" " + type + " (" + types[type] + ")"}
-            </label>
-          </li>
-        )}
-      </ul>
+    return <div className="log-viewer">
+      <div className="options">
+        {this.props.closeButton}
+        <ul className="list-inline">
+          {_.sortBy(_.keys(types)).map((type) =>
+            <li key={type}>
+              <label>
+                <input type="checkbox" name={type} checked={!this.state[type]}
+                       onChange={this.handleChange} />
+                {" " + type + " (" + types[type] + ")"}
+              </label>
+            </li>
+          )}
+        </ul>
+      </div>
 
       <div className="scroll" ref="scroll">
         <table>
@@ -55,7 +58,7 @@ export var LogViewerContent = React.createClass({
           </tbody>
         </table>
       </div>
-    </span>;
+    </div>;
   }
 });
 
@@ -84,15 +87,11 @@ export var LogViewer = React.createClass({
   render() {
     if (LocalSettings.get("logViewer") != "true") return null;
 
-    return <div className="log-viewer">
-      <LogViewerContent />
+    var closeButton = <button type="button" className="close" onClick={this.toggle}>
+      <span aria-hidden="true">&times;</span>
+      <span className="sr-only">Close</span>
+    </button>;
 
-      <div className="right">
-        <button type="button" className="close" onClick={this.toggle}>
-          <span aria-hidden="true">&times;</span>
-          <span className="sr-only">Close</span>
-        </button>
-      </div>
-    </div>;
+    return <LogViewerContent closeButton={closeButton} />;
   }
 });

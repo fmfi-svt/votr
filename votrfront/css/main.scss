@@ -134,24 +134,32 @@ th.sort {
   max-height: 70%;
   z-index: 1111;
   background: $gray-lighter;
-  border: solid $gray-light 2px;
-  border-bottom: 0;
-  .options, .right {
+  border: solid $gray-light;
+  border-width: 0 2px;
+  .options {
     position: absolute;
     bottom: 100%;
-    margin: 0 1em;
+    left: -2px;
+    right: -2px;
     background: $gray-lighter;
-    border: solid $gray-light 2px;
-    border-bottom: 0;
+    border: solid $gray-light;
+    border-width: 2px 2px 1px;
   }
-  .right {
-    padding: 0.5em;
-    right: 0;
+  .list-inline {
+    margin: .2em;
+  }
+  .close {
+    padding: 0.2em;
   }
   .scroll {
     height: 100%;
-    padding: 1em;
     overflow: auto;
+  }
+  .scroll table {
+    margin: 1em;
+  }
+  .scroll td {
+    padding: 2px;
   }
 }
 
