@@ -385,6 +385,7 @@ class Application:
                             for pattern in self.ignored_messages))]
 
     def _process_response(self, soup):
+        self.ctx.log('benchmark', 'Begin response frame processing')
         self.last_response_time = time.time()
         operations, updates = parse_response(soup)
         body = soup.body
@@ -433,6 +434,8 @@ class Application:
                 args = args + [body]
 
             method(*args)
+
+        self.ctx.log('benchmark', 'End response frame processing')
 
     def send_events(self, *events):
         '''Sends the given events to AIS, if AIS is listening to them.

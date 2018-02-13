@@ -47,6 +47,7 @@ class Context:
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
         :return: a :class:`requests.Response` object.
         '''
+        self.log('benchmark', 'Begin AIS network request')
         self.log('http', 'Requesting {} {}'.format(
             method, url.partition('?')[0]), [url, kwargs.get('data', None)])
         url = urljoin(self.ais_url, url)
@@ -56,6 +57,7 @@ class Context:
             self.log('http', 'Received response', response.text)
         else:
             self.log('http', 'Received response (binary data)')
+        self.log('benchmark', 'End AIS network request')
         return response
 
     def request_html(self, url, *, method='GET', **kwargs):
@@ -67,8 +69,9 @@ class Context:
         :return: a ``BeautifulSoup`` object.
         '''
         response = self.request_ais(url, method=method, **kwargs)
+        self.log('benchmark', 'Begin HTML parsing')
         soup = BeautifulSoup(response.text, 'lxml')
-        self.log('http', 'Parsed HTML data')
+        self.log('benchmark', 'End HTML parsing')
         return soup
 
     def request_json(self, url, **data):
@@ -79,12 +82,14 @@ class Context:
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
         :return: a dictionary.
         '''
+        self.log('benchmark', 'Begin REST network request')
         self.log('http', 'Requesting POST {}'.format(
             url.partition('?')[0]), [url, data])
         url = urljoin(self.rest_url, url)
         response = self.connection.request("POST", url, data=data)
         response.raise_for_status()
         self.log('http', 'Received response', response.text)
+        self.log('benchmark', 'End REST network request')
 
         if not response.url.startswith(self.rest_url):
             raise LoggedOutError('REST login expired.')
