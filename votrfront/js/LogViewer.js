@@ -6,6 +6,7 @@ import { logs } from './ajax';
 export var LogViewerContent = React.createClass({
   getInitialState() {
     return {
+      benchmark: true,
       http: true,
       table: true
     }
@@ -32,6 +33,7 @@ export var LogViewerContent = React.createClass({
     return <div className="log-viewer">
       <div className="options">
         {this.props.closeButton}
+        {this.props.modeButton}
         <ul className="list-inline">
           {_.sortBy(_.keys(types)).map((type) =>
             <li key={type}>
@@ -63,10 +65,74 @@ export var LogViewerContent = React.createClass({
 });
 
 
+export var LogViewerBenchmarkContent = React.createClass({
+  computeBenchmarks() {
+    var sums = {};
+    var beginnings = {};
+
+    function start(what, time) {
+      beginnings[what] = time;
+    }
+    function end(what, time) {
+      if (!beginnings[what]) return;
+      if (!sums[what]) sums[what] = 0;
+      sums[what] += time - beginnings[what];
+      delete beginnings[what];
+    }
+
+    logs.forEach((entry) => {
+      if (entry.log == 'benchmark' && entry.message.substr(0, 6) == 'Begin ') {
+        start(entry.message.substr(6), entry.time);
+      }
+      if (entry.log == 'benchmark' && entry.message.substr(0, 4) == 'End ') {
+        end(entry.message.substr(4), entry.time);
+      }
+      if (entry.log == 'rpc' && entry.message.substr(-8) == ' started') {
+        start('total RPC time', entry.time);
+      }
+      if (entry.log == 'rpc' && entry.message.substr(-9) == ' finished') {
+        end('total RPC time', entry.time);
+      }
+    });
+
+    return _(sums).pairs().sortBy(1).reverse().valueOf();
+  },
+
+  render() {
+    var benchmarks = this.computeBenchmarks();
+
+    return <div className="log-viewer">
+      <div className="options">
+        {this.props.closeButton}
+        {this.props.modeButton}
+      </div>
+
+      <div className="scroll">
+        <table>
+          <tbody>
+            {benchmarks.map(([message, sum], index) =>
+              <tr key={message}>
+                <td className="text-right">{sum.toFixed(3)}</td>
+                <td>{message}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+      </div>
+    </div>;
+  }
+});
+
+
 export var LogViewer = React.createClass({
   toggle() {
     LocalSettings.set("logViewer",
-      LocalSettings.get("logViewer") == "true" ? "false" : "true");
+      LocalSettings.get("logViewer") ? "" : "log");
+  },
+
+  toggleMode() {
+    LocalSettings.set("logViewer",
+      LocalSettings.get("logViewer") == "log" ? "benchmark" : "log");
   },
 
   handleKeypress(e) {
@@ -85,13 +151,18 @@ export var LogViewer = React.createClass({
   },
 
   render() {
-    if (LocalSettings.get("logViewer") != "true") return null;
+    var mode = LocalSettings.get("logViewer");
+
+    if (mode != "log" && mode != "benchmark") return null;
+
+    var modeButton = <button type="button" className="pull-left" onClick={this.toggleMode}>{mode}</button>;
 
     var closeButton = <button type="button" className="close" onClick={this.toggle}>
       <span aria-hidden="true">&times;</span>
       <span className="sr-only">Close</span>
     </button>;
 
-    return <LogViewerContent closeButton={closeButton} />;
+    var C = mode == "log" ? LogViewerContent : LogViewerBenchmarkContent;
+    return <C modeButton={modeButton} closeButton={closeButton} />;
   }
 });
