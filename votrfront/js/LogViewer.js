@@ -74,11 +74,11 @@ export var LogViewer = React.createClass({
   },
 
   componentDidMount() {
-    $(window).on('keypress.logViewer', this.handleKeypress);
+    $(window).on('keydown.logViewer', this.handleKeypress);
   },
 
   componentWillUnmount() {
-    $(window).off('keypress.logViewer');
+    $(window).off('keydown.logViewer');
   },
 
   render() {
