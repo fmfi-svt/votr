@@ -1,6 +1,6 @@
 
 import { AboutModal } from './About';
-import { ModalBase } from './layout';
+import { Modal, ModalBase } from './layout';
 import { AnalyticsMixin, FakeLink } from './router';
 
 
@@ -38,13 +38,25 @@ export var LoginForm = React.createClass({
 
     return <form className="login" action="login" method="POST">
       {Votr.settings.invalid_session &&
-        <p className="error">Vaše prihlásenie vypršalo. Prihláste sa znova.</p>}
+        <p>Vaše prihlásenie vypršalo. Prihláste sa znova.</p>}
 
       {Votr.settings.error &&
         <div>
-          <p className="error">Prihlásenie sa nepodarilo.</p>
-          <pre>{Votr.settings.error}</pre>
-          {/* TODO: Hide the full exception behind a "Show details" link. */}
+          <p>Prihlásenie sa nepodarilo.</p>
+          <p>
+            {"Technické detaily: "}
+            <code className="login-error">
+              {_.last(Votr.settings.error.trim("\n").split("\n"))}
+            </code>
+            {" "}
+            <FakeLink onClick={this.props.onOpenError}>Viac detailov...</FakeLink>
+          </p>
+          <p>
+            Ak problém pretrváva, napíšte nám na <a className="text-nowrap"
+            href="mailto:fmfi-svt@googlegroups.com">fmfi-svt@googlegroups.com
+            </a>.
+          </p>
+          <hr />
         </div>}
 
       <input type="hidden" name="destination" value={location.search} />
@@ -118,6 +130,15 @@ export var LoginForm = React.createClass({
 });
 
 
+export var LoginErrorModal = React.createClass({
+  render() {
+    return <Modal title="Chyba pri prihlásení">
+      <pre>{Votr.settings.error}</pre>
+    </Modal>;
+  }
+});
+
+
 export var LoginPage = React.createClass({
   mixins: [AnalyticsMixin],
 
@@ -125,8 +146,16 @@ export var LoginPage = React.createClass({
     return {};
   },
 
-  toggleAbout() {
-    this.setState({ about: !this.state.about });
+  openAbout() {
+    this.setState({ modal: 'about' });
+  },
+
+  openError() {
+    this.setState({ modal: 'error' });
+  },
+
+  closeModal() {
+    this.setState({ modal: null });
   },
 
   render() {
@@ -146,22 +175,23 @@ export var LoginPage = React.createClass({
           bez zbytočného klikania.
         </p>
         <hr />
-        <LoginForm />
+        <LoginForm onOpenError={this.openError} />
       </div>
       <div className="text-center">
         <ul className="list-inline">
-          <li><FakeLink className="btn btn-link" onClick={this.toggleAbout}>O aplikácii</FakeLink></li>
+          <li><FakeLink className="btn btn-link" onClick={this.openAbout}>O aplikácii</FakeLink></li>
           <li><a className="btn btn-link" href="https://uniba.sk/" target="_blank">Univerzita Komenského</a></li>
           <li><a className="btn btn-link" href="https://moja.uniba.sk/" target="_blank">IT služby na UK</a></li>
         </ul>
       </div>
     </div>;
 
-    var modalComponent = this.state.about ? AboutModal : null;
+    var modals = { 'about': AboutModal, 'error': LoginErrorModal };
+    var modalComponent = modals[this.state.modal];
 
     return <span>
       {content}
-      <ModalBase query={{}} component={modalComponent} onClose={this.toggleAbout} />
+      <ModalBase query={{}} component={modalComponent} onClose={this.closeModal} />
     </span>;
   }
 });
