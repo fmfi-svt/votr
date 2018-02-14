@@ -18,11 +18,13 @@ BASE_PATTERN = r' "RPC \w+ failed'
 def classify(line):
     if "OSError: failed to write data" in line.content:
         return 'OSError'
-    if "'Neautorizovaný prístup!', 'Chyba'" in line.content:
-        return 'unauthorized'
     if "base.ps.PSException: Nie je connection" in line.content:
         return 'SQLError'
     if "java.sql.SQLException: Connection is not valid" in line.content:
+        return 'SQLError'
+    if "args=['Nie je connection.'" in line.content:
+        return 'SQLError'
+    if "args=['Nastala SQL chyba" in line.content:
         return 'SQLError'
     if "failed with ConnectionError" in line.content:
         return 'ConnectionError'
