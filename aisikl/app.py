@@ -62,6 +62,7 @@ DEFAULT_IGNORED_MESSAGES = [
 
 
 # Regexes for parsing AIS JavaScript
+_alert_re = re.compile(r'^function main\(\) { alert\((\'.*\')\); }$')
 _onload_re = re.compile(r'^window\.setTimeout\("WebUI_init\(\\"([^"\\]+)\\", \\"ais\\", \\"ais\/webui2\\"\)", 1\)$')
 _functions_re = re.compile(r'\nfunction (\w+)')
 _var_re = re.compile(r'^var \w+;\s*')
@@ -121,6 +122,11 @@ def parse_response(soup):
     if not script_tag or script_tag.get('src'):
         raise AISParseError("Unexpected result frame response")
     script = script_tag.get_text()
+
+    match = _alert_re.match(script.strip())
+    if match:
+        raise AISBehaviorError('AIS error in result frame response: %s' %
+            match.group(1))
 
     functions = [m.group(1) for m in _functions_re.finditer(script)]
     if ','.join(functions) == 'main' and 'onAppClosedOnServer' in script:
@@ -277,6 +283,11 @@ class Application:
 
         app_soup = self.ctx.request_html(url)
         if not app_soup.find(id='webuiProperties'):
+            alert_match = _alert_re.match(
+                app_soup.script.get_text().strip() if app_soup.script else '')
+            if alert_match:
+                raise AISBehaviorError("AIS2 application didn't open: %s" %
+                    alert_match.group(1))
             raise AISParseError("AIS2 application didn't open")
 
         onload = app_soup.body['onload']
