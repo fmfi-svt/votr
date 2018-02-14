@@ -25,23 +25,29 @@ export var ErrorModal = React.createClass({
     var lastLine = _.last(error.trim("\n").split("\n"));
     var type = lastLine.split(":")[0]
 
-    // TODO: Lepsie chybove hlasky. Napisat ze sme to zalogovali a vyriesime, a
-    // ze co maju robit (zavolat CEPITu / pisat nam / skusit to cez AIS / ...).
     var title = "Chyba";
     var description = "Vyskytla sa chyba a vaša požiadavka nebola spracovaná.";
+    var contact = true;
 
     if (type == "aisikl.exceptions.LoggedOutError") {
       title = "Prihlásenie vypršalo";
       description = "Vaše prihlásenie vypršalo. Skúste znova.";
-    } else if (Votr.settings.error) {
+      contact = false;
+    } else if (Votr.settings.error || type.match(/^requests\.exceptions\./)) {
       title = "Chyba pripojenia";
       description = "Votr sa nevie pripojiť na AIS.";
+      contact = false;
     } else {
       if (type == "aisikl.exceptions.AISParseError") {
         description = "Votr nerozumie, čo spravil AIS. V novej verzii AISu sa asi niečo zmenilo.";
       }
       if (type == "aisikl.exceptions.AISBehaviorError") {
-        description = "AIS spravil niečo nečakané. V novej verzii AISu sa možno niečo zmenilo.";
+        if (lastLine.match(/args=\['(Nie je connection|Nastala SQL chyba)/)) {
+          description = "AIS sa nevie pripojiť na svoju databázu.";
+          contact = false;
+        } else {
+          description = "AIS spravil niečo nečakané a Votr si s tým nevie poradiť.";
+        }
       }
     }
 
@@ -50,9 +56,14 @@ export var ErrorModal = React.createClass({
     // reset just now), we redirect to the front page instead.
     var goHome = !Votr.didNavigate && !Votr.settings.error && location.search.substring(1);
 
-    // TODO: Restyle buttons to make them look less like bootstrap.
     return <Modal title={title} closeButton={false}>
       <p className="text-center"><big>{description}</big></p>
+      {contact &&
+        <p className="text-center">
+          Ak problém pretrváva, napíšte nám na <a
+          href="mailto:fmfi-svt@googlegroups.com">fmfi-svt@googlegroups.com</a>.
+        </p>}
+      <br />
       <ul className="list-inline text-center">
         {goHome ?
           <li><button type="button" className="btn btn-primary"
@@ -62,7 +73,7 @@ export var ErrorModal = React.createClass({
         <li><button type="button" className="btn btn-default"
                     onClick={goLogout}>Odhlásiť</button></li>
       </ul>
-      <br /><br />
+      <br />
       {this.state.open ?
         <pre>{error}</pre> :
         <p className="text-center text-muted">
