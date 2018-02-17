@@ -1,5 +1,6 @@
 
 from bs4 import BeautifulSoup
+import sys
 import time
 import json
 import requests
@@ -7,33 +8,27 @@ from urllib.parse import urljoin
 from aisikl.exceptions import RESTServerError, LoggedOutError
 
 
+#: Set this to True (either in the source code, or with ``import aisikl.context;
+#: aisikl.context.print_logs = True``) in order to print all logs to stderr.
+print_logs = False
+
+
 class Context:
-    '''Context contains the things we need to store about an AIS session. When
-    one user makes multiple Votr requests, they have the same Context. It
-    contains our AIS cookie jar, and will later also include the open AIS
-    applications and the Votr logs. (Most of Votr's logging will probably be
-    per-session instead of per-request, because a Votr request can heavily
-    depend on the previous ones.)
+    '''The common context for an AIS session. When one user opens multiple AIS
+    applications, they share the same Context. It manages the HTTP cookie jar,
+    performs HTTP requests and deals with logs.
 
     Arguments:
         cookies: A dictionary of initial cookies.
         ais_url: The AIS server to connect to, e.g. "https://ais2.uniba.sk/".
         rest_url: The REST server to connect to
-
-    Attributes:
-        send_log: A function that will be called with (timestamp, type,
-            message, data) for every log entry. Used to send JSON logs to the
-            client during a RPC request.
-        log_file: A file to write log entries to. Used when this Context is
-            part of a votrfront session.
-        print_logs: Set to True to print log entries to the console.
+        logger: An optional :class:`Logger` instance to use.
     '''
 
-    # TODO: Make sure this class is pickle-able.
-
-    def __init__(self, cookies, ais_url=None, rest_url=None):
+    def __init__(self, cookies, *, ais_url=None, rest_url=None, logger=None):
         self.ais_url = ais_url
         self.rest_url = rest_url
+        self.logger = logger or Logger()
 
         self.connection = requests.Session()
         for key in cookies:
@@ -102,10 +97,6 @@ class Context:
         self.log('http', 'Parsed JSON data')
         return response['response']
 
-    log_file = None
-    send_log = None
-    print_logs = False
-
     def log(self, type, message, data=None):
         '''Logs a message.
 
@@ -114,6 +105,25 @@ class Context:
             message: The log message. Should be a single line.
             data: A JSON-serializable object containing more details.
         '''
+        self.logger.log(type, message, data)
+
+
+class Logger:
+    '''Logs messages to various destinations.'''
+
+    #: An open file to write log entries to. Votrfront sets it to a per-session
+    #: log file on every request. The value is not preserved between requests.
+    log_file = None
+
+    #: A function that will be called with (timestamp, type, message, data) for
+    #: every log entry. Votrfront uses it to send JSON logs to the client during
+    #: a RPC request. The value is not preserved between requests.
+    send_log = None
+
+    def __getstate__(self):
+        return {}
+
+    def log(self, type, message, data=None):
         timestamp = time.time()
 
         if self.log_file:
@@ -122,9 +132,11 @@ class Context:
 
         if self.send_log:
             self.send_log(timestamp, type, message, data)
-        elif self.print_logs:
+        if print_logs:
             print('\033[1;36m{} \033[1;33m{} \033[0m{}'.format(
-                type, message, '' if data is None else json.dumps(data)))
+                type, message, '' if data is None else json.dumps(data)),
+                file=sys.stderr)
+    log.__doc__ = Context.log.__doc__
 
 
 try:
@@ -144,5 +156,5 @@ else:
             content = Markup('<details><summary>{}</summary><pre>{}</pre></details>').format(content, data)
         display(HTML(content))
 
-    Context.send_log = ipython_log
+    Logger.send_log = ipython_log
     # TODO: Do not use HTML logs when running command line ipython.

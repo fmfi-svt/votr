@@ -75,6 +75,5 @@ def logged_transaction(request, sessid=None):
         log_filename = request.app.var_path('logs', sessid)
         with open(log_filename, 'a', encoding='utf8') as log_file:
             client = session.get('client')
-            if client: client.context.log_file = log_file
+            if client: client.context.logger.log_file = log_file
             yield session
-            if client: del client.context.log_file

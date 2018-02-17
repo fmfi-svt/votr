@@ -50,9 +50,8 @@ def rpc_handle_sessions(request, send_json):
         def send_log(timestamp, type, message, data):
             send_json({ 'log': type, 'message': message, 'time': timestamp })
 
-        session['client'].context.send_log = send_log
+        session['client'].context.logger.send_log = send_log
         result = rpc_handle_call(request, session)
-        del session['client'].context.send_log
 
     return result
 
