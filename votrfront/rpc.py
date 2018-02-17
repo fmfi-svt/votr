@@ -22,8 +22,8 @@ def rpc_handle_call(request, session):
     args = json.loads(request.get_data(as_text=True))
     log = session['client'].context.log
 
-    log('rpc', 'RPC {} started'.format(name), args)
     try:
+        log('rpc', 'RPC {} started'.format(name), args)
         method = getattr(session['client'], name)
         result = encode_result(method(*args))
     except Exception as e:
@@ -78,10 +78,18 @@ def rpc_handle_partials(request):
         # TODO: Add explanation about write() - why it's bad to use it, why we
         # use it anyway, and why we hope it will be OK.
 
+        connection_closed = False
+
         def send_json(json_object):
+            nonlocal connection_closed
+            if connection_closed: return
             payload = json.dumps(json_object).encode('ascii')
             header = ('%010d' % len(payload)).encode('ascii')
-            write(header + payload)
+            try:
+                write(header + payload)
+            except OSError:
+                connection_closed = True
+                raise
 
         rpc_handle_exceptions(request, send_json)
 
