@@ -2,7 +2,6 @@
 import json
 import traceback
 from werkzeug.routing import Rule
-from aisikl.exceptions import LoggedOutError
 from . import sessions
 
 
@@ -35,15 +34,7 @@ def rpc_handle_call(request, session):
 
 
 def rpc_handle_sessions(request, send_json):
-    if not sessions.get_cookie(request):
-        raise LoggedOutError('Session cookie not found')
-
     with sessions.logged_transaction(request) as session:
-        if 'client' not in session:
-            # Can happen if /logout and /rpc happen in parallel. If /rpc has
-            # opened the session file and is waiting for flock, then it will
-            # keep the open file even when /logout unlinks it.
-            raise LoggedOutError('Votr session is currently logging out')
         if request.headers.get('X-CSRF-Token') != session['csrf_token']:
             raise ValueError('Bad X-CSRF-Token value')
 
