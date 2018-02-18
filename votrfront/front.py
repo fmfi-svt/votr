@@ -97,7 +97,7 @@ def front(request):
     connection_error = None
 
     # If the user has no session cookie, just show the login form.
-    if not sessions.get_cookie(request):
+    if not sessions.get_session_cookie(request):
         return app_response(request)
 
     try:

@@ -43,8 +43,10 @@ class Context:
         :return: a :class:`requests.Response` object.
         '''
         self.log('benchmark', 'Begin AIS network request')
+        data = kwargs.get('data', None)
+        if data and 'password' in data: data = None
         self.log('http', 'Requesting {} {}'.format(
-            method, url.partition('?')[0]), [url, kwargs.get('data', None)])
+            method, url.partition('?')[0]), [url, data])
         url = urljoin(self.ais_url, url)
         response = self.connection.request(method, url, **kwargs)
         response.raise_for_status()

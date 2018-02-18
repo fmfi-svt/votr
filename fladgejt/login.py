@@ -1,7 +1,7 @@
 
 import os
 import requests
-from aisikl.context import Context
+from aisikl.context import Context, Logger
 from fladgejt.hybrid import HybridClient
 from fladgejt.rest import RestClient
 from fladgejt.webui import WebuiClient
@@ -20,32 +20,51 @@ def parse_cookie_string(cookie, cookie_name):
     return value
 
 
-def get_cosign_cookies(server, params):
+def get_login_session(logger):
+    def log_redirects(response, *args, **kwargs):
+        if response.is_redirect:
+            a, b, c = response.headers['Location'].partition('=')
+            logger.log('http', 'Received {} redirect to {}{}{}'.format(
+                response.status_code, a, b, '...' if c else ''))
+
+    session = requests.Session()
+    session.hooks['response'].append(log_redirects)
+
+    def send_request(method, url, **kwargs):
+        logger.log('http', 'Requesting {} {}'.format(method, url))
+        response = session.request(method, url, **kwargs)
+        response.raise_for_status()
+        logger.log('http', 'Received response', response.text)
+        return response
+
+    return session, send_request
+
+
+def get_cosign_cookies(server, params, logger):
+    result = {}
+
     if params['type'] == 'cosignpassword':
         if 'ais_url' in server:
             url = server['ais_url'] + 'ais/login.do?'
         else:
             url = server['rest_url']
 
-        s = requests.Session()
-        r = s.get(url)
-        s.post(r.url.partition('?')[0] + 'cosign.cgi', data=dict(
+        session, send_request = get_login_session(logger)
+        response = send_request('GET', url)
+        form_submit_url = response.url.partition('?')[0] + 'cosign.cgi'
+        response = send_request('POST', form_submit_url, data=dict(
             login=params['username'], password=params['password'], ref=url))
         if 'ais_url' in server and 'rest_url' in server:
-            s.get(server['rest_url'])
+            send_request('GET', server['rest_url'])
 
-        result = {}
-        if 'ais_url' in server:
-            result[server['ais_cookie']] = s.cookies[server['ais_cookie']]
-        if 'rest_url' in server:
-            result[server['rest_cookie']] = s.cookies[server['rest_cookie']]
-        return result
+        for key in ('ais_cookie', 'rest_cookie'):
+            if key in server:
+                result[server[key]] = session.cookies[server[key]]
 
     if params['type'] == 'cosignproxy':
         # http://webapps.itcs.umich.edu/cosign/index.php/Using_Proxy_Cookies
         name, value = params['cosign_service']
         filename = name + '=' + value.partition('/')[0]
-        result = {}
         with open(os.path.join(params['cosign_proxy'], filename)) as f:
             for line in f:
                 # Remove starting "x" and everything after the space.
@@ -58,37 +77,37 @@ def get_cosign_cookies(server, params):
                 if name == server.get('rest_cookie') and '/' not in value:
                     value += '/99999999999999'
                 result[name] = value
-        return result
 
     if params['type'] == 'cosigncookie':
-        result = {}
         for key in ('ais_cookie', 'rest_cookie'):
             if key not in server: continue
             name = server[key]
             result[name] = parse_cookie_string(params[key], name)
-        return result
 
-    return {}
+    return result
 
 
-def create_client(server, params):
+def create_client(server, params, *, logger=None):
+    logger = logger or Logger()
+
     if params['type'] not in server['login_types']:
         raise ValueError("Unsupported login type")
 
     # If type is cosigncookie, but we only know ais_cookie, skip REST login.
     if (params['type'] == 'cosigncookie' and 'rest_cookie' in server and
             not (params.get('rest_cookie') or '').strip()):
+        logger.log('login', 'Skipping REST login because rest_cookie is empty')
         server = server.copy()
         server.pop('rest_url', None)
         server.pop('rest_cookie', None)
 
     # Do the cosign login if required.
-    cookies = get_cosign_cookies(server, params)
+    cookies = get_cosign_cookies(server, params, logger)
 
-    # TODO: Refactor Context arguments for REST and demo.
     ctx = Context(cookies,
                   ais_url=server.get('ais_url'),
-                  rest_url=server.get('rest_url'))
+                  rest_url=server.get('rest_url'),
+                  logger=logger)
 
     # Request login.do to start the AIS session.
     if 'ais_url' in server:
@@ -98,7 +117,7 @@ def create_client(server, params):
             data['password'] = params['password']
         soup = ctx.request_html('/ais/login.do', method='POST', data=data)
         username_element = soup.find(class_='user-name')
-        if not (username_element and username_element.get_text()):
+        if not (username_element and username_element.get_text().strip()):
             raise Exception('AIS login unsuccessful.')
 
     # Create the client.

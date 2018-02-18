@@ -3,15 +3,14 @@ import contextlib
 import fcntl
 import pickle
 import os
-from werkzeug.contrib.sessions import generate_key
 from aisikl.exceptions import LoggedOutError
 
 
-def get_cookie(request):
+def get_session_cookie(request):
     return request.cookies.get(request.app.session_name)
 
 
-def set_cookie(request, sessid, response):
+def set_session_cookie(request, response, sessid):
     if sessid:
         response.set_cookie(request.app.session_name, sessid)
     else:
@@ -19,17 +18,19 @@ def set_cookie(request, sessid, response):
     return response
 
 
-def get_filename(request, sessid):
+def get_filename(request, sessid, *, logs=False):
     for ch in sessid:
         if ch not in '0123456789abcdef':
             raise ValueError('Invalid sessid')
 
-    return request.app.var_path('sessions', sessid)
+    return request.app.var_path('logs' if logs else 'sessions', sessid)
 
 
-def create(request, session):
-    sessid = generate_key()
+def open_log_file(request, sessid):
+    return open(get_filename(request, sessid, logs=True), 'a', encoding='utf8')
 
+
+def create(request, sessid, session):
     with open(get_filename(request, sessid), 'xb') as f:
         pickle.dump(session, f, pickle.HIGHEST_PROTOCOL)
 
@@ -37,7 +38,7 @@ def create(request, session):
 
 
 def delete(request, sessid=None):
-    if not sessid: sessid = get_cookie(request)
+    if not sessid: sessid = get_session_cookie(request)
     if not sessid: return
     try:
         os.unlink(get_filename(request, sessid))
@@ -48,7 +49,7 @@ def delete(request, sessid=None):
 
 @contextlib.contextmanager
 def transaction(request, sessid=None):
-    if not sessid: sessid = get_cookie(request)
+    if not sessid: sessid = get_session_cookie(request)
     if not sessid: raise LoggedOutError('Session cookie not found')
 
     try:
@@ -84,11 +85,10 @@ def transaction(request, sessid=None):
 
 @contextlib.contextmanager
 def logged_transaction(request, sessid=None):
-    if not sessid: sessid = get_cookie(request)
+    if not sessid: sessid = get_session_cookie(request)
 
     with transaction(request, sessid) as session:
-        log_filename = request.app.var_path('logs', sessid)
-        with open(log_filename, 'a', encoding='utf8') as log_file:
+        with open_log_file(request, sessid) as log_file:
             client = session.get('client')
             if client: client.context.logger.log_file = log_file
             yield session

@@ -13,7 +13,7 @@ import time
 
 TAG_PREFIX = '%'
 PAGER = ['less', '-RS']
-BASE_PATTERN = r' "RPC \w+ failed'
+BASE_PATTERN = r'"\w+", "[\w ]+ failed'
 
 def classify(line):
     if "OSError: failed to write data" in line.content:
@@ -205,6 +205,9 @@ def format_color(app, line):
 
     content = re.sub(
         r'( "RPC )(\w+)( failed with )(\w+)(")',
+        '\\1\033[1;31m\\2\033[0m\\3\033[1;31m\\4\033[0m\\5', content)
+    content = re.sub(
+        r'( ")([\w ]+)( failed with )(\w+)(")',
         '\\1\033[1;31m\\2\033[0m\\3\033[1;31m\\4\033[0m\\5', content)
 
     content = content.replace('\\\\', '\x00').split('\\n')
