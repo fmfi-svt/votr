@@ -102,8 +102,19 @@ def front(request):
 
     try:
         with sessions.logged_transaction(request) as session:
-            csrf_token = session['csrf_token']
-            session['client'].check_connection()
+            log = session['client'].context.log
+            try:
+                log('front', 'Front session check started',
+                    request.full_path)
+                csrf_token = session['csrf_token']
+                session['client'].check_connection()
+            except Exception as e:
+                log('front',
+                    'Front session check failed with {}'.format(
+                        type(e).__name__),
+                    traceback.format_exc())
+                raise
+            log('front', 'Front session check finished')
     except Exception:
         connection_error = traceback.format_exc()
 

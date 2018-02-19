@@ -11,14 +11,29 @@ from .front import app_response
 
 
 def do_logout(request):
+    credentials = None
+
     try:
         with sessions.logged_transaction(request) as session:
-            session['client'].logout()
+            credentials = session['credentials']
+            log = session['client'].context.log
+            try:
+                log('logout', 'Logout started', request.full_path)
+                session['client'].logout()
+            except Exception as e:
+                log('logout',
+                    'Logout failed with {}'.format(type(e).__name__),
+                    traceback.format_exc())
+                # But clear the session and save it anyway.
+            else:
+                log('logout', 'Logout finished')
             session.clear()
     except Exception:
         pass
 
     sessions.delete(request)
+
+    return credentials
 
 
 def finish_login(request, destination, params):
@@ -96,19 +111,12 @@ def login(request):
 
 def reset(request):
     destination = request.args['destination']
-    credentials = None
-
-    try:
-        with sessions.logged_transaction(request) as session:
-            credentials = session['credentials']
-    except Exception:
-        pass
+    credentials = do_logout(request)
 
     if not credentials:
         return app_response(request, invalid_session=True,
                             destination=destination)
 
-    do_logout(request)
     # TODO: We should enforce removing the session cookie.
 
     return start_login(request, destination, credentials)
