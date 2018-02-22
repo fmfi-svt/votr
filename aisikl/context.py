@@ -128,12 +128,14 @@ class Logger:
     def log(self, type, message, data=None):
         timestamp = time.time()
 
-        if self.log_file:
+        if self.log_file and type != 'benchmark':
+            # 'benchmark' is excluded from log files. It's too verbose.
             self.log_file.write(json.dumps([timestamp, type, message, data],
                                            ensure_ascii=False) + '\n')
 
         if self.send_log:
             self.send_log(timestamp, type, message, data)
+
         if print_logs:
             print('\033[1;36m{} \033[1;33m{} \033[0m{}'.format(
                 type, message, '' if data is None else json.dumps(data)),
