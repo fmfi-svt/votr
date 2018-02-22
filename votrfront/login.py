@@ -1,4 +1,5 @@
 
+from base64 import b64decode, b64encode
 import traceback
 from werkzeug.contrib.sessions import generate_key
 from werkzeug.exceptions import InternalServerError
@@ -10,12 +11,22 @@ from . import sessions
 from .front import app_response
 
 
+def load_credentials(credentials):
+    return {k: b64decode(v).decode('utf8') if k == 'password' else v
+            for k, v in credentials.items()}
+
+
+def save_credentials(credentials):
+    return {k: b64encode(v.encode('utf8')) if k == 'password' else v
+            for k, v in credentials.items()}
+
+
 def do_logout(request):
     credentials = None
 
     try:
         with sessions.logged_transaction(request) as session:
-            credentials = session['credentials']
+            credentials = load_credentials(session['credentials'])
             log = session['client'].context.log
             try:
                 log('logout', 'Logout started', request.full_path)
@@ -60,7 +71,8 @@ def finish_login(request, destination, params):
             client = create_client(server, fladgejt_params, logger=logger)
             csrf_token = generate_key()
             session = dict(
-                csrf_token=csrf_token, credentials=params, client=client)
+                csrf_token=csrf_token, credentials=save_credentials(params),
+                client=client)
             sessions.create(request, sessid, session)
         except Exception as e:
             error = traceback.format_exc()
