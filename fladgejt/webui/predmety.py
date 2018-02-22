@@ -104,6 +104,12 @@ class WebuiPredmetyMixin:
         (skratka_predmetu,) = decode_key(predmet_key)
         app = self._open_register_predmetov()
 
+        # Ak AIS prihlasenie vyprsalo, AIS nam stale dovoli otvorit register
+        # predmetov, ale nie dialog poctu prihlasenych studentov. Ak to tak
+        # vyzera, skontrolujeme ci netreba nove prihlasenie.
+        if not app.d.poctyPrihlasenychStudentovMenuItem.enabled:
+            self.check_connection()
+
         self.__query_dialog(app, akademicky_rok, skratka_predmetu='/'.join(skratka_predmetu.split('/')[1:-1]))
 
         app.d.zobrazitPredmetyButton.click()
