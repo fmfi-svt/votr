@@ -30,7 +30,8 @@ class VotrApp(object):
 
     def var_path(self, *args):
         '''Helper for constructing paths relative to ``settings.var_path``.'''
-        return os.path.join(self.settings.var_path, *args)
+        return os.path.join(os.path.dirname(__file__), '..',
+                            self.settings.var_path, *args)
 
     def run_help(self, *args):
         '''Shows the usage when console.py is run with an unknown command.'''
