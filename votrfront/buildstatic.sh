@@ -17,8 +17,8 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   rm -f static/ok
 
   if ! [ -f static/libs/jquery.js ]; then
-    npm install jquery@^1
-    cp -p node_modules/jquery/dist/*.* static/libs/
+    npm install jquery@^3
+    cp -p node_modules/jquery/dist/jquery.* static/libs/
   fi
 
   if ! [ -f static/libs/lodash.js ]; then

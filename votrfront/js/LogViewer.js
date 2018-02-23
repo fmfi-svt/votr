@@ -136,18 +136,18 @@ export var LogViewer = React.createClass({
   },
 
   handleKeypress(e) {
-    if (e.ctrlKey && e.altKey && e.shiftKey && e.which == 76) {   // Ctrl+Alt+Shift+L
+    if (e.ctrlKey && e.altKey && e.shiftKey && (e.key == 'L' || e.key == 'l')) {   // Ctrl+Alt+Shift+L
       this.toggle();
       e.preventDefault();
     }
   },
 
   componentDidMount() {
-    $(window).on('keydown.logViewer', this.handleKeypress);
+    window.addEventListener('keydown', this.handleKeypress);
   },
 
   componentWillUnmount() {
-    $(window).off('keydown.logViewer');
+    window.removeEventListener('keydown', this.handleKeypress);
   },
 
   render() {

@@ -127,7 +127,11 @@ export var Loading = React.createClass({
 
 
 export function goPost(url) {
-  $('<form/>', { method: 'POST', action: url, appendTo: 'body' }).submit();
+  var form = document.createElement('form');
+  form.method = 'POST';
+  form.action = url;
+  document.body.appendChild(form);
+  form.submit();
 };
 
 export function goLogout() {
