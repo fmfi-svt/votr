@@ -38,33 +38,13 @@ sortAs.interval = function (text) {
 export function sortTable(items, columns, query, queryKey) {
   var orderString = query[queryKey] || columns.defaultOrder;
   var order = orderString ? orderString.split(/(?=[ad])/) : [];
-  var orderLength = order.length;
-  var orderAsc = order.map((orderItem) => orderItem.substring(0, 1) == 'a');
-  var orderColumns = order.map((orderItem) => columns[orderItem.substring(1)]);
-
-  items = items.map((item, index) => {
-    var criteria = [];
-    for (var i = 0; i < orderLength; i++) {
-      var [label, prop, process, preferDesc] = orderColumns[i];
-      var value = prop ? item[prop] : item;
-      if (process) value = process(value);
-      if (!prop && !process) value = undefined;
-      criteria.push(value);
-    }
-    return { item, index, criteria };
+  var directions = order.map((o) => o.substring(0, 1) == 'a' ? 'asc' : 'desc');
+  var iteratees = order.map((o) => {
+    var [label, prop, process, preferDesc] = columns[o.substring(1)];
+    return (item) => (process || _.identity)(prop ? item[prop] : item);
   });
 
-  items.sort((a, b) => {
-    for (var i = 0; i < orderLength; i++) {
-      var ac = a.criteria[i], bc = b.criteria[i];
-      if (ac === bc) continue;
-      if (ac < bc) return orderAsc[i] ? -1 : 1;
-      if (ac > bc) return orderAsc[i] ? 1 : -1;
-    }
-    return a.index - b.index;
-  });
-
-  items = items.map((a) => a.item);
+  items = _.orderBy(items, iteratees, directions);
 
   function handleClick(event) {
     var index = event.currentTarget.getAttribute('data-index');

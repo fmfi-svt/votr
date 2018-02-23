@@ -22,9 +22,8 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   fi
 
   if ! [ -f static/libs/lodash.js ]; then
-    version=$(npm view lodash versions | cut -d\' -f2 | grep '^3\.' | tail -n1)
-    wget https://raw.githubusercontent.com/lodash/lodash/$version/lodash.js -O static/libs/lodash.js
-    wget https://raw.githubusercontent.com/lodash/lodash/$version/lodash.min.js -O static/libs/lodash.min.js
+    npm install lodash@^4
+    cp -p node_modules/lodash/lodash.{min.,}js static/libs/
   fi
 
   if ! [ -f static/libs/react.js ]; then

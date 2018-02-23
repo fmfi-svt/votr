@@ -68,7 +68,7 @@ export class Root extends React.Component {
 
 export function buildUrl(href) {
   if (_.isString(href)) return href;
-  return '?' + $.param(_.omit(href, _.isUndefined), true);
+  return '?' + $.param(_.omitBy(href, _.isUndefined), true);
 };
 
 

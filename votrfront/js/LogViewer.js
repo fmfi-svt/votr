@@ -94,7 +94,7 @@ function computeBenchmarks() {
     }
   });
 
-  return _(sums).pairs().sortBy(1).reverse().valueOf();
+  return _.sortBy(_.toPairs(sums), 1).reverse();
 }
 
 

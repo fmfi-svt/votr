@@ -93,7 +93,7 @@ export function MojeHodnoteniaPriemeryTable() {
     if (zapisneListy && zapisneListy.length == 0) {
       priemery = [];
     } else if (zapisneListy) {
-      var zapisnyListKey = _.max(zapisneListy,
+      var zapisnyListKey = _.maxBy(zapisneListy,
           (zapisnyList) => sortAs.date(zapisnyList.datum_zapisu)).zapisny_list_key;
       [priemery, message] = cache.get('get_priemery', zapisnyListKey) || [];
     }

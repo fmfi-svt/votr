@@ -55,7 +55,7 @@ export function App() {
 
     function handleClose() {
       if (Votr.ajaxError) return;
-      navigate(_.omit(query, (value, key) => key.substring(0, 5) == 'modal'));
+      navigate(_.omitBy(query, (value, key) => key.substring(0, 5) == 'modal'));
     }
 
     var C = mainComponent;
