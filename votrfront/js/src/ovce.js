@@ -5,7 +5,7 @@ const cookieDurationVote = 60;
 const cookieName = 'ovcaKolacik';
 const cookieValue = 'on';
 // Starting this day the cookie won't be visible
-const cookieHideDate = Date.parse('6 Jul 2018');
+const cookieHideDate = Date.parse('6 Jul 2017');
 
 const createDiv = () => {
   const bodytag = document.getElementsByTagName('body')[0];

@@ -67,9 +67,6 @@ def app_response(request, **my_data):
     if 'csrf_token' not in my_data:
         my_data['servers'] = request.app.settings.servers
 
-    #if not os.path.exists(static_path + 'ok'):
-    #    return Response('buildstatic failed!', status=500)
-
     content = template % dict(
         init_json=json.dumps({ 'settings': my_data }).replace('</', '<\\/'),
         css='\n'.join(

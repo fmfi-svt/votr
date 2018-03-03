@@ -9,12 +9,12 @@ export class ErrorModal extends Component {
     this.setState({ open: false });
   }
 
-  handleIgnore() {
+  handleIgnore = () => {
     Votr.ajaxError = null;
     Votr.appRoot.forceUpdate();
   }
 
-  handleDetails() {
+  handleDetails = () => {
     this.setState({ open: true });
   }
 
@@ -106,12 +106,15 @@ export class ErrorModal extends Component {
 }
 
 export class ErrorPage extends Component {
-  noop = () => undefined
 
   render() {
     // TODO: ModalBase should probably use transferPropsTo() instead of requiring query.
     return (
-      <ModalBase query={{}} component={ErrorModal} onClose={this.noop} />
+      <ModalBase
+        query={{}}
+        component={ErrorModal}
+        onClose={() => undefined}
+      />
     );
   }
 }

@@ -81,7 +81,7 @@ export const RequestCache = {};
 
 RequestCache.pending = {};
 
-RequestCache.sendRequest = function (request) {
+RequestCache.sendRequest = function(request) {
   const cacheKey = request.join('\0');
   if (RequestCache[cacheKey]) {
     return;

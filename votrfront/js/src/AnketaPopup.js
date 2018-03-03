@@ -87,7 +87,7 @@ export class AnketaPopup extends Component {
             <a
               className="anketa__button anketa__button--secondary"
               onClick={() => this.onClosePopup(1)}
-              href="javascript:void(0);"
+              href={(e) => e.preventDefault()}
             >
               Neskôr
             </a>

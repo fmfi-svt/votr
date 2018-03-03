@@ -2,6 +2,8 @@ import React from 'react';
 import ReactDOM from 'react-dom';
 import $ from 'jquery';
 
+// TODO Remove these imports when Modals are implemented
+// in our source with some package
 import './libs/modal';
 import './libs/transition';
 
@@ -10,6 +12,8 @@ import { LoginPage } from './src/LoginPage';
 import { App } from './src/actions';
 import { Root } from './src/router';
 
+// FIXME These are here just for their side effects, needs to be
+// incorporated into source and deleted
 import './src/prologue';
 import './src/ovce';
 

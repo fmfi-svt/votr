@@ -90,7 +90,6 @@ export class MojePredmetyPageContent extends Component {
   }
 
   render() {
-    const { zapisnyListKey } = this.props.query;
     return (
       <div>
         <div className="header">

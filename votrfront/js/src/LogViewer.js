@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import $ from 'jquery';
-import _ from 'lodash';
 import { LocalSettings } from './LocalSettings';
 import { logs } from './ajax';
 
