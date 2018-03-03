@@ -28,36 +28,53 @@ Running Votr
 
         sudo apt install virtualenv
 
-2.  Install node.js and npm. (Some Linux distributions bundle them together in
-    one package.) Check the version: npm 1 and 2 are too old. npm 3 and 4 are
-    probably OK. npm 5+ is ideal, but most Linux distributions don't have it yet
-    (including current Ubuntu and Debian). In that case, you can either:
-
-    *   Install npm 3 despite its age and hope for the best. E.g. on Ubuntu:
-        `sudo apt install nodejs-legacy npm`.
-    *   Use the unofficial up to date repositories from
-        https://nodejs.org/en/download/package-manager/, and install `nodejs`
-        (not `nodejs-legacy` and `npm`).
-
-3.  Create a virtualenv directory. A virtualenv is an isolated environment that
+2.  Create a virtualenv directory. A virtualenv is an isolated environment that
     contains Python libraries, so that you don't have to install them
     system-wide, and each project can use different versions without conflicts.
 
         virtualenv -p python3 venv
 
-4.  Activate the virtualenv. (Basically, this just adds `venv/bin` to your
+3.  Activate the virtualenv. (Basically, this just adds `venv/bin` to your
     current shell's `$PATH`. Instead, you could just use `venv/bin/python`
     instead of `python`, `venv/bin/pip` instead of `pip`, etc.)
 
         source venv/bin/activate
 
-5.  Install the latest version of `pip` (earlier versions don't support wheels),
+4.  Install the latest version of `pip` (earlier versions don't support wheels),
     and then use it to install Python dependencies.
 
         pip install -U pip
         pip install -r requirements.txt
 
-6.  Start Votr. Remember to activate the virtualenv first if you haven't done it
+5.  Gather/build your CSS files:
+
+        # copy pre-built CSS files to votrfront/static/
+        ./votrfront/buildcss.sh setup
+        # build the custom CSS
+        ./votrfront/buildcss.sh
+        # build the bootstrap custom base CSS - not needed in 99.99% cases
+        ./votrfront/buildcss.sh bootstrap
+
+6.  Install Node.js and npm/yarn. You can do so via
+    [NVM](https://github.com/creationix/nvm). Follow instructions on the NVM
+    website. After installing NVM, you may need to restart your
+    terminal / source .bashrc . Afterwards, run:
+
+        cd votrfront/js/
+        nvm use
+        npm i -g yarn
+        yarn
+        cd ../..
+
+7.  Start the Javascript bundler (you will need to have this open in another
+    terminal):
+
+        cd votrfront/js
+        yarn dev
+        # for production build, do
+        yarn build
+
+8.  Start Votr. Remember to activate the virtualenv first if you haven't done it
     yet in this terminal.
 
         ./console.py serve --debug
@@ -78,6 +95,7 @@ Some documentation is on the wiki: https://github.com/fmfi-svt/votr/wiki
 
 Some documentation is in docstrings in the source code and rendered with Sphinx:
 http://svt.fmph.uniba.sk/~tomi/votrdoc/
+
 
 Building documentation:
 
