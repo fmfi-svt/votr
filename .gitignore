@@ -1,13 +1,23 @@
 build
 static
+### Node ###
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+package-lock.json
 node_modules
-dist
+
 *.egg-info
 *.pyc
 *.pyo
 *~
 .*
 !.git*
+!.babelrc
+!.eslintrc
+!.nvmrc
 /*env
 docs/_build
 *.ipynb

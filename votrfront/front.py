@@ -15,8 +15,8 @@ template = '''
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Votr</title>
-<link rel="stylesheet" type="text/css" href="%(css)s">
 <link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700&amp;subset=latin-ext" rel="stylesheet">
+%(css)s
 <meta name="description" content="Votr ponúka študentom jednoduchší a \
 pohodlnejší spôsob, ako robiť najčastejšie činnosti zo systému AIS. Zapíšte \
 sa na skúšky, prezrite si vaše hodnotenia a skontrolujte si počet kreditov \
@@ -67,19 +67,19 @@ def app_response(request, **my_data):
     if 'csrf_token' not in my_data:
         my_data['servers'] = request.app.settings.servers
 
-    if not os.path.exists(static_path + 'ok'):
-        return Response('buildstatic failed!', status=500)
-
-    debug = request.cookies.get('votr_debug')
-    with open(static_path + ('jsdeps-dev' if debug else 'jsdeps-prod')) as f:
-        scripts = f.read().split()
+    #if not os.path.exists(static_path + 'ok'):
+    #    return Response('buildstatic failed!', status=500)
 
     content = template % dict(
         init_json=json.dumps({ 'settings': my_data }).replace('</', '<\\/'),
-        css=static_url('style.css'),
+        css='\n'.join(
+            '<link rel="stylesheet" type="text/css" href="{}">'.format(static_url(css))
+            for css in ['bootstrap.custom.css', 'votr.css']
+        ),
         scripts='\n'.join(
             '<script src="{}"></script>'.format(static_url(script))
-            for script in scripts),
+            for script in ['votr.bundle.js']
+        ),
         analytics=('' if not request.app.settings.ua_code else
             analytics_template % dict(ua_code=request.app.settings.ua_code)))
 
