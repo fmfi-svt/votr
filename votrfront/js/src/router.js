@@ -69,7 +69,13 @@ export const buildUrl = (href) => {
   // remove empty query paramaters
   const newHref = Object.keys(href)
     .filter((key) => key !== undefined)
-    .reduce((newObj, key) => Object.assign(newObj, { [key]: href[key] }), {});
+    .reduce(
+      (newObj, key) => {
+        newObj[key] = href[key];
+        return newObj;
+      },
+      {}
+    );
 
   return '?' + $.param(newHref, true);
 };
