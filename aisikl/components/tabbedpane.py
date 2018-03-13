@@ -4,13 +4,13 @@ from aisikl.events import change_action_event
 
 
 class TabbedPane(Control):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
-        self.selected_index = int(element.get('selectedindex', '0'))
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
+        self.selected_index = properties.get('selectedIndex', 0)
 
         self.panel_ids = []
         arena = element.find(id=element['id'] + 'Arena', recursive=False)
-        for panel in arena.find_all(jsct=True, recursive=False):
+        for panel in arena.find_all(id=True, recursive=False):
             self.panel_ids.append(panel['id'])
 
     def _ais_setSelectedIndex(self, value):

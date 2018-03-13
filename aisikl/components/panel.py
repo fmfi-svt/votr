@@ -1,21 +1,20 @@
 
+from .component import is_true
 from .control import Control
 from aisikl.events import action_event
 
 
 class Panel(Control):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
         self.tab_id = element.get('tabId')
         self.title = element.get('name')
-        self.autoscrolls = element.get('autoscrolls', 'false') == 'true'
-        self.collapsable = element.get('collapsable', 'false') == 'true'
-        self.collapsed = element.get('collapsed', 'false') == 'true'
+        self.autoscrolls = properties.get('autoscrolls', False)
+        self.collapsable = properties.get('collapsable', False)
+        self.collapsed = properties.get('collapsed', False)
 
     def _ais_setCollapsed(self, value):
-        self.collapsed = (value == 'true')
-    def _ais_setCollapsable(self, value):
-        self.collapsable = (value == 'true')
+        self.collapsed = is_true(value)
 
     def toggle_collapsed(self):
         if not self.collapsable: return

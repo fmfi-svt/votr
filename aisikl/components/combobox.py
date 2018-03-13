@@ -8,9 +8,9 @@ Option = namedtuple('Option', ['title', 'id', 'tool_tip_text'])
 
 
 class ComboBox(Control):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
-        self.tool_tip_like_data = element.get('tooltiplikedata', 'false') == 'true'
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
+        self.tool_tip_like_data = properties.get('ttld', False)
         self._parse_options(element)
 
     def _parse_options(self, element):

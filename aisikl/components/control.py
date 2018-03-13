@@ -1,19 +1,24 @@
 
-from .component import Component
+from .component import Component, is_true
 
 
 class Control(Component):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
-        self.read_only = element.get('_readonly', 'false') == 'true'
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
+        self.parent_id = parent_id
+        self.read_only = properties.get('ro', False)
         self.tab_order = int(element.get('tabindex', '0'))
         self.tool_tip_text = element.get('title')
+
+    @property
+    def parent(self):
+        return self.dialog.components[self.parent_id]
 
     def is_really_enabled(self):
         return super().is_really_enabled() and self.parent.is_really_enabled()
 
     def _ais_setReadOnly(self, value):
-        self.read_only = (value == 'true')
+        self.read_only = is_true(value)
     def _ais_setTabOrder(self, value):
         self.tab_order = int(value)
     def _ais_setToolTipText(self, value):
@@ -23,8 +28,6 @@ class Control(Component):
     def _ais_setY(self, value): pass
     def _ais_setWidth(self, value): pass
     def _ais_setHeight(self, value): pass
-    def _ais_setPastWidth(self, value): pass
-    def _ais_setPastHeight(self, value): pass
     def _ais_setForeground(self, value): pass
     def _ais_setBackground(self, value): pass
     def _ais_setComponentStyle(self, value): pass

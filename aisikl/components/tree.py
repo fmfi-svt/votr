@@ -1,6 +1,7 @@
 
+import json
 from .control import Control
-from .table import load_script
+from .table import load_script_plain, load_script
 from aisikl.events import (action_event, tree_expansion_event,
                            tree_expansion_action_event, tree_selection_event)
 
@@ -28,13 +29,13 @@ def _synchronizer_to_cdata(sync, true_name, false_name):
 
 
 class Tree(Control):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
 
-        self.multiple_selection = element.get('multipleselection', 'false') == 'true'
-        self.commands = element.get('commands')
-        self.border_width = int(element.get('borderwidth', '1'))
-        self.action_name = element.get('actionname')
+        self.multiple_selection = properties.get('multipleSelection', False)
+        self.commands = properties.get('commands')
+        self.border_width = properties.get('borderWidth', 1)
+        self.action_name = properties.get('an')
 
         self.selection_changed = False
         self.expansion_changed = False
@@ -49,6 +50,8 @@ class Tree(Control):
         selection = element.get('selection')
         self.selection = selection.split(',') if selection else []
         self.active_id = element.get('activepath') or None
+
+        properties = json.loads(load_script_plain(data_view, 'json'))
 
         if updating:
             nodes = element
@@ -74,8 +77,17 @@ class Tree(Control):
 
             self.nodes[id] = Node(id, is_leaf, type, expanded, checked, title)
 
-        self.expansion_synchronizer = {}
-        self.checked_synchronizer = {}
+        if updating:
+            for id in properties['expand']:
+                if not self.nodes[id].expanded:
+                    self.toggle_expansion(id, _send_event=False)
+            for id in properties['collapse']:
+                if self.nodes[id].expanded:
+                    self.toggle_expansion(id, _send_event=False)
+        else:
+            self.expansion_synchronizer = {}
+            self.checked_synchronizer = {}
+
         self.dialog.try_interactive(self, "TreeSelectionEvent")
 
     def _ais_setDataView(self, id, body):
@@ -126,7 +138,7 @@ class Tree(Control):
         self.dialog.app.send_events(ev)
 
     def _ais_setMultipleSelection(self, value):
-        self.multiple_selection = (value == 'true')
+        self.multiple_selection = is_true(value)
     def _ais_setCommands(self, value):
         self.commands = value
 
@@ -153,7 +165,7 @@ class Tree(Control):
         ev = tree_selection_event(self, active_id, "SELECT")
         self.dialog.app.send_events(ev)
 
-    def toggle_expansion(self, id):
+    def toggle_expansion(self, id, _send_event=True):
         node = self.nodes[id]
         if node.expanded is None:
             raise ValueError("this node cannot expand")
@@ -173,8 +185,9 @@ class Tree(Control):
             ev = tree_expansion_action_event(self, path)
             self.dialog.app.send_events(ev)
 
-        ev = tree_expansion_event(self, path, node.expanded)
-        self.dialog.app.send_events(ev)
+        if _send_event:
+            ev = tree_expansion_event(self, path, node.expanded)
+            self.dialog.app.send_events(ev)
 
     def toggle_checkbox(self, id):
         node = self.nodes[id]

@@ -9,8 +9,8 @@ Option = namedtuple('Option', ['title', 'id'])
 
 
 class RadioBox(Control):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
 
         items = element.find(id='radioBox_items')
         self.always_selected = items.get('allwaysselected', 'false') == 'true'

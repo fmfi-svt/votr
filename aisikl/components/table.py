@@ -1,6 +1,8 @@
 
+import json
 from bs4 import BeautifulSoup
 from collections import namedtuple
+from .component import is_true
 from .control import Control
 from .combobox import Option
 from aisikl.events import (cell_edited_event, row_edited_event, action_event,
@@ -10,8 +12,8 @@ from aisikl.exceptions import AISParseError, AISBehaviorError
 
 Column = namedtuple('Column', [
     'alias', 'index', 'title', 'header', 'sortable', 'fixed', 'width',
-    'visible', 'edited_by', 'combo_box_mode', 'model', 'send_edit_cell',
-    'default_value'])
+    'visible', 'is_checked_selection_column', 'edited_by', 'combo_box_mode',
+    'model', 'send_edit_cell', 'default_value'])
 
 
 Cell = namedtuple('Cell', [
@@ -38,36 +40,44 @@ class Row(object):
         return '{}({})'.format(self.__class__.__name__, repr(self.cells)[1:-1])
 
 
-def load_script(data_view, id):
+def load_script_plain(data_view, id):
     script_element = data_view.find(id=id)
     if not script_element: return None
     if script_element.name != 'script':
         raise AISParseError('Expected {} to be script instead of {}'.format(
             id, script_element.name))
-    text = script_element.get_text()[4:-3]   # always "<!--" and "-->"
+    return script_element.get_text()[4:-3]   # always "<!--" and "-->"
+
+
+def load_script(data_view, id):
+    text = load_script_plain(data_view, id)
+    if text is None: return None
     return BeautifulSoup(text, 'lxml')   # note: will be wrapped in <html> and <body>
 
 
 class Table(Control):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
 
-        self.sortable = element.get('sortable', 'true') == 'true'
-        self.always_selected = element.get('allwaysselected', 'true') == 'true'
-        self.fixed_columns = int(element.get('fixedcolumns', '0'))
-        self.up_down_enabled = element.get('updownenabled', 'false') == 'true'
-        self.read_only = element.get('readonly', 'true') == 'true'
-        self.user_add_remove_rows_enabled = element.get('useraddremoverowsenabled', 'false') == 'true'
-        self.supported_events = element.get('supportedevents', '')
-        self.multiple_selection = element.get('multipleselection', 'false') == 'true'
-        self.cell_selection_mode = element.get('cellselectionmode', 'false') == 'true'
-        self.scroll_bottom_enabled = element.get('scrollbottomenabled', 'false') == 'true'
-        self.select_all_enabled = element.get('selectallenabled', 'false') == 'true'
-        self.row_numbers_visible = element.get('rownumbersvisible', 'false') == 'true'
+        # In the original JavaScript, these properties have default values, but
+        # it seems the server always sets them. If it stops sending them, maybe
+        # it's better to fail loudly. The original default value of each
+        # property is written in the comment.
+        self.sortable = properties['sortable']  # True
+        self.always_selected = properties['allwaysSelected']  # True
+        self.fixed_columns = properties.get('fixedColumns', 0)
+        self.up_down_enabled = properties['upDownEnabled']  # False
+        self.user_add_remove_rows_enabled = properties['userAddRemoveRowsEnabled']  # False
+        self.supported_events = properties.get('se') or ''
+        self.multiple_selection = properties['multipleSelection']  # False
+        self.cell_selection_mode = properties['cellSelectionMode']  # False
+        self.scroll_bottom_enabled = properties['scrollBottomEnabled']  # False
+        self.select_all_enabled = properties['selectAllEnabled']  # False
+        self.row_numbers_visible = properties['rowNumbersVisible']  # False
         self.row_numbers_visible_changed = False
-        self.status_visible = element.get('statusvisible', 'false') == 'true'
+        self.status_visible = properties['statusVisible']  # False
         self.status_visible_changed = False
-        self.visible_status_buttons = int(element.get('visiblestatusbuttons', '0'))
+        self.visible_status_buttons = properties['visibleStatusButtons']  # 0
 
         self.is_end_of_data = False
         self.truncated = False
@@ -82,7 +92,7 @@ class Table(Control):
         self.selection_changed = False
         self.active_index_changed = False
 
-        self.buffer_size = int(element.get('buffersize', '50'))
+        self.buffer_size = properties.get('bufferSize', 50)
 
         self.headers_changed = False
         self.up_downed_rows = False
@@ -90,7 +100,7 @@ class Table(Control):
         self.edited_cells = False
         self.scrolled_vertically = False
 
-        self.action_name = element.get('actionname')
+        self.action_name = properties.get('an')
 
         self.columns = []
         self.column_map = {}
@@ -110,6 +120,8 @@ class Table(Control):
         self._update_selection_model_properties(data_view)
         self._update_data_tab_bodies_properties(data_view)
 
+        properties = json.loads(load_script_plain(data_view, 'json'))
+
         self.columns = []
 
         index = 0
@@ -118,15 +130,18 @@ class Table(Control):
             header_table = load_script(data_view, 'columnModel' + suffix)
             colgroup = load_script(data_view, 'dataTabColGroup' + suffix)
             if not header_table: continue
+            tds = { e['id']: e for e in header_table.find_all(id=True) }
             for col in colgroup.find_all('col'):
-                td = header_table.find(shortname=col['shortname'])
-                sortable = col.get('sortable', 'true') == 'true'
+                alias = col['id']
+                col_properties = properties['columns'][alias]
+                td = tds['hdr-' + alias]
                 width = int(col.get('width', '0').partition('px')[0])
-                visible = 'hidden' not in col.get('style', '')
                 self.columns.append(Column(
-                    alias=col['shortname'], index=index, title=td.get('title'),
-                    header=td.get('header'), sortable=sortable, fixed=fixed,
-                    width=width, visible=visible, edited_by=col.get('editedby'),
+                    alias=alias, index=index, title=td.get('title'),
+                    header=td.get('header'), edited_by=col.get('editedby'),
+                    sortable=col_properties.get('s', False), fixed=fixed,
+                    width=width, visible=not col_properties.get('h', False),
+                    is_checked_selection_column=col_properties.get('ch'),
                     combo_box_mode=col.get('cbmode'), model=col.get('model'),
                     send_edit_cell=col.get('sendeditcell', 'false') == 'true',
                     default_value=col.get('defaultvalue')))
@@ -204,32 +219,32 @@ class Table(Control):
         self.selection_changed = True
 
     def _ais_setSortable(self, value):
-        self.sortable = (value == 'true')
+        self.sortable = is_true(value)
         # TODO: this.tableService.updateStatusControlSortButton
     def _ais_setAllwaysSelected(self, value):
-        self.always_selected = (value == 'true')
+        self.always_selected = is_true(value)
     def _ais_setFixedColumns(self, value):
         self.fixed_columns = int(value)
     def _ais_setMinNoFixedColumnsWidth(self, value):
         pass   # getMinNoFixedColumnsWidth is unused in Votr
     def _ais_setUpDownEnabled(self, value):
-        self.up_down_enabled = (value == 'true')
+        self.up_down_enabled = is_true(value)
     def _ais_setUserAddRemoveRowsEnabled(self, value):
-        self.user_add_remove_rows_enabled = (value == 'true')
+        self.user_add_remove_rows_enabled = is_true(value)
     def _ais_setSupportedEvents(self, value):
         self.supported_events = value
     def _ais_setMultipleSelection(self, value):
-        self.multiple_selection = (value == 'true')
+        self.multiple_selection = is_true(value)
     def _ais_setCellSelectionMode(self, value):
-        self.cell_selection_mode = (value == 'true')
+        self.cell_selection_mode = is_true(value)
     def _ais_setScrollBottomEnabled(self, value):
-        self.scroll_bottom_enabled = (value == 'true')
+        self.scroll_bottom_enabled = is_true(value)
     def _ais_setSelectAllEnabled(self, value):
-        self.select_all_enabled = (value == 'true')
+        self.select_all_enabled = is_true(value)
     def _ais_setRowNumbersVisible(self, value):
-        self.row_numbers_visible = (value == 'true')
+        self.row_numbers_visible = is_true(value)
     def _ais_setStatusVisible(self, value):
-        self.status_visible = (value == 'true')
+        self.status_visible = is_true(value)
     def _ais_setVisibleStatusButtons(self, value):
         self.visible_status_buttons = int(value)
     def _ais_setBufferSize(self, value):

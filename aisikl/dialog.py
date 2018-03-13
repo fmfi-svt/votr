@@ -1,7 +1,11 @@
 
+import json
+import re
 from .exceptions import AISParseError, AISBehaviorError
 from .components import component_classes
 from aisikl.events import component_event
+
+_properties_re = re.compile(r'^var componentsProperties\s*=\s*(.*);$')
 
 class Dialog:
     '''An opened AIS dialog.
@@ -47,26 +51,46 @@ class Dialog:
         self.app.ctx.log('benchmark', 'Begin dialog initialization')
 
         body = dialog_soup.body
-        if body.get('jsct') != 'body' or body.get('id') != self.name:
+        first_element_child = body.find(True)
+        scripts = dialog_soup.find_all('script')
+        if not (body.get('id') == self.name and
+                'jsct' not in body and
+                'dialogBody' in body.get('class', []) and
+                first_element_child and
+                first_element_child.get('id') == 'dialogComponentsArea' and
+                scripts):
             raise AISParseError("Unexpected dialog body response")
 
         self.components = {}
         self.changed_components = None
 
-        for element in dialog_soup.find_all(jsct=True):
-            if element.get('isTemporary') == 'true': continue
-            id = element['id']
-            jsct = element['jsct']
+        last_line = scripts[-1].string.strip().split('\n')[-1].strip()
+        match = _properties_re.match(last_line)
+        if not match:
+            raise AISParseError("Couldn't find dialog componentProperties")
+        component_properties = json.loads(match.group(1))
 
-            # Webui can have multiple components with the same id. Nobody can
-            # tell them apart, not even result frame scripts, but they still
-            # try to. This code arbitrarily picks the first one we find. But
-            # getElementById() is undefined in this case, so any choice is OK.
-            if id in self.components: continue
+        elements = { e['id']: e for e in dialog_soup.find_all(id=True) }
+        if 'dt_selection' in elements or 'dt_selection_area' in elements:
+            raise AISParseError("#dt_selection is not supported")
 
-            if jsct not in component_classes:
-                raise AISParseError("Unsupported component type: %r" % jsct)
-            component = component_classes[jsct](dialog_soup, element, self)
+        for id, properties in component_properties.items():
+            if properties.get('tmp'): continue
+            if id == 'suggestionsArea': continue
+
+            element = elements.get(id)
+            parent_id = None
+            if element:
+                parent = element.find_parent(
+                    lambda p: p.get('id') in component_properties)
+                if parent:
+                    parent_id = parent['id']
+
+            type = properties.get('t')
+            if type not in component_classes:
+                raise AISParseError("Unsupported component type: %r" % type)
+            component = component_classes[type](
+                self, id, type, parent_id, properties, element)
 
             self.components[id] = component
 

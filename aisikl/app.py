@@ -4,6 +4,7 @@ from contextlib import contextmanager
 import json
 import re
 import time
+import urllib.parse
 from .exceptions import (
     AISParseError, AISBehaviorError, AISApplicationClosedError, LoggedOutError)
 from .dialog import Dialog
@@ -63,7 +64,7 @@ DEFAULT_IGNORED_MESSAGES = [
 
 # Regexes for parsing AIS JavaScript
 _alert_re = re.compile(r'^function main\(\) { alert\((\'.*\')\); }$')
-_onload_re = re.compile(r'^window\.setTimeout\("WebUI_init\(\\"([^"\\]+)\\", \\"ais\\", \\"ais\/webui2\\"\)", 1\)$')
+_app_properties_re = re.compile(r'(?:^|\n)var appProperties=(.*);\s*$')
 _functions_re = re.compile(r'\nfunction (\w+)')
 _var_re = re.compile(r'^var \w+;\s*')
 _trycatch_re = re.compile(r'^try {\s*|\s*} *catch *\(e\) *{ *(return;)? *}$')
@@ -82,13 +83,14 @@ _useless_res = [
     re.compile(r'^if \(dm\(\)!=null\) \w+=dm\(\)\.getDialog\(\'\w+\'\)$'),
     re.compile(r'^if \(\w+!=null\) \w+=\w+\.getDialogContext\(\)$'),
     re.compile(r'^if \(\w+!=null\) \w+\.tryAutosize\(\)$'),
+    re.compile(r'^var componentsProperties = \{\}$'),
     re.compile(r'^dm\(\)\.setActiveDialogName\(\'\w+\'\)$'),
     # TODO: Perhaps we should handle setActiveDialogName, or at least check if
     # it's the same as the current active dialog.
 ]
 _main_re = re.compile(r'^function main0?\(\) \{$')
 _operation_re = re.compile(r'^(webui|dm)\(\)\.(\w+)\((.*)\)$')
-_update_re = re.compile(r'^f\(\)\.getEnsuredJSOById\("(\w+)", *(\w+)\)\.(\w+)\((.*)\)$')
+_update_re = re.compile(r'^f\(\)\.getControlById\("(\w+)", *(\w+)\)\.(\w+)\((.*)\)$')
 _dialog_update_re = re.compile(r'^(\w+)\.getDialogJSObject\(\)\.(\w+)\((.*)\)$')
 
 
@@ -291,10 +293,17 @@ class Application:
             raise AISParseError("AIS2 application didn't open")
 
         onload = app_soup.body['onload']
-        onload_match = _onload_re.match(onload)
-        if not onload_match:
-            raise AISParseError("Couldn't get app ID from <body> onload")
-        self.app_id = onload_match.group(1)
+        if onload != 'window.setTimeout("WebUI_init()", 1)':
+            raise AISParseError("Unexpected <body> onload")
+        first_script = app_soup.script.string if app_soup.script else ''
+        properties_match = _app_properties_re.search(first_script)
+        if not properties_match:
+            raise AISParseError("Couldn't get app ID from appProperties")
+        properties = json.loads(properties_match.group(1))
+        if not (properties.get('appContext') == 'ais' and
+                properties.get('webuiContext') == 'ais/webui2'):
+            raise AISParseError("Unexpected values in appProperties")
+        self.app_id = properties['appId']
 
         if app_soup.find(id='initScript').get_text() != '<!---->':
             raise AISParseError("initScript is not supported")
@@ -680,8 +689,8 @@ class Application:
 
         file_name = file_name.rpartition('/')[2]
         url = ('/ais/files/{}?appId={}&contentType={}&antiCache={}&file={}'
-            .format(file_name, self.app_id, content_type, time.time(),
-                    file_name))
+            .format(urllib.parse.quote(file_name), self.app_id, content_type,
+                    time.time(), urllib.parse.quote(file_name)))
 
         self.ctx.log('operation', 'Downloading "{}"'.format(file_name))
 

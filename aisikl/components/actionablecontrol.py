@@ -3,9 +3,9 @@ from .control import Control
 
 
 class ActionableControl(Control):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
-        self.action_name = element.get('actionname')
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
+        self.action_name = properties.get('an')
 
     @property
     def action(self):

@@ -1,5 +1,6 @@
 
 from collections import namedtuple
+from .component import is_true
 from .control import Control
 
 
@@ -14,9 +15,9 @@ class Item:
 
 
 class CheckList(Control):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
-        self.up_down_enabled = element.get('updownenabled', 'false') == 'true'
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
+        self.up_down_enabled = properties.get('upDownEnabled', False)
         self._parse_items(element)
 
     def _parse_items(self, element):
@@ -59,7 +60,7 @@ class CheckList(Control):
         self._mark_changed()
 
     def _ais_setUpDownEnabled(self, value):
-        self.up_down_enabled = (value == 'true')
+        self.up_down_enabled = is_true(value)
     def _ais_setDataView(self, id, body):
         self._parse_items(body.find(id=id))
     _ais_setDataView.wants_body = True

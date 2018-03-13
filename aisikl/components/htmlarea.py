@@ -3,9 +3,8 @@ from .actionablecontrol import ActionableControl
 
 
 class HtmlArea(ActionableControl):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
-        self.tool_tip_like_data = element.get('tooltiplikedata')
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
         self._parse_content(element)
         # Note: This is where we should call component_changes() if we actually
         # supported canClose.

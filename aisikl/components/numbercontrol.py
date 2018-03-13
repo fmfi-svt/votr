@@ -1,4 +1,5 @@
 
+from .component import is_true
 from .textinput import TextInput
 
 
@@ -10,16 +11,17 @@ def maybe_float(value):
 
 
 class NumberControl(TextInput):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
         self.separator_1000 = element.get('separator1000', ' ')
         self.decimal_point = element.get('decimalpoint', ',')
-        self.scale = int(element.get('scale', '2'))
-        self.negative_enabled = element.get('negativeenabled', 'false') == 'true'
+        self.scale = properties.get('scale', 2)
+        self.unit = properties.get('unit')
+        self.negative_enabled = properties.get('negativeEnabled', True)
         self.min_value = maybe_float(element.get('minvalue', ''))
         self.max_value = maybe_float(element.get('maxvalue', ''))
-        self.show_max_length = int(element.get('showmaxlength', '0'))
-        self.edit_max_length = int(element.get('editmaxlength', '0'))
+        self.show_max_length = properties.get('showMaxLength', 0)
+        self.edit_max_length = properties.get('editMaxLength', 0)
         self.bdvalue = element.get('bdvalue')
 
     def _ais_setSeparator1000(self, value):
@@ -28,8 +30,10 @@ class NumberControl(TextInput):
         self.decimal_point = value
     def _ais_setScale(self, value):
         self.scale = int(value)
+    def _ais_setUnit(self, value):
+        self.unit = value
     def _ais_setNegativeEnabled(self, value):
-        self.scale = (value == 'true')
+        self.scale = is_true(value)
     def _ais_setMinValue(self, value):
         self.min_value = maybe_float(value)
     def _ais_setMaxValue(self, value):

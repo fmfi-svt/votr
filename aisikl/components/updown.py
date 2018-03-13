@@ -4,10 +4,10 @@ from aisikl.events import action_event
 
 
 class UpDown(Control):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
-        self.up_downed_component = element.get('updownedcomponent')
-        self.top_bottom_enabled = element.get('topbottomenabled', 'false') == 'true'
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
+        self.up_downed_component = properties.get('upDownedComponent')
+        self.top_bottom_enabled = properties.get('topBottomEnabled', False)
 
     def click(self, command):
         if command not in ('UP', 'DOWN', 'TOP', 'BOTTOM'):

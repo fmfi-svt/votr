@@ -1,21 +1,20 @@
 
 from aisikl.events import item_event
+from .component import is_true
 from .control import Control
 
 
 class CheckBox(Control):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
         input = element.input
         self.smoked = input.get('smoked', 'false') == 'true'
         self.selected = input.has_attr('checked')
-        self.image = element.get('_image')
-        self.confirm_question = element.get('confirmquestion')
 
     def _ais_setSmoked(self, value):
-        self.smoked = (value == 'true')
+        self.smoked = is_true(value)
     def _ais_setSelected(self, value):
-        self.selected = (value == 'true')
+        self.selected = is_true(value)
         self.dialog.try_interactive(self, "ItemEvent")
 
     def _fire_event(self):

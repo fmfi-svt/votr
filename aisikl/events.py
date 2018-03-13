@@ -115,6 +115,7 @@ def tree_expansion_event(source, path, expand):
     return Event(source, EVENT_EXPAND_COLLAPSE,
         "<event class='avc.ui.tree.AVCTreeExpansionEvent'>" +
         _tag("type", "2" if expand else "1") + _tag("path", path) +
+        _tag("fromViewer", "true") +
         "</event>")
 
 def tree_expansion_action_event(source, path):

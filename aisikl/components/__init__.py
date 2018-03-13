@@ -41,6 +41,7 @@ component_classes = {
     'comboBox': ComboBox,
     'dateControl': DateControl,
     'eventInteractive': TODO,
+    'fileInput': TODO,
     'htmlArea': HtmlArea,
     'htmlList': TODO,
     'image': Image,

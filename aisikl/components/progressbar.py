@@ -3,10 +3,10 @@ from .control import Control
 
 
 class ProgressBar(Control):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
-        self.maximum = int(element.get('maximum', '100'))
-        self.value = int(element.get('value', '0'))
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
+        self.maximum = properties.get('maximum', 100)
+        self.value = properties.get('value', 0)
 
     def _ais_setMaximum(self, value):
         self.maximum = int(value)

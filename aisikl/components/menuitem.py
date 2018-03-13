@@ -4,13 +4,11 @@ from .actionablecontrol import ActionableControl
 
 
 class MenuItem(ActionableControl):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
-        self.lid = element.get('lid')
-        self.popup_menu_id = element.get('pmid')
-        self.title = element.find_all('td', recursive=False)[1].get_text()
-        self.confirm_question = element.get('confirmquestion')
-        self.image = element.get('_image')
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
+        self.popup_menu_id = properties.get('pmid')
+        self.confirm_question = properties.get('confirmQuestion')
+        self.image = properties.get('image')
 
     def _ais_setConfirmQuestion(self, value):
         self.confirm_question = value

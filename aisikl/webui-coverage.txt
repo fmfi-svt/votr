@@ -23,27 +23,39 @@ IRRELEVANT
 
 COMPLETE (removed)
 
-In AIS, each "component" consists of two objects: the actual DOM node, and an
-`JSObject` that is created when it's needed. Current state is stored in DOM
-attributes. Votr creates all components in `Dialog._init()`, and only uses DOM
-nodes for initial parsing.
+In AIS, each "component" is represented by a `JSObject` which is mostly
+stateless and only created when it's needed. Current state is stored in the
+componentsProperties variable in the dialog's iframe, or in the actual visible
+DOM elements. Votr creates all components in `Dialog._init()`, and only uses
+componentsProperties and DOM elements for initial parsing.
 
-A component can be accessed with `my_dialog.components['compName']` or simply
-`my_dialog.compName`.
-
-- getComponent(), initJSO(), initJSObject(), ensureJSOBase(), ensureJSO(),
-  ensureJSObject(), getEnsuredJSOById()
-    - IRRELEVANT, see above.
-    - The mapping between jsct and class is in `aisikl/components/__init__.py`.
-    - The distinction between getComponent() and initJSO() is unclear, but it
-      probably doesn't matter.
+- cp(), ctid(), ctel()
+    - Read componentsProperties. Inlined into Dialog._init().
+- initDialogBodyJSO()
+    - Called from the dialog iframe's onload. Inlined into Dialog._init().
+- fd
+    - UNSUPPORTED
+- initJSO(), initJSObject()
+    - Creates a JSObject for a DOM element. Inlined into Dialog._init(). The
+      distinction between dlgContext and componentContext is IRRELEVANT (it is
+      only for temporary components nested inside a table's iframe).
+- initJsonJSO()
+    - Creates a JSObject for something which has no DOM element. Inlined into
+      Dialog._init().
+- ensureJSOBase(), ensureJSO(), ensureJSObject(), getHtmlJSOById(),
+  ensureJsonJSOBase(), ensureJsonJSO(), getJsonJSOById(), ensureJSOById(),
+  getControlById(), getControl()
+    - Create JSObject-s if they don't exist yet. IRRELEVANT because Votr creates
+      all components ahead of time.
 - getMasterComponent()
-    - Replace with `element.find_parent(jsct=True)`.
+    - Partially reimplemented in Control.parent.
+- getControlForResize()
+    - IRRELEVANT
 - hbe(), h(), on*()
     - When a DOM event of a given type comes, webui calls the corresponding
       method. IRRELEVANT.
 - cancelEvent(), destroy(), detachEvents()
-    - IRRELEVANT.
+    - IRRELEVANT
 
 
 
@@ -62,26 +74,14 @@ extend Component or just Object.
 
 - isInstanceOf()
     - Just use instanceof(), if you really have to.
-- setElement(), getElement()
-    - The DOM element is only used in __init__. See ComponentFactory above.
-- getId() -> self.id
-- setContext(), getContext(), setElementAndContext()
-    - self.dialog (kind of)
-- getPropertyAsString()
-    - `self.foo_bar = element.get('foobar')`
-- getPropertyAsInt()
-    - `self.foo_bar = int(element.get('foobar', '0'))`
-- getPropertyAsFloat()
-    - `self.foo_bar = float(element.get('foobar', '0'))`
-- getPropertyAsBoolean()
-    - `self.foo_bar = (element.get('foobar', 'false') == 'true')`
-    - `self.foo_bar = element.has_attr('foobar')` (for attrs without value)
-- setProperty()
-    - Use one of the type coercions above.
-- getIsTemporary(), setIsTemporary()
-    - Votr doesn't parse elements with `isTemporary="true"` at all.
-- destroy(), cancelEvent(), isValid()
+- setId(), getId() -> self.id
+- setContext(), getContext() -> self.dialog (kind of)
+- getMyself() -> self
+- init(), destroy()
     - IRRELEVANT
+- getCp() -> properties.get(name, default_value)
+- getIsTemporary() -> properties.get('tmp')
+    - Votr doesn't parse elements with `isTemporary="true"` at all.
 
 
 
@@ -95,7 +95,7 @@ When a webui result frame calls a setter, Votr prefixes its name with `_ais_`.
 So if a result frame calls `setEnabled("false")`, Votr calls `_ais_setEnabled`,
 which does a type conversion and sets the attribute.
 
-- getComponentType() -> self.jsct
+- getComponentType() -> self.component_type
 - getState(), setState()
     - STATE_DT is UNSUPPORTED, whatever it's supposed to be.
     - Some AIS components have state 0, despite there being no difference
@@ -117,8 +117,15 @@ which does a type conversion and sets the attribute.
 - menuItemAction()
     - IRRELEVANT. Only used in SplitPane and TabbedPaneSelector, and can be
       worked around.
-- getAutosize()
-    - IRRELEVANT. Only used for positioning and sizing.
+- setElement(), getElement(), setElementAndContext()
+    - The DOM is only used during initialization. See ComponentFactory above.
+- getPropertyAsString() -> `element.get('foobar')`
+- getPropertyAsInt() -> `int(element.get('foobar', '0'))`
+- getPropertyAsFloat() -> `float(element.get('foobar', '0'))`
+- setProperty()
+    - Use one of the type coercions above.
+- cancelEvent(), isValid()
+    - IRRELEVANT
 
 
 
@@ -126,14 +133,22 @@ which does a type conversion and sets the attribute.
 
 PARTIAL
 
+The base class for visible things (backed by a DOM element).
+
 - setHtmlTitle()
-    - IRRELEVANT
-- getX(), setX(), getY(), setY(), getInlineWidth(), getWidth(), setWidth(),
-  getInlineHeight(), getHeight(), setHeight(), getPastWidth(), setPastWidth(),
-  getPastHeight(), setPastHeight(), isAnchor(), getAnchorLeft(), getAnchorTop(),
-  getAnchorRight(), getAnchorBottom(), isParentContainerStacked(),
-  getFontSize(), setFontSize(), getForeground(), setForeground(),
-  getBackground(), setBackground(), setComponentStyle(), getComponentStyle(),
+    - UNSUPPORTED
+- getPositionElement(), getInlineLeft(), getInlineTop(), getInlineRight(),
+  getInlineBottom(), getInlineWidth(), getInlineHeight(), getComputedWidth(),
+  getComputedHeight(), computeWidth(), computeHeight(), computeWidthHeight(),
+  getParentWidth(), getParentHeight(), getX(), setX(), getY(), setY(),
+  getWidth(), setWidth(), getHeight(), setHeight(), getLeft(), setLeft(),
+  getTop(), setTop(), getRight(), setRight(), getBottom(), setBottom(),
+  onParentResize(), resizeByLeftRight(), resizeByTopBottom(), resizeByWidth(),
+  resizeByHeight(), relocateDtSelection(), initAnchorValues(), getAnchorLeft(),
+  getAnchorTop(), getAnchorRight(), getAnchorBottom(), setAnchorLeft(),
+  setAnchorTop(), setAnchorRight(), setAnchorBottom(), getFontSize(),
+  setFontSize(), getForeground(), setForeground(), getBackground(),
+  setBackground(), getComponentStyle(), setComponentStyle(),
   realizeComponentStyle(), getFontStyle(), setFontStyle(), init(),
   resizeComponent(), realizeResizeComponent(), ie8Patch(), canFocusNext(),
   refocus(), focus(), deactivate(), isPreparedToBlur(), blur(),
@@ -143,22 +158,22 @@ PARTIAL
     - Focus and blur is UNSUPPORTED. We never send focus information to AIS,
       and blur events must be triggered manually.
     - So far we've only seen setForeground, setBackground and setComponentStyle
-      in result frame updates. But to be safe, all the _ais_set*() methods exist
-      as no-ops.
+      in result frame updates. But to be safe, some of the `_ais_set*()` methods
+      exist as no-ops.
     - Instead of calling positionContextMenu() or showPopupMenu(), use the menu
       items directly.
 - getReadOnly(), setReadOnly() -> self.read_only
 - realizeReadOnly()
     - Removed. Just use `self.read_only`. (Also applies to subclasses.)
+- realizeMyLabelEnability()
+    - IRRELEVANT
 - isDisabledDueToParents() -> not self.parent.is_really_enabled()
 - isDisabled() -> not self.is_really_enabled()
 - isUnvisible() -> not (self.visible and self.visible_in_ui)
 - getParentContainer(), getParentContainerJSO() -> self.parent
-    - Moved to Component.
-- isParentContainerSplitPane()
-    - IRRELEVANT - only used to call SplitPane.childChangeVisibility(), which
-      is IRRELEVANT.
-- getAncestorAutosizeJSO()
+- isParentContainer(), isParentContainerTabbedPane(),
+  isParentContainerStackedPane(), isParentContainerSplitPane(),
+  getAncestorAutosizeJSO()
     - IRRELEVANT, because all functions that use it are IRRELEVANT.
 - getTabOrder(), setTabOrder() -> self.tab_order
 - getToolTipText(), setToolTipText() -> self.tool_tip_text
@@ -171,16 +186,17 @@ PARTIAL
 
 COMPLETE (merged into Control)
 
-- getMinWidth(), setMinWidth(), getMinHeight(), setMinHeight(),
-  getOverflowed(), setOverflowed(), setElementAnchorAll()
+- getMinWidth(), getMinHeight(), getAutosize(), getOverflowed(),
+  setOverflowed(), setElementAnchorAll()
     - IRRELEVANT
     - We should add `_ais_set...()` no-ops if webui uses the setters.
 - getVisibleForUser()
     - IRRELEVANT, because all functions that use it are IRRELEVANT. See their
       respective sections.
-- startChromeOverflowPatch(), endChromeOverflowPatch()
+- startChromeOverflowPatch(), endChromeOverflowPatch(),
+  findParentBorderTopBottomHeight()
     - IRRELEVANT, because all functions that use it are IRRELEVANT.
-- autosizeHeight()
+- getChildrenElements(), onParentResize(), autosizeHeight()
     - IRRELEVANT. (Also applies to subclasses.)
 
 
@@ -286,6 +302,8 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
     - Removed, see PopupMenuManager below.
 - actionManager
     - Removed, see ActionManager below.
+- interactiveManager
+    - UNSUPPORTED
 - suspendedTableJSO
     - IRRELEVANT
 - focusChanged, getFocusChanged()
@@ -299,11 +317,14 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
     - dtSelectionDiv is UNSUPPORTED.
     - Everything else done by init() is IRRELEVANT, including the call to
       onDialogBodyInit().
-- resize(), resizeComponent()
+- getAutosize(), resize(), onParentResize(), initAutosizeComponents(),
+  isElementAutosized(), tryAutosize(), findAutosizeDif(), autosizeHeight(),
+  getChildrenElements()
     - IRRELEVANT
 - resetComponentChanges()
     - Inlined at the end of Dialog.changed_properties().
-- getWidth(), getHeight(), setWidth(), setHeight()
+- getWidth(), getHeight(), getMinWidth(), getMinHeight(), setWidth(),
+  setHeight()
     - IRRELEVANT
 - componentCollapsingChanged()
     - IRRELEVANT -- only calls setMoveDueToOtherExpCol() which is IRRELEVANT.
@@ -312,10 +333,12 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
   reactivateFocusedComponent(), getFocusedComponent(), setFocusedComponent(),
   blurFocusedComponent()
     - UNSUPPORTED. See Control above.
+- isRegisteredToSelect(), registerToSelect()
+    - IRRELEVANT. Only used for focus and blur.
 - addExtraComponent(), extraComponents, reactivateExtraComponents()
-    - TODO. (Seems to be some extra behavior for HtmlArea.)
+    - UNSUPPORTED. (Seems to be some extra behavior for HtmlArea.)
 - setEnabled()
-    - Defined in superclass, but extraComponents support is TODO.
+    - Defined in superclass, but extraComponents support is UNSUPPORTED.
 - keydown()
     - UNSUPPORTED
     - There are some things you can only do with the keyboard (such as
@@ -358,13 +381,12 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
     - UNSUPPORTED
 - focusNextElement(), focusPreviousElement()
     - UNSUPPORTED
-- initializedComps, addToInitializedComps(), destroy()
-    - IRRELEVANT
 - retrieveAllComponentIds(), retrieveIdAndComponentType()
     - IRRELEVANT (seems to be unused in webui)
-- initCalendarSelector(), getCalendarSelector(), calendarBackButtonClick(),
-  calendarForwardButtonClick(), calendarMiniTableClick(), calendarMouseDown()
-    - UNSUPPORTED (likely IRRELEVANT)
+- fileInputUpload()
+    - UNSUPPORTED
+- isValid(), setInvalid(), destroy()
+    - IRRELEVANT
 - dtSelect(), getElementPath(), dtDeselect(), isElementSelected(),
   addRemoveDtSelection(), setDtSelection(), clearDtSelection(),
   manageDtSelection(), manageAreaSelection(), manageAreaSelectionTimer(),
@@ -506,10 +528,10 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
 
 - getDialogTitleRowHeight(), getDialogFrameWidth(), areDialogsPrepared(),
   onSomeDialogBodyInitialized(), resizeBrowser(), resizeIframeHeight(),
-  openWaitingDialogs(), closeWaitingDialog(), workspaceResize(), hideByJaws(),
-  prepareUpdatingDialogs()
+  openWaitingDialogs(), closeWaitingDialog(), workspaceResize(),
+  disableDialogsGlassClick(), hideByJaws(), prepareUpdatingDialogs()
     - IRRELEVANT
-- resizeNoAccessibleIframe()
+- tryResizeIframe()
     - UNSUPPORTED
 - openMainDialog()
     - Application.open_main_dialog()
@@ -552,11 +574,12 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
   retrieveIdAndComponentTypeOnActiveDialog()
     - IRRELEVANT (seems to be unused in webui)
 - fillImageUrl() -> `'/ais/images/' + value + '.png'`
-- messageBox(), confirmBox(), fileUpload(), fileXUpload(), editDoc(),
-  abortBox(), onLoadAbortBox(), showNativeDialog(), showNextNativeDialog(),
-  onNativeDialogClosed(), onMessageBoxClose(), onConfirmBoxClose(),
-  closeAbortBox(), onFileUploadSubmit(), onFileUploadCancel(),
-  closeFileUpload(), onFileXUploadClose(), onEditDocClose()
+- fileInputUpload(), messageBox(), confirmBox(), calendarBox(), fileUpload(),
+  fileXUpload(), editDoc(), abortBox(), onLoadAbortBox(), showNativeDialog(),
+  showNextNativeDialog(), onNativeDialogClosed(), onMessageBoxClose(),
+  onCalendarBoxClose(), onConfirmBoxClose(), closeAbortBox(),
+  onFileUploadSubmit(), onFileUploadCancel(), closeFileUpload(),
+  onFileXUploadClose(), onEditDocClose()
     - TODO
 
 
@@ -583,7 +606,7 @@ TODO
 
 
 
-# MessageBox, ConfirmBox, FileUpload, FileXUpload, EditDoc, AbortBox
+# MessageBox, ConfirmBox, CalendarBox, FileUpload, FileXUpload, EditDoc, AbortBox
 
 TODO
 
@@ -598,6 +621,7 @@ COMPLETE
 - getVisibleForUser()
     - IRRELEVANT, because all functions that use it are IRRELEVANT. See their
       respective sections.
+- getActionIds() -> self.action_ids
 
 
 
@@ -608,11 +632,14 @@ COMPLETE
 Like in webui, the `_ais_set*()` setters will also modify the associated
 buttons and menu items.
 
-- getComponents() -> self.get_components()
-- getButtonMenuItemJSObjects() -> self.get_button_menu_item_js_objects()
 - getAccessible(), setAccessible() -> self.accessible
 - getToolTipText(), setToolTipText() -> self.tool_tip_text
+- getShortCut() -> self.shortcut
+- getActionListId() -> self.action_list_id
 - getConfirmQuestion(), setConfirmQuestion() -> self.confirm_question
+- getComponentIds() -> self.component_ids
+- getComponents() -> self.get_components()
+- getButtonMenuItemJSObjects() -> self.get_buttons_and_menu_items()
 - init() -> `__init__`
 - onExecute() -> self.execute()
     - The first argument was removed. Setting it to True is UNSUPPORTED,
@@ -662,6 +689,12 @@ COMPLETE
 
 
 
+# FileInput
+
+TODO
+
+
+
 # CheckBox
 
 COMPLETE
@@ -702,12 +735,13 @@ Added `self.text` which is the actual text content.
 
 COMPLETE
 
-- getChildrenElements(), getOverflowElement(), getHasTmpPanel(),
-  tryParentStackedPaneAutosize(), autosizeHeight(), computeResizeDiff(),
+- getChildrenElements(), getOverflowElement(), getTitleBaseElement(),
+  getBottomBaseElement(), getHasAuxiliaryArea(), tryParentStackedPaneAutosize(),
+  tryParentAutosize(), findAutosizeDif(), autosizeHeight(), computeResizeDiff(),
   resizeChildren()
     - IRRELEVANT, because all functions that use it are IRRELEVANT.
 - getTabId() -> self.tab_id
-- getMyTabbedPaneJSO(), isOnTabbedPane(), setComponentStyle()
+- getMyTabbedPaneJSO(), setComponentStyle()
     - IRRELEVANT
 - getTitle(), setTitle() -> self.title (`_ais_setTitle()` is inherited)
 - blur()
@@ -724,10 +758,9 @@ COMPLETE
   getExpandCollapseButton()
     - IRRELEVANT
 - click() -> self.toggle_collapsed()
-- getFirstFocusableComponent()
+- getFirstFocusableComponent(), adjustCollapsableAuxiliaryHeight(),
+  realizeCollapsed()
     - IRRELEVANT
-- realizeCollapsed()
-    - Reduces to this.fireUIChangesEvent().
 - fireUIChangesEvent() -> self._fire_event()
 - changedProperties() -> self.changed_properties()
 - setMoveDueToOtherExpCol()
@@ -792,7 +825,7 @@ COMPLETE
 - panels -> self.get_panels()
     - This is to avoid issues with component initialization order.
 - arena -> local variable in `__init__`
-- resizeContent(), showSelectedPanel()
+- onParentResize(), showSelectedPanel()
     - IRRELEVANT
 - changedProperties() -> self.changed_properties()
 - fireUIChangesEvent() -> self._fire_event()
@@ -825,7 +858,6 @@ COMPLETE
     - IRRELEVANT
 - refreshBackgroundColor()
     - IRRELEVANT
-- getReadOnly(), setReadOnly() is inherited
 - getToolTipLikeData() -> self.tool_tip_like_data
 - select() -> self.select()
 - selectId(), selectTitle()
@@ -1055,12 +1087,6 @@ COMPLETE
     - IRRELEVANT
 
 
-# CalendarSelector
-
-UNSUPPORTED
-
-
-
 # HtmlArea
 
 COMPLETE
@@ -1068,6 +1094,8 @@ COMPLETE
 - setHtml() -> self._ais_setHtml()
 - getBorderWidth(), initIframeWindow(), resizeComponent(), realizeEnability()
     - IRRELEVANT
+- getSafeLinks()
+    - UNSUPPORTED
 - initFromDataView() -> self._parse_content()
 - tryExecuteAction()
     - Equivalent to ActionableControl's version.
@@ -1079,6 +1107,8 @@ COMPLETE
 - getCanClose()
     - UNSUPPORTED, because we don't actually parse or execute the content.
 - tryExecuteActionFromHtmlArea() -> self.try_execute_action()
+    - with three arguments: tryExecuteActionFromHtmlArea(area, params, action)
+      -> action.execute(area.id, params)
 - tryShowPopupMenuFromHtmlArea()
     - Mostly IRRELEVANT, see PopupMenu below.
     - If this function receives non-null params, WebUI stores the value in
@@ -1160,6 +1190,7 @@ bare minimum. In particular, masks and suggestion requests are not supported.
 - setRawText()
     - IRRELEVANT, only called from TableModel
 - getType(), setType() -> self.type
+- setActionsAreaWidth()
 - getSelStart(), setSelStart()
     - IRRELEVANT, only used in focus()
 - getSuggestionsEnabled(), setSuggestionsEnabled() -> self.suggestions_enabled
@@ -1211,7 +1242,8 @@ visible, so it's largely IRRELEVANT. The rest was moved directly to Table.
   setRowIndexLabel(), updateStatusSelection(), updateDataAndCursorWidth(),
   setScrollAreaTop(), resize(), resizeContainerWidth(), manageScrollBars()
     - IRRELEVANT
-    - TODO: look at showControlButtons() and ensure their visibility is in the API.
+    - TODO: look at showControlButtons() and ensure their visibility is in the
+      API.
 - setCursorRow()
     - Inlined into select(), along with onDataTabActiveIndexChange().
 - scrollTopContentTo(), adjustScroll()
@@ -1306,8 +1338,9 @@ the various editor types are mostly ignored when possible.
 - setCellEditor(), getCellEditor()
     - IRRELEVANT
 - getVisible() -> self.visible
+- getIsCheckedSelectionColumn() -> self.is_checked_selection_column
 - init()
-    - Inlined in aaaaaa.
+    - Inlined in Table._init_from_data_view().
 
 
 
@@ -1320,6 +1353,8 @@ the various editor types are mostly ignored when possible.
     - No longer case insensitive.
 - getColumnByDataCell()
     - IRRELEVANT
+- getPreviousVisibleColumn()
+    - IRRELEVANT? It seems there are no callers.
 - toXML()
     - Inlined in changed_properties().
 - destroy()
@@ -1519,7 +1554,7 @@ stores everything once, directly in Table.
       self._init_from_data_view().
 - doesTableHaveModels() -> True
 - deinitPropertiesAndModel(), destroy(), setWidth(), setHeight(),
-  resizeComponent(), resizeChildren()
+  onParentResize(), resizeComponent(), resizeChildren()
     - IRRELEVANT
 - getSortable(), setSortable() -> self.sortable
 - getAllwaysSelected(), setAllwaysSelected() -> self.always_selected
@@ -1716,7 +1751,8 @@ source of truth, like with Table and TableModel.
   onNodeExpanderMouseDown()
     - IRRELEVANT
 - onNodeCheckBoxClick(), switchCheck() -> self.toggle_checkbox()
-- findMyNode(), getNodeText(), getNodeImageElement(), getNodeExpanderImage()
+- findMyNode(), findNodeById(), getNodeText(), getNodeImageElement(),
+  getNodeExpanderImage()
     - IRRELEVANT
 - isNodeExpanded() -> node.expanded
 - getParentNode(), getChildrenNodes()
@@ -1767,7 +1803,7 @@ COMPLETE
 - initFromDataView() -> self._init_from_data_view()
     - Creating the iframe content is IRRELEVANT, but we still need to parse the
       data view scripts instead.
-- resizeComponent(), resizeChildren()
+- onParentResize(), resizeChildren()
     - IRRELEVANT
 - initModel()
     - Previously called from initTreeModel() in iframe onload.
@@ -1805,7 +1841,6 @@ COMPLETE
 
 COMPLETE
 
-- getLid() -> self.lid
 - realizeEnability(), realizeVisibility()
     - IRRELEVANT
 - getRightArrowElement(), select(), unselect(), setClassName()
@@ -1837,15 +1872,18 @@ closed. Votr supports that, but you have to do it manually.
 
 - setIsInternal(), getIsInternal()
     - IRRELEVANT. Votr doesn't handle internal popup menus.
-- selectedItemJSObject, hasVisibleItems(), focus(), showAsSubpopup(), doShow(),
-  showHideSeparators(), getSelectedItemJSObject(), setSelectedItemJSObject(),
-  isVisible(), resizeComponent(), realizeEnability(), realizeVisibility()
+- getItemsTable(), createTwin(), findTwin(), removeTwin(), selectedItemJSObject,
+  hasVisibleItems(), focus(), showAsSubpopup(), doShow(), showHideSeparators(),
+  getSelectedItemJSObject(), setSelectedItemJSObject(), isVisible(),
+  resizeComponent(), realizeEnability(), realizeVisibility()
     - IRRELEVANT
 - show() -> self.show()
 - hide() -> self.hide()
 - getMenuItem() -> `self.dialog.components[id]`
 - setComponents()
     - UNSUPPORTED. Dynamically adding and removing components? No thanks.
+- setSourceComponentJSO()
+    - UNSUPPORTED
 
 
 
@@ -1863,7 +1901,7 @@ user must give params directly to MenuItem.click() instead.
 
 
 
-# Interactive, EventInteractive, ValueInteractive, ChangeGuardInteractive
+# Interactive, EventInteractive, ValueInteractive, ChangeGuardInteractive, InteractiveManager
 
 TODO
 
@@ -1881,6 +1919,7 @@ Mostly covered by Application. No longer global.
 - appId -> app.app_id
 - appContext -> "ais"
 - webuiContext -> "ais/webui2"
+- getSlashContext() -> "/ais"
 - getAppBody(), getRequestFrame(), getResultFrame(), getDownloadFrame(),
   getLogFrame(), getDisableDialogsGlass(), webuiVersion, useAria
     - IRRELEVANT

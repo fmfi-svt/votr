@@ -1,18 +1,19 @@
 
+from .component import is_true
 from .textinput import TextInput
 
 
 class TextField(TextInput):
-    def __init__(self, dialog_soup, element, dialog):
-        super().__init__(dialog_soup, element, dialog)
+    def __init__(self, dialog, id, type, parent_id, properties, element):
+        super().__init__(dialog, id, type, parent_id, properties, element)
         self.label_display = element.get('labeldisplay')
         self.value = element.get('value', '')
         if element.get('type') == 'password':
             self.type = 'password'
         else:
             self.type = element.get('xtype')
-        self.suggestions_enabled = element.get('suggestionsenabled', 'false') == 'true'
-        self.suggestions_multi_value_enabled = element.get('suggestionsmultivalueenabled', 'false') == 'true'
+        self.suggestions_enabled = properties.get('suggestionsEnabled', False)
+        self.suggestions_multi_value_enabled = properties.get('suggestionsMultiValueEnabled', True)
         self.tool_tip_changed = False
 
     def _ais_setLabelDisplay(self, value):
@@ -23,9 +24,9 @@ class TextField(TextInput):
     def _ais_setType(self, value):
         self.type = value
     def _ais_setSuggestionsEnabled(self, value):
-        self.suggestions_enabled = (value == 'true')
+        self.suggestions_enabled = is_true(value)
     def _ais_setSuggestionsMultiValueEnabled(self, value):
-        self.suggestions_multi_value_enabled = (value == 'true')
+        self.suggestions_multi_value_enabled = is_true(value)
 
     def _mark_changed(self):
         # This function makes no sense. It's webui's fault.
