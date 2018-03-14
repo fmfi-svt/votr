@@ -175,7 +175,10 @@ export var LoginPage = React.createClass({
           bez zbytočného klikania.
         </p>
         <hr />
-        <LoginForm onOpenError={this.openError} />
+        <p className="alert alert-danger" role="alert">
+          Votr momentálne nefunguje. Pracujeme na podpore pre novú verziu AISu.
+          Skúste znova o zopár dní. Ďakujeme za pochopenie.
+        </p>
       </div>
       <div className="text-center">
         <ul className="list-inline">
