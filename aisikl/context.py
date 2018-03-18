@@ -153,6 +153,7 @@ else:
     from IPython.display import display, HTML
 
     def ipython_log(self, timestamp, type, message, data):
+        if type == 'benchmark': return
         content = Markup('<span style="background:#FF8"><b>{}</b> {}</span>').format(type, message)
         if data is not None:
             if not isinstance(data, str):
