@@ -1,9 +1,9 @@
 
-from collections import namedtuple
 from .component import is_true
 from .control import Control
 
 
+# Not a namedtuple, because 'checked' can change.
 class Item:
     def __init__(self, title, id, sid, rid, tool_tip_text, checked):
         self.title = title
@@ -12,6 +12,9 @@ class Item:
         self.rid = rid
         self.tool_tip_text = tool_tip_text
         self.checked = checked
+
+    def __repr__(self):
+        return '<{} {}>'.format(self.__class__.__name__, repr(self.__dict__))
 
 
 class CheckList(Control):

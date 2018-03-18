@@ -6,6 +6,7 @@ from aisikl.events import (action_event, tree_expansion_event,
                            tree_expansion_action_event, tree_selection_event)
 
 
+# Not a namedtuple, because 'expanded' and 'checked' can change.
 class Node(object):
     def __init__(self, id, is_leaf, type, expanded, checked, title):
         self.id = id
