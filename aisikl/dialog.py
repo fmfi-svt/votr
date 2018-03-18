@@ -103,6 +103,9 @@ class Dialog:
             return self.components[name]
         raise AttributeError(name)
 
+    def __dir__(self):
+        return super().__dir__() + list(self.components)
+
     def changed_properties(self):
         '''Return the <changedProperties> string for this dialog.'''
         # We ignore width, height, x, y, focusedComponent and dtSelection.
