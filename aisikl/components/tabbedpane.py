@@ -28,7 +28,7 @@ class TabbedPane(Control):
 
     def changed_properties(self):
         return self._build_changed_properties(
-            selectedIndex=self.selected_index)
+            selectedIndex=str(self.selected_index))
 
     def _fire_event(self):
         self.dialog.component_changes(self, False)

@@ -7,7 +7,7 @@ from aisikl.events import action_event
 class Panel(Control):
     def __init__(self, dialog, id, type, parent_id, properties, element):
         super().__init__(dialog, id, type, parent_id, properties, element)
-        self.tab_id = element.get('tabId')
+        self.tab_id = element.get('tabid')
         self.title = element.get('name')
         self.autoscrolls = properties.get('autoscrolls', False)
         self.collapsable = properties.get('collapsable', False)

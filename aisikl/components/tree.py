@@ -70,7 +70,7 @@ class Tree(Control):
             is_leaf = node_element['isleaf'] == 'true'
             type = node_element['type']
             expander = node_div.find(id='nodeExpanderImage')
-            expanded = (expander['class'] == 'expanded') if expander else None
+            expanded = ('expanded' in expander['class']) if expander else None
             checkbox = node_div.find('input', type='checkbox')
             checked = checkbox.has_attr('checked') if checkbox else None
             title = node_div.find(id='nodeText').get_text().replace('\xa0', ' ')
