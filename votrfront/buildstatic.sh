@@ -57,11 +57,8 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     cp $bs/javascripts/bootstrap/*.js static/libs/
   fi
 
-  if ! [ -f static/spinner.svg ]; then
-    wget https://raw.githubusercontent.com/kvakes/spinner.svg/master/spinner2.svg -O static/spinner.svg
-  fi
   if ! [ -f static/_spinner.scss ]; then
-    node -e 'console.log("$spinner: url(data:image/svg+xml;base64," + require("fs").readFileSync("static/spinner.svg", "base64") + ");")' > static/_spinner.scss
+    node -e 'console.log("$spinner: url(data:image/svg+xml," + escape(require("fs").readFileSync("css/spinner.svg", "ascii")) + ");")' > static/_spinner.scss
   fi
 
   sed -i "
