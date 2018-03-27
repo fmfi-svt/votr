@@ -134,7 +134,7 @@ export function MojeSkuskyPageContent() {
         <thead>{header}</thead>
         <tbody>
           {terminy.map((termin) =>
-            <tr key={termin.termin_key}>
+            <tr key={termin.originalIndex}>
               {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
                 <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
                 <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }

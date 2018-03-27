@@ -43,6 +43,7 @@ export function sortTable(items, columns, query, queryKey) {
   var orderColumns = order.map((orderItem) => columns[orderItem.substring(1)]);
 
   items = items.map((item, index) => {
+    item = { ...item, originalIndex: index };
     var criteria = [];
     for (var i = 0; i < orderLength; i++) {
       var [label, prop, process, preferDesc] = orderColumns[i];

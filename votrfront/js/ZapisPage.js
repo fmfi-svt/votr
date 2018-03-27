@@ -264,7 +264,7 @@ export class ZapisTable extends React.Component {
             var blok = predmet.blok_skratka;
             if (predmet.blok_nazov) blok = <abbr title={predmet.blok_nazov}>{blok}</abbr>;
 
-            return <tr key={predmet_key} className={classes[predmet_key]}>
+            return <tr key={predmet.originalIndex} className={classes[predmet_key]}>
               <td className="text-center">
                 <input type="checkbox" name={predmet_key} checked={checked[predmet_key]} onChange={this.handleChange} />
               </td>
@@ -313,8 +313,8 @@ export function ZapisVlastnostiTable(props) {
     <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
-        {vlastnosti.map((vlastnost, index) =>
-          <tr key={index}>
+        {vlastnosti.map((vlastnost) =>
+          <tr key={vlastnost.originalIndex}>
             <td>{vlastnost.skratka}</td>
             <td>{vlastnost.nazov}</td>
             <td>{vlastnost.minimalny_kredit}</td>
@@ -457,8 +457,8 @@ export class ZapisZPonukyForm extends React.Component {
     return <FormItem label={label}>
       {items ?
         <select className="form-item-control" name={name} value={this.state[name]} onChange={this.handleFieldChange}>
-          {items.map((item) =>
-            <option key={item.id} value={item.id}>{item.title}</option>
+          {items.map((item, index) =>
+            <option key={index} value={item.id}>{item.title}</option>
           )}
         </select> : <Loading requests={cache.missing} />}
     </FormItem>;

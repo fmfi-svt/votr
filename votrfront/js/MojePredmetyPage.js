@@ -40,7 +40,7 @@ export function MojePredmetyPageContent() {
       <thead>{header}</thead>
       <tbody>
         {hodnotenia.map((hodnotenie) =>
-          <tr key={hodnotenie.hodn_key} className={classForSemester(hodnotenie.semester)}>
+          <tr key={hodnotenie.originalIndex} className={classForSemester(hodnotenie.semester)}>
             <td>{hodnotenie.semester}</td>
             <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: hodnotenie.predmet_key, modalAkademickyRok: hodnotenie.akademicky_rok }}>
               {hodnotenie.nazov}

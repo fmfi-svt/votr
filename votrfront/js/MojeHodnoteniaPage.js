@@ -48,7 +48,7 @@ export function MojeHodnoteniaHodnoteniaTable() {
       <thead>{header}</thead>
       <tbody>
         {hodnotenia.map((hodnotenie) =>
-          <tr key={hodnotenie.hodn_key} className={classForSemester(hodnotenie.semester)}>
+          <tr key={hodnotenie.originalIndex} className={classForSemester(hodnotenie.semester)}>
             <td>{hodnotenie.akademicky_rok}</td>
             <td>{hodnotenie.semester}</td>
             <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: hodnotenie.predmet_key, modalAkademickyRok: hodnotenie.akademicky_rok }}>
@@ -112,8 +112,8 @@ export function MojeHodnoteniaPriemeryTable() {
     return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
-        {priemery.map((priemer, index) =>
-          <tr key={index}>
+        {priemery.map((priemer) =>
+          <tr key={priemer.originalIndex}>
             <td>{priemer.datum_vypoctu}</td>
             <td>{humanizeNazovPriemeru(priemer.nazov)}</td>
             <td>{priemer.akademicky_rok}</td>

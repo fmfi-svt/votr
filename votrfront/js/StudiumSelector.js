@@ -30,10 +30,10 @@ export function StudiumSelector(props) {
       <React.Fragment>
         <ul className="nav nav-pills selector">
           <li><span className="text-pill">Štúdium:</span></li>
-          {items.map((studium) => {
+          {items.map((studium, index) => {
             var key = studium.studium_key;
             var active = key == query.studiumKey;
-            return <li key={key} className={active ? "active" : ""}>
+            return <li key={index} className={active ? "active" : ""}>
               <Link href={{ ...query, studiumKey: key }}>
                 {studium.sp_skratka}
               </Link>

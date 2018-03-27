@@ -54,8 +54,8 @@ export class RegisterPredmetovForm extends React.Component {
     return <FormItem label={label}>
       {items ?
         <select className="form-item-control" name={name} value={this.state[name]} onChange={this.handleFieldChange}>
-          {items.map((item) =>
-            <option key={item.id} value={item.id}>{item.title}</option>
+          {items.map((item, index) =>
+            <option key={index} value={item.id}>{item.title}</option>
           )}
         </select> : <Loading requests={cache.missing} />}
     </FormItem>;
@@ -131,7 +131,7 @@ export function RegisterPredmetovResultTable(props) {
         <thead>{header}</thead>
         <tbody>
           {rows.map((predmet) =>
-            <tr key={predmet.predmet_key} className={classForSemester(predmet.semester)}>
+            <tr key={predmet.originalIndex} className={classForSemester(predmet.semester)}>
               <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: query.akademickyRok }}>
                 {predmet.nazov}
               </Link></td>

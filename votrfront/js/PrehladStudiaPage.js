@@ -86,7 +86,7 @@ export function PrehladStudiaStudia() {
       <thead>{header}</thead>
       <tbody>
         {studia.map((studium) =>
-          <tr key={studium.studium_key}>
+          <tr key={studium.originalIndex}>
             <td>{studium.sp_popis} ({studium.sp_skratka})</td>
             <td>{studium.rok_studia}</td>
             <td>{studium.sp_dlzka}</td>
@@ -136,7 +136,7 @@ export function PrehladStudiaZapisneListy() {
           <thead>{header}</thead>
           <tbody>
             {zapisneListy.map((zapisnyList) =>
-              <tr key={zapisnyList.zapisny_list_key}>
+              <tr key={zapisnyList.originalIndex}>
                 <td>{zapisnyList.akademicky_rok}</td>
                 <td>{zapisnyList.sp_popis} ({zapisnyList.sp_skratka})</td>
                 <td>{zapisnyList.rocnik}</td>

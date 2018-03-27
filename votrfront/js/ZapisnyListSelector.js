@@ -32,10 +32,10 @@ export function ZapisnyListSelector(props) {
       <React.Fragment>
         <ul className="nav nav-pills selector">
           <li><span className="text-pill">Zápisný list:</span></li>
-          {items.map((zapisnyList) => {
+          {items.map((zapisnyList, index) => {
             var key = zapisnyList.zapisny_list_key;
             var active = key == query.zapisnyListKey;
-            return <li key={key} className={active ? "active" : ""}>
+            return <li key={index} className={active ? "active" : ""}>
               <Link href={{ ...query, zapisnyListKey: key }}>
                 {zapisnyList.akademicky_rok} {zapisnyList.sp_skratka}
               </Link>

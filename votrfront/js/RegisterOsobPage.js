@@ -62,8 +62,8 @@ export class RegisterOsobForm extends React.Component {
     return <FormItem label={label}>
       {items ?
         <select className="form-item-control" name={name} value={this.state[name]} onChange={this.handleFieldChange}>
-          {items.map((item) =>
-            <option key={item.id} value={item.id}>{item.title}</option>
+          {items.map((item, index) =>
+            <option key={index} value={item.id}>{item.title}</option>
           )}
         </select> : <Loading requests={cache.missing} />}
     </FormItem>;
@@ -182,8 +182,8 @@ export function RegisterOsobResultTable(props) {
       <table className="table table-condensed table-bordered table-striped table-hover">
         <thead>{header}</thead>
         <tbody>
-          {osoby.map((osoba, index) =>
-            <tr key={index}>
+          {osoby.map((osoba) =>
+            <tr key={osoba.originalIndex}>
               <td>{osoba.plne_meno}</td>
               <td>{osoba.email &&
                     <a href={"mailto:" + osoba.email}>{osoba.email}</a>}

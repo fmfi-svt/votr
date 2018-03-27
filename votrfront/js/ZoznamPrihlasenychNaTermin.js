@@ -35,8 +35,8 @@ function ZoznamPrihlasenychNaTerminModalContent() {
     return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
-        {studenti.map((student, index) =>
-          <tr key={index}>
+        {studenti.map((student) =>
+          <tr key={student.originalIndex}>
             <td>{student.plne_meno}</td>
             <td>{student.sp_skratka}</td>
             <td>{student.rocnik}</td>

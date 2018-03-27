@@ -69,8 +69,8 @@ function DetailPredmetuUcitelia() {
     return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
-        {ucitelia.map((ucitel, index) =>
-          <tr key={index}>
+        {ucitelia.map((ucitel) =>
+          <tr key={ucitel.originalIndex}>
             <td>{ucitel.plne_meno}</td>
             <td>{ucitel.typ}</td>
           </tr>
@@ -107,8 +107,8 @@ function DetailPredmetuZapisaniStudenti() {
     return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
-        {studenti.map((student, index) =>
-          <tr key={index}>
+        {studenti.map((student) =>
+          <tr key={student.originalIndex}>
             <td>{student.plne_meno}</td>
             <td>{student.sp_skratka}</td>
             <td>{student.rocnik}</td>
