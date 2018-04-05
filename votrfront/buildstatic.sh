@@ -38,8 +38,8 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   fi
 
   if ! [ -f static/libs/FileSaver.min.js ]; then
-    npm install file-saver@^1.3.4
-    cp node_modules/file-saver/dist/*.* static/libs/
+    npm install file-saver@1.3.8  # pinned! breaks too often.
+    cp node_modules/file-saver/FileSaver*.* static/libs/
   fi
 
   if ! [ -f node_modules/.bin/webpack ]; then
