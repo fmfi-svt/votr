@@ -89,6 +89,8 @@ RequestCache.invalidate = function (command) {
   }
 }
 
+window.VotrRequestCache = RequestCache;
+
 
 export function CacheRequester() {
   this.missing = [];

@@ -22,8 +22,8 @@ export function PriebezneHodnoteniaPageContent() {
 
     return (
       <React.Fragment>
-      {priebezneHodnotenia.map((priebHod) =>
-        <React.Fragment>
+      {priebezneHodnotenia.map((priebHod, index) =>
+        <React.Fragment key={index}>
           <h2><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: priebHod.predmet_key, modalAkademickyRok: priebHod.akademicky_rok }}>
                 {priebHod.nazov}</Link>
           </h2>
@@ -38,8 +38,8 @@ export function PriebezneHodnoteniaPageContent() {
               </tr>
             </thead>
             <tbody>
-            {priebHod.zaznamy.map((zaznam) =>
-              <tr>
+            {priebHod.zaznamy.map((zaznam, index) =>
+              <tr key={index}>
                 <td>{zaznam.dovod}</td>
                 <td>{zaznam.poc_bodov} / {zaznam.maximum}</td>
                 <td>{zaznam.zaevidoval}</td>
