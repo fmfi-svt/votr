@@ -60,9 +60,9 @@ export var StudiumSelector = createReactClass({
       query = { ...query, studiumKey: mostRecentItem.studium_key };
     }
 
-    return <div>
+    return <React.Fragment>
       {this.renderSelector(cache, items, query)}
       {this.renderPage(cache, items, query)}
-    </div>;
+    </React.Fragment>;
   }
 });

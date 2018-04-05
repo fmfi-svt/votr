@@ -81,12 +81,12 @@ export var MojePredmetyPageContent = createReactClass({
 
   render() {
     var {zapisnyListKey} = this.props.query;
-    return <div>
+    return <React.Fragment>
       <div className="header">
         <PageTitle>Moje predmety</PageTitle>
       </div>
       {this.renderContent()}
-    </div>;
+    </React.Fragment>;
   }
 });
 

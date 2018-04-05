@@ -123,7 +123,7 @@ export var PrehladStudiaPage = createReactClass({
 
     var message = zapisneListy.length ? null : "V AISe nemáte žiadne zápisné listy.";
 
-    return <span>
+    return <React.Fragment>
       {!cache.loadedAll && <Loading requests={cache.missing} />}
       {showTable &&
         <table className="table table-condensed table-bordered table-striped table-hover">
@@ -140,7 +140,7 @@ export var PrehladStudiaPage = createReactClass({
           </tbody>
           {message && <tfoot><tr><td colSpan={PrehladZapisnyListColumns.length}>{message}</td></tr></tfoot>}
         </table>}
-    </span>;
+    </React.Fragment>;
   },
 
   render() {

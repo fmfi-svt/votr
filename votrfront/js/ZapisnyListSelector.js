@@ -62,9 +62,9 @@ export var ZapisnyListSelector = createReactClass({
       query = { ...query, zapisnyListKey: mostRecentItem.zapisny_list_key };
     }
 
-    return <div>
+    return <React.Fragment>
       {this.renderSelector(cache, items, query)}
       {this.renderPage(cache, items, query)}
-    </div>;
+    </React.Fragment>;
   }
 });

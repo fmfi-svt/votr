@@ -133,14 +133,14 @@ export var MojeHodnoteniaPageContent = createReactClass({
   },
 
   render() {
-    return <div>
+    return <React.Fragment>
       <div className="header">
         <PageTitle>Moje hodnotenia</PageTitle>
       </div>
       {this.renderHodnotenia()}
       <h2>Moje priemery</h2>
       {this.renderPriemery()}
-    </div>;
+    </React.Fragment>;
   }
 });
 

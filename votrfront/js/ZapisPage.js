@@ -58,7 +58,7 @@ export var ZapisMenu = createReactClass({
 
   render() {
     var {action, cast, zapisnyListKey} = this.props.query;
-    return <div>
+    return <React.Fragment>
       <div className="header">
         <PageTitle>Zápis predmetov</PageTitle>
         <div className="pull-right">
@@ -75,8 +75,8 @@ export var ZapisMenu = createReactClass({
           </div>
         </div>
       </div>
-      <div>{this.props.children}</div>
-    </div>;
+      {this.props.children}
+    </React.Fragment>;
   }
 });
 
@@ -258,7 +258,7 @@ export var ZapisTable = createReactClass({
             var href = { ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: this.props.akademickyRok };
             var nazov = <Link href={href}>{predmet.nazov}</Link>;
             if (predmet.moje) nazov = <strong>{nazov}</strong>;
-            if (predmet.aktualnost) nazov = <span><del>{nazov}</del> (nekoná sa)</span>;
+            if (predmet.aktualnost) nazov = <React.Fragment><del>{nazov}</del> (nekoná sa)</React.Fragment>;
             var blok = predmet.blok_skratka;
             if (predmet.blok_nazov) blok = <abbr title={predmet.blok_nazov}>{blok}</abbr>;
 

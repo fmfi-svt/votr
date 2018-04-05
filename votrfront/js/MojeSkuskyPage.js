@@ -133,7 +133,7 @@ export var MojeSkuskyPageContent = createReactClass({
       saveAs(blob, "MojeTerminy.ics", true);
     }
 
-    return <div>
+    return <React.Fragment>
       <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
         <thead>{header}</thead>
         <tbody>
@@ -168,16 +168,16 @@ export var MojeSkuskyPageContent = createReactClass({
         {message && <tfoot><tr><td colSpan={MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
       </table>
       {terminy.length && <button onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}
-    </div>;
+    </React.Fragment>;
   },
 
   render() {
-    return <div>
+    return <React.Fragment>
       <div className="header">
         <PageTitle>Moje skúšky</PageTitle>
       </div>
       {this.renderContent()}
-    </div>;
+    </React.Fragment>;
   }
 });
 

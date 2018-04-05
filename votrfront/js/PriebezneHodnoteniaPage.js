@@ -25,9 +25,9 @@ export var PriebezneHodnoteniaPageContent = createReactClass({
     }
 
     return (
-      <div>
+      <React.Fragment>
       {priebezneHodnotenia.map((priebHod) =>
-        <div>
+        <React.Fragment>
           <h2><Link href={{ ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: priebHod.predmet_key, modalAkademickyRok: priebHod.akademicky_rok }}>
                 {priebHod.nazov}</Link>
           </h2>
@@ -53,20 +53,20 @@ export var PriebezneHodnoteniaPageContent = createReactClass({
             )}
             </tbody>
           </table>
-        </div>
+        </React.Fragment>
       )}
       {message && <strong>{message}</strong>}
-      </div>
+      </React.Fragment>
     );
   },
   
   render() {
-    return <div>
+    return <React.Fragment>
       <div className="header">
         <PageTitle>Priebežné hodnotenia</PageTitle>
       </div>
       {this.renderContent()}
-    </div>;  
+    </React.Fragment>;
   }
 });
 

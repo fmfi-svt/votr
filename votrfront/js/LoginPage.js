@@ -41,7 +41,7 @@ export var LoginForm = createReactClass({
         <p>Vaše prihlásenie vypršalo. Prihláste sa znova.</p>}
 
       {Votr.settings.error &&
-        <div>
+        <React.Fragment>
           <p>Prihlásenie sa nepodarilo.</p>
           <p>
             {"Technické detaily: "}
@@ -57,7 +57,7 @@ export var LoginForm = createReactClass({
             </a>.
           </p>
           <hr />
-        </div>}
+        </React.Fragment>}
 
       <input type="hidden" name="destination" value={location.search} />
 
@@ -90,7 +90,7 @@ export var LoginForm = createReactClass({
       }
 
       {(currentType == 'cosignpassword' || currentType == 'plainpassword') &&
-        <div>
+        <React.Fragment>
           <p>
             <label>
               {"Meno: "}
@@ -103,10 +103,10 @@ export var LoginForm = createReactClass({
               <input name="password" type="password" />
             </label>
           </p>
-        </div>}
+        </React.Fragment>}
 
       {currentType == 'cosigncookie' &&
-        <div>
+        <React.Fragment>
           {/* TODO: Detailed instructions for cosigncookie. */}
           {serverConfig.ais_cookie &&
             <p>
@@ -122,7 +122,7 @@ export var LoginForm = createReactClass({
                 <input name="rest_cookie" />
               </label>
             </p>}
-        </div>}
+        </React.Fragment>}
 
       <button type="submit" className="btn btn-lg btn-primary center-block">Prihlásiť</button>
     </form>;
@@ -187,9 +187,9 @@ export var LoginPage = createReactClass({
     var modals = { 'about': AboutModal, 'error': LoginErrorModal };
     var modalComponent = modals[this.state.modal];
 
-    return <span>
+    return <React.Fragment>
       {content}
       <ModalBase query={{}} component={modalComponent} onClose={this.closeModal} />
-    </span>;
+    </React.Fragment>;
   }
 });

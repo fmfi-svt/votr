@@ -9,7 +9,7 @@ export var PageLayout = createReactClass({
   },
 
   render() {
-    return <div>
+    return <React.Fragment>
       <PageNavbar query={this.props.query} />
       <div className="layout-container">
         <div className="layout-menu">
@@ -21,7 +21,7 @@ export var PageLayout = createReactClass({
           </div>
         </div>
       </div>
-    </div>;
+    </React.Fragment>;
   }
 });
 
@@ -107,13 +107,17 @@ export var MainMenu = createReactClass({
     return <ul className="main-menu nav nav-pills nav-stacked">
       <li><strong className="text-pill">Moje štúdium</strong></li>
       {somStudent === false && <li><span className="text-pill">Nie ste študentom.</span></li>}
-      {somStudent && this.renderMenuItem("Moje predmety", { action: 'mojePredmety', zapisnyListKey })}
-      {somStudent && this.renderMenuItem("Moje skúšky", { action: 'mojeSkusky', zapisnyListKey })}
-      {somStudent && this.renderMenuItem("Moje hodnotenia", { action: 'mojeHodnotenia', studiumKey })}
-      {somStudent && this.renderMenuItem("Priebežné hodnotenia", { action: 'priebezneHodnotenia', zapisnyListKey })}
-      {/*somStudent && this.renderDisabled("Môj rozvrh")*/}
-      {somStudent && this.renderMenuItem("Zápis predmetov", { action: 'zapisZPlanu', zapisnyListKey }, { zapisZPonuky: true })}
-      {somStudent && this.renderMenuItem("Prehľad štúdia", { action: 'prehladStudia' })}
+      {somStudent && (
+        <React.Fragment>
+          {this.renderMenuItem("Moje predmety", { action: 'mojePredmety', zapisnyListKey })}
+          {this.renderMenuItem("Moje skúšky", { action: 'mojeSkusky', zapisnyListKey })}
+          {this.renderMenuItem("Moje hodnotenia", { action: 'mojeHodnotenia', studiumKey })}
+          {this.renderMenuItem("Priebežné hodnotenia", { action: 'priebezneHodnotenia', zapisnyListKey })}
+          {/*this.renderDisabled("Môj rozvrh")*/}
+          {this.renderMenuItem("Zápis predmetov", { action: 'zapisZPlanu', zapisnyListKey }, { zapisZPonuky: true })}
+          {this.renderMenuItem("Prehľad štúdia", { action: 'prehladStudia' })}
+        </React.Fragment>
+      )}
       {!cache.loadedAll && <li><span className="text-pill"><Loading requests={cache.missing} /></span></li>}
       <li><hr/></li>
       <li><strong className="text-pill">Registre</strong></li>

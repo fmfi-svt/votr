@@ -124,7 +124,7 @@ export var RegisterPredmetovResultTable = createReactClass({
       message = "Podmienkam nevyhovuje žiadny záznam.";
     }
 
-    return <div>
+    return <React.Fragment>
       <h2>Výsledky</h2>
       <table className="table table-condensed table-bordered table-striped table-hover">
         <thead>{header}</thead>
@@ -145,7 +145,7 @@ export var RegisterPredmetovResultTable = createReactClass({
         </tbody>
         {message && <tfoot><tr><td colSpan={RegisterPredmetovColumns.length}>{message}</td></tr></tfoot>}
       </table>
-    </div>;
+    </React.Fragment>;
   }
 });
 

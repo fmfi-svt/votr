@@ -65,11 +65,11 @@ export var App = createReactClass({
     var modalComponent = Votr.ajaxError ? ErrorModal : modalActions[query.modal];
 
     var C = mainComponent;
-    return <div>
+    return <React.Fragment>
       <C query={query} />
       <ModalBase query={query} component={modalComponent} onClose={this.handleClose} />
       <LogViewer />
       <AnketaPopup />
-    </div>;
+    </React.Fragment>;
   }
 });

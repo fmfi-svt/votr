@@ -176,7 +176,7 @@ export var RegisterOsobResultTable = createReactClass({
       message = "Podmienkam nevyhovuje žiadny záznam.";
     }
 
-    return <div>
+    return <React.Fragment>
       <h2>Výsledky</h2>
       <table className="table table-condensed table-bordered table-striped table-hover">
         <thead>{header}</thead>
@@ -192,7 +192,7 @@ export var RegisterOsobResultTable = createReactClass({
         </tbody>
         {message && <tfoot><tr><td colSpan={RegisterOsobColumns.length}>{message}</td></tr></tfoot>}
       </table>
-    </div>;
+    </React.Fragment>;
   }
 });
 
