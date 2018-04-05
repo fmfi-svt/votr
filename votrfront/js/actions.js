@@ -17,7 +17,7 @@ import { navigate } from './router';
 import { AnketaPopup } from './AnketaPopup';
 
 
-export var NotFoundPage = React.createClass({
+export var NotFoundPage = createReactClass({
   render() {
     return <PageLayout query={this.props.query}>
       <p>Action not found!</p>
@@ -47,9 +47,9 @@ export var modalActions = {
 };
 
 
-export var App = React.createClass({
+export var App = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   handleClose() {

@@ -4,10 +4,10 @@ import { Link } from './router';
 import { sortAs } from './sorting';
 
 
-export var ZapisnyListSelector = React.createClass({
+export var ZapisnyListSelector = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired,
-    component: React.PropTypes.func.isRequired
+    query: PropTypes.object.isRequired,
+    component: PropTypes.func.isRequired
   },
 
   getItems(cache) {

@@ -21,9 +21,9 @@ export var MojePredmetyColumns = [
 MojePredmetyColumns.defaultOrder = 'd0a1';
 
 
-export var MojePredmetyPageContent = React.createClass({
+export var MojePredmetyPageContent = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   renderContent() {
@@ -91,9 +91,9 @@ export var MojePredmetyPageContent = React.createClass({
 });
 
 
-export var MojePredmetyPage = React.createClass({
+export var MojePredmetyPage = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   render() {

@@ -7,10 +7,10 @@ import { sortAs } from './sorting';
 // TODO: Reduce code duplication with ZapisnyListSelector.
 
 
-export var StudiumSelector = React.createClass({
+export var StudiumSelector = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired,
-    component: React.PropTypes.func.isRequired
+    query: PropTypes.object.isRequired,
+    component: PropTypes.func.isRequired
   },
 
   getItems(cache) {

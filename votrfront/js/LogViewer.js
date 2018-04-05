@@ -3,7 +3,7 @@ import { LocalSettings } from './LocalSettings';
 import { logs } from './ajax';
 
 
-export var LogViewerContent = React.createClass({
+export var LogViewerContent = createReactClass({
   getInitialState() {
     return {
       benchmark: true,
@@ -65,7 +65,7 @@ export var LogViewerContent = React.createClass({
 });
 
 
-export var LogViewerBenchmarkContent = React.createClass({
+export var LogViewerBenchmarkContent = createReactClass({
   computeBenchmarks() {
     var sums = {};
     var beginnings = {};
@@ -124,7 +124,7 @@ export var LogViewerBenchmarkContent = React.createClass({
 });
 
 
-export var LogViewer = React.createClass({
+export var LogViewer = createReactClass({
   toggle() {
     LocalSettings.set("logViewer",
       LocalSettings.get("logViewer") ? "" : "log");

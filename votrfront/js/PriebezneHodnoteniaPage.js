@@ -6,9 +6,9 @@ import { Link } from './router';
 import { humanizeBoolean } from './humanizeAISData';
 
 
-export var PriebezneHodnoteniaPageContent = React.createClass({
+export var PriebezneHodnoteniaPageContent = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
     
   renderContent() {
@@ -70,9 +70,9 @@ export var PriebezneHodnoteniaPageContent = React.createClass({
   }
 });
 
-export var PriebezneHodnoteniaPage = React.createClass({
+export var PriebezneHodnoteniaPage = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   render() {

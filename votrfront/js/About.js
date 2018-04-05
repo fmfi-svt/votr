@@ -2,7 +2,7 @@
 import { Modal, PageLayout } from './layout';
 
 
-export var AboutModal = React.createClass({
+export var AboutModal = createReactClass({
   render() {
     var github = "https://github.com/fmfi-svt/votr";
     return <Modal title="O aplikácii">
@@ -54,7 +54,7 @@ export var AboutModal = React.createClass({
 });
 
 
-export var IndexPage = React.createClass({
+export var IndexPage = createReactClass({
   render() {
     // TODO: Use PageTitle, but show different h1.
     return <PageLayout query={this.props.query}>

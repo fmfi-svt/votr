@@ -107,7 +107,7 @@ CacheRequester.prototype.get = function (...request) {
 };
 
 
-export var Loading = React.createClass({
+export var Loading = createReactClass({
   componentDidMount() {
     if (this.props.requests) this.props.requests.forEach((request) => {
       RequestCache.sendRequest(request);

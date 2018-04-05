@@ -13,7 +13,7 @@ var TYPE_NAMES = {
 };
 
 
-export var LoginForm = React.createClass({
+export var LoginForm = createReactClass({
   getInitialState() {
     return {
       server: Votr.settings.server || 0,
@@ -130,7 +130,7 @@ export var LoginForm = React.createClass({
 });
 
 
-export var LoginErrorModal = React.createClass({
+export var LoginErrorModal = createReactClass({
   render() {
     return <Modal title="Chyba pri prihlásení">
       <pre>{Votr.settings.error}</pre>
@@ -139,7 +139,7 @@ export var LoginErrorModal = React.createClass({
 });
 
 
-export var LoginPage = React.createClass({
+export var LoginPage = createReactClass({
   mixins: [AnalyticsMixin],
 
   getInitialState() {

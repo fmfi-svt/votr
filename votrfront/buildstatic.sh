@@ -28,13 +28,25 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   fi
 
   if ! [ -f static/libs/react.js ]; then
-    npm install react@^0.14
-    cp -p node_modules/react/dist/*.* static/libs/
+    npm install react@^16.3.1
+    cp -p node_modules/react/umd/react.development.js static/libs/react.js
+    cp -p node_modules/react/umd/react.production.min.js static/libs/react.min.js
   fi
 
   if ! [ -f static/libs/react-dom.js ]; then
-    npm install react-dom@^0.14
-    cp -p node_modules/react-dom/dist/*.* static/libs/
+    npm install react-dom@^16.3.1
+    cp -p node_modules/react-dom/umd/react-dom.development.js static/libs/react-dom.js
+    cp -p node_modules/react-dom/umd/react-dom.production.min.js static/libs/react-dom.min.js
+  fi
+
+  if ! [ -f static/libs/create-react-class.js ]; then
+    npm install create-react-class@^15.6.3
+    cp -p node_modules/create-react-class/create-react-class*.js static/libs/
+  fi
+
+  if ! [ -f static/libs/prop-types.js ]; then
+    npm install prop-types@^15.6.1
+    cp -p node_modules/prop-types/prop-types*.js static/libs/
   fi
 
   if ! [ -f static/libs/FileSaver.min.js ]; then
@@ -81,7 +93,7 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     echo "webpack output is up to date."
   fi
 
-  libs='prologue.js libs/jquery.min.js libs/react.min.js libs/react-dom.min.js libs/lodash.min.js libs/transition.js libs/modal.js libs/FileSaver.min.js'
+  libs='prologue.js libs/jquery.min.js libs/react.min.js libs/react-dom.min.js libs/create-react-class.min.js libs/prop-types.min.js libs/lodash.min.js libs/transition.js libs/modal.js libs/FileSaver.min.js'
   dev=(static/dev/*)
   echo ${libs//.min} "${dev[@]//"static/"}" votr.dev.js > static/jsdeps-dev
   echo $libs votr.min.js > static/jsdeps-prod

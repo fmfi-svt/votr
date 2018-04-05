@@ -29,9 +29,9 @@ export var PrehladZapisnyListColumns = [
 PrehladZapisnyListColumns.defaultOrder = 'd0d3';
 
 
-export var PrehladStudiaPage = React.createClass({
+export var PrehladStudiaPage = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   renderObdobie(label, rpcName, arg) {

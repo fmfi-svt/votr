@@ -13,9 +13,9 @@ export var ZoznamPrihlasenychNaTerminColumns = [
 ];
 
 
-export var ZoznamPrihlasenychNaTerminModal = React.createClass({
+export var ZoznamPrihlasenychNaTerminModal = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   renderContent() {

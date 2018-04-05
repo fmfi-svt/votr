@@ -9,7 +9,7 @@ var cookieValue = 'on'; // Value of cookie
 var cookieHideDate = Date.parse('19 February 2018'); // Starting this day the cookie won't be visible
 
  
-export var AnketaPopup = React.createClass({
+export var AnketaPopup = createReactClass({
 
   getInitialState() {
     var today = new Date();

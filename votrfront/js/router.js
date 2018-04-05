@@ -37,7 +37,7 @@ function parseQueryString(queryString) {
 }
 
 
-export var Root = React.createClass({
+export var Root = createReactClass({
   mixins: [AnalyticsMixin],
 
   handlePopState() {
@@ -73,7 +73,7 @@ export function navigate(href) {
 };
 
 
-export var Link = React.createClass({
+export var Link = createReactClass({
   handleClick(event) {
     // Chrome fires onclick on middle click. Firefox only fires it on document,
     // see <http://lists.w3.org/Archives/Public/www-dom/2013JulSep/0203.html>,
@@ -93,9 +93,9 @@ export var Link = React.createClass({
 
 // Looks and acts like a link, but doesn't have a href and cannot be opened in
 // a new tab when middle-clicked or ctrl-clicked.
-export var FakeLink = React.createClass({
+export var FakeLink = createReactClass({
   propTypes: {
-    onClick: React.PropTypes.func.isRequired
+    onClick: PropTypes.func.isRequired
   },
 
   // Pressing Enter on <a href=...> emits a click event, and the HTML5 spec

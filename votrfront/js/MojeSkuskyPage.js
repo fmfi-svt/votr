@@ -91,9 +91,9 @@ function convertToICAL(terminy) {
   return lines.map((l) => l.replace(/\n/g, "\\n")).join("\r\n");
 }
 
-export var MojeSkuskyPageContent = React.createClass({
+export var MojeSkuskyPageContent = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   renderContent() {
@@ -182,9 +182,9 @@ export var MojeSkuskyPageContent = React.createClass({
 });
 
 
-export var SkuskyRegisterButton = React.createClass({
+export var SkuskyRegisterButton = createReactClass({
   propTypes: {
-    termin: React.PropTypes.object.isRequired
+    termin: PropTypes.object.isRequired
   },
 
   getInitialState() {
@@ -239,9 +239,9 @@ export var SkuskyRegisterButton = React.createClass({
 });
 
 
-export var MojeSkuskyPage = React.createClass({
+export var MojeSkuskyPage = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   render() {

@@ -4,7 +4,7 @@ import { Modal, ModalBase } from './layout';
 import { AnalyticsMixin, FakeLink } from './router';
 
 
-export var ErrorModal = React.createClass({
+export var ErrorModal = createReactClass({
   getInitialState() {
     return {
       open: false
@@ -88,7 +88,7 @@ export var ErrorModal = React.createClass({
 });
 
 
-export var ErrorPage = React.createClass({
+export var ErrorPage = createReactClass({
   mixins: [AnalyticsMixin],
 
   render() {

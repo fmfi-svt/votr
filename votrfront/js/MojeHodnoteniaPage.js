@@ -29,9 +29,9 @@ export var MojePriemeryColumns = [
 MojePriemeryColumns.defaultOrder = 'a0a2a1';
 
 
-export var MojeHodnoteniaPageContent = React.createClass({
+export var MojeHodnoteniaPageContent = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   renderHodnotenia() {
@@ -145,9 +145,9 @@ export var MojeHodnoteniaPageContent = React.createClass({
 });
 
 
-export var MojeHodnoteniaPage = React.createClass({
+export var MojeHodnoteniaPage = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   render() {

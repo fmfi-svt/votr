@@ -14,7 +14,7 @@ DetailPredmetuUciteliaColumns.defaultOrder = 'a0';
 export var DetailPredmetuStudentiColumns = ZoznamPrihlasenychNaTerminColumns.slice();
 DetailPredmetuStudentiColumns.defaultOrder = 'a0';
 
-export var DetailPredmetuModal = React.createClass({
+export var DetailPredmetuModal = createReactClass({
   getZapisaniStudenti(cache, predmetKey, akademickyRok){
     return cache.get('get_studenti_zapisani_na_predmet', predmetKey, akademickyRok);
   },

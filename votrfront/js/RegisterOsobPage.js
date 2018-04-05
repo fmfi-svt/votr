@@ -12,7 +12,7 @@ export var RegisterOsobColumns = [
 ];
 RegisterOsobColumns.defaultOrder = 'a0';
 
-export var RegisterOsobForm = React.createClass({
+export var RegisterOsobForm = createReactClass({
   getInitialState() {
     var query = this.props.query;
     return {
@@ -117,7 +117,7 @@ export var RegisterOsobForm = React.createClass({
   },
 });
 
-export var RegisterOsobResultTable = React.createClass({
+export var RegisterOsobResultTable = createReactClass({
   render() {
     var cache = new CacheRequester();
     var query = this.props.query;
@@ -197,7 +197,7 @@ export var RegisterOsobResultTable = React.createClass({
 });
 
 
-export var RegisterOsobPage = React.createClass({
+export var RegisterOsobPage = createReactClass({
   render() {
     return <PageLayout query={this.props.query}>
         <div className="header">

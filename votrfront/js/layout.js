@@ -3,9 +3,9 @@ import { CacheRequester, Loading, goLogout, goReset, logs } from './ajax';
 import { FakeLink, Link } from './router';
 
 
-export var PageLayout = React.createClass({
+export var PageLayout = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   render() {
@@ -26,7 +26,7 @@ export var PageLayout = React.createClass({
 });
 
 
-export var PageNavbar = React.createClass({
+export var PageNavbar = createReactClass({
   render() {
     return <div className="navbar navbar-inverse navbar-static-top">
       <div className="container-fluid">
@@ -49,7 +49,7 @@ export var PageNavbar = React.createClass({
 });
 
 
-export var LogStatus = React.createClass({
+export var LogStatus = createReactClass({
   render() {
     var entry = _.last(logs);
     var message;
@@ -67,7 +67,7 @@ export var LogStatus = React.createClass({
 });
 
 
-export var PageTitle = React.createClass({
+export var PageTitle = createReactClass({
   componentDidMount() {
     document.title = this.refs.title.textContent;
   },
@@ -82,9 +82,9 @@ export var PageTitle = React.createClass({
 });
 
 
-export var MainMenu = React.createClass({
+export var MainMenu = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   renderMenuItem(content, href, moreActions) {
@@ -126,7 +126,7 @@ export var MainMenu = React.createClass({
 });
 
 
-export var FormItem = React.createClass({
+export var FormItem = createReactClass({
   render() {
     if (this.props.label) {
       return <label className="form-item">
@@ -142,11 +142,11 @@ export var FormItem = React.createClass({
 });
 
 
-export var ModalBase = React.createClass({
+export var ModalBase = createReactClass({
   propTypes: {
-    component: React.PropTypes.func,
-    onClose: React.PropTypes.func.isRequired,
-    query: React.PropTypes.object.isRequired
+    component: PropTypes.func,
+    onClose: PropTypes.func.isRequired,
+    query: PropTypes.object.isRequired
   },
 
   componentDidMount() {
@@ -178,11 +178,11 @@ export var ModalBase = React.createClass({
 });
 
 
-export var Modal = React.createClass({
+export var Modal = createReactClass({
   propTypes: {
-    closeButton: React.PropTypes.bool.isRequired,
-    title: React.PropTypes.node.isRequired,
-    footer: React.PropTypes.node
+    closeButton: PropTypes.bool.isRequired,
+    title: PropTypes.node.isRequired,
+    footer: PropTypes.node
   },
 
   getDefaultProps() {

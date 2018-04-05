@@ -18,7 +18,7 @@ export var RegisterPredmetovColumns = [
 ];
 RegisterPredmetovColumns.defaultOrder = 'a0';
 
-export var RegisterPredmetovForm = React.createClass({
+export var RegisterPredmetovForm = createReactClass({
   getInitialState() {
     var query = this.props.query;
     return {
@@ -83,7 +83,7 @@ export var RegisterPredmetovForm = React.createClass({
   }
 });
 
-export var RegisterPredmetovResultTable = React.createClass({
+export var RegisterPredmetovResultTable = createReactClass({
   render() {
     var cache = new CacheRequester();
     var query = this.props.query;
@@ -150,7 +150,7 @@ export var RegisterPredmetovResultTable = React.createClass({
 });
 
 
-export var RegisterPredmetovPage = React.createClass({
+export var RegisterPredmetovPage = createReactClass({
   render() {
     return <PageLayout query={this.props.query}>
         <div className="header">

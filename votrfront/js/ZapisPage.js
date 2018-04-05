@@ -47,9 +47,9 @@ export var ZapisVlastnostiColumns = [
 ];
 
 
-export var ZapisMenu = React.createClass({
+export var ZapisMenu = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   renderLink(content, href, active) {
@@ -81,10 +81,10 @@ export var ZapisMenu = React.createClass({
 });
 
 
-export var ZapisTableFooter = React.createClass({
+export var ZapisTableFooter = createReactClass({
   propTypes: {
-    predmety: React.PropTypes.object.isRequired,
-    moje: React.PropTypes.object.isRequired
+    predmety: PropTypes.object.isRequired,
+    moje: PropTypes.object.isRequired
   },
 
   render() {
@@ -127,16 +127,16 @@ export var ZapisTableFooter = React.createClass({
 });
 
 
-export var ZapisTable = React.createClass({
+export var ZapisTable = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired,
-    predmety: React.PropTypes.object,
-    akademickyRok: React.PropTypes.string,
-    message: React.PropTypes.node,
-    columns: React.PropTypes.array.isRequired,
-    showFooter: React.PropTypes.bool,
-    odoberPredmety: React.PropTypes.func.isRequired,
-    pridajPredmety: React.PropTypes.func.isRequired
+    query: PropTypes.object.isRequired,
+    predmety: PropTypes.object,
+    akademickyRok: PropTypes.string,
+    message: PropTypes.node,
+    columns: PropTypes.array.isRequired,
+    showFooter: PropTypes.bool,
+    odoberPredmety: PropTypes.func.isRequired,
+    pridajPredmety: PropTypes.func.isRequired
   },
 
   getInitialState() {
@@ -290,9 +290,9 @@ export var ZapisTable = React.createClass({
 });
 
 
-export var ZapisVlastnostiTable = React.createClass({
+export var ZapisVlastnostiTable = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   render() {
@@ -330,7 +330,7 @@ export var ZapisVlastnostiTable = React.createClass({
 });
 
 
-export var ZapisZPlanuPageContent = React.createClass({
+export var ZapisZPlanuPageContent = createReactClass({
   getQuery() {
     var {zapisnyListKey, cast} = this.props.query;
     cast = (cast == 'SS' ? 'SS' : 'SC');
@@ -410,9 +410,9 @@ export var ZapisZPlanuPageContent = React.createClass({
 });
 
 
-export var ZapisZPlanuPage = React.createClass({
+export var ZapisZPlanuPage = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   render() {
@@ -423,7 +423,7 @@ export var ZapisZPlanuPage = React.createClass({
 });
 
 
-export var ZapisZPonukyForm = React.createClass({
+export var ZapisZPonukyForm = createReactClass({
   getInitialState() {
     var query = this.props.query;
     return {
@@ -487,7 +487,7 @@ export var ZapisZPonukyForm = React.createClass({
 });
 
 
-export var ZapisZPonukyPageContent = React.createClass({
+export var ZapisZPonukyPageContent = createReactClass({
   render() {
     var cache = new CacheRequester();
     var query = this.props.query;
@@ -564,9 +564,9 @@ export var ZapisZPonukyPageContent = React.createClass({
 });
 
 
-export var ZapisZPonukyPage = React.createClass({
+export var ZapisZPonukyPage = createReactClass({
   propTypes: {
-    query: React.PropTypes.object.isRequired
+    query: PropTypes.object.isRequired
   },
 
   render() {
