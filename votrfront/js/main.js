@@ -24,10 +24,11 @@ if (query !== undefined && (query == '' || query.substring(0, 1) == '?')) {
   }
 }
 
-var root =
-    Votr.settings.servers ? <LoginPage /> :
-    Votr.settings.error ? <ErrorPage /> :
-    <Root app={App} />;
+var app =
+    Votr.settings.servers ? LoginPage :
+    Votr.settings.error ? ErrorPage :
+    App;
+var root = <Root app={app} />;
 
 Votr.appRoot = ReactDOM.render(root, document.getElementById('votr'));
 

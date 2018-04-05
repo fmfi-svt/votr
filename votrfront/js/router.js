@@ -9,17 +9,6 @@ export function trackPageView() {
 };
 
 
-export var AnalyticsMixin = {
-  componentDidMount() {
-    trackPageView();
-  },
-
-  componentDidUpdate() {
-    trackPageView();
-  }
-};
-
-
 function parseQueryString(queryString) {
   if (!queryString) return {};
   var result = {};
@@ -38,14 +27,17 @@ function parseQueryString(queryString) {
 
 
 export var Root = createReactClass({
-  mixins: [AnalyticsMixin],
-
   handlePopState() {
-    this.forceUpdate();
+    Votr.appRoot.forceUpdate();
   },
 
   componentDidMount() {
     window.addEventListener('popstate', this.handlePopState, false);
+    trackPageView();
+  },
+
+  componentDidUpdate() {
+    trackPageView();
   },
 
   render() {

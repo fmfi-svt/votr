@@ -140,8 +140,6 @@ export var LoginErrorModal = createReactClass({
 
 
 export var LoginPage = createReactClass({
-  mixins: [AnalyticsMixin],
-
   getInitialState() {
     return {};
   },
