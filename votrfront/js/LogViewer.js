@@ -10,6 +10,8 @@ export class LogViewerContent extends React.Component {
     table: true
   }
 
+  scrollRef = React.createRef()
+
   handleChange = (e) => {
     var update = {};
     update[e.target.name] = !e.target.checked;
@@ -17,7 +19,7 @@ export class LogViewerContent extends React.Component {
   }
 
   componentDidUpdate() {
-    var div = this.refs.scroll;
+    var div = this.scrollRef.current;
     var time = _.last(logs).time;
     if (time != this.lastTime) {
       this.lastTime = time;
@@ -45,7 +47,7 @@ export class LogViewerContent extends React.Component {
         </ul>
       </div>
 
-      <div className="scroll" ref="scroll">
+      <div className="scroll" ref={this.scrollRef}>
         <table>
           <tbody>
             {logs.map((entry, index) => !this.state[entry.log] &&

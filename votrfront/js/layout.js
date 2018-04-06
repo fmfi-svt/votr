@@ -62,16 +62,18 @@ export function LogStatus() {
 
 
 export class PageTitle extends React.Component {
+  titleRef = React.createRef()
+
   componentDidMount() {
-    document.title = this.refs.title.textContent;
+    document.title = this.titleRef.current.textContent;
   }
 
   componentDidUpdate() {
-    document.title = this.refs.title.textContent;
+    document.title = this.titleRef.current.textContent;
   }
 
   render() {
-    return <h1 ref="title">{this.props.children}</h1>;
+    return <h1 ref={this.titleRef}>{this.props.children}</h1>;
   }
 }
 
@@ -153,8 +155,10 @@ export class ModalBase extends React.Component {
     onClose: PropTypes.func.isRequired,
   };
 
+  modalRef = React.createRef()
+
   componentDidMount() {
-    var $node = $(this.refs.modal);
+    var $node = $(this.modalRef.current);
     $node.modal();
     $node.on('hide.bs.modal', (e) => {
       if ($node.attr('data-show') == 'true') {
@@ -165,14 +169,14 @@ export class ModalBase extends React.Component {
   }
 
   componentDidUpdate() {
-    var $node = $(this.refs.modal);
+    var $node = $(this.modalRef.current);
     $node.modal($node.attr('data-show') == 'true' ? 'show' : 'hide');
   }
 
   render() {
     var C = this.props.component;
 
-    return <div data-show={Boolean(C)} className="modal fade" ref="modal"
+    return <div data-show={Boolean(C)} className="modal fade" ref={this.modalRef}
                 tabIndex="-1" role="dialog" aria-hidden="true">
       <div className="modal-dialog modal-lg">
         {C && <C />}
