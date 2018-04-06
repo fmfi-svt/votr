@@ -7,7 +7,7 @@ import { Root } from './router';
 
 (function () {
 
-if (!history.pushState) {
+if (!history.pushState || !window.Set || !window.Map) {
   return;   // see prologue.js
 }
 

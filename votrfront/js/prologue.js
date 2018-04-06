@@ -4,7 +4,7 @@ Votr.setDebug = function (enabled) {
   location.reload();
 }
 
-if (!history.pushState) {
+if (!history.pushState || !window.Set || !window.Map) {
   document.getElementById('votr').innerHTML = `
     <div class="central-box">
     <h1>Votr</h1>
@@ -17,7 +17,7 @@ if (!history.pushState) {
     <li><a class="btn btn-link" href="https://www.google.com/chrome">Google Chrome</a>
     <li><a class="btn btn-link" href="https://www.opera.com/">Opera</a>
     <li><a class="btn btn-link" href="https://www.apple.com/safari/">Safari</a>
-    <li><a class="btn btn-link" href="http://windows.microsoft.com/ie">Internet Explorer (10+)</a>
+    <li><a class="btn btn-link" href="http://windows.microsoft.com/ie">Internet Explorer 11</a>
     </ul>
     </div>
   `;
