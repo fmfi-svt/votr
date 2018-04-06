@@ -56,9 +56,11 @@ export class Root extends React.Component {
     }
 
     return (
-      <QueryContext.Provider value={this.query}>
-        <this.props.app />
-      </QueryContext.Provider>
+      <React.StrictMode>
+        <QueryContext.Provider value={this.query}>
+          <this.props.app />
+        </QueryContext.Provider>
+      </React.StrictMode>
     );
   }
 }
