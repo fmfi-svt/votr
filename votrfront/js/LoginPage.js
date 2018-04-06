@@ -13,24 +13,22 @@ var TYPE_NAMES = {
 };
 
 
-export var LoginForm = createReactClass({
-  getInitialState() {
-    return {
-      server: Votr.settings.server || 0,
-      type: Votr.settings.type
-    };
-  },
+export class LoginForm extends React.Component {
+  state = {
+    server: Votr.settings.server || 0,
+    type: Votr.settings.type
+  }
 
-  handleServerChange(event) {
+  handleServerChange = (event) => {
     var server = event.target.value;
     var newTypes = Votr.settings.servers[server].login_types;
     var type = _.includes(newTypes, this.state.type) ? this.state.type : null;
     this.setState({ server, type });
-  },
+  }
 
-  handleTypeChange(event) {
+  handleTypeChange = (event) => {
     this.setState({ type: event.target.value });
-  },
+  }
 
   render() {
     var serverConfig = Votr.settings.servers[this.state.server];
@@ -127,34 +125,32 @@ export var LoginForm = createReactClass({
       <button type="submit" className="btn btn-lg btn-primary center-block">Prihlásiť</button>
     </form>;
   }
-});
+}
 
 
-export var LoginErrorModal = createReactClass({
-  render() {
-    return <Modal title="Chyba pri prihlásení">
+export function LoginErrorModal() {
+  return (
+    <Modal title="Chyba pri prihlásení">
       <pre>{Votr.settings.error}</pre>
-    </Modal>;
-  }
-});
+    </Modal>
+  );
+}
 
 
-export var LoginPage = createReactClass({
-  getInitialState() {
-    return {};
-  },
+export class LoginPage extends React.Component {
+  state = {}
 
-  openAbout() {
+  openAbout = () => {
     this.setState({ modal: 'about' });
-  },
+  }
 
-  openError() {
+  openError = () => {
     this.setState({ modal: 'error' });
-  },
+  }
 
-  closeModal() {
+  closeModal = () => {
     this.setState({ modal: null });
-  },
+  }
 
   render() {
     var content = <div className="login-page">
@@ -192,4 +188,4 @@ export var LoginPage = createReactClass({
       <ModalBase component={modalComponent} onClose={this.closeModal} />
     </React.Fragment>;
   }
-});
+}

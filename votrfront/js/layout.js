@@ -3,9 +3,9 @@ import { CacheRequester, Loading, goLogout, goReset, logs } from './ajax';
 import { FakeLink, Link, queryConsumer } from './router';
 
 
-export var PageLayout = createReactClass({
-  render() {
-    return <React.Fragment>
+export function PageLayout(props) {
+  return (
+    <React.Fragment>
       <PageNavbar />
       <div className="layout-container">
         <div className="layout-menu">
@@ -13,13 +13,13 @@ export var PageLayout = createReactClass({
         </div>
         <div className="layout-content">
           <div className="container-fluid">
-            {this.props.children}
+            {props.children}
           </div>
         </div>
       </div>
-    </React.Fragment>;
-  }
-});
+    </React.Fragment>
+  );
+}
 
 
 export function PageNavbar() {
@@ -45,37 +45,35 @@ export function PageNavbar() {
 }
 
 
-export var LogStatus = createReactClass({
-  render() {
-    var entry = _.last(logs);
-    var message;
-    if (!entry) {
-      message = "\xA0"; // nbsp
-    } else if (entry.log == 'http' && entry.message.match(/^Requesting/)) {
-      message = "Čakám na AIS...";
-    } else if (entry.log == 'rpc' && entry.message.match(/finished$/)) {
-      message = "\xA0"; // nbsp
-    } else {
-      message = "Spracovávam dáta... (" + entry.message + ")";
-    }
-    return <p className="navbar-text">{message}</p>;
+export function LogStatus() {
+  var entry = _.last(logs);
+  var message;
+  if (!entry) {
+    message = "\xA0"; // nbsp
+  } else if (entry.log == 'http' && entry.message.match(/^Requesting/)) {
+    message = "Čakám na AIS...";
+  } else if (entry.log == 'rpc' && entry.message.match(/finished$/)) {
+    message = "\xA0"; // nbsp
+  } else {
+    message = "Spracovávam dáta... (" + entry.message + ")";
   }
-});
+  return <p className="navbar-text">{message}</p>;
+}
 
 
-export var PageTitle = createReactClass({
+export class PageTitle extends React.Component {
   componentDidMount() {
     document.title = this.refs.title.textContent;
-  },
+  }
 
   componentDidUpdate() {
     document.title = this.refs.title.textContent;
-  },
+  }
 
   render() {
     return <h1 ref="title">{this.props.children}</h1>;
   }
-});
+}
 
 
 function MenuItem(props) {
@@ -131,27 +129,29 @@ export function MainMenu() {
 }
 
 
-export var FormItem = createReactClass({
-  render() {
-    if (this.props.label) {
-      return <label className="form-item">
-        <div className="col-sm-4 form-item-label">{this.props.label}</div>
-        <div className="col-sm-8">{this.props.children}</div>
-      </label>;
-    } else {
-      return <div className="form-item">
-        <div className="col-sm-offset-4 col-sm-8">{this.props.children}</div>
-      </div>;
-    }
+export function FormItem(props) {
+  if (props.label) {
+    return (
+      <label className="form-item">
+        <div className="col-sm-4 form-item-label">{props.label}</div>
+        <div className="col-sm-8">{props.children}</div>
+      </label>
+    );
+  } else {
+    return (
+      <div className="form-item">
+        <div className="col-sm-offset-4 col-sm-8">{props.children}</div>
+      </div>
+    );
   }
-});
+}
 
 
-export var ModalBase = createReactClass({
-  propTypes: {
+export class ModalBase extends React.Component {
+  static propTypes = {
     component: PropTypes.func,
     onClose: PropTypes.func.isRequired,
-  },
+  };
 
   componentDidMount() {
     var $node = $(this.refs.modal);
@@ -162,12 +162,12 @@ export var ModalBase = createReactClass({
         this.props.onClose();
       }
     });
-  },
+  }
 
   componentDidUpdate() {
     var $node = $(this.refs.modal);
     $node.modal($node.attr('data-show') == 'true' ? 'show' : 'hide');
-  },
+  }
 
   render() {
     var C = this.props.component;
@@ -179,36 +179,34 @@ export var ModalBase = createReactClass({
       </div>
     </div>;
   }
-});
+}
 
 
-export var Modal = createReactClass({
-  propTypes: {
-    closeButton: PropTypes.bool.isRequired,
-    title: PropTypes.node.isRequired,
-    footer: PropTypes.node
-  },
-
-  getDefaultProps() {
-    return {
-      closeButton: true
-    };
-  },
-
-  render() {
-    return <div className="modal-content">
+export function Modal(props) {
+  return (
+    <div className="modal-content">
       <div className="modal-header">
-        {this.props.closeButton &&
+        {props.closeButton &&
           <button type="button" className="close" data-dismiss="modal">
             <span aria-hidden="true">&times;</span>
             <span className="sr-only">Close</span>
           </button>}
-        <h4 className="modal-title">{this.props.title}</h4>
+        <h4 className="modal-title">{props.title}</h4>
       </div>
       <div className="modal-body">
-        {this.props.children}
+        {props.children}
       </div>
-      {this.props.footer}
-    </div>;
-  }
-});
+      {props.footer}
+    </div>
+  );
+}
+
+Modal.propTypes = {
+  closeButton: PropTypes.bool.isRequired,
+  title: PropTypes.node.isRequired,
+  footer: PropTypes.node
+};
+
+Modal.defaultProps = {
+  closeButton: true
+};

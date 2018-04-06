@@ -169,18 +169,16 @@ export function MojeSkuskyPageContent() {
 }
 
 
-export var SkuskyRegisterButton = createReactClass({
-  propTypes: {
+export class SkuskyRegisterButton extends React.Component {
+  static propTypes = {
     termin: PropTypes.object.isRequired
-  },
+  };
 
-  getInitialState() {
-    return {
-      pressed: false
-    };
-  },
+  state = {
+    pressed: false
+  }
 
-  handleClick() {
+  handleClick = () => {
     var command = this.isSigninButton() ? 'prihlas_na_termin' : 'odhlas_z_terminu';
     var termin = this.props.termin;
 
@@ -196,17 +194,17 @@ export var SkuskyRegisterButton = createReactClass({
     });
 
     this.setState({ pressed: true });
-  },
+  }
 
   isDisabled() {
     var termin = this.props.termin;
     return (this.isSigninButton() && termin.moznost_prihlasit !== 'A') || this.state.pressed;
-  },
+  }
 
   isSigninButton() {
     var termin = this.props.termin;
     return !termin.datum_prihlasenia || termin.datum_odhlasenia;
-  },
+  }
 
   render() {
     var termin = this.props.termin;
@@ -223,7 +221,7 @@ export var SkuskyRegisterButton = createReactClass({
 
     return <button onClick={this.state.pressed ? null : this.handleClick} className={buttonClass}>{buttonText}</button>;
   }
-});
+}
 
 
 export function MojeSkuskyPage() {

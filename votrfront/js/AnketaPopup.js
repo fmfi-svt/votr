@@ -8,25 +8,23 @@ var cookieName = 'anketaKolacik'; // Name of our cookie
 var cookieValue = 'on'; // Value of cookie
 var cookieHideDate = Date.parse('19 February 2018'); // Starting this day the cookie won't be visible
 
- 
-export var AnketaPopup = createReactClass({
 
-  getInitialState() {
+export class AnketaPopup extends React.Component {
+  constructor(props) {
+    super(props);
     var today = new Date();
-    if ((checkCookie(cookieName) != cookieValue) && (cookieHideDate > today)) {
-        return {showPopup: true}
-    }
-    return {showPopup: false}
-  },
+    var showPopup = checkCookie(cookieName) != cookieValue && cookieHideDate > today;
+    this.state = { showPopup };
+  }
 
-  onClosePopup(action) {
+  onClosePopup = (action) => {
     if(action == 0) {
       createCookie(cookieName, cookieValue, cookieDurationVote); // Create vote cookie
     } else {
       createCookie(cookieName, cookieValue, cookieDurationClose); // Create close cookie
     }
     this.setState({showPopup: false})
-  },
+  }
 
   render() {
     if (!this.state.showPopup) return null;
@@ -49,7 +47,7 @@ export var AnketaPopup = createReactClass({
             </div>
            </div>;
   }
-});
+}
 
 
 function createCookie(name, value, days) {

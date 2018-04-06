@@ -34,19 +34,19 @@ export function queryConsumer(callback) {
 }
 
 
-export var Root = createReactClass({
-  handlePopState() {
+export class Root extends React.Component {
+  handlePopState = () => {
     Votr.appRoot.forceUpdate();
-  },
+  }
 
   componentDidMount() {
     window.addEventListener('popstate', this.handlePopState, false);
     trackPageView();
-  },
+  }
 
   componentDidUpdate() {
     trackPageView();
-  },
+  }
 
   render() {
     var queryString = location.search.substring(1);
@@ -61,7 +61,7 @@ export var Root = createReactClass({
       </QueryContext.Provider>
     );
   }
-});
+}
 
 
 export function buildUrl(href) {
@@ -77,8 +77,8 @@ export function navigate(href) {
 };
 
 
-export var Link = createReactClass({
-  handleClick(event) {
+export class Link extends React.Component {
+  handleClick = (event) => {
     // Chrome fires onclick on middle click. Firefox only fires it on document,
     // see <http://lists.w3.org/Archives/Public/www-dom/2013JulSep/0203.html>,
     // but React adds event listeners to document so we still see a click event.
@@ -86,34 +86,34 @@ export var Link = createReactClass({
 
     event.preventDefault();
     navigate(this.props.href);
-  },
+  }
 
   render() {
     return <a {...this.props} href={buildUrl(this.props.href)}
               onClick={this.handleClick} />;
   }
-});
+}
 
 
 // Looks and acts like a link, but doesn't have a href and cannot be opened in
 // a new tab when middle-clicked or ctrl-clicked.
-export var FakeLink = createReactClass({
-  propTypes: {
+export class FakeLink extends React.Component {
+  static propTypes = {
     onClick: PropTypes.func.isRequired
-  },
+  };
 
   // Pressing Enter on <a href=...> emits a click event, and the HTML5 spec
   // says elements with tabindex should do that too, but they don't.
   // <http://www.w3.org/TR/WCAG20-TECHS/SCR29> suggests using a keyup event:
-  handleKeyUp(event) {
+  handleKeyUp = (event) => {
     if (event.which == 13) {
       event.preventDefault();
       this.props.onClick(event);
     }
-  },
+  }
 
   render() {
     return <a {...this.props} onKeyUp={this.handleKeyUp}
               tabIndex="0" role="button" />;
   }
-});
+}

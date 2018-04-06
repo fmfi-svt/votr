@@ -2,10 +2,10 @@
 import { Modal, PageLayout } from './layout';
 
 
-export var AboutModal = createReactClass({
-  render() {
-    var github = "https://github.com/fmfi-svt/votr";
-    return <Modal title="O aplikácii">
+export function AboutModal() {
+  var github = "https://github.com/fmfi-svt/votr";
+  return (
+    <Modal title="O aplikácii">
       <p>
         Len málokto sa vyzná v AISe. Kým sa študent dostane k tomu, čo
         potrebuje, musí sa prebiť cez hŕbu okien a menu. A ani pravidelné
@@ -49,15 +49,15 @@ export var AboutModal = createReactClass({
         bližšie a vie s ním plynule narábať. Aj mená interných súčastí Votru
         pokračujú v tejto téme.
       </p>
-    </Modal>;
-  }
-});
+    </Modal>
+  );
+}
 
 
-export var IndexPage = createReactClass({
-  render() {
-    // TODO: Use PageTitle, but show different h1.
-    return <PageLayout>
+export function IndexPage() {
+  // TODO: Use PageTitle, but show different h1.
+  return (
+    <PageLayout>
       <h1>Vitajte</h1>
       <p>
         Votr je alternatívne rozhranie pre systém AIS2. Cez menu sa dostanete
@@ -98,5 +98,5 @@ export var IndexPage = createReactClass({
         </p></li>
       </ul>
     </PageLayout>
-  }
-});
+  );
+}

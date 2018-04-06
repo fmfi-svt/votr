@@ -52,10 +52,10 @@ function ZoznamPrihlasenychNaTerminModalContent() {
   });
 }
 
-export var ZoznamPrihlasenychNaTerminModal = createReactClass({
-  render() {
-    return <Modal title="Zoznam prihlásených na termín">
+export function ZoznamPrihlasenychNaTerminModal() {
+  return (
+    <Modal title="Zoznam prihlásených na termín">
       <ZoznamPrihlasenychNaTerminModalContent />
-    </Modal>;
-  }
-});
+    </Modal>
+  );
+}

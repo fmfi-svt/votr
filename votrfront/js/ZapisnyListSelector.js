@@ -4,67 +4,56 @@ import { Link, QueryContext, queryConsumer } from './router';
 import { sortAs } from './sorting';
 
 
-export var ZapisnyListSelector = createReactClass({
-  getItems(cache) {
-    var studia = cache.get('get_studia');
+function getItems(cache) {
+  var studia = cache.get('get_studia');
 
-    var items = [];
+  var items = [];
 
-    if (studia) studia.forEach((studium) => {
-      var zapisneListy = cache.get('get_zapisne_listy', studium.studium_key);
-      if (zapisneListy) items.push(...zapisneListy);
-    });
+  if (studia) studia.forEach((studium) => {
+    var zapisneListy = cache.get('get_zapisne_listy', studium.studium_key);
+    if (zapisneListy) items.push(...zapisneListy);
+  });
 
-    return _.sortBy(items, (item) => sortAs.date(item.datum_zapisu)).reverse();
-  },
+  return _.sortBy(items, (item) => sortAs.date(item.datum_zapisu)).reverse();
+}
 
-  renderSelector(cache, items, query) {
-    return <ul className="nav nav-pills selector">
-      <li><span className="text-pill">Zápisný list:</span></li>
-      {items.map((zapisnyList) => {
-        var key = zapisnyList.zapisny_list_key;
-        var active = key == query.zapisnyListKey;
-        return <li key={key} className={active ? "active" : ""}>
-          <Link href={{ ...query, zapisnyListKey: key }}>
-            {zapisnyList.akademicky_rok} {zapisnyList.sp_skratka}
-          </Link>
-        </li>;
-      })}
-      {cache.loadedAll ? null :
-        <li><span className="text-pill">
-          <Loading requests={cache.missing} />
-        </span></li>}
-    </ul>;
-  },
 
-  renderPage(cache, items, query) {
-    if (query.zapisnyListKey) {
-      return (
-        <QueryContext.Provider value={query}>
-          {this.props.children}
-        </QueryContext.Provider>
-      );
+export function ZapisnyListSelector(props) {
+  return queryConsumer(query => {
+    var cache = new CacheRequester();
+    var items = getItems(cache);
+
+    if (!query.zapisnyListKey && cache.loadedAll && items.length) {
+      var mostRecentItem = items[0];
+      query = { ...query, zapisnyListKey: mostRecentItem.zapisny_list_key };
     }
-    if (cache.loadedAll && items.length == 0) {
-      return <p>Žiadne zápisné listy.</p>;
-    }
-    return null;
-  },
 
-  render() {
-    return queryConsumer(query => {
-      var cache = new CacheRequester();
-      var items = this.getItems(cache);
-
-      if (!query.zapisnyListKey && cache.loadedAll && items.length) {
-        var mostRecentItem = items[0];
-        query = { ...query, zapisnyListKey: mostRecentItem.zapisny_list_key };
-      }
-
-      return <React.Fragment>
-        {this.renderSelector(cache, items, query)}
-        {this.renderPage(cache, items, query)}
-      </React.Fragment>;
-    });
-  }
-});
+    return (
+      <React.Fragment>
+        <ul className="nav nav-pills selector">
+          <li><span className="text-pill">Zápisný list:</span></li>
+          {items.map((zapisnyList) => {
+            var key = zapisnyList.zapisny_list_key;
+            var active = key == query.zapisnyListKey;
+            return <li key={key} className={active ? "active" : ""}>
+              <Link href={{ ...query, zapisnyListKey: key }}>
+                {zapisnyList.akademicky_rok} {zapisnyList.sp_skratka}
+              </Link>
+            </li>;
+          })}
+          {cache.loadedAll ? null :
+            <li><span className="text-pill">
+              <Loading requests={cache.missing} />
+            </span></li>}
+        </ul>
+        {query.zapisnyListKey ? (
+          <QueryContext.Provider value={query}>
+            {props.children}
+          </QueryContext.Provider>
+        ) : cache.loadedAll && items.length == 0 ? (
+          <p>Žiadne zápisné listy.</p>
+        ) : null}
+      </React.Fragment>
+    );
+  });
+}

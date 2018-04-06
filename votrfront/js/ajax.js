@@ -107,23 +107,23 @@ CacheRequester.prototype.get = function (...request) {
 };
 
 
-export var Loading = createReactClass({
+export class Loading extends React.Component {
   componentDidMount() {
     if (this.props.requests) this.props.requests.forEach((request) => {
       RequestCache.sendRequest(request);
     });
-  },
+  }
 
   componentDidUpdate() {
     if (this.props.requests) this.props.requests.forEach((request) => {
       RequestCache.sendRequest(request);
     });
-  },
+  }
 
   render() {
     return <span className="loading">Načítavam...</span>;
   }
-});
+}
 
 
 export function goPost(url) {

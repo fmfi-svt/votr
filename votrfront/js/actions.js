@@ -17,13 +17,13 @@ import { navigate, queryConsumer } from './router';
 import { AnketaPopup } from './AnketaPopup';
 
 
-export var NotFoundPage = createReactClass({
-  render() {
-    return <PageLayout>
+export function NotFoundPage() {
+  return (
+    <PageLayout>
       <p>Action not found!</p>
-    </PageLayout>;
-  }
-});
+    </PageLayout>
+  );
+}
 
 
 export var actions = {

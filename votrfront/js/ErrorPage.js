@@ -4,21 +4,19 @@ import { Modal, ModalBase } from './layout';
 import { AnalyticsMixin, FakeLink } from './router';
 
 
-export var ErrorModal = createReactClass({
-  getInitialState() {
-    return {
-      open: false
-    }
-  },
+export class ErrorModal extends React.Component {
+  state = {
+    open: false
+  }
 
-  handleIgnore() {
+  handleIgnore = () => {
     Votr.ajaxError = null;
     Votr.appRoot.forceUpdate();
-  },
+  }
 
-  handleDetails() {
+  handleDetails = () => {
     this.setState({ open: true });
-  },
+  }
 
   render() {
     var error = Votr.settings.error || Votr.ajaxError;
@@ -85,11 +83,9 @@ export var ErrorModal = createReactClass({
                 onClick={this.handleIgnore}>Ignorovať chybu</button>}
     </Modal>;
   }
-});
+}
 
 
-export var ErrorPage = createReactClass({
-  render() {
-    return <ModalBase component={ErrorModal} onClose={_.noop} />
-  }
-});
+export function ErrorPage() {
+  return <ModalBase component={ErrorModal} onClose={_.noop} />;
+}

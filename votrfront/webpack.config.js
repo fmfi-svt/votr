@@ -47,6 +47,7 @@ function makeConfig() {
           query: {
             cacheDirectory: __dirname + '/static/cache',
             loose: ['es6.destructuring', 'es6.properties.computed', 'es6.spread'],
+            optional: ['es7.classProperties'],
           },
         },
       ],

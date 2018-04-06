@@ -12,10 +12,11 @@ export var RegisterOsobColumns = [
 ];
 RegisterOsobColumns.defaultOrder = 'a0';
 
-export var RegisterOsobForm = createReactClass({
-  getInitialState() {
-    var query = this.props.query;
-    return {
+export class RegisterOsobForm extends React.Component {
+  constructor(props) {
+    super(props);
+    var query = props.query;
+    this.state = {
       meno: query.meno,
       priezvisko: query.priezvisko,
       absolventi: query.absolventi,
@@ -35,27 +36,27 @@ export var RegisterOsobForm = createReactClass({
       osmyRocnik: query.osmyRocnik,
       absolventiRocnik: query.absolventiRocnik
     };
-  },
+  }
 
-  handleFieldChange(event) {
+  handleFieldChange = (event) => {
     this.setState({ [event.target.name]: event.target.value });
-  },
+  }
 
-  handleCheckBoxChange(event) {
+  handleCheckBoxChange = (event) => {
     this.setState({ [event.target.name]: String(event.target.checked) });
-  },
+  }
 
-  handleSubmit(event) {
+  handleSubmit = (event) => {
     event.preventDefault();
     navigate({ action: 'registerOsob', ...this.state });
-  },
+  }
 
   renderTextInput(label, name, focus) {
     return <FormItem label={label}>
       <input className="form-item-control" name={name} autoFocus={focus}
              value={this.state[name] || ''} type="text" onChange={this.handleFieldChange} />
     </FormItem>;
-  },
+  }
 
   renderSelect(label, name, items, cache) {
     return <FormItem label={label}>
@@ -66,14 +67,14 @@ export var RegisterOsobForm = createReactClass({
           )}
         </select> : <Loading requests={cache.missing} />}
     </FormItem>;
-  },
+  }
 
   renderCheckbox(label, name) {
     return <label>
       <input name={name} checked={this.state[name] == "true"} type="checkbox" onChange={this.handleCheckBoxChange} />
       {label}
     </label>;
-  },
+  }
 
   render() {
     var cache = new CacheRequester();
@@ -114,69 +115,69 @@ export var RegisterOsobForm = createReactClass({
         <button className="btn btn-primary" type="submit">Vyhľadaj</button>
       </FormItem>
     </form>;
-  },
-});
+  }
+}
 
-export var RegisterOsobResultTable = createReactClass({
-  render() {
-    var cache = new CacheRequester();
-    var query = this.props.query;
+export function RegisterOsobResultTable(props) {
+  var cache = new CacheRequester();
+  var query = props.query;
 
-    if(!query.akademickyRok ||
-       !(query.meno ||
-         query.priezvisko ||
-         query.absolventi == "true" ||
-         query.studenti == "true" ||
-         query.zamestnanci == "true" ||
-         query.fakulta ||
-         query.skratkaSp ||
-         query.uchadzaciRocnik == "true" ||
-         query.prvyRocnik == "true" ||
-         query.druhyRocnik == "true" ||
-         query.tretiRocnik == "true" ||
-         query.stvrtyRocnik == "true" ||
-         query.piatyRocnik == "true" ||
-         query.siestyRocnik == "true" ||
-         query.siedmyRocnik == "true" ||
-         query.osmyRocnik == "true" ||
-         query.absolventiRocnik == "true")) {
-      return null;
-    }
+  if(!query.akademickyRok ||
+     !(query.meno ||
+       query.priezvisko ||
+       query.absolventi == "true" ||
+       query.studenti == "true" ||
+       query.zamestnanci == "true" ||
+       query.fakulta ||
+       query.skratkaSp ||
+       query.uchadzaciRocnik == "true" ||
+       query.prvyRocnik == "true" ||
+       query.druhyRocnik == "true" ||
+       query.tretiRocnik == "true" ||
+       query.stvrtyRocnik == "true" ||
+       query.piatyRocnik == "true" ||
+       query.siestyRocnik == "true" ||
+       query.siedmyRocnik == "true" ||
+       query.osmyRocnik == "true" ||
+       query.absolventiRocnik == "true")) {
+    return null;
+  }
 
-    var response = cache.get('vyhladaj_osobu',
-          query.meno,
-          query.priezvisko,
-          query.absolventi == "true",
-          query.studenti == "true",
-          query.zamestnanci == "true",
-          query.akademickyRok,
-          query.fakulta,
-          query.skratkaSp,
-          query.uchadzaciRocnik == "true",
-          query.prvyRocnik == "true",
-          query.druhyRocnik == "true",
-          query.tretiRocnik == "true",
-          query.stvrtyRocnik == "true",
-          query.piatyRocnik == "true",
-          query.siestyRocnik == "true",
-          query.siedmyRocnik == "true",
-          query.osmyRocnik == "true",
-          query.absolventiRocnik == "true");
+  var response = cache.get('vyhladaj_osobu',
+        query.meno,
+        query.priezvisko,
+        query.absolventi == "true",
+        query.studenti == "true",
+        query.zamestnanci == "true",
+        query.akademickyRok,
+        query.fakulta,
+        query.skratkaSp,
+        query.uchadzaciRocnik == "true",
+        query.prvyRocnik == "true",
+        query.druhyRocnik == "true",
+        query.tretiRocnik == "true",
+        query.stvrtyRocnik == "true",
+        query.piatyRocnik == "true",
+        query.siestyRocnik == "true",
+        query.siedmyRocnik == "true",
+        query.osmyRocnik == "true",
+        query.absolventiRocnik == "true");
 
-    if (!response) {
-      return <Loading requests={cache.missing} />;
-    }
+  if (!response) {
+    return <Loading requests={cache.missing} />;
+  }
 
-    var [osoby, message] = response;
+  var [osoby, message] = response;
 
-    var [osoby, header] = sortTable(
-      osoby, RegisterOsobColumns, this.props.query, 'osobySort');
+  var [osoby, header] = sortTable(
+    osoby, RegisterOsobColumns, query, 'osobySort');
 
-    if (!message && !osoby.length) {
-      message = "Podmienkam nevyhovuje žiadny záznam.";
-    }
+  if (!message && !osoby.length) {
+    message = "Podmienkam nevyhovuje žiadny záznam.";
+  }
 
-    return <React.Fragment>
+  return (
+    <React.Fragment>
       <h2>Výsledky</h2>
       <table className="table table-condensed table-bordered table-striped table-hover">
         <thead>{header}</thead>
@@ -192,9 +193,9 @@ export var RegisterOsobResultTable = createReactClass({
         </tbody>
         {message && <tfoot><tr><td colSpan={RegisterOsobColumns.length}>{message}</td></tr></tfoot>}
       </table>
-    </React.Fragment>;
-  }
-});
+    </React.Fragment>
+  );
+}
 
 
 export function RegisterOsobPage() {

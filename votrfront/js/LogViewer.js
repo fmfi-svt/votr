@@ -3,20 +3,18 @@ import { LocalSettings } from './LocalSettings';
 import { logs } from './ajax';
 
 
-export var LogViewerContent = createReactClass({
-  getInitialState() {
-    return {
-      benchmark: true,
-      http: true,
-      table: true
-    }
-  },
+export class LogViewerContent extends React.Component {
+  state = {
+    benchmark: true,
+    http: true,
+    table: true
+  }
 
-  handleChange(e) {
+  handleChange = (e) => {
     var update = {};
     update[e.target.name] = !e.target.checked;
     this.setState(update);
-  },
+  }
 
   componentDidUpdate() {
     var div = this.refs.scroll;
@@ -25,7 +23,7 @@ export var LogViewerContent = createReactClass({
       this.lastTime = time;
       div.scrollTop = div.scrollHeight;
     }
-  },
+  }
 
   render() {
     var types = _.countBy(logs, 'log');
@@ -62,46 +60,47 @@ export var LogViewerContent = createReactClass({
       </div>
     </div>;
   }
-});
+}
 
 
-export var LogViewerBenchmarkContent = createReactClass({
-  computeBenchmarks() {
-    var sums = {};
-    var beginnings = {};
+function computeBenchmarks() {
+  var sums = {};
+  var beginnings = {};
 
-    function start(what, time) {
-      beginnings[what] = time;
+  function start(what, time) {
+    beginnings[what] = time;
+  }
+  function end(what, time) {
+    if (!beginnings[what]) return;
+    if (!sums[what]) sums[what] = 0;
+    sums[what] += time - beginnings[what];
+    delete beginnings[what];
+  }
+
+  logs.forEach((entry) => {
+    if (entry.log == 'benchmark' && entry.message.substr(0, 6) == 'Begin ') {
+      start(entry.message.substr(6), entry.time);
     }
-    function end(what, time) {
-      if (!beginnings[what]) return;
-      if (!sums[what]) sums[what] = 0;
-      sums[what] += time - beginnings[what];
-      delete beginnings[what];
+    if (entry.log == 'benchmark' && entry.message.substr(0, 4) == 'End ') {
+      end(entry.message.substr(4), entry.time);
     }
+    if (entry.log == 'rpc' && entry.message.substr(-8) == ' started') {
+      start('total RPC time', entry.time);
+    }
+    if (entry.log == 'rpc' && entry.message.substr(-9) == ' finished') {
+      end('total RPC time', entry.time);
+    }
+  });
 
-    logs.forEach((entry) => {
-      if (entry.log == 'benchmark' && entry.message.substr(0, 6) == 'Begin ') {
-        start(entry.message.substr(6), entry.time);
-      }
-      if (entry.log == 'benchmark' && entry.message.substr(0, 4) == 'End ') {
-        end(entry.message.substr(4), entry.time);
-      }
-      if (entry.log == 'rpc' && entry.message.substr(-8) == ' started') {
-        start('total RPC time', entry.time);
-      }
-      if (entry.log == 'rpc' && entry.message.substr(-9) == ' finished') {
-        end('total RPC time', entry.time);
-      }
-    });
+  return _(sums).pairs().sortBy(1).reverse().valueOf();
+}
 
-    return _(sums).pairs().sortBy(1).reverse().valueOf();
-  },
 
-  render() {
-    var benchmarks = this.computeBenchmarks();
+export function LogViewerBenchmarkContent() {
+  var benchmarks = this.computeBenchmarks();
 
-    return <div className="log-viewer">
+  return (
+    <div className="log-viewer">
       <div className="options">
         {this.props.closeButton}
         {this.props.modeButton}
@@ -119,36 +118,36 @@ export var LogViewerBenchmarkContent = createReactClass({
           </tbody>
         </table>
       </div>
-    </div>;
-  }
-});
+    </div>
+  );
+}
 
 
-export var LogViewer = createReactClass({
-  toggle() {
+export class LogViewer extends React.Component {
+  toggle = () => {
     LocalSettings.set("logViewer",
       LocalSettings.get("logViewer") ? "" : "log");
-  },
+  }
 
-  toggleMode() {
+  toggleMode = () => {
     LocalSettings.set("logViewer",
       LocalSettings.get("logViewer") == "log" ? "benchmark" : "log");
-  },
+  }
 
-  handleKeypress(e) {
+  handleKeypress = (e) => {
     if (e.ctrlKey && e.altKey && e.shiftKey && (e.key == 'L' || e.key == 'l')) {   // Ctrl+Alt+Shift+L
       this.toggle();
       e.preventDefault();
     }
-  },
+  }
 
   componentDidMount() {
     window.addEventListener('keydown', this.handleKeypress);
-  },
+  }
 
   componentWillUnmount() {
     window.removeEventListener('keydown', this.handleKeypress);
-  },
+  }
 
   render() {
     var mode = LocalSettings.get("logViewer");
@@ -165,4 +164,4 @@ export var LogViewer = createReactClass({
     var C = mode == "log" ? LogViewerContent : LogViewerBenchmarkContent;
     return <C modeButton={modeButton} closeButton={closeButton} />;
   }
-});
+}
