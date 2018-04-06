@@ -5,7 +5,7 @@ import { CacheRequester, Loading } from './ajax';
 import { coursesStats, renderWeightedStudyAverage } from './coursesStats';
 import { classForSemester, humanizeNazovPriemeru, humanizeTerminHodnotenia, humanizeTypVyucby, plural } from './humanizeAISData';
 import { PageLayout, PageTitle } from './layout';
-import { Link } from './router';
+import { Link, queryConsumer } from './router';
 import { sortAs, sortTable } from './sorting';
 
 
@@ -29,14 +29,10 @@ export var MojePriemeryColumns = [
 MojePriemeryColumns.defaultOrder = 'a0a2a1';
 
 
-export var MojeHodnoteniaPageContent = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
-
-  renderHodnotenia() {
+export function MojeHodnoteniaHodnoteniaTable() {
+  return queryConsumer(query => {
     var cache = new CacheRequester();
-    var {studiumKey} = this.props.query;
+    var {studiumKey} = query;
     var [hodnotenia, message] = cache.get('get_prehlad_kreditov', studiumKey) || [];
 
     if (!hodnotenia) {
@@ -44,7 +40,7 @@ export var MojeHodnoteniaPageContent = createReactClass({
     }
 
     var [hodnotenia, header] = sortTable(
-      hodnotenia, MojeHodnoteniaColumns, this.props.query, 'predmetySort');
+      hodnotenia, MojeHodnoteniaColumns, query, 'predmetySort');
 
     var stats = coursesStats(hodnotenia);
 
@@ -55,7 +51,7 @@ export var MojeHodnoteniaPageContent = createReactClass({
           <tr key={hodnotenie.hodn_key} className={classForSemester(hodnotenie.semester)}>
             <td>{hodnotenie.akademicky_rok}</td>
             <td>{hodnotenie.semester}</td>
-            <td><Link href={{ ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: hodnotenie.predmet_key, modalAkademickyRok: hodnotenie.akademicky_rok }}>
+            <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: hodnotenie.predmet_key, modalAkademickyRok: hodnotenie.akademicky_rok }}>
               {hodnotenie.nazov}
             </Link></td>
             <td>{hodnotenie.skratka}</td>
@@ -83,11 +79,13 @@ export var MojeHodnoteniaPageContent = createReactClass({
           {message && <tr><td colSpan={MojeHodnoteniaColumns.length}>{message}</td></tr>}
       </tfoot>
     </table>;
-  },
+  });
+}
 
-  renderPriemery() {
+export function MojeHodnoteniaPriemeryTable() {
+  return queryConsumer(query => {
     var cache = new CacheRequester();
-    var {studiumKey} = this.props.query;
+    var {studiumKey} = query;
 
     var priemery, message;
     var zapisneListy = cache.get('get_zapisne_listy', studiumKey);
@@ -105,7 +103,7 @@ export var MojeHodnoteniaPageContent = createReactClass({
     }
 
     var [priemery, header] = sortTable(
-      priemery, MojePriemeryColumns, this.props.query, 'priemerySort');
+      priemery, MojePriemeryColumns, query, 'priemerySort');
 
     if (!message && !priemery.length) {
       message = "V AISe zatiaľ nie sú vypočítané žiadne priemery.";
@@ -130,29 +128,21 @@ export var MojeHodnoteniaPageContent = createReactClass({
       </tbody>
       {message && <tfoot><tr><td colSpan={MojePriemeryColumns.length}>{message}</td></tr></tfoot>}
     </table>;
-  },
-
-  render() {
-    return <React.Fragment>
-      <div className="header">
-        <PageTitle>Moje hodnotenia</PageTitle>
-      </div>
-      {this.renderHodnotenia()}
-      <h2>Moje priemery</h2>
-      {this.renderPriemery()}
-    </React.Fragment>;
-  }
-});
+  });
+}
 
 
-export var MojeHodnoteniaPage = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
-
-  render() {
-    return <PageLayout query={this.props.query}>
-      <StudiumSelector query={this.props.query} component={MojeHodnoteniaPageContent} />
-    </PageLayout>;
-  }
-});
+export function MojeHodnoteniaPage() {
+  return (
+    <PageLayout>
+      <StudiumSelector>
+        <div className="header">
+          <PageTitle>Moje hodnotenia</PageTitle>
+        </div>
+        <MojeHodnoteniaHodnoteniaTable />
+        <h2>Moje priemery</h2>
+        <MojeHodnoteniaPriemeryTable />
+      </StudiumSelector>
+    </PageLayout>
+  );
+}

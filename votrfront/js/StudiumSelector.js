@@ -1,6 +1,6 @@
 
 import { CacheRequester, Loading } from './ajax';
-import { Link } from './router';
+import { Link, QueryContext, queryConsumer } from './router';
 import { sortAs } from './sorting';
 
 
@@ -8,11 +8,6 @@ import { sortAs } from './sorting';
 
 
 export var StudiumSelector = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired,
-    component: PropTypes.func.isRequired
-  },
-
   getItems(cache) {
     var studia = cache.get('get_studia');
 
@@ -42,7 +37,11 @@ export var StudiumSelector = createReactClass({
 
   renderPage(cache, items, query) {
     if (query.studiumKey) {
-      return <this.props.component query={query} />;
+      return (
+        <QueryContext.Provider value={query}>
+          {this.props.children}
+        </QueryContext.Provider>
+      );
     }
     if (cache.loadedAll && items.length == 0) {
       return <p>Žiadne štúdiá.</p>;
@@ -51,18 +50,19 @@ export var StudiumSelector = createReactClass({
   },
 
   render() {
-    var cache = new CacheRequester();
-    var items = this.getItems(cache);
-    var query = this.props.query;
+    return queryConsumer(query => {
+      var cache = new CacheRequester();
+      var items = this.getItems(cache);
 
-    if (!query.studiumKey && cache.loadedAll && items.length) {
-      var mostRecentItem = items[0];
-      query = { ...query, studiumKey: mostRecentItem.studium_key };
-    }
+      if (!query.studiumKey && cache.loadedAll && items.length) {
+        var mostRecentItem = items[0];
+        query = { ...query, studiumKey: mostRecentItem.studium_key };
+      }
 
-    return <React.Fragment>
-      {this.renderSelector(cache, items, query)}
-      {this.renderPage(cache, items, query)}
-    </React.Fragment>;
+      return <React.Fragment>
+        {this.renderSelector(cache, items, query)}
+        {this.renderPage(cache, items, query)}
+      </React.Fragment>;
+    });
   }
 });

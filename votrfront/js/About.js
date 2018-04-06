@@ -57,7 +57,7 @@ export var AboutModal = createReactClass({
 export var IndexPage = createReactClass({
   render() {
     // TODO: Use PageTitle, but show different h1.
-    return <PageLayout query={this.props.query}>
+    return <PageLayout>
       <h1>Vitajte</h1>
       <p>
         Votr je alternatívne rozhranie pre systém AIS2. Cez menu sa dostanete

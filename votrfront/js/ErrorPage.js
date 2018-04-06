@@ -90,7 +90,6 @@ export var ErrorModal = createReactClass({
 
 export var ErrorPage = createReactClass({
   render() {
-    // TODO: ModalBase should probably use transferPropsTo() instead of requiring query.
-    return <ModalBase query={{}} component={ErrorModal} onClose={_.noop} />
+    return <ModalBase component={ErrorModal} onClose={_.noop} />
   }
 });

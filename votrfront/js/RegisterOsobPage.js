@@ -2,7 +2,7 @@
 import { CacheRequester, Loading } from './ajax';
 import { currentAcademicYear } from './coursesStats';
 import { FormItem, PageLayout, PageTitle } from './layout';
-import { navigate } from './router';
+import { navigate, queryConsumer } from './router';
 import { sortAs, sortTable } from './sorting';
 
 
@@ -53,7 +53,7 @@ export var RegisterOsobForm = createReactClass({
   renderTextInput(label, name, focus) {
     return <FormItem label={label}>
       <input className="form-item-control" name={name} autoFocus={focus}
-             value={this.state[name]} type="text" onChange={this.handleFieldChange} />
+             value={this.state[name] || ''} type="text" onChange={this.handleFieldChange} />
     </FormItem>;
   },
 
@@ -197,14 +197,14 @@ export var RegisterOsobResultTable = createReactClass({
 });
 
 
-export var RegisterOsobPage = createReactClass({
-  render() {
-    return <PageLayout query={this.props.query}>
-        <div className="header">
-          <PageTitle>Register osôb</PageTitle>
-        </div>
-        <RegisterOsobForm query={this.props.query} />
-        <RegisterOsobResultTable query={this.props.query} />
-    </PageLayout>;
-  }
-});
+export function RegisterOsobPage() {
+  return queryConsumer(query => (
+    <PageLayout>
+      <div className="header">
+        <PageTitle>Register osôb</PageTitle>
+      </div>
+      <RegisterOsobForm query={query} />
+      <RegisterOsobResultTable query={query} />
+    </PageLayout>
+  ));
+}

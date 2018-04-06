@@ -2,6 +2,7 @@
 import { ZoznamPrihlasenychNaTerminColumns } from './ZoznamPrihlasenychNaTermin';
 import { CacheRequester, Loading } from './ajax';
 import { Modal } from './layout';
+import { queryConsumer } from './router';
 import { sortAs, sortTable } from './sorting';
 
 
@@ -14,14 +15,16 @@ DetailPredmetuUciteliaColumns.defaultOrder = 'a0';
 export var DetailPredmetuStudentiColumns = ZoznamPrihlasenychNaTerminColumns.slice();
 DetailPredmetuStudentiColumns.defaultOrder = 'a0';
 
-export var DetailPredmetuModal = createReactClass({
-  getZapisaniStudenti(cache, predmetKey, akademickyRok){
-    return cache.get('get_studenti_zapisani_na_predmet', predmetKey, akademickyRok);
-  },
 
-  renderInformacnyListPredmetu() {
+function getZapisaniStudenti(cache, predmetKey, akademickyRok) {
+  return cache.get('get_studenti_zapisani_na_predmet', predmetKey, akademickyRok);
+}
+
+
+function DetailPredmetuInformacnyList() {
+  return queryConsumer(query => {
     var cache = new CacheRequester();
-    var {modalAkademickyRok, modalPredmetKey} = this.props.query;
+    var {modalAkademickyRok, modalPredmetKey} = query;
 
     var data = cache.get('get_informacny_list', modalPredmetKey, modalAkademickyRok);
 
@@ -31,13 +34,16 @@ export var DetailPredmetuModal = createReactClass({
 
     var url = "data:application/pdf;base64," + escape(data);
     return <a href={url} download>Stiahnuť</a>;
-  },
+  });
+}
 
-  renderUcitelia() {
+
+function DetailPredmetuUcitelia() {
+  return queryConsumer(query => {
     var cache = new CacheRequester();
-    var {modalAkademickyRok, modalPredmetKey} = this.props.query;
+    var {modalAkademickyRok, modalPredmetKey} = query;
 
-    var data = this.getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
+    var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 
     if (!data) {
       return <Loading requests={cache.missing} />;
@@ -56,7 +62,7 @@ export var DetailPredmetuModal = createReactClass({
     }
 
     var [ucitelia, header] = sortTable(
-      ucitelia, DetailPredmetuUciteliaColumns, this.props.query, 'modalUciteliaSort');
+      ucitelia, DetailPredmetuUciteliaColumns, query, 'modalUciteliaSort');
 
     var message = ucitelia.length ? null : "Predmet nemá v AISe žiadnych učiteľov.";
 
@@ -72,13 +78,16 @@ export var DetailPredmetuModal = createReactClass({
       </tbody>
       {message && <tfoot><tr><td colSpan={DetailPredmetuUciteliaColumns.length}>{message}</td></tr></tfoot>}
     </table>;
-  },
+  });
+}
 
-  renderZapisaniStudenti() {
+
+function DetailPredmetuZapisaniStudenti() {
+  return queryConsumer(query => {
     var cache = new CacheRequester();
-    var {modalAkademickyRok, modalPredmetKey} = this.props.query;
+    var {modalAkademickyRok, modalPredmetKey} = query;
 
-    var data = this.getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
+    var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 
     if (!data) {
       return <Loading requests={cache.missing} />;
@@ -91,7 +100,7 @@ export var DetailPredmetuModal = createReactClass({
     }
 
     var [studenti, header] = sortTable(
-      studenti, DetailPredmetuStudentiColumns, this.props.query, 'modalStudentiSort');
+      studenti, DetailPredmetuStudentiColumns, query, 'modalStudentiSort');
 
     var message = studenti.length ? null : "Predmet nemá v AISe žiadnych zapísaných študentov.";
 
@@ -112,13 +121,16 @@ export var DetailPredmetuModal = createReactClass({
       </tbody>
       {message && <tfoot><tr><td colSpan={DetailPredmetuStudentiColumns.length}>{message}</td></tr></tfoot>}
     </table>;
-  },
+  });
+}
 
-  renderTitle() {
+
+function DetailPredmetuTitle() {
+  return queryConsumer(query => {
     var cache = new CacheRequester();
-    var {modalAkademickyRok, modalPredmetKey} = this.props.query;
+    var {modalAkademickyRok, modalPredmetKey} = query;
 
-    var data = this.getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
+    var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 
     if (!data) {
       return <Loading requests={cache.missing} />;
@@ -131,17 +143,19 @@ export var DetailPredmetuModal = createReactClass({
     }
 
     return predmet.nazov;
-  },
+  });
+}
 
-  render() {
-    return <Modal title={this.renderTitle()}>
 
+export function DetailPredmetuModal() {
+  return (
+    <Modal title={<DetailPredmetuTitle />}>
       <h4>Informačný list predmetu</h4>
-      {this.renderInformacnyListPredmetu()}
+      <DetailPredmetuInformacnyList />
       <h4>Učitelia</h4>
-      {this.renderUcitelia()}
+      <DetailPredmetuUcitelia />
       <h4>Zapísaní študenti</h4>
-      {this.renderZapisaniStudenti()}
-    </Modal>;
-  }
-});
+      <DetailPredmetuZapisaniStudenti />
+    </Modal>
+  );
+}

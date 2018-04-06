@@ -3,7 +3,7 @@ import { CacheRequester, Loading } from './ajax';
 import { currentAcademicYear } from './coursesStats';
 import { classForSemester, humanizeBoolean } from './humanizeAISData';
 import { FormItem, PageLayout, PageTitle } from './layout';
-import { Link, navigate } from './router';
+import { Link, navigate, queryConsumer } from './router';
 import { sortAs, sortTable } from './sorting';
 
 
@@ -45,7 +45,7 @@ export var RegisterPredmetovForm = createReactClass({
   renderTextInput(label, name, focus) {
     return <FormItem label={label}>
       <input className="form-item-control" name={name} autoFocus={focus}
-             value={this.state[name]} type="text" onChange={this.handleFieldChange} />
+             value={this.state[name] || ''} type="text" onChange={this.handleFieldChange} />
     </FormItem>;
   },
 
@@ -150,14 +150,14 @@ export var RegisterPredmetovResultTable = createReactClass({
 });
 
 
-export var RegisterPredmetovPage = createReactClass({
-  render() {
-    return <PageLayout query={this.props.query}>
-        <div className="header">
-          <PageTitle>Register predmetov</PageTitle>
-        </div>
-        <RegisterPredmetovForm query={this.props.query} />
-        <RegisterPredmetovResultTable query={this.props.query} />
-    </PageLayout>;
-  }
-});
+export function RegisterPredmetovPage() {
+  return queryConsumer(query => (
+    <PageLayout>
+      <div className="header">
+        <PageTitle>Register predmetov</PageTitle>
+      </div>
+      <RegisterPredmetovForm query={query} />
+      <RegisterPredmetovResultTable query={query} />
+    </PageLayout>
+  ));
+}

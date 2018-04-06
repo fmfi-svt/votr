@@ -1,19 +1,15 @@
 
 import { CacheRequester, Loading, goLogout, goReset, logs } from './ajax';
-import { FakeLink, Link } from './router';
+import { FakeLink, Link, queryConsumer } from './router';
 
 
 export var PageLayout = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
-
   render() {
     return <React.Fragment>
-      <PageNavbar query={this.props.query} />
+      <PageNavbar />
       <div className="layout-container">
         <div className="layout-menu">
-          <MainMenu query={this.props.query} />
+          <MainMenu />
         </div>
         <div className="layout-content">
           <div className="container-fluid">
@@ -26,9 +22,9 @@ export var PageLayout = createReactClass({
 });
 
 
-export var PageNavbar = createReactClass({
-  render() {
-    return <div className="navbar navbar-inverse navbar-static-top">
+export function PageNavbar() {
+  return queryConsumer(query => (
+    <div className="navbar navbar-inverse navbar-static-top">
       <div className="container-fluid">
         <div className="navbar-header">
           <Link className="navbar-brand" href={{}}>Votr</Link>
@@ -38,15 +34,15 @@ export var PageNavbar = createReactClass({
         </div>
         <div className="navbar-right">
           <ul className="nav navbar-nav">
-            <li><Link href={{ ...this.props.query, modal: 'about' }}>O aplikácii</Link></li>
+            <li><Link href={{ ...query, modal: 'about' }}>O aplikácii</Link></li>
             <li><FakeLink onClick={goReset} title="Znovu načítať všetky dáta">Obnoviť</FakeLink></li>
             <li><FakeLink onClick={goLogout}>Odhlásiť</FakeLink></li>
           </ul>
         </div>
       </div>
-    </div>;
-  }
-});
+    </div>
+  ));
+}
 
 
 export var LogStatus = createReactClass({
@@ -82,52 +78,57 @@ export var PageTitle = createReactClass({
 });
 
 
-export var MainMenu = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
+function MenuItem(props) {
+  return queryConsumer(query => {
+    var isActive = props.active || props.href.action == query.action;
+    return (
+      <li className={isActive ? 'active' : null}>
+        <Link href={props.href}>{props.label}</Link>
+      </li>
+    );
+  });
+}
 
-  renderMenuItem(content, href, moreActions) {
-    var isActive = href.action == this.props.query.action || (moreActions && moreActions[this.props.query.action]);
-    return <li className={isActive ? 'active' : null}>
-      <Link href={href}>{content}</Link>
-    </li>;
-  },
 
-  renderDisabled(content) {
-    return <li className="disabled"><a>{content}</a></li>;
-  },
+function DisabledItem(props) {
+  // return <li className="disabled"><a>{props.label}</a></li>;
+  return null;
+}
 
-  render() {
-    var {studiumKey, zapisnyListKey} = this.props.query;
+
+export function MainMenu() {
+  return queryConsumer(query => {
+    var { action, studiumKey, zapisnyListKey } = query;
 
     var cache = new CacheRequester();
     var somStudent = cache.get('get_som_student');
 
-    return <ul className="main-menu nav nav-pills nav-stacked">
-      <li><strong className="text-pill">Moje štúdium</strong></li>
-      {somStudent === false && <li><span className="text-pill">Nie ste študentom.</span></li>}
-      {somStudent && (
-        <React.Fragment>
-          {this.renderMenuItem("Moje predmety", { action: 'mojePredmety', zapisnyListKey })}
-          {this.renderMenuItem("Moje skúšky", { action: 'mojeSkusky', zapisnyListKey })}
-          {this.renderMenuItem("Moje hodnotenia", { action: 'mojeHodnotenia', studiumKey })}
-          {this.renderMenuItem("Priebežné hodnotenia", { action: 'priebezneHodnotenia', zapisnyListKey })}
-          {/*this.renderDisabled("Môj rozvrh")*/}
-          {this.renderMenuItem("Zápis predmetov", { action: 'zapisZPlanu', zapisnyListKey }, { zapisZPonuky: true })}
-          {this.renderMenuItem("Prehľad štúdia", { action: 'prehladStudia' })}
-        </React.Fragment>
-      )}
-      {!cache.loadedAll && <li><span className="text-pill"><Loading requests={cache.missing} /></span></li>}
-      <li><hr/></li>
-      <li><strong className="text-pill">Registre</strong></li>
-      {this.renderMenuItem("Register osôb", { action: 'registerOsob' })}
-      {this.renderMenuItem("Register predmetov", { action: 'registerPredmetov' })}
-      {/*this.renderDisabled("Register miestností")*/}
-      {/*this.renderDisabled("Register študijných programov")*/}
-    </ul>;
-  }
-});
+    return (
+      <ul className="main-menu nav nav-pills nav-stacked">
+        <li><strong className="text-pill">Moje štúdium</strong></li>
+        {somStudent === false && <li><span className="text-pill">Nie ste študentom.</span></li>}
+        {somStudent && (
+          <React.Fragment>
+            <MenuItem label="Moje predmety" href={{ action: 'mojePredmety', zapisnyListKey }} />
+            <MenuItem label="Moje skúšky" href={{ action: 'mojeSkusky', zapisnyListKey }} />
+            <MenuItem label="Moje hodnotenia" href={{ action: 'mojeHodnotenia', studiumKey }} />
+            <MenuItem label="Priebežné hodnotenia" href={{ action: 'priebezneHodnotenia', zapisnyListKey }} />
+            <DisabledItem label="Môj rozvrh" />
+            <MenuItem label="Zápis predmetov" href={{ action: 'zapisZPlanu', zapisnyListKey }} active={action == 'zapisZPonuky'} />
+            <MenuItem label="Prehľad štúdia" href={{ action: 'prehladStudia' }} />
+          </React.Fragment>
+        )}
+        {!cache.loadedAll && <li><span className="text-pill"><Loading requests={cache.missing} /></span></li>}
+        <li><hr/></li>
+        <li><strong className="text-pill">Registre</strong></li>
+        <MenuItem label="Register osôb" href={{ action: 'registerOsob' }} />
+        <MenuItem label="Register predmetov" href={{ action: 'registerPredmetov' }} />
+        <DisabledItem label="Register miestností" />
+        <DisabledItem label="Register študijných programov" />
+      </ul>
+    );
+  });
+}
 
 
 export var FormItem = createReactClass({
@@ -150,7 +151,6 @@ export var ModalBase = createReactClass({
   propTypes: {
     component: PropTypes.func,
     onClose: PropTypes.func.isRequired,
-    query: PropTypes.object.isRequired
   },
 
   componentDidMount() {
@@ -175,7 +175,7 @@ export var ModalBase = createReactClass({
     return <div data-show={Boolean(C)} className="modal fade" ref="modal"
                 tabIndex="-1" role="dialog" aria-hidden="true">
       <div className="modal-dialog modal-lg">
-        {C && <C query={this.props.query} />}
+        {C && <C />}
       </div>
     </div>;
   }

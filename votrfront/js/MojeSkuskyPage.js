@@ -2,7 +2,7 @@
 import { ZapisnyListSelector } from './ZapisnyListSelector';
 import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
 import { PageLayout, PageTitle } from './layout';
-import { Link } from './router';
+import { Link, queryConsumer } from './router';
 import { sortAs, sortTable } from './sorting';
 
 
@@ -91,14 +91,10 @@ function convertToICAL(terminy) {
   return lines.map((l) => l.replace(/\n/g, "\\n")).join("\r\n");
 }
 
-export var MojeSkuskyPageContent = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
-
-  renderContent() {
+export function MojeSkuskyPageContent() {
+  return queryConsumer(query => {
     var cache = new CacheRequester();
-    var {zapisnyListKey} = this.props.query;
+    var {zapisnyListKey} = query;
 
     var vidim = cache.get('get_vidim_terminy_hodnotenia', zapisnyListKey);
 
@@ -123,7 +119,7 @@ export var MojeSkuskyPageContent = createReactClass({
     terminy = _.values(terminy);
 
     var [terminy, header] = sortTable(
-      terminy, MojeSkuskyColumns, this.props.query, 'skuskySort');
+      terminy, MojeSkuskyColumns, query, 'skuskySort');
 
     var message = terminy.length ? null : "Zatiaľ nie sú vypísané žiadne termíny.";
 
@@ -142,14 +138,14 @@ export var MojeSkuskyPageContent = createReactClass({
               {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
                 <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
                 <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
-              <td><Link href={{ ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
+              <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
                 {termin.nazov_predmetu}
               </Link></td>
               <td>{termin.datum}</td>
               <td>{termin.cas}</td>
               <td>{termin.miestnost}</td>
               <td>{termin.hodnotiaci}</td>
-              <td><Link href={{ ...this.props.query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
+              <td><Link href={{ ...query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
                 {termin.pocet_prihlasenych +
                  (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
               </Link></td>
@@ -169,17 +165,8 @@ export var MojeSkuskyPageContent = createReactClass({
       </table>
       {terminy.length && <button onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}
     </React.Fragment>;
-  },
-
-  render() {
-    return <React.Fragment>
-      <div className="header">
-        <PageTitle>Moje skúšky</PageTitle>
-      </div>
-      {this.renderContent()}
-    </React.Fragment>;
-  }
-});
+  });
+}
 
 
 export var SkuskyRegisterButton = createReactClass({
@@ -239,14 +226,15 @@ export var SkuskyRegisterButton = createReactClass({
 });
 
 
-export var MojeSkuskyPage = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
-
-  render() {
-    return <PageLayout query={this.props.query}>
-      <ZapisnyListSelector query={this.props.query} component={MojeSkuskyPageContent} />
-    </PageLayout>;
-  }
-});
+export function MojeSkuskyPage() {
+  return (
+    <PageLayout>
+      <ZapisnyListSelector>
+        <div className="header">
+          <PageTitle>Moje skúšky</PageTitle>
+        </div>
+        <MojeSkuskyPageContent />
+      </ZapisnyListSelector>
+    </PageLayout>
+  );
+}

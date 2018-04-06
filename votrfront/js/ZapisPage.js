@@ -4,7 +4,7 @@ import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
 import { coursesStats } from './coursesStats';
 import { humanizeTypVyucby, plural } from './humanizeAISData';
 import { FormItem, PageLayout, PageTitle } from './layout';
-import { Link, navigate } from './router';
+import { Link, navigate, queryConsumer } from './router';
 import { sortAs, sortTable } from './sorting';
 
 
@@ -410,17 +410,15 @@ export var ZapisZPlanuPageContent = createReactClass({
 });
 
 
-export var ZapisZPlanuPage = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
-
-  render() {
-    return <PageLayout query={this.props.query}>
-      <ZapisnyListSelector query={this.props.query} component={ZapisZPlanuPageContent} />
-    </PageLayout>;
-  }
-});
+export function ZapisZPlanuPage() {
+  return (
+    <PageLayout>
+      <ZapisnyListSelector>
+        {queryConsumer(query => <ZapisZPlanuPageContent query={query} />)}
+      </ZapisnyListSelector>
+    </PageLayout>
+  );
+}
 
 
 export var ZapisZPonukyForm = createReactClass({
@@ -564,14 +562,12 @@ export var ZapisZPonukyPageContent = createReactClass({
 });
 
 
-export var ZapisZPonukyPage = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
-
-  render() {
-    return <PageLayout query={this.props.query}>
-      <ZapisnyListSelector query={this.props.query} component={ZapisZPonukyPageContent} />
-    </PageLayout>;
-  }
-});
+export function ZapisZPonukyPage() {
+  return (
+    <PageLayout>
+      <ZapisnyListSelector>
+        {queryConsumer(query => <ZapisZPonukyPageContent query={query} />)}
+      </ZapisnyListSelector>
+    </PageLayout>
+  );
+}

@@ -4,7 +4,7 @@ import { CacheRequester, Loading } from './ajax';
 import { coursesStats, renderWeightedStudyAverage } from './coursesStats';
 import { classForSemester, humanizeTerminHodnotenia, humanizeTypVyucby, plural } from './humanizeAISData';
 import { PageLayout, PageTitle } from './layout';
-import { Link } from './router';
+import { Link, queryConsumer } from './router';
 import { sortAs, sortTable } from './sorting';
 
 
@@ -21,14 +21,10 @@ export var MojePredmetyColumns = [
 MojePredmetyColumns.defaultOrder = 'd0a1';
 
 
-export var MojePredmetyPageContent = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
-
-  renderContent() {
+export function MojePredmetyPageContent() {
+  return queryConsumer(query => {
     var cache = new CacheRequester();
-    var {zapisnyListKey} = this.props.query;
+    var {zapisnyListKey} = query;
     var [hodnotenia, message] = cache.get('get_hodnotenia', zapisnyListKey) || [];
 
     if (!hodnotenia) {
@@ -36,7 +32,7 @@ export var MojePredmetyPageContent = createReactClass({
     }
 
     var [hodnotenia, header] = sortTable(
-      hodnotenia, MojePredmetyColumns, this.props.query, 'predmetySort');
+      hodnotenia, MojePredmetyColumns, query, 'predmetySort');
 
     var stats = coursesStats(hodnotenia);
 
@@ -46,7 +42,7 @@ export var MojePredmetyPageContent = createReactClass({
         {hodnotenia.map((hodnotenie) =>
           <tr key={hodnotenie.hodn_key} className={classForSemester(hodnotenie.semester)}>
             <td>{hodnotenie.semester}</td>
-            <td><Link href={{ ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: hodnotenie.predmet_key, modalAkademickyRok: hodnotenie.akademicky_rok }}>
+            <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: hodnotenie.predmet_key, modalAkademickyRok: hodnotenie.akademicky_rok }}>
               {hodnotenie.nazov}
             </Link></td>
             <td>{hodnotenie.skratka}</td>
@@ -77,28 +73,19 @@ export var MojePredmetyPageContent = createReactClass({
           {message && <tr><td colSpan={MojePredmetyColumns.length}>{message}</td></tr>}
       </tfoot>
     </table>;
-  },
-
-  render() {
-    var {zapisnyListKey} = this.props.query;
-    return <React.Fragment>
-      <div className="header">
-        <PageTitle>Moje predmety</PageTitle>
-      </div>
-      {this.renderContent()}
-    </React.Fragment>;
-  }
-});
+  });
+}
 
 
-export var MojePredmetyPage = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
-
-  render() {
-    return <PageLayout query={this.props.query}>
-      <ZapisnyListSelector query={this.props.query} component={MojePredmetyPageContent} />
-    </PageLayout>;
-  }
-});
+export function MojePredmetyPage() {
+  return (
+    <PageLayout>
+      <ZapisnyListSelector>
+        <div className="header">
+          <PageTitle>Moje predmety</PageTitle>
+        </div>
+        <MojePredmetyPageContent />
+      </ZapisnyListSelector>
+    </PageLayout>
+  );
+}

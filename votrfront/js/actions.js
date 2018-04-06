@@ -13,13 +13,13 @@ import { RegisterPredmetovPage } from './RegisterPredmetovPage';
 import { ZapisZPlanuPage, ZapisZPonukyPage } from './ZapisPage';
 import { ZoznamPrihlasenychNaTerminModal } from './ZoznamPrihlasenychNaTermin';
 import { ModalBase, PageLayout } from './layout';
-import { navigate } from './router';
+import { navigate, queryConsumer } from './router';
 import { AnketaPopup } from './AnketaPopup';
 
 
 export var NotFoundPage = createReactClass({
   render() {
-    return <PageLayout query={this.props.query}>
+    return <PageLayout>
       <p>Action not found!</p>
     </PageLayout>;
   }
@@ -47,29 +47,23 @@ export var modalActions = {
 };
 
 
-export var App = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
-
-  handleClose() {
-    if (Votr.ajaxError) return;
-    navigate(_.omit(
-        this.props.query, (value, key) => key.substring(0, 5) == 'modal'));
-  },
-
-  render() {
-    var query = this.props.query;
+export function App() {
+  return queryConsumer(query => {
     var action = query.action || 'index';
     var mainComponent = actions[action] || NotFoundPage;
     var modalComponent = Votr.ajaxError ? ErrorModal : modalActions[query.modal];
 
+    function handleClose() {
+      if (Votr.ajaxError) return;
+      navigate(_.omit(query, (value, key) => key.substring(0, 5) == 'modal'));
+    }
+
     var C = mainComponent;
     return <React.Fragment>
-      <C query={query} />
-      <ModalBase query={query} component={modalComponent} onClose={this.handleClose} />
+      <C />
+      <ModalBase component={modalComponent} onClose={handleClose} />
       <LogViewer />
       <AnketaPopup />
     </React.Fragment>;
-  }
-});
+  });
+}

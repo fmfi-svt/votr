@@ -2,18 +2,14 @@
 import { ZapisnyListSelector } from './ZapisnyListSelector';
 import { CacheRequester, Loading } from './ajax';
 import { PageLayout, PageTitle } from './layout';
-import { Link } from './router';
+import { Link, queryConsumer } from './router';
 import { humanizeBoolean } from './humanizeAISData';
 
 
-export var PriebezneHodnoteniaPageContent = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
-    
-  renderContent() {
+export function PriebezneHodnoteniaPageContent() {
+  return queryConsumer(query => {
     var cache = new CacheRequester();
-    var {zapisnyListKey} = this.props.query;
+    var {zapisnyListKey} = query;
     var [priebezneHodnotenia, message] = cache.get('get_priebezne_hodnotenia', zapisnyListKey) || [];
 
     if (!priebezneHodnotenia) {
@@ -28,7 +24,7 @@ export var PriebezneHodnoteniaPageContent = createReactClass({
       <React.Fragment>
       {priebezneHodnotenia.map((priebHod) =>
         <React.Fragment>
-          <h2><Link href={{ ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: priebHod.predmet_key, modalAkademickyRok: priebHod.akademicky_rok }}>
+          <h2><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: priebHod.predmet_key, modalAkademickyRok: priebHod.akademicky_rok }}>
                 {priebHod.nazov}</Link>
           </h2>
           <table className="table table-condensed table-bordered table-striped table-hover">
@@ -58,26 +54,19 @@ export var PriebezneHodnoteniaPageContent = createReactClass({
       {message && <strong>{message}</strong>}
       </React.Fragment>
     );
-  },
-  
-  render() {
-    return <React.Fragment>
-      <div className="header">
-        <PageTitle>Priebežné hodnotenia</PageTitle>
-      </div>
-      {this.renderContent()}
-    </React.Fragment>;
-  }
-});
+  });
+}
 
-export var PriebezneHodnoteniaPage = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
 
-  render() {
-    return <PageLayout query={this.props.query}>
-      <ZapisnyListSelector query={this.props.query} component={PriebezneHodnoteniaPageContent} />
-    </PageLayout>;
-  }
-});
+export function PriebezneHodnoteniaPage() {
+  return (
+    <PageLayout>
+      <ZapisnyListSelector>
+        <div className="header">
+          <PageTitle>Priebežné hodnotenia</PageTitle>
+        </div>
+        <PriebezneHodnoteniaPageContent />
+      </ZapisnyListSelector>
+    </PageLayout>
+  );
+}

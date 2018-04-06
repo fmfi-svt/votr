@@ -189,7 +189,7 @@ export var LoginPage = createReactClass({
 
     return <React.Fragment>
       {content}
-      <ModalBase query={{}} component={modalComponent} onClose={this.closeModal} />
+      <ModalBase component={modalComponent} onClose={this.closeModal} />
     </React.Fragment>;
   }
 });

@@ -1,6 +1,7 @@
 
 import { CacheRequester, Loading } from './ajax';
 import { PageLayout, PageTitle } from './layout';
+import { queryConsumer } from './router';
 import { sortAs, sortTable } from './sorting';
 
 
@@ -29,43 +30,45 @@ export var PrehladZapisnyListColumns = [
 PrehladZapisnyListColumns.defaultOrder = 'd0d3';
 
 
-export var PrehladStudiaPage = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
-
-  renderObdobie(label, rpcName, arg) {
-    var cache = new CacheRequester();
-    var result = cache.get(rpcName, arg);
-    return <tr>
-      <th>{label}</th>
+export function PrehladStudiaObdobie(props) {
+  var cache = new CacheRequester();
+  var result = cache.get(props.rpc, props.semester);
+  return (
+    <tr>
+      <th>{props.label}</th>
       <td>
         {result ?
           result.obdobie_od + " \u2013 " + result.obdobie_do :
           <Loading requests={cache.missing} />}
       </td>
-    </tr>;
-  },
+    </tr>
+  );
+}
 
-  renderObdobia() {
+
+export function PrehladStudiaObdobia() {
+  return queryConsumer(query => {
     // Obdobia predsalen neukazujeme, lebo AIS ma vacsinou zle informacie
     // (skuskove je umelo predlzene kvoli moznosti zapisovat znamky, apod) a
     // nechceme byt matuci. Zapnut sa daju tymto schovanym query flagom.
-    if (!this.props.query.reallyShowDates) {
+    if (!query.reallyShowDates) {
       return null;
     }
 
     return <table className="table table-narrow table-condensed table-bordered table-hover">
       <tbody>
-        {this.renderObdobie("Zimný semester", 'get_semester_obdobie', 'Z')}
-        {this.renderObdobie("Zimné skúškové", 'get_skuskove_obdobie', 'Z')}
-        {this.renderObdobie("Letný semester", 'get_semester_obdobie', 'L')}
-        {this.renderObdobie("Letné skúškové", 'get_skuskove_obdobie', 'L')}
+        <PrehladStudiaObdobie label="Zimný semester" rpc="get_semester_obdobie" semester="Z" />
+        <PrehladStudiaObdobie label="Zimné skúškové" rpc="get_skuskove_obdobie" semester="Z" />
+        <PrehladStudiaObdobie label="Letný semester" rpc="get_semester_obdobie" semester="L" />
+        <PrehladStudiaObdobie label="Letné skúškové" rpc="get_skuskove_obdobie" semester="L" />
       </tbody>
     </table>;
-  },
+  });
+}
 
-  renderStudia() {
+
+export function PrehladStudiaStudia() {
+  return queryConsumer(query => {
     var cache = new CacheRequester();
 
     var studia = cache.get('get_studia');
@@ -75,7 +78,7 @@ export var PrehladStudiaPage = createReactClass({
     }
 
     var [studia, header] = sortTable(
-      studia, PrehladStudiumColumns, this.props.query, 'studiaSort');
+      studia, PrehladStudiumColumns, query, 'studiaSort');
 
     var message = studia.length ? null : "V AISe nemáte žiadne štúdiá.";
 
@@ -95,9 +98,12 @@ export var PrehladStudiaPage = createReactClass({
       </tbody>
       {message && <tfoot><tr><td colSpan={PrehladStudiumColumns.length}>{message}</td></tr></tfoot>}
     </table>;
-  },
+  });
+}
 
-  renderZapisneListy() {
+
+export function PrehladStudiaZapisneListy() {
+  return queryConsumer(query => {
     var cache = new CacheRequester();
 
     var studia = cache.get('get_studia');
@@ -117,7 +123,7 @@ export var PrehladStudiaPage = createReactClass({
 
     var [zapisneListy, header] = sortTable(
       zapisneListy, PrehladZapisnyListColumns,
-      this.props.query, 'zapisneListySort');
+      query, 'zapisneListySort');
 
     var showTable = zapisneListy.length || cache.loadedAll;
 
@@ -141,18 +147,21 @@ export var PrehladStudiaPage = createReactClass({
           {message && <tfoot><tr><td colSpan={PrehladZapisnyListColumns.length}>{message}</td></tr></tfoot>}
         </table>}
     </React.Fragment>;
-  },
+  });
+}
 
-  render() {
-    return <PageLayout query={this.props.query}>
+
+export function PrehladStudiaPage() {
+  return (
+    <PageLayout>
       <div className="header">
         <PageTitle>Prehľad štúdia</PageTitle>
       </div>
-      {this.renderObdobia()}
+      <PrehladStudiaObdobia />
       <h2>Zoznam štúdií</h2>
-      {this.renderStudia()}
+      <PrehladStudiaStudia />
       <h2>Zoznam zápisných listov</h2>
-      {this.renderZapisneListy()}
-    </PageLayout>;
-  }
-});
+      <PrehladStudiaZapisneListy />
+    </PageLayout>
+  );
+}

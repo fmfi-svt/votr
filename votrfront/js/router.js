@@ -26,6 +26,14 @@ function parseQueryString(queryString) {
 }
 
 
+export var QueryContext = React.createContext();
+
+
+export function queryConsumer(callback) {
+  return <QueryContext.Consumer>{callback}</QueryContext.Consumer>;
+}
+
+
 export var Root = createReactClass({
   handlePopState() {
     Votr.appRoot.forceUpdate();
@@ -47,7 +55,11 @@ export var Root = createReactClass({
       this.lastQueryString = queryString;
     }
 
-    return <this.props.app query={this.query} />;
+    return (
+      <QueryContext.Provider value={this.query}>
+        <this.props.app />
+      </QueryContext.Provider>
+    );
   }
 });
 

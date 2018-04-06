@@ -1,6 +1,7 @@
 
 import { CacheRequester, Loading } from './ajax';
 import { Modal } from './layout';
+import { queryConsumer } from './router';
 import { sortAs, sortTable } from './sorting';
 
 
@@ -13,14 +14,10 @@ export var ZoznamPrihlasenychNaTerminColumns = [
 ];
 
 
-export var ZoznamPrihlasenychNaTerminModal = createReactClass({
-  propTypes: {
-    query: PropTypes.object.isRequired
-  },
-
-  renderContent() {
+function ZoznamPrihlasenychNaTerminModalContent() {
+  return queryConsumer(query => {
     var cache = new CacheRequester();
-    var {modalTerminKey} = this.props.query;
+    var {modalTerminKey} = query;
 
     if (!modalTerminKey) return null;
     var studenti = cache.get('get_prihlaseni_studenti', modalTerminKey);
@@ -31,7 +28,7 @@ export var ZoznamPrihlasenychNaTerminModal = createReactClass({
 
     var [studenti, header] = sortTable(
       studenti, ZoznamPrihlasenychNaTerminColumns,
-      this.props.query, 'modalStudentiSort');
+      query, 'modalStudentiSort');
 
     var message = studenti.length ? null : "Na termín nie sú prihlásení žiadni študenti.";
 
@@ -52,11 +49,13 @@ export var ZoznamPrihlasenychNaTerminModal = createReactClass({
       </tbody>
       {message && <tfoot><tr><td colSpan={ZoznamPrihlasenychNaTerminColumns.length}>{message}</td></tr></tfoot>}
     </table>;
-  },
+  });
+}
 
+export var ZoznamPrihlasenychNaTerminModal = createReactClass({
   render() {
     return <Modal title="Zoznam prihlásených na termín">
-      {this.renderContent()}
+      <ZoznamPrihlasenychNaTerminModalContent />
     </Modal>;
   }
 });
