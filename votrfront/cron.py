@@ -18,6 +18,8 @@ def cron(app):
         if now - mtime > app.settings.session_max_age:
             os.unlink(path)
 
+    return  # TODO: implement new logs structure.
+
     for sessid in os.listdir(app.var_path('logs')):
         if os.path.exists(app.var_path('sessions', sessid)):
             continue

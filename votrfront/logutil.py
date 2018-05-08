@@ -67,6 +67,7 @@ def _connect(app):
 def locate(app, sessid):
     options = [
         app.var_path('logs', sessid),
+        app.var_path('logs', sessid + '.gz'),
         app.var_path('oldlogs', sessid[0:2], sessid + '.gz'),
         sessid,
     ]

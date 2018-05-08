@@ -1,5 +1,6 @@
 
 from base64 import b64decode, b64encode
+from datetime import datetime
 import traceback
 from werkzeug.contrib.sessions import generate_key
 from werkzeug.exceptions import InternalServerError
@@ -60,7 +61,7 @@ def finish_login(request, destination, params):
     else:
         fladgejt_params = params
 
-    sessid = generate_key()
+    sessid = datetime.utcnow().strftime('%Y%m%d_') + generate_key()
     with sessions.open_log_file(request, sessid) as log_file:
         logger = Logger()
         logger.log_file = log_file

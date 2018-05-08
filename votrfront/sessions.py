@@ -1,8 +1,9 @@
 
 import contextlib
 import fcntl
-import pickle
+import gzip
 import os
+import pickle
 from aisikl.exceptions import LoggedOutError
 
 
@@ -20,14 +21,15 @@ def set_session_cookie(request, response, sessid):
 
 def get_filename(request, sessid, *, logs=False):
     for ch in sessid:
-        if ch not in '0123456789abcdef':
+        if ch not in '0123456789abcdef_':
             raise ValueError('Invalid sessid')
 
     return request.app.var_path('logs' if logs else 'sessions', sessid)
 
 
 def open_log_file(request, sessid):
-    return open(get_filename(request, sessid, logs=True), 'a', encoding='utf8')
+    filename = get_filename(request, sessid, logs=True) + '.gz'
+    return gzip.open(filename, 'at', encoding='utf8')
 
 
 def create(request, sessid, session):
