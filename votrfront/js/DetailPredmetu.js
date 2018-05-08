@@ -3,7 +3,7 @@ import { ZoznamPrihlasenychNaTerminColumns } from './ZoznamPrihlasenychNaTermin'
 import { CacheRequester, Loading } from './ajax';
 import { Modal } from './layout';
 import { queryConsumer } from './router';
-import { sortAs, sortTable } from './sorting';
+import { sortAs, SortableTable } from './sorting';
 
 
 export var DetailPredmetuUciteliaColumns = [
@@ -61,23 +61,22 @@ function DetailPredmetuUcitelia() {
       return <Loading requests={cache.missing} />;
     }
 
-    var [ucitelia, header] = sortTable(
-      ucitelia, DetailPredmetuUciteliaColumns, query, 'modalUciteliaSort');
-
     var message = ucitelia.length ? null : "Predmet nemá v AISe žiadnych učiteľov.";
 
-    return <table className="table table-condensed table-bordered table-striped table-hover">
-      <thead>{header}</thead>
-      <tbody>
-        {ucitelia.map((ucitel, index) =>
-          <tr key={index}>
+    return (
+      <SortableTable
+        items={ucitelia}
+        columns={DetailPredmetuUciteliaColumns}
+        queryKey="modalUciteliaSort"
+        row={(ucitel) => (
+          <tr>
             <td>{ucitel.plne_meno}</td>
             <td>{ucitel.typ}</td>
           </tr>
         )}
-      </tbody>
-      {message && <tfoot><tr><td colSpan={DetailPredmetuUciteliaColumns.length}>{message}</td></tr></tfoot>}
-    </table>;
+        message={message}
+      />
+    );
   });
 }
 
@@ -99,16 +98,15 @@ function DetailPredmetuZapisaniStudenti() {
       return "Dáta pre predmet neboli nájdené.";
     }
 
-    var [studenti, header] = sortTable(
-      studenti, DetailPredmetuStudentiColumns, query, 'modalStudentiSort');
-
     var message = studenti.length ? null : "Predmet nemá v AISe žiadnych zapísaných študentov.";
 
-    return <table className="table table-condensed table-bordered table-striped table-hover">
-      <thead>{header}</thead>
-      <tbody>
-        {studenti.map((student, index) =>
-          <tr key={index}>
+    return (
+      <SortableTable
+        items={studenti}
+        columns={DetailPredmetuStudentiColumns}
+        queryKey="modalStudentiSort"
+        row={(student) => (
+          <tr>
             <td>{student.plne_meno}</td>
             <td>{student.sp_skratka}</td>
             <td>{student.rocnik}</td>
@@ -118,9 +116,9 @@ function DetailPredmetuZapisaniStudenti() {
             <td>{student.datum_prihlasenia}</td>
           </tr>
         )}
-      </tbody>
-      {message && <tfoot><tr><td colSpan={DetailPredmetuStudentiColumns.length}>{message}</td></tr></tfoot>}
-    </table>;
+        message={message}
+      />
+    );
   });
 }
 

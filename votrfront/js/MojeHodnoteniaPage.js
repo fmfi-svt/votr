@@ -6,7 +6,7 @@ import { coursesStats, renderWeightedStudyAverage } from './coursesStats';
 import { classForSemester, humanizeNazovPriemeru, humanizeTerminHodnotenia, humanizeTypVyucby, plural } from './humanizeAISData';
 import { PageLayout, PageTitle } from './layout';
 import { Link, queryConsumer } from './router';
-import { sortAs, sortTable } from './sorting';
+import { sortAs, SortableTable } from './sorting';
 
 
 export var MojeHodnoteniaColumns = [
@@ -39,16 +39,15 @@ export function MojeHodnoteniaHodnoteniaTable() {
       return <Loading requests={cache.missing} />;
     }
 
-    var [hodnotenia, header] = sortTable(
-      hodnotenia, MojeHodnoteniaColumns, query, 'predmetySort');
-
     var stats = coursesStats(hodnotenia);
 
-    return <table className="table table-condensed table-bordered table-striped table-hover">
-      <thead>{header}</thead>
-      <tbody>
-        {hodnotenia.map((hodnotenie) =>
-          <tr key={hodnotenie.hodn_key} className={classForSemester(hodnotenie.semester)}>
+    return (
+      <SortableTable
+        items={hodnotenia}
+        columns={MojeHodnoteniaColumns}
+        queryKey="predmetySort"
+        row={(hodnotenie) => (
+          <tr className={classForSemester(hodnotenie.semester)}>
             <td>{hodnotenie.akademicky_rok}</td>
             <td>{hodnotenie.semester}</td>
             <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: hodnotenie.predmet_key, modalAkademickyRok: hodnotenie.akademicky_rok }}>
@@ -66,8 +65,7 @@ export function MojeHodnoteniaHodnoteniaTable() {
             <td>{humanizeTerminHodnotenia(hodnotenie.hodn_termin)}</td>
           </tr>
         )}
-      </tbody>
-      <tfoot>
+        footer={
           <tr>
             <td colSpan="4">Celkom {stats.spolu.count} {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}</td>
             <td>{stats.spolu.creditsCount}</td>
@@ -76,9 +74,10 @@ export function MojeHodnoteniaHodnoteniaTable() {
             <td></td>
             <td></td>
           </tr>
-          {message && <tr><td colSpan={MojeHodnoteniaColumns.length}>{message}</td></tr>}
-      </tfoot>
-    </table>;
+        }
+        message={message}
+      />
+    );
   });
 }
 
@@ -102,18 +101,17 @@ export function MojeHodnoteniaPriemeryTable() {
       return <Loading requests={cache.missing} />;
     }
 
-    var [priemery, header] = sortTable(
-      priemery, MojePriemeryColumns, query, 'priemerySort');
-
     if (!message && !priemery.length) {
       message = "V AISe zatiaľ nie sú vypočítané žiadne priemery.";
     }
 
-    return <table className="table table-condensed table-bordered table-striped table-hover">
-      <thead>{header}</thead>
-      <tbody>
-        {priemery.map((priemer, index) =>
-          <tr key={index}>
+    return (
+      <SortableTable
+        items={priemery}
+        columns={MojePriemeryColumns}
+        queryKey="priemerySort"
+        row={(priemer) => (
+          <tr>
             <td>{priemer.datum_vypoctu}</td>
             <td>{humanizeNazovPriemeru(priemer.nazov)}</td>
             <td>{priemer.akademicky_rok}</td>
@@ -125,9 +123,9 @@ export function MojeHodnoteniaPriemeryTable() {
             <td>{priemer.vazeny_priemer}</td>
           </tr>
         )}
-      </tbody>
-      {message && <tfoot><tr><td colSpan={MojePriemeryColumns.length}>{message}</td></tr></tfoot>}
-    </table>;
+        message={message}
+      />
+    );
   });
 }
 

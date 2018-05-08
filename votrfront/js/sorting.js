@@ -1,5 +1,5 @@
 
-import { navigate } from './router';
+import { navigate, queryConsumer } from './router';
 
 
 export var sortAs = {};
@@ -64,8 +64,6 @@ export function sortTable(items, columns, query, queryKey) {
     return a.index - b.index;
   });
 
-  items = items.map((a) => a.item);
-
   function handleClick(event) {
     var index = event.currentTarget.getAttribute('data-index');
     var [label, prop, process, preferDesc] = columns[index];
@@ -91,3 +89,30 @@ export function sortTable(items, columns, query, queryKey) {
 
   return [items, header];
 };
+
+export function SortableTable(props) {
+  return queryConsumer(query => {
+    var { items, columns, queryKey, row, footer, message, withButtons } = props;
+    var [sortedItems, header] = sortTable(items, columns, query, queryKey);
+    var className = "table table-condensed table-bordered table-striped table-hover" + (withButtons ? " with-buttons-table" : "");
+
+    return (
+      <table className={className}>
+        <thead>{header}</thead>
+        <tbody>
+          {sortedItems.map((item) => (
+            <React.Fragment key={item.index}>
+              {row(item.item)}
+            </React.Fragment>
+          ))}
+        </tbody>
+        {(footer || message) && (
+          <tfoot>
+            {footer}
+            {message && <tr><td colSpan={columns.length}>{message}</td></tr>}
+          </tfoot>
+        )}
+      </table>
+    );
+  });
+}

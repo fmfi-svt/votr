@@ -2,7 +2,7 @@
 import { CacheRequester, Loading } from './ajax';
 import { Modal } from './layout';
 import { queryConsumer } from './router';
-import { sortAs, sortTable } from './sorting';
+import { sortAs, SortableTable } from './sorting';
 
 
 export var ZoznamPrihlasenychNaTerminColumns = [
@@ -26,17 +26,19 @@ function ZoznamPrihlasenychNaTerminModalContent() {
       return <Loading requests={cache.missing} />;
     }
 
-    var [studenti, header] = sortTable(
+    var [studenti, header] = SortableTable(
       studenti, ZoznamPrihlasenychNaTerminColumns,
       query, 'modalStudentiSort');
 
     var message = studenti.length ? null : "Na termín nie sú prihlásení žiadni študenti.";
 
-    return <table className="table table-condensed table-bordered table-striped table-hover">
-      <thead>{header}</thead>
-      <tbody>
-        {studenti.map((student, index) =>
-          <tr key={index}>
+    return (
+      <SortableTable
+        items={studenti}
+        columns={ZoznamPrihlasenychNaTerminColumns}
+        queryKey="modalStudentiSort"
+        row={(student) => (
+          <tr>
             <td>{student.plne_meno}</td>
             <td>{student.sp_skratka}</td>
             <td>{student.rocnik}</td>
@@ -46,9 +48,9 @@ function ZoznamPrihlasenychNaTerminModalContent() {
             <td>{student.datum_prihlasenia}</td>
           </tr>
         )}
-      </tbody>
-      {message && <tfoot><tr><td colSpan={ZoznamPrihlasenychNaTerminColumns.length}>{message}</td></tr></tfoot>}
-    </table>;
+        message={message}
+      />
+    );
   });
 }
 

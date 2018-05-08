@@ -5,7 +5,7 @@ import { coursesStats, renderWeightedStudyAverage } from './coursesStats';
 import { classForSemester, humanizeTerminHodnotenia, humanizeTypVyucby, plural } from './humanizeAISData';
 import { PageLayout, PageTitle } from './layout';
 import { Link, queryConsumer } from './router';
-import { sortAs, sortTable } from './sorting';
+import { sortAs, SortableTable } from './sorting';
 
 
 export var MojePredmetyColumns = [
@@ -31,16 +31,15 @@ export function MojePredmetyPageContent() {
       return <Loading requests={cache.missing} />;
     }
 
-    var [hodnotenia, header] = sortTable(
-      hodnotenia, MojePredmetyColumns, query, 'predmetySort');
-
     var stats = coursesStats(hodnotenia);
 
-    return <table className="table table-condensed table-bordered table-striped table-hover">
-      <thead>{header}</thead>
-      <tbody>
-        {hodnotenia.map((hodnotenie) =>
-          <tr key={hodnotenie.hodn_key} className={classForSemester(hodnotenie.semester)}>
+    return (
+      <SortableTable
+        items={hodnotenia}
+        columns={MojePredmetyColumns}
+        queryKey="predmetySort"
+        row={(hodnotenie) => (
+          <tr className={classForSemester(hodnotenie.semester)}>
             <td>{hodnotenie.semester}</td>
             <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: hodnotenie.predmet_key, modalAkademickyRok: hodnotenie.akademicky_rok }}>
               {hodnotenie.nazov}
@@ -57,8 +56,7 @@ export function MojePredmetyPageContent() {
             <td>{humanizeTerminHodnotenia(hodnotenie.hodn_termin)}</td>
           </tr>
         )}
-      </tbody>
-      <tfoot>
+        footer={
           <tr>
             <td colSpan="3">
               Celkom {stats.spolu.count} {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
@@ -70,9 +68,10 @@ export function MojePredmetyPageContent() {
             <td></td>
             <td></td>
           </tr>
-          {message && <tr><td colSpan={MojePredmetyColumns.length}>{message}</td></tr>}
-      </tfoot>
-    </table>;
+        }
+        message={message}
+      />
+    );
   });
 }
 

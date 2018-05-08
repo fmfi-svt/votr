@@ -2,7 +2,7 @@
 import { CacheRequester, Loading } from './ajax';
 import { PageLayout, PageTitle } from './layout';
 import { queryConsumer } from './router';
-import { sortAs, sortTable } from './sorting';
+import { sortAs, SortableTable } from './sorting';
 
 
 // TODO: Pridat kadejake sumarne informacie, aby to vyzeralo ako dashboard.
@@ -68,86 +68,78 @@ export function PrehladStudiaObdobia() {
 
 
 export function PrehladStudiaStudia() {
-  return queryConsumer(query => {
-    var cache = new CacheRequester();
+  var cache = new CacheRequester();
 
-    var studia = cache.get('get_studia');
+  var studia = cache.get('get_studia');
 
-    if (!studia) {
-      return <Loading requests={cache.missing} />;
-    }
+  if (!studia) {
+    return <Loading requests={cache.missing} />;
+  }
 
-    var [studia, header] = sortTable(
-      studia, PrehladStudiumColumns, query, 'studiaSort');
+  var message = studia.length ? null : "V AISe nemáte žiadne štúdiá.";
 
-    var message = studia.length ? null : "V AISe nemáte žiadne štúdiá.";
-
-    return <table className="table table-condensed table-bordered table-striped table-hover">
-      <thead>{header}</thead>
-      <tbody>
-        {studia.map((studium) =>
-          <tr key={studium.studium_key}>
-            <td>{studium.sp_popis} ({studium.sp_skratka})</td>
-            <td>{studium.rok_studia}</td>
-            <td>{studium.sp_dlzka}</td>
-            <td>{studium.zaciatok}</td>
-            <td>{studium.koniec}</td>
-            <td>{studium.sp_doplnujuce_udaje.replace(/^\((.*)\)$/, '$1')}</td>
-          </tr>
-        )}
-      </tbody>
-      {message && <tfoot><tr><td colSpan={PrehladStudiumColumns.length}>{message}</td></tr></tfoot>}
-    </table>;
-  });
+  return (
+    <SortableTable
+      items={studia}
+      columns={PrehladStudiumColumns}
+      queryKey="studiaSort"
+      row={(studium) => (
+        <tr>
+          <td>{studium.sp_popis} ({studium.sp_skratka})</td>
+          <td>{studium.rok_studia}</td>
+          <td>{studium.sp_dlzka}</td>
+          <td>{studium.zaciatok}</td>
+          <td>{studium.koniec}</td>
+          <td>{studium.sp_doplnujuce_udaje.replace(/^\((.*)\)$/, '$1')}</td>
+        </tr>
+      )}
+      message={message}
+    />
+  );
 }
 
 
 export function PrehladStudiaZapisneListy() {
-  return queryConsumer(query => {
-    var cache = new CacheRequester();
+  var cache = new CacheRequester();
 
-    var studia = cache.get('get_studia');
+  var studia = cache.get('get_studia');
 
-    if (!studia) {
-      return <Loading requests={cache.missing} />;
-    }
+  if (!studia) {
+    return <Loading requests={cache.missing} />;
+  }
 
-    var zapisneListy = [];
+  var zapisneListy = [];
 
-    if (studia) studia.forEach((studium) => {
-      var mojeZapisneListy = cache.get('get_zapisne_listy', studium.studium_key);
-      if (mojeZapisneListy) mojeZapisneListy.forEach((zapisnyList) => {
-        zapisneListy.push(zapisnyList);
-      });
+  if (studia) studia.forEach((studium) => {
+    var mojeZapisneListy = cache.get('get_zapisne_listy', studium.studium_key);
+    if (mojeZapisneListy) mojeZapisneListy.forEach((zapisnyList) => {
+      zapisneListy.push(zapisnyList);
     });
-
-    var [zapisneListy, header] = sortTable(
-      zapisneListy, PrehladZapisnyListColumns,
-      query, 'zapisneListySort');
-
-    var showTable = zapisneListy.length || cache.loadedAll;
-
-    var message = zapisneListy.length ? null : "V AISe nemáte žiadne zápisné listy.";
-
-    return <React.Fragment>
-      {!cache.loadedAll && <Loading requests={cache.missing} />}
-      {showTable &&
-        <table className="table table-condensed table-bordered table-striped table-hover">
-          <thead>{header}</thead>
-          <tbody>
-            {zapisneListy.map((zapisnyList) =>
-              <tr key={zapisnyList.zapisny_list_key}>
-                <td>{zapisnyList.akademicky_rok}</td>
-                <td>{zapisnyList.sp_popis} ({zapisnyList.sp_skratka})</td>
-                <td>{zapisnyList.rocnik}</td>
-                <td>{zapisnyList.datum_zapisu}</td>
-              </tr>
-            )}
-          </tbody>
-          {message && <tfoot><tr><td colSpan={PrehladZapisnyListColumns.length}>{message}</td></tr></tfoot>}
-        </table>}
-    </React.Fragment>;
   });
+
+  var showTable = zapisneListy.length || cache.loadedAll;
+
+  var message = zapisneListy.length ? null : "V AISe nemáte žiadne zápisné listy.";
+
+  return <React.Fragment>
+    {!cache.loadedAll && <Loading requests={cache.missing} />}
+    {showTable && (
+      <SortableTable
+        items={zapisneListy}
+        columns={PrehladZapisnyListColumns}
+        queryKey="zapisneListySort"
+        row={(zapisnyList) => (
+          <tr>
+            <td>{zapisnyList.akademicky_rok}</td>
+            <td>{zapisnyList.sp_popis} ({zapisnyList.sp_skratka})</td>
+            <td>{zapisnyList.rocnik}</td>
+            <td>{zapisnyList.datum_zapisu}</td>
+          </tr>
+        )}
+        message={message}
+      />
+    )}
+  </React.Fragment>;
 }
 
 

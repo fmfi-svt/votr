@@ -3,7 +3,7 @@ import { ZapisnyListSelector } from './ZapisnyListSelector';
 import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
 import { PageLayout, PageTitle } from './layout';
 import { Link, queryConsumer } from './router';
-import { sortAs, sortTable } from './sorting';
+import { sortAs, SortableTable } from './sorting';
 
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
@@ -118,9 +118,6 @@ export function MojeSkuskyPageContent() {
     terminyPrihlasene.forEach((termin) => terminy[termin.termin_key] = termin);
     terminy = _.values(terminy);
 
-    var [terminy, header] = sortTable(
-      terminy, MojeSkuskyColumns, query, 'skuskySort');
-
     var message = terminy.length ? null : "Zatiaľ nie sú vypísané žiadne termíny.";
 
     function handleClickICal() {
@@ -130,39 +127,40 @@ export function MojeSkuskyPageContent() {
     }
 
     return <React.Fragment>
-      <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
-        <thead>{header}</thead>
-        <tbody>
-          {terminy.map((termin) =>
-            <tr key={termin.termin_key}>
-              {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
-                <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
-                <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
-              <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
-                {termin.nazov_predmetu}
-              </Link></td>
-              <td>{termin.datum}</td>
-              <td>{termin.cas}</td>
-              <td>{termin.miestnost}</td>
-              <td>{termin.hodnotiaci}</td>
-              <td><Link href={{ ...query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
-                {termin.pocet_prihlasenych +
-                 (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
-              </Link></td>
-              <td>{termin.poznamka}</td>
-              <td>{termin.prihlasovanie}</td>
-              <td>{termin.odhlasovanie}</td>
-              <td>
-                {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
-                 termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
-                 null}
-                 <SkuskyRegisterButton termin={termin}/>
-              </td>
-            </tr>
-          )}
-        </tbody>
-        {message && <tfoot><tr><td colSpan={MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
-      </table>
+      <SortableTable
+        withButtons={true}
+        items={terminy}
+        columns={MojeSkuskyColumns}
+        queryKey="skuskySort"
+        row={(termin) => (
+          <tr>
+            {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
+              <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
+              <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
+            <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
+              {termin.nazov_predmetu}
+            </Link></td>
+            <td>{termin.datum}</td>
+            <td>{termin.cas}</td>
+            <td>{termin.miestnost}</td>
+            <td>{termin.hodnotiaci}</td>
+            <td><Link href={{ ...query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
+              {termin.pocet_prihlasenych +
+               (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
+            </Link></td>
+            <td>{termin.poznamka}</td>
+            <td>{termin.prihlasovanie}</td>
+            <td>{termin.odhlasovanie}</td>
+            <td>
+              {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
+               termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
+               null}
+               <SkuskyRegisterButton termin={termin}/>
+            </td>
+          </tr>
+        )}
+        message={message}
+      />
       {terminy.length && <button onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}
     </React.Fragment>;
   });

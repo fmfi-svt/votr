@@ -98,14 +98,14 @@ function computeBenchmarks() {
 }
 
 
-export function LogViewerBenchmarkContent() {
-  var benchmarks = this.computeBenchmarks();
+export function LogViewerBenchmarkContent(props) {
+  var benchmarks = computeBenchmarks();
 
   return (
     <div className="log-viewer">
       <div className="options">
-        {this.props.closeButton}
-        {this.props.modeButton}
+        {props.closeButton}
+        {props.modeButton}
       </div>
 
       <div className="scroll">

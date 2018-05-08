@@ -5,7 +5,7 @@ import { coursesStats } from './coursesStats';
 import { humanizeTypVyucby, plural } from './humanizeAISData';
 import { FormItem, PageLayout, PageTitle } from './layout';
 import { Link, navigate, queryConsumer } from './router';
-import { sortAs, sortTable } from './sorting';
+import { sortAs, SortableTable } from './sorting';
 
 
 export var ZapisZPlanuColumns = [
@@ -104,7 +104,7 @@ export function ZapisTableFooter(props) {
   var jedinySemester = _.keys(semestre).length <= 1;
 
   return (
-    <tfoot>
+    <React.Fragment>
       {_.map(bloky, (blok, skratka) => {
         var stats = coursesStats(blok);
         return <tr key={skratka}>
@@ -121,7 +121,7 @@ export function ZapisTableFooter(props) {
           <td colSpan="3"></td>
         </tr>;
       })}
-    </tfoot>
+    </React.Fragment>
   );
 }
 
@@ -248,23 +248,24 @@ export class ZapisTable extends React.Component {
       </button>
     </div>;
 
-    var [predmety, header] = sortTable(_.values(predmety), columns, query, 'predmetySort');
-
     return <form onSubmit={this.handleSave}>
       {saveButton}
-      <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
-        <thead>{header}</thead>
-        <tbody>
-          {predmety.map((predmet) => {
-            var predmet_key = predmet.predmet_key;
-            var href = { ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: this.props.akademickyRok };
-            var nazov = <Link href={href}>{predmet.nazov}</Link>;
-            if (predmet.moje) nazov = <strong>{nazov}</strong>;
-            if (predmet.aktualnost) nazov = <React.Fragment><del>{nazov}</del> (nekoná sa)</React.Fragment>;
-            var blok = predmet.blok_skratka;
-            if (predmet.blok_nazov) blok = <abbr title={predmet.blok_nazov}>{blok}</abbr>;
+      <SortableTable
+        withButtons={true}
+        items={_.values(predmety)}
+        columns={columns}
+        queryKey="predmetySort"
+        row={(predmet) => {
+          var predmet_key = predmet.predmet_key;
+          var href = { ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: this.props.akademickyRok };
+          var nazov = <Link href={href}>{predmet.nazov}</Link>;
+          if (predmet.moje) nazov = <strong>{nazov}</strong>;
+          if (predmet.aktualnost) nazov = <React.Fragment><del>{nazov}</del> (nekoná sa)</React.Fragment>;
+          var blok = predmet.blok_skratka;
+          if (predmet.blok_nazov) blok = <abbr title={predmet.blok_nazov}>{blok}</abbr>;
 
-            return <tr key={predmet_key} className={classes[predmet_key]}>
+          return (
+            <tr className={classes[predmet_key]}>
               <td className="text-center">
                 <input type="checkbox" name={predmet_key} checked={checked[predmet_key]} onChange={this.handleChange} />
               </td>
@@ -280,12 +281,12 @@ export class ZapisTable extends React.Component {
                   {predmet.maximalne_prihlasenych && "/" + predmet.maximalne_prihlasenych}</td>
               {columns == ZapisZPlanuColumns && <td>{predmet.odporucany_rocnik}</td>}
               <td>{predmet.jazyk.replace(/ ,/g, ', ')}</td>
-            </tr>;
-          })}
-        </tbody>
-        {this.props.showFooter && <ZapisTableFooter predmety={this.props.predmety} moje={checked} />}
-        {message && <tfoot><tr><td colSpan={columns.length}>{message}</td></tr></tfoot>}
-      </table>
+            </tr>
+          );
+        }}
+        footer={this.props.showFooter && <ZapisTableFooter predmety={this.props.predmety} moje={checked} />}
+        message={message}
+      />
       {saveButton}
     </form>;
   }
@@ -306,24 +307,21 @@ export function ZapisVlastnostiTable(props) {
     message = "Študijný plán nemá žiadne poznámky.";
   }
 
-  var [vlastnosti, header] = sortTable(
-    vlastnosti, ZapisVlastnostiColumns, props.query, 'vlastnostiSort');
-
   return (
-    <table className="table table-condensed table-bordered table-striped table-hover">
-      <thead>{header}</thead>
-      <tbody>
-        {vlastnosti.map((vlastnost, index) =>
-          <tr key={index}>
-            <td>{vlastnost.skratka}</td>
-            <td>{vlastnost.nazov}</td>
-            <td>{vlastnost.minimalny_kredit}</td>
-            <td>{vlastnost.poznamka}</td>
-          </tr>
-        )}
-      </tbody>
-      {message && <tfoot><tr><td colSpan={ZapisVlastnostiColumns.length}>{message}</td></tr></tfoot>}
-    </table>
+    <SortableTable
+      items={vlastnosti}
+      columns={ZapisVlastnostiColumns}
+      queryKey="vlastnostiSort"
+      row={(vlastnost) => (
+        <tr>
+          <td>{vlastnost.skratka}</td>
+          <td>{vlastnost.nazov}</td>
+          <td>{vlastnost.minimalny_kredit}</td>
+          <td>{vlastnost.poznamka}</td>
+        </tr>
+      )}
+      message={message}
+    />
   );
 }
 

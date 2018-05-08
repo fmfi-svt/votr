@@ -4,7 +4,7 @@ import { currentAcademicYear } from './coursesStats';
 import { classForSemester, humanizeBoolean } from './humanizeAISData';
 import { FormItem, PageLayout, PageTitle } from './layout';
 import { Link, navigate, queryConsumer } from './router';
-import { sortAs, sortTable } from './sorting';
+import { sortAs, SortableTable } from './sorting';
 
 
 export var RegisterPredmetovColumns = [
@@ -115,37 +115,34 @@ export function RegisterPredmetovResultTable(props) {
     return <Loading requests={cache.missing} />
   }
 
-  var [rows, message] = response;
+  var [predmety, message] = response;
 
-  var [rows, header] = sortTable(
-    rows, RegisterPredmetovColumns, query, 'predmetSort');
-
-  if (!message && !rows.length) {
+  if (!message && !predmety.length) {
     message = "Podmienkam nevyhovuje žiadny záznam.";
   }
 
   return (
     <React.Fragment>
       <h2>Výsledky</h2>
-      <table className="table table-condensed table-bordered table-striped table-hover">
-        <thead>{header}</thead>
-        <tbody>
-          {rows.map((predmet) =>
-            <tr key={predmet.predmet_key} className={classForSemester(predmet.semester)}>
-              <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: query.akademickyRok }}>
-                {predmet.nazov}
-              </Link></td>
-              <td>{predmet.skratka}</td>
-              <td>{predmet.fakulta}</td>
-              <td>{predmet.semester}</td>
-              <td>{predmet.rozsah_vyucby}</td>
-              <td>{predmet.kredit}</td>
-              <td>{humanizeBoolean(predmet.konanie)}</td>
-            </tr>
-          )}
-        </tbody>
-        {message && <tfoot><tr><td colSpan={RegisterPredmetovColumns.length}>{message}</td></tr></tfoot>}
-      </table>
+      <SortableTable
+        items={predmety}
+        columns={RegisterPredmetovColumns}
+        queryKey="predmetSort"
+        row={(predmet) => (
+          <tr className={classForSemester(predmet.semester)}>
+            <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: query.akademickyRok }}>
+              {predmet.nazov}
+            </Link></td>
+            <td>{predmet.skratka}</td>
+            <td>{predmet.fakulta}</td>
+            <td>{predmet.semester}</td>
+            <td>{predmet.rozsah_vyucby}</td>
+            <td>{predmet.kredit}</td>
+            <td>{humanizeBoolean(predmet.konanie)}</td>
+          </tr>
+        )}
+        message={message}
+      />
     </React.Fragment>
   );
 }

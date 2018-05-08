@@ -3,7 +3,7 @@ import { CacheRequester, Loading } from './ajax';
 import { currentAcademicYear } from './coursesStats';
 import { FormItem, PageLayout, PageTitle } from './layout';
 import { navigate, queryConsumer } from './router';
-import { sortAs, sortTable } from './sorting';
+import { sortAs, SortableTable } from './sorting';
 
 
 export var RegisterOsobColumns = [
@@ -169,9 +169,6 @@ export function RegisterOsobResultTable(props) {
 
   var [osoby, message] = response;
 
-  var [osoby, header] = sortTable(
-    osoby, RegisterOsobColumns, query, 'osobySort');
-
   if (!message && !osoby.length) {
     message = "Podmienkam nevyhovuje žiadny záznam.";
   }
@@ -179,20 +176,20 @@ export function RegisterOsobResultTable(props) {
   return (
     <React.Fragment>
       <h2>Výsledky</h2>
-      <table className="table table-condensed table-bordered table-striped table-hover">
-        <thead>{header}</thead>
-        <tbody>
-          {osoby.map((osoba, index) =>
-            <tr key={index}>
-              <td>{osoba.plne_meno}</td>
-              <td>{osoba.email &&
-                    <a href={"mailto:" + osoba.email}>{osoba.email}</a>}
-              </td>
-            </tr>
-          )}
-        </tbody>
-        {message && <tfoot><tr><td colSpan={RegisterOsobColumns.length}>{message}</td></tr></tfoot>}
-      </table>
+      <SortableTable
+        items={osoby}
+        columns={RegisterOsobColumns}
+        queryKey="osobySort"
+        row={(osoba) => (
+          <tr>
+            <td>{osoba.plne_meno}</td>
+            <td>{osoba.email &&
+                  <a href={"mailto:" + osoba.email}>{osoba.email}</a>}
+            </td>
+          </tr>
+        )}
+        message={message}
+      />
     </React.Fragment>
   );
 }

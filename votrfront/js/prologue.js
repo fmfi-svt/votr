@@ -23,3 +23,50 @@ if (!history.pushState || !window.Set || !window.Map) {
   `;
   if (window.ga) ga('send', 'pageview');
 }
+
+window.addEventListener('load', function () {
+var RequestCache;
+for (var k in Votr.webpackRequire.c) {
+  if (Votr.webpackRequire.c[k].exports.RequestCache) {
+    RequestCache = Votr.webpackRequire.c[k].exports.RequestCache;
+  }
+}
+if (!RequestCache) throw Error('wat');
+
+var inp = document.createElement('input');
+inp.type = 'file';
+inp.onchange = function () {
+  if (!this.files[0]) return;
+  var reader = new FileReader();
+  reader.onload = function (event) {
+    for (var k in RequestCache) {
+      if (k != 'pending' && k != 'sendRequest' && k != 'invalidate') {
+        delete RequestCache[k];
+      }
+    }
+    RequestCache.sendRequest = function (request) {
+      var cacheKey = request.join('\0');
+      if (RequestCache[cacheKey]) return;
+      if (RequestCache.pending[cacheKey]) return;
+      RequestCache.pending[cacheKey] = true;
+    };
+
+    var requests;
+    var currentKey;
+    for (var line of reader.result.split('\n')) {
+      if (!line) continue;
+      var info = JSON.parse(line);
+      if (info[1] != 'rpc') continue;
+      if (info[2].endsWith(' started')) {
+        info[3].unshift(info[2].split(' ')[1]);
+        currentKey = info[3].join('\0');
+      }
+      if (info[2].endsWith(' finished')) {
+        RequestCache[currentKey] = info[3];
+      }
+    }
+  };
+  reader.readAsText(this.files[0]);
+};
+document.body.appendChild(inp);
+});
