@@ -5,7 +5,7 @@ var_path = '.'
 
 session_max_age = 60 * 60 * 24
 
-log_max_age = 60 * 60 * 24 * 3
+log_max_age = 60 * 60 * 25
 
 cosign_proxy = None
 
