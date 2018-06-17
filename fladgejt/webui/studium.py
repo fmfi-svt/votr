@@ -254,8 +254,8 @@ class WebuiStudiumMixin:
         app.awaited_close_dialog(ops)
 
         return options
-
-    def create_zapisny_list(self, studium_key, akademicky_rok, rok_studia):
+    
+    def create_zapisny_list(self, studium_key, akademicky_rok=None, rok_studia=None):
         '''Creates enrollment list.
 
         Args:
@@ -267,21 +267,40 @@ class WebuiStudiumMixin:
         app = self._open_administracia_studia()
 
         self.__open_novy_zapisny_list_dialog(app, studium_key)
+        
+        message = None
 
         # V combo boxe vyberieme rok studia.
-        app.d.rocnikComboBox.select(find_option(app.d.rocnikComboBox.options, id=str(rok_studia)))
+        if rok_studia is not None:
+            app.d.rocnikComboBox.select(find_option(app.d.rocnikComboBox.options, id=str(rok_studia)))
 
         # Ak je nastaveny akademicky rok, vyberieme ho v combo boxe.
         if akademicky_rok is not None:
-            app.d.rokComboBox.select(find_option(app.d.rokComboBox.options, id=akademicky_rok))
+            try:
+                app.d.rokComboBox.select(find_option(app.d.rokComboBox.options, id=akademicky_rok))
+                
+                # Stlacime tlacidlo "OK".
+                with app.collect_operations() as ops:
+                    app.d.enterButton.click()
+        
+                # Ak sa neda vytvorit zapisny list, lebo to nie je povolene v danom datume
+                if ops and ops[0].method == 'messageBox':
+                    assert_ops(ops, 'messageBox')
+                    message = ops[0].args[0]
+                    with app.collect_operations() as ops:
+                        app.d.click_close_button()
 
-        # Stlacime tlacidlo "OK".
-        with app.collect_operations() as ops:
-            app.d.enterButton.click()
+                # Dialog sa zavrie.
+                app.awaited_close_dialog(ops)
+                
+            # Snazime sa vytvorit zapisny list na akademicky rok, ktory nie je na vyber v comboBoxe
+            except KeyError:
+                message = "Na tento akademický rok sa nedá vytvoriť zápisný list."
+                app.close_all_dialogs()          
+                
+        return message
 
-        # Dialog sa zavrie.
-        app.awaited_close_dialog(ops)
-
+    # nepouzita funkcia
     def delete_zapisny_list(self, zapisny_list_key):
         '''Deletes enrollment list.
 

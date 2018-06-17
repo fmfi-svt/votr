@@ -63,7 +63,7 @@ export function currentAcademicYear() {
   var year = date.getFullYear();
   var month = date.getMonth() + 1;
 
-  if (month < 8) {
+  if (month < 7) {
     return (year - 1) + '/' + year;
   } else {
     return year + '/' + (year + 1);

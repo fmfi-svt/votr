@@ -1,8 +1,9 @@
 
-import { CacheRequester, Loading } from './ajax';
+import { CacheRequester, Loading, sendRpc, RequestCache } from './ajax';
 import { PageLayout, PageTitle } from './layout';
 import { queryConsumer } from './router';
 import { sortAs, sortTable } from './sorting';
+import { currentAcademicYear } from './coursesStats';
 
 
 // TODO: Pridat kadejake sumarne informacie, aby to vyzeralo ako dashboard.
@@ -16,7 +17,8 @@ export var PrehladStudiumColumns = [
   ["Dĺžka v semestroch", 'sp_dlzka', sortAs.number],
   ["Začiatok štúdia", 'zaciatok', sortAs.date],
   ["Koniec štúdia", 'koniec', sortAs.date],
-  ["Doplňujúce údaje", 'sp_doplnujuce_udaje']
+  ["Doplňujúce údaje", 'sp_doplnujuce_udaje'],
+  ["Zápisný list", 'zapisny_list']
 ];
 PrehladStudiumColumns.defaultOrder = 'd4';
 
@@ -81,6 +83,23 @@ export function PrehladStudiaStudia() {
       studia, PrehladStudiumColumns, query, 'studiaSort');
 
     var message = studia.length ? null : "V AISe nemáte žiadne štúdiá.";
+    
+    var button = function (studium) {
+        var zapisne_listy = cache.get('get_zapisne_listy', studium.studium_key);
+        var aktualny_zapisny_list = 0;
+        if (zapisne_listy !== null){
+            aktualny_zapisny_list = zapisne_listy.filter(zl => zl.akademicky_rok === '2017/2018').length;
+        }
+        if (studium.koniec === '') {
+            if (aktualny_zapisny_list !== 0) {
+                return <button class='btn btn-xs btn-success appear-disabled'>Pridať zápisný list</button>
+            } else {
+                return <button onClick={() => sendRpc('create_zapisny_list', [studium.studium_key, currentAcademicYear()], (message)=>{if (message !== null) {alert(message);} else {RequestCache.invalidate('get_zapisne_listy');}})} class='btn btn-xs btn-success'>Pridať zápisný list</button>
+            }
+        } else {
+            return '' 
+        }
+    }
 
     return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
@@ -93,6 +112,7 @@ export function PrehladStudiaStudia() {
             <td>{studium.zaciatok}</td>
             <td>{studium.koniec}</td>
             <td>{studium.sp_doplnujuce_udaje.replace(/^\((.*)\)$/, '$1')}</td>
+            <td>{button(studium)}</td>
           </tr>
         )}
       </tbody>

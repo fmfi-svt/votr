@@ -45,6 +45,7 @@ export function ZapisnyListSelector(props) {
             <li><span className="text-pill">
               <Loading requests={cache.missing} />
             </span></li>}
+           <li><Link href='./?action=prehladStudia'>Vytvor nový zápisný list</Link></li>
         </ul>
         {query.zapisnyListKey ? (
           <QueryContext.Provider value={query}>
