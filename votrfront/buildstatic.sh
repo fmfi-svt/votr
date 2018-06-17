@@ -64,6 +64,13 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     cp $bs/javascripts/bootstrap/*.js static/libs/
   fi
 
+  if ! [ -d node_modules/react-big-calendar ]; then
+    npm install react-big-calendar
+  fi
+  if ! [ -d node_modules/moment ]; then
+    npm install moment
+  fi
+
   if ! [ -f static/_spinner.scss ]; then
     node -e 'console.log("$spinner: url(data:image/svg+xml," + escape(require("fs").readFileSync("css/spinner.svg", "ascii")) + ");")' > static/_spinner.scss
   fi

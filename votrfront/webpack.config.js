@@ -37,6 +37,7 @@ function makeConfig() {
       path: __dirname + '/static',
       sourceMapFilename: '[file].' + Date.now() + '.map',   // it seems Chrome caches source maps even if "Disable cache" is enabled
     },
+    externals: { "react": "React", "prop-types": "PropTypes" },
     plugins: [],
     module: {
       loaders: [

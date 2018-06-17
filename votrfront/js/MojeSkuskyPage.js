@@ -4,6 +4,8 @@ import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
 import { PageLayout, PageTitle } from './layout';
 import { Link, queryConsumer } from './router';
 import { sortAs, sortTable } from './sorting';
+import BigCalendar from 'react-big-calendar';
+import moment from 'moment';
 
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
@@ -35,7 +37,7 @@ function convertToICAL(terminy) {
     "X-WR-CALDESC:Kalendár skúšok vyexportovaný z aplikácie Votr",
     "X-WR-TIMEZONE:Europe/Bratislava",
   ];
-  
+
   var dtstamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
 
   // VEVENTs
@@ -45,13 +47,13 @@ function convertToICAL(terminy) {
       continue;
     }
     lines.push("BEGIN:VEVENT");
-    
+
     lines.push("SUMMARY:" + termin.nazov_predmetu);
-    
+
     // unique identificator for each event (so we can identify copies of the same event)
     var uid = termin.termin_key + "@votr.uniba.sk";
     lines.push("UID:" + uid);
-    
+
     // DTSTAMP is when this VEVENT was created (exported), must be YYYYMMDDTHHMMSSZ
     lines.push("DTSTAMP:" + dtstamp);
 
@@ -89,6 +91,54 @@ function convertToICAL(terminy) {
   lines.push("END:VCALENDAR");
 
   return lines.map((l) => l.replace(/\n/g, "\\n")).join("\r\n");
+}
+
+BigCalendar.momentLocalizer(moment); // or globalizeLocalizer
+
+function convertToEvents(terminy){
+  let events = [];
+  let i = 0;
+  for (let termin of terminy){
+    events.push({
+      id: i,
+      title: termin.nazov_predmetu+" ("+termin.cas+")",
+      startDate: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').toDate(),
+      endDate: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').toDate()
+    });
+    i += 1;
+  }
+  return events;
+}
+
+export class KalendarUdalosti extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {eventList: (props && props.eventList)?props.eventList:[]};
+  }
+  render(){
+    return (
+      <BigCalendar
+        events={this.state.eventList}
+        startAccessor='startDate'
+        endAccessor='endDate'
+        views={Object.keys(BigCalendar.Views).map(k => BigCalendar.Views[k])}
+        defaultDate = {new Date()}
+        messages={{
+          allDay: "Celý deň",
+          previous: "Späť",
+          next: "Ďalej",
+          today: "Dnes",
+          month: "Mesiac",
+          week: "Týždeň",
+          workWeek: "Pracovný týždeň",
+          day: "Deň",
+          agenda: "Agenda",
+          date: "Dátum",
+          time: "Čas"
+        }}
+      />
+    )
+  }
 }
 
 export function MojeSkuskyPageContent() {
@@ -130,6 +180,9 @@ export function MojeSkuskyPageContent() {
     }
 
     return <React.Fragment>
+      <div style={{height:"700px"}}>
+        <KalendarUdalosti eventList={convertToEvents(terminy)}/>
+      </div>
       <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
         <thead>{header}</thead>
         <tbody>
