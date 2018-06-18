@@ -99,11 +99,14 @@ function convertToEvents(terminy){
   let events = [];
   let i = 0;
   for (let termin of terminy){
+    console.log(termin);
     events.push({
       id: i,
-      title: termin.nazov_predmetu+" ("+termin.cas+")",
+      title: termin.nazov_predmetu+" ("+termin.cas+", "+termin.miestnost+")",
       startDate: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').toDate(),
-      endDate: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').toDate()
+      endDate: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').toDate(),
+      prihlaseny: termin.datum_prihlasenia && !termin.datum_odhlasenia,
+      vikend: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').day() >=5
     });
     i += 1;
   }
@@ -121,7 +124,7 @@ export class KalendarUdalosti extends React.Component {
         events={this.state.eventList}
         startAccessor='startDate'
         endAccessor='endDate'
-        views={Object.keys(BigCalendar.Views).map(k => BigCalendar.Views[k])}
+        views={["month", "week", "day"]}
         defaultDate = {new Date()}
         messages={{
           allDay: "Celý deň",
@@ -130,11 +133,26 @@ export class KalendarUdalosti extends React.Component {
           today: "Dnes",
           month: "Mesiac",
           week: "Týždeň",
-          workWeek: "Pracovný týždeň",
           day: "Deň",
           agenda: "Agenda",
           date: "Dátum",
-          time: "Čas"
+          time: "Čas",
+          event: "Skúška"
+        }}
+        culture={"sk"}
+        eventPropGetter={
+          (event, start, end, isSelected) => {
+            let newStyle = {
+              backgroundColor: event.prihlaseny? "#D9534F":"#5CB85C",
+            };
+            return {
+              style: newStyle
+            };
+          }
+        }
+        //remove start and end times (we need only one included in title)
+        formats={{
+          eventTimeRangeFormat: ({ start, end }, culture, local) => {}
         }}
       />
     )
