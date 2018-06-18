@@ -93,18 +93,46 @@ function convertToICAL(terminy) {
   return lines.map((l) => l.replace(/\n/g, "\\n")).join("\r\n");
 }
 
+function ZobrazenieLink(props) {
+  return (<Link className={"btn btn-default" + (props.active ? " active" : "")} href={props.href}>{props.label}</Link>);
+}
+
+export function MojeSkuskyMenu(props) {
+  var {action, cast, zapisnyListKey} = props.query;
+  return (
+    <div className="header">
+      <div className="pull-right">
+        <div className="btn-group">
+          <ZobrazenieLink
+            label="Zoznam"
+            href={{ action: 'mojeSkusky', cast: 'ZZ', zapisnyListKey }}
+            active={action == 'mojeSkusky' && cast != 'CA'}
+          />
+          <ZobrazenieLink
+            label="Kalendár"
+            href={{ action: 'mojeSkusky', cast: 'CA', zapisnyListKey }}
+            active={action == 'mojeSkusky' && cast == 'CA'}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+MojeSkuskyMenu.propTypes = {
+  query: PropTypes.object.isRequired
+};
+
 BigCalendar.momentLocalizer(moment); // or globalizeLocalizer
 
 function convertToEvents(terminy){
   let events = [];
   let i = 0;
   for (let termin of terminy){
-    console.log(termin);
     events.push({
       id: i,
       title: termin.nazov_predmetu+" ("+termin.cas+", "+termin.miestnost+")",
       startDate: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').toDate(),
-      endDate: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').toDate(),
+      endDate: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').add(3,"hours").toDate(),
       prihlaseny: termin.datum_prihlasenia && !termin.datum_odhlasenia,
       vikend: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').day() >=5
     });
@@ -162,7 +190,7 @@ export class KalendarUdalosti extends React.Component {
 export function MojeSkuskyPageContent() {
   return queryConsumer(query => {
     var cache = new CacheRequester();
-    var {zapisnyListKey} = query;
+    var {zapisnyListKey, cast} = query;
 
     var vidim = cache.get('get_vidim_terminy_hodnotenia', zapisnyListKey);
 
@@ -198,42 +226,49 @@ export function MojeSkuskyPageContent() {
     }
 
     return <React.Fragment>
-      <div style={{height:"700px"}}>
-        <KalendarUdalosti eventList={convertToEvents(terminy)}/>
-      </div>
-      <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
-        <thead>{header}</thead>
-        <tbody>
-          {terminy.map((termin) =>
-            <tr key={termin.termin_key}>
-              {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
-                <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
-                <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
-              <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
-                {termin.nazov_predmetu}
-              </Link></td>
-              <td>{termin.datum}</td>
-              <td>{termin.cas}</td>
-              <td>{termin.miestnost}</td>
-              <td>{termin.hodnotiaci}</td>
-              <td><Link href={{ ...query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
-                {termin.pocet_prihlasenych +
-                 (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
-              </Link></td>
-              <td>{termin.poznamka}</td>
-              <td>{termin.prihlasovanie}</td>
-              <td>{termin.odhlasovanie}</td>
-              <td>
-                {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
-                 termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
-                 null}
-                 <SkuskyRegisterButton termin={termin}/>
-              </td>
-            </tr>
-          )}
-        </tbody>
-        {message && <tfoot><tr><td colSpan={MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
-      </table>
+      <MojeSkuskyMenu query={query} />
+      {cast === "CA"?
+        <div style={{height:"90vh"}}>
+          <KalendarUdalosti eventList={convertToEvents(terminy)}/>
+        </div>
+        : null
+      }
+      {cast !== "CA"?
+        <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
+          <thead>{header}</thead>
+          <tbody>
+            {terminy.map((termin) =>
+              <tr key={termin.termin_key}>
+                {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
+                  <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
+                  <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
+                <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
+                  {termin.nazov_predmetu}
+                </Link></td>
+                <td>{termin.datum}</td>
+                <td>{termin.cas}</td>
+                <td>{termin.miestnost}</td>
+                <td>{termin.hodnotiaci}</td>
+                <td><Link href={{ ...query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
+                  {termin.pocet_prihlasenych +
+                   (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
+                </Link></td>
+                <td>{termin.poznamka}</td>
+                <td>{termin.prihlasovanie}</td>
+                <td>{termin.odhlasovanie}</td>
+                <td>
+                  {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
+                   termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
+                   null}
+                   <SkuskyRegisterButton termin={termin}/>
+                </td>
+              </tr>
+            )}
+          </tbody>
+          {message && <tfoot><tr><td colSpan={MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
+        </table>
+        : null
+      }
       {terminy.length && <button onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}
     </React.Fragment>;
   });
