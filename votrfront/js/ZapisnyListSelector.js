@@ -2,16 +2,28 @@
 import { CacheRequester, Loading } from './ajax';
 import { Link, QueryContext, queryConsumer } from './router';
 import { sortAs } from './sorting';
+import { currentAcademicYear } from './coursesStats';
 
+var buttonNovyZapisnyList = false;
 
 function getItems(cache) {
   var studia = cache.get('get_studia');
 
   var items = [];
 
+  buttonNovyZapisnyList = false;
+    
   if (studia) studia.forEach((studium) => {
     var zapisneListy = cache.get('get_zapisne_listy', studium.studium_key);
     if (zapisneListy) items.push(...zapisneListy);
+   
+    var aktualny = 0;
+    if (zapisneListy !== null) {
+        aktualny = zapisneListy.filter(zl => zl.akademicky_rok === currentAcademicYear()).length;
+    }
+    if (studium.koniec === '' && aktualny === 0) {
+        buttonNovyZapisnyList = true;
+    }
   });
 
   return _.sortBy(items, (item) => sortAs.date(item.datum_zapisu)).reverse();
@@ -45,7 +57,10 @@ export function ZapisnyListSelector(props) {
             <li><span className="text-pill">
               <Loading requests={cache.missing} />
             </span></li>}
-           <li><Link href='./?action=prehladStudia'>Vytvor nový zápisný list</Link></li>
+          {buttonNovyZapisnyList ? 
+           <li><Link href='./?action=prehladStudia'>Vytvor nový zápisný list</Link></li> :
+           null
+          }
         </ul>
         {query.zapisnyListKey ? (
           <QueryContext.Provider value={query}>
