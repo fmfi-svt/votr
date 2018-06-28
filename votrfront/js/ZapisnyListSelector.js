@@ -57,9 +57,8 @@ export function ZapisnyListSelector(props) {
             <li><span className="text-pill">
               <Loading requests={cache.missing} />
             </span></li>}
-          {buttonNovyZapisnyList ? 
-           <li><Link href='./?action=prehladStudia'>Vytvor nový zápisný list</Link></li> :
-           null
+          {buttonNovyZapisnyList &&
+           <li><Link href={{ action: 'prehladStudia' }}>Pridať...</Link></li>
           }
         </ul>
         {query.zapisnyListKey ? (

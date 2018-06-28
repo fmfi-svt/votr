@@ -68,6 +68,28 @@ export function PrehladStudiaObdobia() {
   });
 }
 
+export function PridatZapisnyListButton (props) {
+    var studium = props.studium;
+    var cache = new CacheRequester();
+    var zapisne_listy = cache.get('get_zapisne_listy', studium.studium_key);
+        var aktualny_zapisny_list = 0;
+        if (zapisne_listy !== null){
+            aktualny_zapisny_list = zapisne_listy.filter(zl => zl.akademicky_rok === currentAcademicYear()).length;
+        }
+        if (studium.koniec === '') { // ak este neskoncilo studium
+            if (aktualny_zapisny_list !== 0) { // ak uz mame zapisny list na tento rok
+                return <button class='btn btn-xs btn-success appear-disabled'>Vytvoriť</button>
+            } else { //  ak studium prebieha a nemame este zapisny list na tento rok
+                return <button onClick={() => 
+                            sendRpc('create_zapisny_list', [studium.studium_key, currentAcademicYear(), null],(message) =>
+                                {if (message !== null) {window.confirm(message);} 
+                                else {RequestCache.invalidate('get_zapisne_listy');}})} 
+                        class='btn btn-xs btn-success'>Vytvoriť</button>
+            }
+        } else { // ak studium uz skoncilo
+            return '' 
+        }
+}
 
 export function PrehladStudiaStudia() {
   return queryConsumer(query => {
@@ -83,23 +105,6 @@ export function PrehladStudiaStudia() {
       studia, PrehladStudiumColumns, query, 'studiaSort');
 
     var message = studia.length ? null : "V AISe nemáte žiadne štúdiá.";
-    
-    var button = function (studium) {
-        var zapisne_listy = cache.get('get_zapisne_listy', studium.studium_key);
-        var aktualny_zapisny_list = 0;
-        if (zapisne_listy !== null){
-            aktualny_zapisny_list = zapisne_listy.filter(zl => zl.akademicky_rok === currentAcademicYear()).length;
-        }
-        if (studium.koniec === '') { // ak este neskoncilo studium
-            if (aktualny_zapisny_list !== 0) { // ak uz mame zapisny list na tento rok
-                return <button class='btn btn-xs btn-success appear-disabled'>Pridať zápisný list</button>
-            } else { //  ak studium prebieha a nemame este zapisny list na tento rok
-                return <button onClick={() => sendRpc('create_zapisny_list', [studium.studium_key, currentAcademicYear()], (message)=>{if (message !== null) {alert(message);} else {RequestCache.invalidate('get_zapisne_listy');}})} class='btn btn-xs btn-success'>Pridať zápisný list</button>
-            }
-        } else { // ak studium uz skoncilo
-            return '' 
-        }
-    }
 
     return <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
@@ -112,7 +117,7 @@ export function PrehladStudiaStudia() {
             <td>{studium.zaciatok}</td>
             <td>{studium.koniec}</td>
             <td>{studium.sp_doplnujuce_udaje.replace(/^\((.*)\)$/, '$1')}</td>
-            <td>{button(studium)}</td>
+            <td><PridatZapisnyListButton studium={studium} /></td>
           </tr>
         )}
       </tbody>

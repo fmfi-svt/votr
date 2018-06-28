@@ -255,7 +255,7 @@ class WebuiStudiumMixin:
 
         return options
     
-    def create_zapisny_list(self, studium_key, akademicky_rok=None, rok_studia=None):
+    def create_zapisny_list(self, studium_key, akademicky_rok, rok_studia):
         '''Creates enrollment list.
 
         Args:
@@ -277,26 +277,29 @@ class WebuiStudiumMixin:
         # Ak je nastaveny akademicky rok, vyberieme ho v combo boxe.
         if akademicky_rok is not None:
             try:
-                app.d.rokComboBox.select(find_option(app.d.rokComboBox.options, id=akademicky_rok))
-                
-                # Stlacime tlacidlo "OK".
-                with app.collect_operations() as ops:
-                    app.d.enterButton.click()
-        
-                # Ak sa neda vytvorit zapisny list, lebo to nie je povolene v danom datume
-                if ops and ops[0].method == 'messageBox':
-                    assert_ops(ops, 'messageBox')
-                    message = ops[0].args[0]
-                    with app.collect_operations() as ops:
-                        app.d.click_close_button()
-
-                # Dialog sa zavrie.
-                app.awaited_close_dialog(ops)
-                
+                option = find_option(app.d.rokComboBox.options, id=akademicky_rok)
             # Snazime sa vytvorit zapisny list na akademicky rok, ktory nie je na vyber v comboBoxe
             except KeyError:
-                message = "Na tento akademický rok sa nedá vytvoriť zápisný list."
-                app.close_all_dialogs()          
+                with app.collect_operations() as ops:
+                    app.d.click_close_button()
+                app.awaited_close_dialog(ops)
+                return "Na tento akademický rok sa nedá vytvoriť zápisný list."
+                
+            app.d.rokComboBox.select(option)
+                
+        # Stlacime tlacidlo "OK".
+        with app.collect_operations() as ops:
+            app.d.enterButton.click()
+
+        # Ak sa neda vytvorit zapisny list, lebo to nie je povolene v danom datume
+        if ops and ops[0].method == 'messageBox':
+            assert_ops(ops, 'messageBox')
+            message = ops[0].args[0]
+            with app.collect_operations() as ops:
+                app.d.click_close_button()
+
+        # Dialog sa zavrie.
+        app.awaited_close_dialog(ops)               
                 
         return message
 
