@@ -6,7 +6,7 @@ var cookieDurationClose = 3;
 var cookieDurationVote = 60;
 var cookieName = 'anketaKolacik2018Leto'; // Name of our cookie
 var cookieValue = 'on'; // Value of cookie
-var cookieHideDate = Date.parse('19 July 2018'); // Starting this day the cookie won't be visible
+var cookieHideDate = Date.parse('3 July 2018'); // Starting this day the cookie won't be visible
 
 
 export class AnketaPopup extends React.Component {
