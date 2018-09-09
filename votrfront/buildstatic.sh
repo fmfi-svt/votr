@@ -48,18 +48,12 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   compressed='-s compressed'
   sassc $compressed -I $bs/stylesheets -I static css/main.scss static/style.css
 
-  if ! [ -f static/webpacktime ] || [ "$(find js/ webpack.config.js -newer static/webpacktime)" ]; then
-    touch static/webpacktime
-    rm -f static/votr.min.js.*.map
-    ../node_modules/.bin/webpack
-  else
-    echo "webpack output is up to date."
-  fi
+  rm -f static/votr.min.js.*.map
+  yarn webpack --mode=production --progress --display=minimal
 
-  libs='prologue.js libs/jquery.min.js libs/react.min.js libs/react-dom.min.js libs/prop-types.min.js libs/lodash.min.js libs/transition.js libs/modal.js libs/FileSaver.min.js'
-  dev=(static/dev/*)
-  echo ${libs//.min} "${dev[@]//"static/"}" votr.dev.js > static/jsdeps-dev
-  echo $libs votr.min.js > static/jsdeps-prod
+  libs='libs/jquery.min.js libs/react.min.js libs/react-dom.min.js libs/prop-types.min.js libs/lodash.min.js libs/transition.js libs/modal.js libs/FileSaver.min.js'
+  echo prologue.min.js ${libs//.min} votr.min.js > static/jsdeps-dev
+  echo prologue.min.js $libs votr.min.js > static/jsdeps-prod
 
   touch static/ok
 
