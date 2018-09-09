@@ -39,25 +39,27 @@ Running Votr
         https://nodejs.org/en/download/package-manager/, and install `nodejs`
         (not `nodejs-legacy` and `npm`).
 
-3.  Create a virtualenv directory. A virtualenv is an isolated environment that
+3.  [Install Yarn.](https://yarnpkg.com/en/docs/install)
+
+4.  Create a virtualenv directory. A virtualenv is an isolated environment that
     contains Python libraries, so that you don't have to install them
     system-wide, and each project can use different versions without conflicts.
 
         virtualenv -p python3 venv
 
-4.  Activate the virtualenv. (Basically, this just adds `venv/bin` to your
+5.  Activate the virtualenv. (Basically, this just adds `venv/bin` to your
     current shell's `$PATH`. Instead, you could just use `venv/bin/python`
     instead of `python`, `venv/bin/pip` instead of `pip`, etc.)
 
         source venv/bin/activate
 
-5.  Install the latest version of `pip` (earlier versions don't support wheels),
+6.  Install the latest version of `pip` (earlier versions don't support wheels),
     and then use it to install Python dependencies.
 
         pip install -U pip
         pip install -r requirements.txt
 
-6.  Start Votr. Remember to activate the virtualenv first if you haven't done it
+7.  Start Votr. Remember to activate the virtualenv first if you haven't done it
     yet in this terminal.
 
         ./console.py serve --debug

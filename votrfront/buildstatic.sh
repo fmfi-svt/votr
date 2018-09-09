@@ -16,49 +16,18 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   mkdir -p static/libs/ static/cache/
   rm -f static/ok
 
-  if ! [ -f static/libs/jquery.js ]; then
-    npm install jquery@^3
-    cp -p node_modules/jquery/dist/jquery.* static/libs/
-  fi
+  yarn --cwd=.. install
 
-  if ! [ -f static/libs/lodash.js ]; then
-    npm install lodash@^4
-    cp -p node_modules/lodash/lodash.{min.,}js static/libs/
-  fi
+  cp -p ../node_modules/jquery/dist/jquery.* static/libs/
+  cp -p ../node_modules/lodash/lodash.{min.,}js static/libs/
+  cp -p ../node_modules/react/umd/react.development.js static/libs/react.js
+  cp -p ../node_modules/react/umd/react.production.min.js static/libs/react.min.js
+  cp -p ../node_modules/react-dom/umd/react-dom.development.js static/libs/react-dom.js
+  cp -p ../node_modules/react-dom/umd/react-dom.production.min.js static/libs/react-dom.min.js
+  cp -p ../node_modules/prop-types/prop-types*.js static/libs/
+  cp ../node_modules/file-saver/FileSaver*.* static/libs/
 
-  if ! [ -f static/libs/react.js ]; then
-    npm install react@^16.3.1
-    cp -p node_modules/react/umd/react.development.js static/libs/react.js
-    cp -p node_modules/react/umd/react.production.min.js static/libs/react.min.js
-  fi
-
-  if ! [ -f static/libs/react-dom.js ]; then
-    npm install react-dom@^16.3.1
-    cp -p node_modules/react-dom/umd/react-dom.development.js static/libs/react-dom.js
-    cp -p node_modules/react-dom/umd/react-dom.production.min.js static/libs/react-dom.min.js
-  fi
-
-  if ! [ -f static/libs/prop-types.js ]; then
-    npm install prop-types@^15.6.1
-    cp -p node_modules/prop-types/prop-types*.js static/libs/
-  fi
-
-  if ! [ -f static/libs/FileSaver.min.js ]; then
-    npm install file-saver@1.3.8  # pinned! breaks too often.
-    cp node_modules/file-saver/FileSaver*.* static/libs/
-  fi
-
-  if ! [ -f node_modules/.bin/webpack ]; then
-    npm install node-libs-browser@^0.5   # from peerDependencies of webpack
-    npm install babel-core@^5   # from peerDependencies of babel-loader
-    npm install webpack@^1.10
-    npm install babel-loader@^5
-  fi
-
-  if ! [ -d node_modules/bootstrap-sass ]; then
-    npm install bootstrap-sass@^3.3
-  fi
-  bs=node_modules/bootstrap-sass/assets
+  bs=../node_modules/bootstrap-sass/assets
   if ! [ -f static/libs/modal.js ]; then
     cp $bs/javascripts/bootstrap/*.js static/libs/
   fi
@@ -82,7 +51,7 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
   if ! [ -f static/webpacktime ] || [ "$(find js/ webpack.config.js -newer static/webpacktime)" ]; then
     touch static/webpacktime
     rm -f static/votr.min.js.*.map
-    ./node_modules/.bin/webpack
+    ../node_modules/.bin/webpack
   else
     echo "webpack output is up to date."
   fi
@@ -96,7 +65,7 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
 
 elif [ "$1" == "clean" ]; then
 
-  rm -rf node_modules static
+  rm -rf node_modules ../node_modules static
 
 else
   echo "usage: $0 [--env=path/to/venv] [build|clean]"
