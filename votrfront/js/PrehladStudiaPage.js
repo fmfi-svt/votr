@@ -1,8 +1,9 @@
 
-import { CacheRequester, Loading } from './ajax';
+import { CacheRequester, Loading, sendRpc, RequestCache } from './ajax';
 import { PageLayout, PageTitle } from './layout';
 import { queryConsumer } from './router';
 import { sortAs, sortTable } from './sorting';
+import { currentAcademicYear } from './coursesStats';
 
 
 // TODO: Pridat kadejake sumarne informacie, aby to vyzeralo ako dashboard.
@@ -16,7 +17,8 @@ export var PrehladStudiumColumns = [
   ["Dĺžka v semestroch", 'sp_dlzka', sortAs.number],
   ["Začiatok štúdia", 'zaciatok', sortAs.date],
   ["Koniec štúdia", 'koniec', sortAs.date],
-  ["Doplňujúce údaje", 'sp_doplnujuce_udaje']
+  ["Doplňujúce údaje", 'sp_doplnujuce_udaje'],
+  ["Zápisný list", 'zapisny_list']
 ];
 PrehladStudiumColumns.defaultOrder = 'd4';
 
@@ -66,6 +68,32 @@ export function PrehladStudiaObdobia() {
   });
 }
 
+export function PridatZapisnyListButton (props) {
+    var studium = props.studium;
+    var cache = new CacheRequester();
+    var zapisne_listy = cache.get('get_zapisne_listy', studium.studium_key);
+    if (!cache.loadedAll) {
+      return <Loading requests={cache.missing} />;
+    }
+        var aktualny_zapisny_list = 0;
+        if (zapisne_listy !== null){
+            aktualny_zapisny_list = zapisne_listy.filter(zl => zl.akademicky_rok === currentAcademicYear()).length;
+        }
+        if (studium.koniec === '') { // ak este neskoncilo studium
+            if (aktualny_zapisny_list !== 0) { // ak uz mame zapisny list na tento rok
+                return <button className='btn btn-xs btn-success' disabled={true}>Vytvoriť</button>
+            } else { //  ak studium prebieha a nemame este zapisny list na tento rok
+                return <button onClick={() => {
+                    if (confirm(`Vytvoriť zápisný list pre akademický rok ${currentAcademicYear()}?`)) {
+                            sendRpc('create_zapisny_list', [studium.studium_key, currentAcademicYear(), null],(message) =>
+                                {if (message !== null) {alert(message);}
+                                else {RequestCache.invalidate('get_zapisne_listy');}})}}}
+                        className='btn btn-xs btn-success'>Vytvoriť</button>
+            }
+        } else { // ak studium uz skoncilo
+            return null;
+        }
+}
 
 export function PrehladStudiaStudia() {
   return queryConsumer(query => {
@@ -93,6 +121,7 @@ export function PrehladStudiaStudia() {
             <td>{studium.zaciatok}</td>
             <td>{studium.koniec}</td>
             <td>{studium.sp_doplnujuce_udaje.replace(/^\((.*)\)$/, '$1')}</td>
+            <td><PridatZapisnyListButton studium={studium} /></td>
           </tr>
         )}
       </tbody>

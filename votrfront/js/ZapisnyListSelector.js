@@ -2,26 +2,36 @@
 import { CacheRequester, Loading } from './ajax';
 import { Link, QueryContext, queryConsumer } from './router';
 import { sortAs } from './sorting';
-
+import { currentAcademicYear } from './coursesStats';
 
 function getItems(cache) {
   var studia = cache.get('get_studia');
 
   var items = [];
 
+  var buttonNovyZapisnyList = false;
+
   if (studia) studia.forEach((studium) => {
     var zapisneListy = cache.get('get_zapisne_listy', studium.studium_key);
     if (zapisneListy) items.push(...zapisneListy);
+
+    var aktualny = 0;
+    if (zapisneListy !== null) {
+        aktualny = zapisneListy.filter(zl => zl.akademicky_rok === currentAcademicYear()).length;
+    }
+    if (studium.koniec === '' && aktualny === 0) {
+        buttonNovyZapisnyList = true;
+    }
   });
 
-  return _.sortBy(items, (item) => sortAs.date(item.datum_zapisu)).reverse();
+  return [_.sortBy(items, (item) => sortAs.date(item.datum_zapisu)).reverse(), buttonNovyZapisnyList];
 }
 
 
 export function ZapisnyListSelector(props) {
   return queryConsumer(query => {
     var cache = new CacheRequester();
-    var items = getItems(cache);
+    var [items, buttonNovyZapisnyList] = getItems(cache);
 
     if (!query.zapisnyListKey && cache.loadedAll && items.length) {
       var mostRecentItem = items[0];
@@ -45,6 +55,9 @@ export function ZapisnyListSelector(props) {
             <li><span className="text-pill">
               <Loading requests={cache.missing} />
             </span></li>}
+          {buttonNovyZapisnyList &&
+           <li><Link href={{ action: 'prehladStudia' }}>Pridať...</Link></li>
+          }
         </ul>
         {query.zapisnyListKey ? (
           <QueryContext.Provider value={query}>

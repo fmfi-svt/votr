@@ -268,20 +268,42 @@ class WebuiStudiumMixin:
 
         self.__open_novy_zapisny_list_dialog(app, studium_key)
 
+        message = None
+
         # V combo boxe vyberieme rok studia.
-        app.d.rocnikComboBox.select(find_option(app.d.rocnikComboBox.options, id=str(rok_studia)))
+        if rok_studia is not None:
+            app.d.rocnikComboBox.select(find_option(app.d.rocnikComboBox.options, id=str(rok_studia)))
 
         # Ak je nastaveny akademicky rok, vyberieme ho v combo boxe.
         if akademicky_rok is not None:
-            app.d.rokComboBox.select(find_option(app.d.rokComboBox.options, id=akademicky_rok))
+            try:
+                option = find_option(app.d.rokComboBox.options, id=akademicky_rok)
+            # Snazime sa vytvorit zapisny list na akademicky rok, ktory nie je na vyber v comboBoxe
+            except KeyError:
+                with app.collect_operations() as ops:
+                    app.d.click_close_button()
+                app.awaited_close_dialog(ops)
+                return "Na tento akademický rok sa nedá vytvoriť zápisný list."
+
+            app.d.rokComboBox.select(option)
 
         # Stlacime tlacidlo "OK".
         with app.collect_operations() as ops:
             app.d.enterButton.click()
 
+        # Ak sa neda vytvorit zapisny list, lebo to nie je povolene v danom datume
+        if ops and ops[0].method == 'messageBox':
+            assert_ops(ops, 'messageBox')
+            message = ops[0].args[0]
+            with app.collect_operations() as ops:
+                app.d.click_close_button()
+
         # Dialog sa zavrie.
         app.awaited_close_dialog(ops)
 
+        return message
+
+    # nepouzita funkcia
     def delete_zapisny_list(self, zapisny_list_key):
         '''Deletes enrollment list.
 
