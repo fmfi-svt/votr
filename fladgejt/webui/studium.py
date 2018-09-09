@@ -254,7 +254,7 @@ class WebuiStudiumMixin:
         app.awaited_close_dialog(ops)
 
         return options
-    
+
     def create_zapisny_list(self, studium_key, akademicky_rok, rok_studia):
         '''Creates enrollment list.
 
@@ -267,7 +267,7 @@ class WebuiStudiumMixin:
         app = self._open_administracia_studia()
 
         self.__open_novy_zapisny_list_dialog(app, studium_key)
-        
+
         message = None
 
         # V combo boxe vyberieme rok studia.
@@ -284,9 +284,9 @@ class WebuiStudiumMixin:
                     app.d.click_close_button()
                 app.awaited_close_dialog(ops)
                 return "Na tento akademický rok sa nedá vytvoriť zápisný list."
-                
+
             app.d.rokComboBox.select(option)
-                
+
         # Stlacime tlacidlo "OK".
         with app.collect_operations() as ops:
             app.d.enterButton.click()
@@ -299,8 +299,8 @@ class WebuiStudiumMixin:
                 app.d.click_close_button()
 
         # Dialog sa zavrie.
-        app.awaited_close_dialog(ops)               
-                
+        app.awaited_close_dialog(ops)
+
         return message
 
     # nepouzita funkcia
