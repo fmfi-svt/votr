@@ -1,6 +1,7 @@
 
 import os
 import json
+import time
 import traceback
 from werkzeug.routing import Rule
 from werkzeug.wrappers import Response
@@ -66,6 +67,21 @@ def app_response(request, **my_data):
     my_data['instance_name'] = request.app.settings.instance_name
     if 'csrf_token' not in my_data:
         my_data['servers'] = request.app.settings.servers
+
+    for i in range(60):
+        try:
+            with open(static_path + 'status') as f:
+                status = f.read().strip()
+        except FileNotFoundError:
+            return Response('Missing static files.', status=500)
+        if status != 'busy':
+            break
+        time.sleep(0.1)
+    else:
+        return Response('Timed out waiting for webpack.', status=500)
+
+    if status == 'failed':
+        return Response('Webpack build failed.', status=500)
 
     if not os.path.exists(static_path + 'ok'):
         return Response('buildstatic failed!', status=500)

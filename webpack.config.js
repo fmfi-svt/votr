@@ -32,6 +32,33 @@ function importerWhichRewritesBootstrapNormalizeScss(url, prev, done) {
 
 const outputPath = __dirname + '/votrfront/static';
 
+// A plugin which writes the current status to votrfront/static/status.
+// - "busy" during compilation
+// - "failed" on errors
+// - "ok_dev" or "ok_prod" on success
+// votrfront/front.py reads the status to check if it can serve the page.
+function StatusFilePlugin(mode) {
+  this.apply = function(compiler) {
+    function writeStatus(content, callback) {
+      fs.mkdir(outputPath, function (err) {
+        if (err && err.code != 'EEXIST') return callback(err);
+        fs.writeFile(outputPath + '/status', content + '\n', 'utf8', callback);
+      });
+    }
+
+    function handleRunEvent(compilationParams, callback) {
+      writeStatus('busy', callback);
+    }
+
+    compiler.hooks.run.tapAsync('StatusFilePlugin', handleRunEvent);
+    compiler.hooks.watchRun.tapAsync('StatusFilePlugin', handleRunEvent);
+    compiler.hooks.done.tapAsync('StatusFilePlugin', (stats, callback) => {
+      const status = stats.compilation.errors.length ? 'failed' : 'ok_' + mode;
+      writeStatus(status, callback);
+    });
+  };
+}
+
 module.exports = function (env, args) {
   const mode = args.mode;
 
@@ -47,6 +74,7 @@ module.exports = function (env, args) {
     },
     plugins: [
       new MiniCssExtractPlugin({ filename: 'style.css' }),
+      new StatusFilePlugin(mode == 'development' ? 'dev' : 'prod'),
     ],
     module: {
       rules: [
