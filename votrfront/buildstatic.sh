@@ -20,10 +20,6 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
 
   bs=../node_modules/bootstrap-sass/assets
 
-  if ! [ -f static/_spinner.scss ]; then
-    node -e 'console.log("$spinner: url(data:image/svg+xml," + escape(require("fs").readFileSync("css/spinner.svg", "ascii")) + ");")' > static/_spinner.scss
-  fi
-
   sed -i "
     # Don't use pointer cursor on buttons.
     # http://lists.w3.org/Archives/Public/public-css-testsuite/2010Jul/0024.html

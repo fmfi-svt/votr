@@ -43,11 +43,15 @@ module.exports = function (env, args) {
             {
               loader: 'sass-loader',
               options: {
-                includePaths: [__dirname + '/votrfront/static', __dirname + '/node_modules/bootstrap-sass/assets/stylesheets'],
+                includePaths: [__dirname + '/node_modules/bootstrap-sass/assets/stylesheets'],
                 outputStyle: mode == 'development' ? undefined : 'compressed',
               },
             },
           ],
+        },
+        {
+          test: /\.svg$/,
+          loader: 'url-loader',
         },
       ],
     },
