@@ -18,17 +18,6 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
 
   yarn --cwd=.. install
 
-  bs=../node_modules/bootstrap-sass/assets
-
-  sed -i "
-    # Don't use pointer cursor on buttons.
-    # http://lists.w3.org/Archives/Public/public-css-testsuite/2010Jul/0024.html
-    s@cursor: pointer; // 3@@
-    # Don't inherit color and font on inputs and selects.
-    s@color: inherit; // 1@@
-    s@font: inherit; // 2@@
-    " $bs/stylesheets/bootstrap/_normalize.scss
-
   rm -f static/votr.min.js.*.map
   yarn webpack --mode=production --progress --display=minimal
 

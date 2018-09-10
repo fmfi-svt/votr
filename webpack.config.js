@@ -1,4 +1,34 @@
+const fs = require('fs');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+
+const bootstrapPath = __dirname + '/node_modules/bootstrap-sass/assets/stylesheets';
+
+// A custom node-sass importer that removes some unwanted rules from _normalize.scss.
+function importerWhichRewritesBootstrapNormalizeScss(url, prev, done) {
+  if (url != 'bootstrap/normalize') {
+    done(null);
+    return;
+  }
+
+  fs.readFile(bootstrapPath + '/bootstrap/_normalize.scss', 'utf8', (err, data) => {
+    if (err) return done(err);
+
+    function remove(what) {
+      if (!data.includes(what)) throw Error(`"${what}" not found`);
+      data = data.replace(what, '');
+    }
+
+    // Don't use pointer cursor on buttons.
+    // http://lists.w3.org/Archives/Public/public-css-testsuite/2010Jul/0024.html
+    remove('cursor: pointer; // 3');
+
+    // Don't inherit color and font on inputs and selects.
+    remove('color: inherit; // 1');
+    remove('font: inherit; // 2');
+
+    done({ contents: data });
+  });
+}
 
 const outputPath = __dirname + '/votrfront/static';
 
@@ -43,8 +73,9 @@ module.exports = function (env, args) {
             {
               loader: 'sass-loader',
               options: {
-                includePaths: [__dirname + '/node_modules/bootstrap-sass/assets/stylesheets'],
+                includePaths: [bootstrapPath],
                 outputStyle: mode == 'development' ? undefined : 'compressed',
+                importer: importerWhichRewritesBootstrapNormalizeScss,
               },
             },
           ],
