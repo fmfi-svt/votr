@@ -33,9 +33,6 @@ if [ "$1" == "build" ] || [ "$1" == "" ]; then
     s@font: inherit; // 2@@
     " $bs/stylesheets/bootstrap/_normalize.scss
 
-  compressed='-s compressed'
-  sassc $compressed -I $bs/stylesheets -I static css/main.scss static/style.css
-
   rm -f static/votr.min.js.*.map
   yarn webpack --mode=production --progress --display=minimal
 

@@ -1,3 +1,5 @@
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+
 const outputPath = __dirname + '/votrfront/static';
 
 module.exports = function (env, args) {
@@ -14,6 +16,7 @@ module.exports = function (env, args) {
       sourceMapFilename: '[file].' + Date.now() + '.map',   // it seems Chrome caches source maps even if "Disable cache" is enabled
     },
     plugins: [
+      new MiniCssExtractPlugin({ filename: 'style.css' }),
     ],
     module: {
       rules: [
@@ -31,6 +34,20 @@ module.exports = function (env, args) {
           test: /node_modules\/bootstrap-sass\//,
           loader: 'imports-loader',
           options: { 'jQuery': 'jquery' },
+        },
+        {
+          test: /\.scss$/,
+          use: [
+            MiniCssExtractPlugin.loader,
+            'css-loader',
+            {
+              loader: 'sass-loader',
+              options: {
+                includePaths: [__dirname + '/votrfront/static', __dirname + '/node_modules/bootstrap-sass/assets/stylesheets'],
+                outputStyle: mode == 'development' ? undefined : 'compressed',
+              },
+            },
+          ],
         },
       ],
     },

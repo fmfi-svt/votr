@@ -6,6 +6,8 @@ import { LoginPage } from './LoginPage';
 import { App } from './actions';
 import { Root } from './router';
 
+import '../css/main.scss';
+
 
 (function () {
 
