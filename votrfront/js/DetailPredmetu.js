@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { ZoznamPrihlasenychNaTerminColumns } from './ZoznamPrihlasenychNaTermin';
 import { CacheRequester, Loading } from './ajax';
 import { Modal } from './layout';

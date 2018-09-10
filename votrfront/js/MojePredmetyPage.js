@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { ZapisnyListSelector } from './ZapisnyListSelector';
 import { CacheRequester, Loading } from './ajax';
 import { coursesStats, renderWeightedStudyAverage } from './coursesStats';

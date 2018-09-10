@@ -1,4 +1,6 @@
 
+import React from 'react';
+import ReactDOM from 'react-dom';
 import { ErrorPage } from './ErrorPage';
 import { LoginPage } from './LoginPage';
 import { App } from './actions';

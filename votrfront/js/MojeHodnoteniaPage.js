@@ -1,4 +1,6 @@
 
+import React from 'react';
+import _ from 'lodash';
 import { MojePredmetyColumns } from './MojePredmetyPage';
 import { StudiumSelector } from './StudiumSelector';
 import { CacheRequester, Loading } from './ajax';

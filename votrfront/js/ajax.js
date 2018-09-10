@@ -1,4 +1,7 @@
 
+import React from 'react';
+import _ from 'lodash';
+
 export function sendRpc(name, args, callback) {
   var HEADER_LENGTH = 10;
   var processed = 0;

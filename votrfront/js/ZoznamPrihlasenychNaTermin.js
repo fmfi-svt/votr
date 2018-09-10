@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { CacheRequester, Loading } from './ajax';
 import { Modal } from './layout';
 import { queryConsumer } from './router';
