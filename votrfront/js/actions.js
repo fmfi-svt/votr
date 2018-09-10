@@ -1,4 +1,6 @@
 
+import React from 'react';
+import _ from 'lodash';
 import { AboutModal, IndexPage } from './About';
 import { DetailPredmetuModal } from './DetailPredmetu';
 import { ErrorModal } from './ErrorPage';

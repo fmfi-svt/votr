@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { CacheRequester, Loading, sendRpc, RequestCache } from './ajax';
 import { PageLayout, PageTitle } from './layout';
 import { queryConsumer } from './router';

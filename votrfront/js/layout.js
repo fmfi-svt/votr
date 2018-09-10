@@ -1,4 +1,10 @@
 
+import PropTypes from 'prop-types';
+import React from 'react';
+import _ from 'lodash';
+import $ from 'jquery';
+import 'bootstrap-sass/assets/javascripts/bootstrap/transition';
+import 'bootstrap-sass/assets/javascripts/bootstrap/modal';
 import { CacheRequester, Loading, goLogout, goReset, logs } from './ajax';
 import { FakeLink, Link, queryConsumer } from './router';
 

@@ -1,4 +1,6 @@
 
+import React from 'react';
+import _ from 'lodash';
 import { LocalSettings } from './LocalSettings';
 import { logs } from './ajax';
 

@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { CacheRequester, Loading } from './ajax';
 import { currentAcademicYear } from './coursesStats';
 import { classForSemester, humanizeBoolean } from './humanizeAISData';

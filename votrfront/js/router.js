@@ -1,4 +1,9 @@
 
+import PropTypes from 'prop-types';
+import React from 'react';
+import _ from 'lodash';
+import $ from 'jquery';
+
 export function trackPageView() {
   if (!window.ga) return;
   var current = location.protocol + '//' + location.hostname +

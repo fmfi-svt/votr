@@ -1,4 +1,5 @@
 
+import React from 'react';
 import { CacheRequester, Loading } from './ajax';
 
 var dropCookie = true;  // false disables the Cookie, allowing you to style the banner

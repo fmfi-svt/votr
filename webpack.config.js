@@ -18,11 +18,28 @@ module.exports = function (env, args) {
     module: {
       rules: [
         {
+          // Without this, webpack tries to replace `define.amd` in jquery and
+          // file-saver with its own definition.
+          parser: { amd: false }
+        },
+        {
           test: /\.js$/,
           exclude: /node_modules/,
           loader: 'babel-loader',
         },
+        {
+          test: /node_modules\/bootstrap-sass\//,
+          loader: 'imports-loader',
+          options: { 'jQuery': 'jquery' },
+        },
       ],
+    },
+    optimization: {
+      splitChunks: {
+        chunks: 'all',
+        minSize: 0,
+        automaticNameDelimiter: '_',
+      },
     },
     devtool: 'source-map',
     performance: {

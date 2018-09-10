@@ -1,4 +1,6 @@
 
+import React from 'react';
+import _ from 'lodash';
 import { goLogout, goReset, goResetHome } from './ajax';
 import { Modal, ModalBase } from './layout';
 import { AnalyticsMixin, FakeLink } from './router';
