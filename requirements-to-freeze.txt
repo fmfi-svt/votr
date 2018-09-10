@@ -1,5 +1,4 @@
 beautifulsoup4
-libsass
 lxml
 requests
 werkzeug
