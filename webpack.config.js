@@ -59,6 +59,23 @@ function StatusFilePlugin(mode) {
   };
 }
 
+// A plugin which deletes old .map files. We can't use clean-webpack-plugin to
+// delete *.map before every compilation, because in watch mode, if a .js file
+// doesn't change then its .map file won't be regenerated.
+function CleanMapFilesPlugin() {
+  this.apply = function(compiler) {
+    compiler.hooks.afterEmit.tapAsync('CleanMapFilesPlugin', function(compilation, callback) {
+      fs.readdirSync(outputPath).forEach(file => {
+        if (file.match(/\.map$/) && !compilation.assets[file] &&
+            compilation.assets[file.replace(/\.\w+\.map$/, '')]) {
+          fs.unlinkSync(outputPath + '/' + file);
+        }
+      });
+      callback();
+    });
+  }
+}
+
 module.exports = function (env, args) {
   const mode = args.mode;
 
@@ -70,11 +87,12 @@ module.exports = function (env, args) {
     output: {
       path: outputPath,
       filename: mode == 'development' ? '[name].dev.js' : '[name].min.js',
-      sourceMapFilename: '[file].' + Date.now() + '.map',   // it seems Chrome caches source maps even if "Disable cache" is enabled
+      sourceMapFilename: '[file].[hash].map',   // it seems Chrome caches source maps even if "Disable cache" is enabled
     },
     plugins: [
       new MiniCssExtractPlugin({ filename: 'style.css' }),
       new StatusFilePlugin(mode == 'development' ? 'dev' : 'prod'),
+      new CleanMapFilesPlugin(),
     ],
     module: {
       rules: [
