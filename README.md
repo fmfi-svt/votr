@@ -21,48 +21,51 @@ based on). **Fladgejt** contains the business logic for various AIS2 tasks and
 knows where to find which buttons and tables. And **Votrfront** is the web app
 that Votr's users interact with.
 
-Running Votr
-------------
+Installing and running Votr
+---------------------------
 
-1.  Install Python 3.4+ and virtualenv. On recent Ubuntu or Debian, use:
+System requirements:
 
-        sudo apt install virtualenv
+*   Install Python 3.4+ and virtualenv. E.g. on Ubuntu 18.04: `sudo apt install
+    virtualenv`
+*   Install [node.js 8+][1]. E.g. on Ubuntu 18.04: `sudo apt install nodejs`
+    *   If your Linux distribution doesn't have node.js >= 8, or if you don't
+        want to install node.js system-wide, you can use nvm or nodeenv.
+        [Read more.][2]
+*   [Install Yarn.][3]
 
-2.  Install node.js and npm. (Some Linux distributions bundle them together in
-    one package.) Check the version: npm 1 and 2 are too old. npm 3 and 4 are
-    probably OK. npm 5+ is ideal, but most Linux distributions don't have it yet
-    (including current Ubuntu and Debian). In that case, you can either:
+[1]: https://nodejs.org/en/download/package-manager/
+[2]: https://github.com/fmfi-svt/votr/wiki/Installation-options
+[3]: https://yarnpkg.com/en/docs/install
 
-    *   Install npm 3 despite its age and hope for the best. E.g. on Ubuntu:
-        `sudo apt install nodejs-legacy npm`.
-    *   Use the unofficial up to date repositories from
-        https://nodejs.org/en/download/package-manager/, and install `nodejs`
-        (not `nodejs-legacy` and `npm`).
+Download and set up Votr:
 
-3.  [Install Yarn.](https://yarnpkg.com/en/docs/install)
+```shell
+git clone https://github.com/fmfi-svt/votr.git
+cd votr
+virtualenv -p python3 venv
+```
 
-4.  Create a virtualenv directory. A virtualenv is an isolated environment that
-    contains Python libraries, so that you don't have to install them
-    system-wide, and each project can use different versions without conflicts.
+Install Votr's dependencies in `votr/venv` and `votr/node_modules`:
 
-        virtualenv -p python3 venv
+```shell
+venv/bin/pip install -r requirements.txt
+yarn install
+```
 
-5.  Activate the virtualenv. (Basically, this just adds `venv/bin` to your
-    current shell's `$PATH`. Instead, you could just use `venv/bin/python`
-    instead of `python`, `venv/bin/pip` instead of `pip`, etc.)
+(Note: Repeat this step every time you pull a new version of Votr, in case they
+were updated.)
 
-        source venv/bin/activate
+Run Votr by starting these two commands in separate terminals: \
+(They are Votr's web server and Votr's JS/CSS build system.)
 
-6.  Install the latest version of `pip` (earlier versions don't support wheels),
-    and then use it to install Python dependencies.
+```shell
+venv/bin/python console.py serve --debug
+```
 
-        pip install -U pip
-        pip install -r requirements.txt
-
-7.  Start Votr. Remember to activate the virtualenv first if you haven't done it
-    yet in this terminal.
-
-        ./console.py serve --debug
+```shell
+yarn watch
+```
 
 Contributing to Votr
 --------------------

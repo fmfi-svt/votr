@@ -80,15 +80,15 @@ def app_response(request, **my_data):
     else:
         return Response('Timed out waiting for webpack.', status=500)
 
+    debug = request.cookies.get('votr_debug')
     if status == 'failed':
         return Response('Webpack build failed.', status=500)
-
-    if not os.path.exists(static_path + 'ok'):
-        return Response('buildstatic failed!', status=500)
-
-    debug = request.cookies.get('votr_debug')
-    with open(static_path + ('jsdeps-dev' if debug else 'jsdeps-prod')) as f:
-        scripts = f.read().split()
+    elif status == 'ok_dev' or (status == 'ok_both' and debug):
+        scripts = ['prologue.dev.js', 'votr.dev.js', 'vendors_votr.dev.js']
+    elif status == 'ok_prod' or (status == 'ok_both' and not debug):
+        scripts = ['prologue.min.js', 'votr.min.js', 'vendors_votr.min.js']
+    else:
+        return Response('Unexpected webpack status.', status=500)
 
     content = template % dict(
         init_json=json.dumps({ 'settings': my_data }).replace('</', '<\\/'),
