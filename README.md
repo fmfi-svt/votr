@@ -28,41 +28,40 @@ Running Votr
 
         sudo apt install virtualenv
 
-2.  Install node.js and npm. (Some Linux distributions bundle them together in
-    one package.) Check the version: npm 1 and 2 are too old. npm 3 and 4 are
-    probably OK. npm 5+ is ideal, but most Linux distributions don't have it yet
-    (including current Ubuntu and Debian). In that case, you can either:
+2.  Install node.js 8+. On Ubuntu 18.04 or newer or Debian Buster or newer, use:
 
-    *   Install npm 3 despite its age and hope for the best. E.g. on Ubuntu:
-        `sudo apt install nodejs-legacy npm`.
-    *   Use the unofficial up to date repositories from
-        https://nodejs.org/en/download/package-manager/, and install `nodejs`
-        (not `nodejs-legacy` and `npm`).
+        sudo apt install nodejs
+
+    On Ubuntu 16.04 or Debian Stretch, the default node.js is too old, but the
+    unofficial repo from https://nodejs.org/en/download/package-manager/ works.
 
 3.  [Install Yarn.](https://yarnpkg.com/en/docs/install)
 
-4.  Create a virtualenv directory. A virtualenv is an isolated environment that
+4.  Download Votr.
+
+        git clone https://github.com/fmfi-svt/votr.git
+        cd votr
+
+5.  Create a virtualenv directory. A virtualenv is an isolated environment that
     contains Python libraries, so that you don't have to install them
     system-wide, and each project can use different versions without conflicts.
 
         virtualenv -p python3 venv
 
-5.  Activate the virtualenv. (Basically, this just adds `venv/bin` to your
-    current shell's `$PATH`. Instead, you could just use `venv/bin/python`
-    instead of `python`, `venv/bin/pip` instead of `pip`, etc.)
+6.  Install Votr's Python and JavaScript dependencies. (Repeat this step every
+    time you pull a new version of Votr in case they were updated.)
 
-        source venv/bin/activate
+        venv/bin/pip install -r requirements.txt
+        yarn install
 
-6.  Install the latest version of `pip` (earlier versions don't support wheels),
-    and then use it to install Python dependencies.
+7.  Now you have everything you need. To run Votr, open two terminals. In one
+    terminal, start the Votr server:
 
-        pip install -U pip
-        pip install -r requirements.txt
+        venv/bin/python console.py serve --debug
 
-7.  Start Votr. Remember to activate the virtualenv first if you haven't done it
-    yet in this terminal.
+    In the second terminal, start the JavaScript compiler:
 
-        ./console.py serve --debug
+        yarn watch
 
 Contributing to Votr
 --------------------
