@@ -5,6 +5,7 @@ import time
 import traceback
 from werkzeug.routing import Rule
 from werkzeug.wrappers import Response
+from werkzeug.utils import escape
 from . import sessions
 
 
@@ -24,7 +25,7 @@ sa na skúšky, prezrite si vaše hodnotenia a skontrolujte si počet kreditov \
 bez zbytočného klikania.">
 %(analytics)s
 </head>
-<body>
+<body data-settings="%(settings)s">
 <span id="votr"></span>
 <noscript>
 <div class="login-page">
@@ -37,7 +38,6 @@ vaše hodnotenia a skontrolujte si počet kreditov bez zbytočného klikania.</p
 </div>
 </div>
 </noscript>
-<script>Votr = %(init_json)s</script>
 %(scripts)s
 </body>
 </html>
@@ -91,7 +91,7 @@ def app_response(request, **my_data):
         return Response('Unexpected webpack status.', status=500)
 
     content = template % dict(
-        init_json=json.dumps({ 'settings': my_data }).replace('</', '<\\/'),
+        settings=escape(json.dumps(my_data)),
         css=static_url('style.css'),
         scripts='\n'.join(
             '<script src="{}"></script>'.format(static_url(script))

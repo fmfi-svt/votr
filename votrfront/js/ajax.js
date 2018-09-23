@@ -1,6 +1,7 @@
 
 import React from 'react';
 import _ from 'lodash';
+import { settings } from './settings';
 
 export function sendRpc(name, args, callback) {
   var HEADER_LENGTH = 10;
@@ -53,7 +54,7 @@ export function sendRpc(name, args, callback) {
   xhr.onerror = fail;
   xhr.open("POST", "rpc?name=" + name, true);
   xhr.setRequestHeader("Content-Type", "application/json");
-  xhr.setRequestHeader("X-CSRF-Token", Votr.settings.csrf_token);
+  xhr.setRequestHeader("X-CSRF-Token", settings.csrf_token);
   xhr.send(JSON.stringify(args));
 }
 

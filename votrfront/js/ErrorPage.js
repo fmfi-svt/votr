@@ -4,6 +4,7 @@ import _ from 'lodash';
 import { goLogout, goReset, goResetHome } from './ajax';
 import { Modal, ModalBase } from './layout';
 import { AnalyticsMixin, FakeLink } from './router';
+import { settings } from './settings';
 
 
 export class ErrorModal extends React.Component {
@@ -21,7 +22,7 @@ export class ErrorModal extends React.Component {
   }
 
   render() {
-    var error = Votr.settings.error || Votr.ajaxError;
+    var error = settings.error || Votr.ajaxError;
     var lastLine = _.last(error.trim("\n").split("\n"));
     var type = lastLine.split(":")[0]
 
@@ -33,7 +34,7 @@ export class ErrorModal extends React.Component {
       title = "Prihlásenie vypršalo";
       description = "Vaše prihlásenie vypršalo. Skúste znova.";
       contact = false;
-    } else if (Votr.settings.error || type.match(/^requests\.exceptions\./)) {
+    } else if (settings.error || type.match(/^requests\.exceptions\./)) {
       title = "Chyba pripojenia";
       description = "Votr sa nevie pripojiť na AIS.";
       contact = false;
@@ -54,7 +55,7 @@ export class ErrorModal extends React.Component {
     // Some errors are caused by a malformed URL, so resetting won't help. If
     // we haven't navigated since the last full reload (the user has probably
     // reset just now), we redirect to the front page instead.
-    var goHome = !Votr.didNavigate && !Votr.settings.error && location.search.substring(1);
+    var goHome = !Votr.didNavigate && !settings.error && location.search.substring(1);
 
     return <Modal title={title} closeButton={false}>
       <p className="text-center"><big>{description}</big></p>
@@ -80,7 +81,7 @@ export class ErrorModal extends React.Component {
           Technické detaily: <code>{lastLine}</code>{" "}
           <FakeLink onClick={this.handleDetails}>Viac detailov...</FakeLink>
         </p>}
-      {!Votr.settings.error && this.state.open &&
+      {!settings.error && this.state.open &&
         <button type="button" className="btn btn-default"
                 onClick={this.handleIgnore}>Ignorovať chybu</button>}
     </Modal>;

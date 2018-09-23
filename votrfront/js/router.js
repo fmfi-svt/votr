@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import _ from 'lodash';
 import $ from 'jquery';
+import { settings } from './settings';
 
 export function trackPageView() {
   if (!window.ga) return;
@@ -79,7 +80,7 @@ export function buildUrl(href) {
 
 export function navigate(href) {
   Votr.didNavigate = true;
-  history.pushState(null, '', Votr.settings.url_root + buildUrl(href));
+  history.pushState(null, '', settings.url_root + buildUrl(href));
   Votr.appRoot.forceUpdate();
 };
 

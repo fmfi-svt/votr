@@ -4,6 +4,7 @@ import _ from 'lodash';
 import { AboutModal } from './About';
 import { Modal, ModalBase } from './layout';
 import { AnalyticsMixin, FakeLink } from './router';
+import { settings } from './settings';
 
 
 var TYPE_NAMES = {
@@ -17,13 +18,13 @@ var TYPE_NAMES = {
 
 export class LoginForm extends React.Component {
   state = {
-    server: Votr.settings.server || 0,
-    type: Votr.settings.type
+    server: settings.server || 0,
+    type: settings.type
   }
 
   handleServerChange = (event) => {
     var server = event.target.value;
-    var newTypes = Votr.settings.servers[server].login_types;
+    var newTypes = settings.servers[server].login_types;
     var type = _.includes(newTypes, this.state.type) ? this.state.type : null;
     this.setState({ server, type });
   }
@@ -33,20 +34,20 @@ export class LoginForm extends React.Component {
   }
 
   render() {
-    var serverConfig = Votr.settings.servers[this.state.server];
+    var serverConfig = settings.servers[this.state.server];
     var currentType = this.state.type || serverConfig.login_types[0];
 
     return <form className="login" action="login" method="POST">
-      {Votr.settings.invalid_session &&
+      {settings.invalid_session &&
         <p>Vaše prihlásenie vypršalo. Prihláste sa znova.</p>}
 
-      {Votr.settings.error &&
+      {settings.error &&
         <React.Fragment>
           <p>Prihlásenie sa nepodarilo.</p>
           <p>
             {"Technické detaily: "}
             <code className="login-error">
-              {_.last(Votr.settings.error.trim("\n").split("\n"))}
+              {_.last(settings.error.trim("\n").split("\n"))}
             </code>
             {" "}
             <FakeLink onClick={this.props.onOpenError}>Viac detailov...</FakeLink>
@@ -61,12 +62,12 @@ export class LoginForm extends React.Component {
 
       <input type="hidden" name="destination" value={location.search} />
 
-      {Votr.settings.servers.length > 1 ?
+      {settings.servers.length > 1 ?
         <p>
           <label>
             {"Server: "}
             <select name="server" value={this.state.server} onChange={this.handleServerChange}>
-              {Votr.settings.servers.map((server, index) =>
+              {settings.servers.map((server, index) =>
                 <option key={index} value={index}>{server.title}</option>
               )}
             </select>
@@ -133,7 +134,7 @@ export class LoginForm extends React.Component {
 export function LoginErrorModal() {
   return (
     <Modal title="Chyba pri prihlásení">
-      <pre>{Votr.settings.error}</pre>
+      <pre>{settings.error}</pre>
     </Modal>
   );
 }
@@ -159,7 +160,7 @@ export class LoginPage extends React.Component {
       <div className="navbar navbar-inverse navbar-static-top">
         <div className="container-fluid">
           <div className="navbar-header">
-            <a href={Votr.settings.url_root} className="navbar-brand">Votr</a>
+            <a href={settings.url_root} className="navbar-brand">Votr</a>
           </div>
         </div>
       </div>

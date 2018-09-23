@@ -1,10 +1,14 @@
 
-Votr.setDebug = function (enabled) {
-  document.cookie = enabled ? 'votr_debug=true' : 'votr_debug=';
-  location.reload();
-}
+Votr = {
+  setDebug(enabled) {
+    document.cookie = enabled ? 'votr_debug=true' : 'votr_debug=';
+    location.reload();
+  },
+};
 
-if (!history.pushState || !window.Set || !window.Map) {
+if (history.pushState && window.Set && window.Map) {
+  Votr.go = true;
+} else {
   document.getElementById('votr').innerHTML = `
     <div class="central-box">
     <h1>Votr</h1>
