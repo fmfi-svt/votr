@@ -1,5 +1,5 @@
 
-from collections import namedtuple
+import attr
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 
 
@@ -62,19 +62,7 @@ def find_option(objects, **conditions):
     raise KeyError("Object not found: {!r}".format(conditions))
 
 
-_keyed_namedtuple_template = '''
-def __new__(_cls, {args_none}):
-    {keys}
-    return tuple.__new__(_cls, ({args},))
-result_class.__new__ = __new__
-'''
-
-_keyed_namedtuple_key_template = '''
-    if {key_name} is None: {key_name} = encode_key(({key_args},))
-'''
-
-
-def keyed_namedtuple(typename, field_names, **key_fields):
+def key_attrib(*field_names):
     '''A variant of namedtuple where some "key fields" have default values.
 
     The value of each "key field" is computed from some other fields by
@@ -97,29 +85,11 @@ def keyed_namedtuple(typename, field_names, **key_fields):
     Returns:
         A new class, like returned by namedtuple.
     '''
-    # Key names have to be in field_names and key args have to exist
-    for key_name, key_args in key_fields.items():
-        if key_name not in field_names or set(key_args) - set(field_names):
-            raise ValueError(typename)
-
-    result_class = namedtuple(typename, field_names)
-
-    # Add '=None' to the keys
-    field_names_none = [name + ("=None" if name in key_fields else "")
-                        for name in field_names]
-
-    # Create code for computing the default values of key_fields
-    key_defs = [_keyed_namedtuple_key_template.format(
-                    key_name=key_name, key_args=', '.join(key_fields[key_name]))
-                for key_name in field_names if key_name in key_fields]
-
-    # Create custom __new__ method
-    exec(_keyed_namedtuple_template.format(
-        args_none=', '.join(field_names_none),
-        args=', '.join(field_names),
-        keys=''.join(key_defs)))
-
-    return result_class
+    # TODO: Document.
+    def factory(obj):
+        return encode_key(getattr(obj, f) for f in field_names)
+    return attr.attrib(
+        init=False, default=attr.Factory(factory, takes_self=True))
 
 
 def encode_key(tuple):

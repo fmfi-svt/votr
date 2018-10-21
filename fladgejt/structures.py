@@ -1,74 +1,175 @@
 
-from collections import namedtuple
-from .helpers import keyed_namedtuple
+import attr
+from .helpers import key_attrib
 
 
-Studium = keyed_namedtuple('Studium', [
-    'sp_skratka', 'sp_popis', 'sp_doplnujuce_udaje', 'zaciatok', 'koniec',
-    'sp_dlzka', 'sp_cislo', 'rok_studia', 'organizacna_jednotka',
-    'studium_key'],
-    studium_key=['sp_skratka', 'zaciatok'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class Studium:
+    sp_skratka = attr.attrib()
+    sp_popis = attr.attrib()
+    sp_doplnujuce_udaje = attr.attrib()
+    zaciatok = attr.attrib()
+    koniec = attr.attrib()
+    sp_dlzka = attr.attrib()
+    sp_cislo = attr.attrib()
+    rok_studia = attr.attrib()
+    organizacna_jednotka = attr.attrib()
+    studium_key = key_attrib('sp_skratka', 'zaciatok')
 
-ZapisnyList = keyed_namedtuple('ZapisnyList', [
-    'akademicky_rok', 'rocnik', 'sp_skratka', 'sp_popis', 'datum_zapisu',
-    'studium_key', 'zapisny_list_key'],
-    zapisny_list_key=['studium_key', 'akademicky_rok'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class ZapisnyList:
+    akademicky_rok = attr.attrib()
+    rocnik = attr.attrib()
+    sp_skratka = attr.attrib()
+    sp_popis = attr.attrib()
+    datum_zapisu = attr.attrib()
+    studium_key = attr.attrib()
+    zapisny_list_key = key_attrib('studium_key', 'akademicky_rok')
 
-Predmet = keyed_namedtuple('Predmet', [
-    'skratka', 'nazov', 'typ_vyucby', 'semester', 'kredit', 'predmet_key'],
-    predmet_key=['skratka'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class Predmet:
+    skratka = attr.attrib()
+    nazov = attr.attrib()
+    typ_vyucby = attr.attrib()
+    semester = attr.attrib()
+    kredit = attr.attrib()
+    predmet_key = key_attrib('skratka')
 
-RegPredmet = keyed_namedtuple('RegPredmet', [
-    'skratka', 'nazov', 'konanie', 'stredisko', 'fakulta', 'cudzi_nazov',
-    'rozsah_vyucby', 'semester', 'kredit', 'predmet_key'],
-    predmet_key=['skratka'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class RegPredmet:
+    skratka = attr.attrib()
+    nazov = attr.attrib()
+    konanie = attr.attrib()
+    stredisko = attr.attrib()
+    fakulta = attr.attrib()
+    cudzi_nazov = attr.attrib()
+    rozsah_vyucby = attr.attrib()
+    semester = attr.attrib()
+    kredit = attr.attrib()
+    predmet_key = key_attrib('skratka')
 
-ZapisPredmet = keyed_namedtuple('ZapisPredmet', [
-    'skratka', 'nazov', 'typ_vyucby', 'semester', 'kredit', 'rozsah_vyucby',
-    'jazyk', 'datum_zapisu', 'aktualnost', 'pocet_prihlasenych',
-    'maximalne_prihlasenych', 'blok_skratka', 'blok_nazov', 'blok_index',
-    'v_bloku_index', 'odporucany_rocnik', 'cast', 'predmet_key'],
-    predmet_key=['skratka'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class ZapisPredmet:
+    skratka = attr.attrib()
+    nazov = attr.attrib()
+    typ_vyucby = attr.attrib()
+    semester = attr.attrib()
+    kredit = attr.attrib()
+    rozsah_vyucby = attr.attrib()
+    jazyk = attr.attrib()
+    datum_zapisu = attr.attrib()
+    aktualnost = attr.attrib()
+    pocet_prihlasenych = attr.attrib()
+    maximalne_prihlasenych = attr.attrib()
+    blok_skratka = attr.attrib()
+    blok_nazov = attr.attrib()
+    blok_index = attr.attrib()
+    v_bloku_index = attr.attrib()
+    odporucany_rocnik = attr.attrib()
+    cast = attr.attrib()
+    predmet_key = key_attrib('skratka')
 
-ZapisVlastnost = namedtuple('ZapisVlastnost', [
-    'skratka', 'nazov', 'minimalny_kredit', 'poznamka'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class ZapisVlastnost:
+    skratka = attr.attrib()
+    nazov = attr.attrib()
+    minimalny_kredit = attr.attrib()
+    poznamka = attr.attrib()
 
-Hodnotenie = keyed_namedtuple('Hodnotenie', [
-    'akademicky_rok', 'skratka', 'nazov', 'typ_vyucby', 'semester', 'kredit',
-    'hodn_znamka', 'hodn_termin', 'hodn_datum', 'hodn_znamka_popis',
-    'zapisny_list_key', 'predmet_key', 'hodn_key'],
-    predmet_key=['skratka'],
-    hodn_key=['zapisny_list_key', 'skratka'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class Hodnotenie:
+    akademicky_rok = attr.attrib()
+    skratka = attr.attrib()
+    nazov = attr.attrib()
+    typ_vyucby = attr.attrib()
+    semester = attr.attrib()
+    kredit = attr.attrib()
+    hodn_znamka = attr.attrib()
+    hodn_termin = attr.attrib()
+    hodn_datum = attr.attrib()
+    hodn_znamka_popis = attr.attrib()
+    zapisny_list_key = attr.attrib()
+    predmet_key = key_attrib('skratka')
+    hodn_key = key_attrib('zapisny_list_key', 'skratka')
 
-PriebezneHodnotenie = namedtuple('PriebezneHodnotenie', [
-    'dovod', 'poc_bodov', 'maximum', 'zaevidoval', 'zapocitavat', 'minimum'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class PriebezneHodnotenie:
+    dovod = attr.attrib()
+    poc_bodov = attr.attrib()
+    maximum = attr.attrib()
+    zaevidoval = attr.attrib()
+    zapocitavat = attr.attrib()
+    minimum = attr.attrib()
 
-PriebezneHodnoteniaPredmetu = keyed_namedtuple('PriebezneHodnoteniaPredmetu', [
-    'akademicky_rok', 'skratka', 'nazov', 'semester', 'kredit', 'zaznamy',
-    'predmet_key'],
-    predmet_key=['skratka'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class PriebezneHodnoteniaPredmetu:
+    akademicky_rok = attr.attrib()
+    skratka = attr.attrib()
+    nazov = attr.attrib()
+    semester = attr.attrib()
+    kredit = attr.attrib()
+    zaznamy = attr.attrib()
+    predmet_key = key_attrib('skratka')
 
-Priemer = namedtuple('Priemer', [
-    'akademicky_rok', 'nazov', 'semester', 'ziskany_kredit', 'predmetov',
-    'neabsolvovanych', 'studijny_priemer', 'vazeny_priemer', 'pokusy_priemer',
-    'datum_vypoctu'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class Priemer:
+    akademicky_rok = attr.attrib()
+    nazov = attr.attrib()
+    semester = attr.attrib()
+    ziskany_kredit = attr.attrib()
+    predmetov = attr.attrib()
+    neabsolvovanych = attr.attrib()
+    studijny_priemer = attr.attrib()
+    vazeny_priemer = attr.attrib()
+    pokusy_priemer = attr.attrib()
+    datum_vypoctu = attr.attrib()
 
-Termin = keyed_namedtuple('Termin', [
-    'datum', 'cas', 'miestnost', 'pocet_prihlasenych',
-    'maximalne_prihlasenych', 'hodnotiaci', 'prihlasovanie', 'odhlasovanie',
-    'poznamka', 'akademicky_rok', 'nazov_predmetu', 'skratka_predmetu',
-    'moznost_prihlasit', 'datum_prihlasenia', 'datum_odhlasenia',
-    'hodnotenie_terminu', 'hodnotenie_predmetu', 'zapisny_list_key',
-    'predmet_key', 'termin_key'],
-    predmet_key=['skratka_predmetu'],
-    termin_key=['zapisny_list_key', 'predmet_key', 'datum', 'cas', 'miestnost',
-        'poznamka'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class Termin:
+    datum = attr.attrib()
+    cas = attr.attrib()
+    miestnost = attr.attrib()
+    pocet_prihlasenych = attr.attrib()
+    maximalne_prihlasenych = attr.attrib()
+    hodnotiaci = attr.attrib()
+    prihlasovanie = attr.attrib()
+    odhlasovanie = attr.attrib()
+    poznamka = attr.attrib()
+    akademicky_rok = attr.attrib()
+    nazov_predmetu = attr.attrib()
+    skratka_predmetu = attr.attrib()
+    moznost_prihlasit = attr.attrib()
+    datum_prihlasenia = attr.attrib()
+    datum_odhlasenia = attr.attrib()
+    hodnotenie_terminu = attr.attrib()
+    hodnotenie_predmetu = attr.attrib()
+    zapisny_list_key = attr.attrib()
+    predmet_key = key_attrib('skratka_predmetu')
+    termin_key = key_attrib('zapisny_list_key', 'predmet_key', 'datum', 'cas',
+                            'miestnost', 'poznamka')
 
-PrihlasenyStudent = namedtuple('PrihlasenyStudent', [
-    'sp_skratka', 'datum_prihlasenia', 'plne_meno', 'rocnik', 'email'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class PrihlasenyStudent:
+    sp_skratka = attr.attrib()
+    datum_prihlasenia = attr.attrib()
+    plne_meno = attr.attrib()
+    rocnik = attr.attrib()
+    email = attr.attrib()
 
-Obdobie = namedtuple('Obdobie', ['obdobie_od', 'obdobie_do', 'id_akcie'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class Obdobie:
+    obdobie_od = attr.attrib()
+    obdobie_do = attr.attrib()
+    id_akcie = attr.attrib()
 
-RegUcitelPredmetu = namedtuple('RegUcitelPredmetu', ['plne_meno', 'typ'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class RegUcitelPredmetu:
+    plne_meno = attr.attrib()
+    typ = attr.attrib()
 
-RegOsoba = namedtuple('RegOsoba', ['meno', 'priezvisko', 'plne_meno', 'email'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class RegOsoba:
+    meno = attr.attrib()
+    priezvisko = attr.attrib()
+    plne_meno = attr.attrib()
+    email = attr.attrib()

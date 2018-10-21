@@ -1,4 +1,5 @@
 
+import attr
 import json
 from .control import Control
 from .table import load_script_plain, load_script
@@ -6,18 +7,14 @@ from aisikl.events import (action_event, tree_expansion_event,
                            tree_expansion_action_event, tree_selection_event)
 
 
-# Not a namedtuple, because 'expanded' and 'checked' can change.
+@attr.attrs(frozen=False, slots=True, kw_only=True)
 class Node(object):
-    def __init__(self, id, is_leaf, type, expanded, checked, title):
-        self.id = id
-        self.is_leaf = is_leaf
-        self.type = type
-        self.expanded = expanded
-        self.checked = checked
-        self.title = title
-
-    def __repr__(self):
-        return '<{} {}>'.format(self.__class__.__name__, repr(self.__dict__))
+    id = attr.attrib()
+    is_leaf = attr.attrib()
+    type = attr.attrib()
+    expanded = attr.attrib()  # can change.
+    checked = attr.attrib()  # can change.
+    title = attr.attrib()
 
 
 def _synchronizer_to_cdata(sync, true_name, false_name):

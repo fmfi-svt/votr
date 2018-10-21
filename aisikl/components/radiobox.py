@@ -1,11 +1,14 @@
 
-from collections import namedtuple
+import attr
 from .control import Control
 from aisikl.events import selection_event
 from aisikl.exceptions import AISParseError
 
 
-Option = namedtuple('Option', ['title', 'id'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class Option:
+    title = attr.attrib()
+    id = attr.attrib()
 
 
 class RadioBox(Control):

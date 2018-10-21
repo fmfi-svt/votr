@@ -1,10 +1,14 @@
 
-from collections import namedtuple
+import attr
 from .control import Control
 from aisikl.events import selection_event
 
 
-Option = namedtuple('Option', ['title', 'id', 'tool_tip_text'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class Option:
+    title = attr.attrib()
+    id = attr.attrib()
+    tool_tip_text = attr.attrib()
 
 
 class ComboBox(Control):

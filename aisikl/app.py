@@ -1,5 +1,5 @@
 
-from collections import namedtuple
+import attr
 from contextlib import contextmanager
 import json
 import re
@@ -10,40 +10,51 @@ from .exceptions import (
 from .dialog import Dialog
 
 
-#: Record of a "big" action done by AIS that isn't handled automatically
-#: and requires some reaction, such as:
-#:
-#: - Opening a new application or browser window
-#: - Showing a message box or another modal dialog
-#: - Opening and closing dialogs
-#:
-#: You can use :meth:`Application.collect_operations` to express that you
-#: expected something to happen and are prepared to handle it, or use
-#: :attr:`Application.ignored_messages` to specify that some ``messageBox``
-#: Operations can be safely ignored. If an Operation isn't collected or
-#: safely ignored, it throws an exception.
-#:
-#: Attributes:
-#:     target: The target JavaScript object. Either "webui" or "dm". Usually,
-#:         you just need :attr:`method`.
-#:     method: The type of the operation -- the name of the WebUI JavaScript
-#:         method being called. See :data:`known_operations` for possible
-#:         values.
-#:     args: The list of attributes to the JavaScript method. Votr follows the
-#:         same signatures as WebUI. For example, if ``op.method ==
-#:         "openDialog"``, the Votr call is ``app.open_dialog(*op.args)``.
-Operation = namedtuple('Operation', ('target', 'method', 'args'))
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class Operation:
+    """Record of a "big" action done by AIS that isn't handled automatically
+    and requires some reaction, such as:
+
+    - Opening a new application or browser window
+    - Showing a message box or another modal dialog
+    - Opening and closing dialogs
+
+    You can use :meth:`Application.collect_operations` to express that you
+    expected something to happen and are prepared to handle it, or use
+    :attr:`Application.ignored_messages` to specify that some ``messageBox``
+    Operations can be safely ignored. If an Operation isn't collected or
+    safely ignored, it throws an exception.
+    """
+    #: The target JavaScript object. Either "webui" or "dm". Usually, you just
+    #: need :attr:`method`.
+    target = attr.attrib()
+
+    #: The type of the operation -- the name of the WebUI JavaScript method
+    #: being called. See :data:`known_operations` for possible values.
+    method = attr.attrib()
+
+    #: The list of attributes to the JavaScript method. Votr follows the same
+    #: signatures as WebUI. For example, if ``op.method == "openDialog"``, the
+    #: Votr call is ``app.open_dialog(*op.args)``.
+    args = attr.attrib()
 
 
-#: Record of AIS calling a setter on some component.
-#:
-#: Attributes:
-#:     dialog: The dialog name.
-#:     target: The target component name.
-#:     method: The setter method that is called. In Votr, this original
-#:         method name will be prefixed with ``_ais_``.
-#:     args: The list of setter arguments. (Usually a single string.)
-Update = namedtuple('Update', ('dialog', 'target', 'method', 'args'))
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class Update:
+    """Record of AIS calling a setter on some component."""
+
+    #: The dialog name.
+    dialog = attr.attrib()
+
+    #: The target component name.
+    target = attr.attrib()
+
+    #: The setter method that is called. In Votr, this original method name
+    #: will be prefixed with ``_ais_``.
+    method = attr.attrib()
+
+    #: The list of setter arguments. (Usually a single string.)
+    args = attr.attrib()
 
 
 #: The known :class:`Operation` methods.
@@ -170,21 +181,24 @@ def parse_response(soup):
             if method not in known_operations[target]:
                 raise AISParseError("Unknown method {}().{}()".format(
                     target, method))
-            operations.append(Operation(target, method, args))
+            operations.append(Operation(
+                target=target, method=method, args=args))
             continue
 
         match = _update_re.match(line)
         if match:
             target, dialog, method, args_str = match.groups()
             args = _parse_args(args_str)
-            updates.append(Update(dialog, target, method, args))
+            updates.append(Update(
+                dialog=dialog, target=target, method=method, args=args))
             continue
 
         match = _dialog_update_re.match(line)
         if match:
             target, method, args_str = match.groups()
             args = _parse_args(args_str)
-            updates.append(Update(target, target, method, args))
+            updates.append(Update(
+                dialog=target, target=target, method=method, args=args))
             continue
 
         raise AISParseError("Couldn't parse script line: {}".format(line))
@@ -412,7 +426,8 @@ class Application:
 
         for operation in operations:
             self.ctx.log('operation',
-                'Received operation {}'.format(operation.method), operation)
+                'Received operation {}'.format(operation.method),
+                attr.astuple(operation, recurse=False))
 
         operations = self._filter_operations(operations)
 
@@ -426,7 +441,8 @@ class Application:
 
         if updates:
             self.ctx.log('update',
-                'Updating {} components'.format(len(updates)), updates)
+                'Updating {} components'.format(len(updates)),
+                [attr.astuple(update, recurse=False) for update in updates])
 
         for update in updates:
             try:

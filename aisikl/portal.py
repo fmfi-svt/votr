@@ -1,10 +1,15 @@
 
-from collections import namedtuple
+import attr
 
 __all__ = ['get_modules', 'get_apps']
 
 
-PortalApp = namedtuple('PortalApp', ['id', 'title', 'url', 'description'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class PortalApp:
+    id = attr.attrib()
+    title = attr.attrib()
+    url = attr.attrib()
+    description = attr.attrib()
 
 
 def get_modules(ctx):

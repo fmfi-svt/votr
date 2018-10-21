@@ -1,7 +1,7 @@
 
+import attr
 import json
 from bs4 import BeautifulSoup
-from collections import namedtuple
 from .component import is_true
 from .control import Control
 from .combobox import Option
@@ -10,18 +10,36 @@ from aisikl.events import (cell_edited_event, row_edited_event, action_event,
 from aisikl.exceptions import AISParseError, AISBehaviorError
 
 
-Column = namedtuple('Column', [
-    'alias', 'index', 'title', 'header', 'sortable', 'fixed', 'width',
-    'visible', 'is_checked_selection_column', 'edited_by', 'combo_box_mode',
-    'model', 'send_edit_cell', 'default_value'])
+@attr.attrs(frozen=True, slots=True, kw_only=True)
+class Column:
+    alias = attr.attrib()
+    index = attr.attrib()
+    title = attr.attrib()
+    header = attr.attrib()
+    sortable = attr.attrib()
+    fixed = attr.attrib()
+    width = attr.attrib()
+    visible = attr.attrib()
+    is_checked_selection_column = attr.attrib()
+    edited_by = attr.attrib()
+    combo_box_mode = attr.attrib()
+    model = attr.attrib()
+    send_edit_cell = attr.attrib()
+    default_value = attr.attrib()
 
 
-Cell = namedtuple('Cell', [
-    'value', 'title', 'edited_by', 'combo_box_mode', 'model', 'send_edit_cell',
-    'disabled'])
+@attr.attrs(frozen=False, slots=True, kw_only=True)
+class Cell:
+    value = attr.attrib()  # can change.
+    title = attr.attrib()
+    edited_by = attr.attrib()
+    combo_box_mode = attr.attrib()
+    model = attr.attrib()
+    send_edit_cell = attr.attrib()
+    disabled = attr.attrib()
 
 
-class Row(object):
+class Row:
     def __init__(self, id, rid, cells, table):
         self.id = id
         self.rid = rid
@@ -149,7 +167,9 @@ class Table(Control):
 
         self.column_map = { col.alias: col for col in self.columns }
 
-        self.log('table', 'Found {} columns in {}'.format(len(self.columns), self.id), self.columns)
+        self.log('table',
+            'Found {} columns in {}'.format(len(self.columns), self.id),
+            [attr.astuple(c, recurse=False) for c in self.columns])
 
         self._load_rows(load_script(data_view, 'dataTabBodies'),
                         load_script(data_view, 'dataTabBodiesFixed'))
@@ -659,7 +679,7 @@ class Table(Control):
         self.log('action', 'Setting cell {} of row {} in {} to {!r}'.format(
             alias, row_index, self.id, value))
 
-        cell = row.cells[column.index] = cell._replace(value=value)
+        cell.value = value
 
         self.changed_cells.add((alias, row_index))
         self.last_changed_row_index = row_index

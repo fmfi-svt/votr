@@ -1,4 +1,5 @@
 
+import attr
 import json
 import traceback
 from werkzeug.routing import Rule
@@ -6,8 +7,8 @@ from . import sessions
 
 
 def encode_result(thing):
-    if isinstance(thing, tuple) and hasattr(thing, '_asdict'):
-        thing = thing._asdict()
+    if attr.has(thing.__class__):
+        thing = attr.asdict(thing, recurse=False)
 
     if isinstance(thing, (list, tuple)):
         return [encode_result(item) for item in thing]

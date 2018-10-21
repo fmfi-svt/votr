@@ -1,20 +1,17 @@
 
+import attr
 from .component import is_true
 from .control import Control
 
 
-# Not a namedtuple, because 'checked' can change.
+@attr.attrs(frozen=False, slots=True, kw_only=True)
 class Item:
-    def __init__(self, title, id, sid, rid, tool_tip_text, checked):
-        self.title = title
-        self.id = id
-        self.sid = sid
-        self.rid = rid
-        self.tool_tip_text = tool_tip_text
-        self.checked = checked
-
-    def __repr__(self):
-        return '<{} {}>'.format(self.__class__.__name__, repr(self.__dict__))
+    title = attr.attrib()
+    id = attr.attrib()
+    sid = attr.attrib()
+    rid = attr.attrib()
+    tool_tip_text = attr.attrib()
+    checked = attr.attrib()  # can change.
 
 
 class CheckList(Control):
