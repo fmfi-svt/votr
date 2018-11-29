@@ -160,8 +160,8 @@ export function MojeSkuskyPageContent() {
 
     return <React.Fragment>
       <div style={{marginBottom: "5px"}}>
-        <button className="btn btn-default" onClick={expandAll}>Expand all</button>
-        <button className="btn btn-default" onClick={collapseAll}>Collapse all</button>
+        <button className="btn btn-default hidden-md hidden-lg" onClick={expandAll}>Expand all</button>
+        <button className="btn btn-default hidden-md hidden-lg" onClick={collapseAll}>Collapse all</button>
       </div>
       <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
         <thead>{header}</thead>
@@ -201,17 +201,31 @@ export function MojeSkuskyPageContent() {
             <tr key={`${termin.termin_key}-info`} className={`hidden-md hidden-lg ${isOpened(index) ? "" : "hidden"}`}>
               <td />
               <td colSpan="10">
-                <span className="hidden-sm">
-                  Prihlásení: <Link href={{ ...query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
-                  {termin.pocet_prihlasenych +
-                    (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
-                  </Link><br />
-                </span>
-                <span className="hidden-sm">Miestnosť: {termin.miestnost}<br /></span>
-                Hodnotiaci: {termin.hodnotiaci}<br />
-                Poznámka: {termin.poznamka}<br />
-                Prihlasovanie: {termin.prihlasovanie}<br />
-                Odhlasovanie: {termin.odhlasovanie}<br />
+                <table className="table-condensed">
+                <tbody>
+                  <tr className="hidden-sm">
+                    <td>Prihlásení:</td>
+                    <td><Link href={{ ...query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
+                    {termin.pocet_prihlasenych +
+                      (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
+                    </Link></td>
+                  </tr>
+                  <tr className="hidden-sm">
+                    <td>Miestnosť:</td>
+                    <td>{termin.miestnost}</td>
+                  </tr>
+                  <tr>
+                    <td>Hodnotiaci:</td>
+                    <td>{termin.hodnotiaci}</td>
+                  </tr>
+                  <tr>
+                    <td>Poznámka:</td>
+                    <td>{termin.poznamka}</td>
+                  </tr>
+                  <tr><td>Prihlasovanie:</td><td>{termin.prihlasovanie}</td></tr>
+                  <tr><td>Odhlasovanie:</td><td>{termin.odhlasovanie}</td></tr>
+                </tbody>
+                </table>
               </td>
             </tr>
           ])}
