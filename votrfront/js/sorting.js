@@ -62,9 +62,9 @@ export function sortTable(items, columns, query, queryKey) {
   }
 
   var header = <tr>
-    {columns.map(([label, prop, process, preferDesc], index) =>
+    {columns.map(([label, prop, process, preferDesc, responsiveClass], index) =>
       <th key={index} data-index={index} onClick={handleClick}
-          className={'sort ' + (order[0] == 'a' + index ? 'asc' :
+          className={`${responsiveClass} ` + 'sort ' + (order[0] == 'a' + index ? 'asc' :
                                 order[0] == 'd' + index ? 'desc' : '')}>
         {label}
       </th>
