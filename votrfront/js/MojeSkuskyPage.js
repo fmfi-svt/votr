@@ -8,7 +8,7 @@ import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
 import { PageLayout, PageTitle } from './layout';
 import { Link, queryConsumer } from './router';
 import { sortAs, sortTable } from './sorting';
-
+import { LocalSettings } from './LocalSettings';
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
 
@@ -17,13 +17,13 @@ export var MojeSkuskyColumns = [
   ["Predmet", 'nazov_predmetu'],
   ["Dátum", 'datum', sortAs.date],
   ["Čas", 'cas'],
-  ["Miestnosť", 'miestnost'],
-  ["Hodnotiaci", 'hodnotiaci', sortAs.personName],
-  ["Prihlásení", 'pocet_prihlasenych', sortAs.number],
-  ["Poznámka", 'poznamka'],
-  ["Prihlasovanie", 'prihlasovanie', sortAs.interval],
-  ["Odhlasovanie", 'odhlasovanie', sortAs.interval],
-  ["Známka", null, (termin) => termin.hodnotenie_terminu || termin.hodnotenie_predmetu]
+  ["Miestnosť", 'miestnost', null, null, "hidden-xs"],
+  ["Hodnotiaci", 'hodnotiaci', sortAs.personName, null, "hidden-xs hidden-sm"],
+  ["Prihlásení", 'pocet_prihlasenych', sortAs.number, null, "hidden-xs"],
+  ["Poznámka", 'poznamka', null, null, "hidden-xs hidden-sm"],
+  ["Prihlasovanie", 'prihlasovanie', sortAs.interval, null, "hidden-xs hidden-sm"],
+  ["Odhlasovanie", 'odhlasovanie', sortAs.interval, null, "hidden-xs hidden-sm"],
+  ["Známka", null, (termin) => termin.hodnotenie_terminu || termin.hodnotenie_predmetu],
 ];
 
 function convertToICAL(terminy) {
@@ -39,7 +39,7 @@ function convertToICAL(terminy) {
     "X-WR-CALDESC:Kalendár skúšok vyexportovaný z aplikácie Votr",
     "X-WR-TIMEZONE:Europe/Bratislava",
   ];
-  
+
   var dtstamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
 
   // VEVENTs
@@ -49,13 +49,13 @@ function convertToICAL(terminy) {
       continue;
     }
     lines.push("BEGIN:VEVENT");
-    
+
     lines.push("SUMMARY:" + termin.nazov_predmetu);
-    
+
     // unique identificator for each event (so we can identify copies of the same event)
     var uid = termin.termin_key + "@votr.uniba.sk";
     lines.push("UID:" + uid);
-    
+
     // DTSTAMP is when this VEVENT was created (exported), must be YYYYMMDDTHHMMSSZ
     lines.push("DTSTAMP:" + dtstamp);
 
@@ -133,37 +133,88 @@ export function MojeSkuskyPageContent() {
       saveAs(blob, "MojeTerminy.ics", true);
     }
 
+    function toggleInfo(index) {
+      const opened = JSON.parse(LocalSettings.get("openedRows")) || {};
+      opened[index] = !opened[index];
+      LocalSettings.set("openedRows", JSON.stringify(opened));
+    }
+
+    function isOpened(index) {
+      return (JSON.parse(LocalSettings.get("openedRows")) || {})[index];
+    }
+
+    function expandAll() {
+      const opened = terminy.reduce((acc, curr, idx) => ({...acc, [idx]: true}), {});
+      LocalSettings.set("openedRows", JSON.stringify(opened));
+    }
+
+    // TODO: better names
+    function collapseAll() {
+      LocalSettings.set("openedRows", JSON.stringify({}));
+    }
+
+    function fullTable() {
+      // console.log("TODO remove all hidden classes on elements ?!?");
+    }
+    // <button className="btn btn-default" onClick={fullTable}>Full table</button>
+
     return <React.Fragment>
+      <div style={{marginBottom: "5px"}}>
+        <button className="btn btn-default" onClick={expandAll}>Expand all</button>
+        <button className="btn btn-default" onClick={collapseAll}>Collapse all</button>
+      </div>
       <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
         <thead>{header}</thead>
         <tbody>
-          {terminy.map((termin) =>
-            <tr key={termin.termin_key}>
+          {terminy.map((termin, index) =>[
+            <tr key={termin.termin_key} onClick={() => toggleInfo(index)}>
               {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
                 <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
                 <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
-              <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
-                {termin.nazov_predmetu}
-              </Link></td>
+              <td>
+                <span className="hidden-md hidden-lg" style={{fontWeight:"bold", float: "right"}}>
+                  {isOpened(index) ? "-" : "+"}
+                </span>
+                <Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
+                  {termin.nazov_predmetu}
+                </Link>
+              </td>
               <td>{termin.datum}</td>
               <td>{termin.cas}</td>
-              <td>{termin.miestnost}</td>
-              <td>{termin.hodnotiaci}</td>
-              <td><Link href={{ ...query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
+              <td className="hidden-xs">{termin.miestnost}</td>
+              <td className="hidden-xs hidden-sm">{termin.hodnotiaci}</td>
+              <td className="hidden-xs"><Link href={{ ...query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
                 {termin.pocet_prihlasenych +
                  (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
               </Link></td>
-              <td>{termin.poznamka}</td>
-              <td>{termin.prihlasovanie}</td>
-              <td>{termin.odhlasovanie}</td>
+              <td className="hidden-xs hidden-sm">{termin.poznamka}</td>
+              <td className="hidden-xs hidden-sm">{termin.prihlasovanie}</td>
+              <td className="hidden-xs hidden-sm">{termin.odhlasovanie}</td>
               <td>
                 {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
                  termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
                  null}
                  <SkuskyRegisterButton termin={termin}/>
               </td>
+            </tr>,
+            <tr key={`${termin.termin_key}-striped-hack`} className={`hidden-md hidden-lg ${isOpened(index) ? "" : "hidden"}`}></tr>,
+            <tr key={`${termin.termin_key}-info`} className={`hidden-md hidden-lg ${isOpened(index) ? "" : "hidden"}`}>
+              <td />
+              <td colSpan="10">
+                <span className="hidden-sm">
+                  Prihlásení: <Link href={{ ...query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
+                  {termin.pocet_prihlasenych +
+                    (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
+                  </Link><br />
+                </span>
+                <span className="hidden-sm">Miestnosť: {termin.miestnost}<br /></span>
+                Hodnotiaci: {termin.hodnotiaci}<br />
+                Poznámka: {termin.poznamka}<br />
+                Prihlasovanie: {termin.prihlasovanie}<br />
+                Odhlasovanie: {termin.odhlasovanie}<br />
+              </td>
             </tr>
-          )}
+          ])}
         </tbody>
         {message && <tfoot><tr><td colSpan={MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
       </table>
