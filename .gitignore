@@ -15,6 +15,7 @@ docs/_build
 /logs
 /logdb
 /oldlogs
+/logarchive
 *_settings.py
 !default_settings.py
 *.log

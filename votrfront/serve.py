@@ -14,6 +14,7 @@ def serve(app, *args):
     os.makedirs(app.var_path('logs'), exist_ok=True)
     os.makedirs(app.var_path('logdb'), exist_ok=True)
     os.makedirs(app.var_path('oldlogs'), exist_ok=True)
+    os.makedirs(app.var_path('logarchive'), exist_ok=True)
     os.makedirs(app.var_path('sessions'), exist_ok=True)
 
     app.wrap_static()

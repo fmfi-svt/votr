@@ -3,6 +3,7 @@ import contextlib
 import gzip
 import io
 import json
+import lzma
 import os
 import re
 import sqlite3
@@ -66,9 +67,10 @@ def _connect(app):
 
 def locate(app, sessid):
     options = [
-        app.var_path('logs', sessid),
+        app.var_path('logs', sessid),  # legacy
         app.var_path('logs', sessid + '.gz'),
-        app.var_path('oldlogs', sessid[0:2], sessid + '.gz'),
+        app.var_path('oldlogs', sessid[0:2], sessid + '.gz'),  # legacy
+        app.var_path('oldlogs', sessid + '.xz'),
         sessid,
     ]
     for option in options:
@@ -80,6 +82,8 @@ def locate(app, sessid):
 def open_log(filename):
     if filename.endswith('.gz'):
         return gzip.open(filename, 'rt', encoding='utf8')
+    elif filename.endswith('.xz'):
+        return lzma.open(filename, 'rt', encoding='utf8')
     else:
         return open(filename, encoding='utf8')
 
