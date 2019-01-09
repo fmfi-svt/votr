@@ -533,14 +533,15 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
     - IRRELEVANT
 - tryResizeIframe()
     - UNSUPPORTED
-- openMainDialog()
-    - Application.open_main_dialog()
+- prepareBrowserForDialogsOpen()
+    - IRRELEVANT (probably only affects positioning and visuals)
+- showDialogs()
+    - Handled in parse_response()
     - useDialogFrame is IRRELEVANT (it only affects positioning and visuals).
 - openDialog()
     - Application.open_dialog()
-    - isNative is UNSUPPORTED. (TODO: it seems this *is* NativeDialog after
-      all. dm.messageBox() calls showNativeDialog() which calls openDialog()
-      with isNative true. Figure this out.)
+    - isNative is only true when called from showNativeDialog(), which is used
+      in messageBox(), confirmBox(), etc.
     - Multiple dialog stacks are UNSUPPORTED.
     - x, y, width, height, resizeable, minWidth, minHeight, forControlOfParent
       are IRRELEVANT (only affecting positioning and visuals). minimizeable is
@@ -597,6 +598,27 @@ would be a lot of work for little gain.
 # StyleManager
 
 IRRELEVANT
+
+
+
+# RequestManager
+
+COMPLETE
+
+- prepareHttpRequest()
+    - IRRELEVANT
+- reqIndex -> self.req_index
+- prepareUrlBase() -> Application._prepare_url_base()
+- prepareUrlDialog()
+    - Inlined in Application.open_dialog().
+- sendRequestEvent() -> Application._send_request()
+- sendRequestWhatsUp(), sendRequestGetLastOutput(), sendRequestAbort(),
+  sendRequestSuggestions()
+    - Probably IRRELEVANT.
+- getResultIsland()
+    - See getXMPIsland().
+- getResultComponentsProperties()
+    - Always empty so far. Empty case is handled in _useless_res.
 
 
 
@@ -1101,6 +1123,7 @@ COMPLETE
     - Equivalent to ActionableControl's version.
 - fireUIChangesEvent()
     - IRRELEVANT, because canClose is UNSUPPORTED
+    - setData is also UNSUPPORTED for now
 - changedProperties() -> self.changed_properties()
 - bodyContextMenu(), bodyMouseDown()
     - IRRELEVANT
@@ -1114,6 +1137,8 @@ COMPLETE
     - If this function receives non-null params, WebUI stores the value in
       PopupMenuManager and uses it in MenuItem.onAction(). This can be done in
       Votr by calling MenuItem.click() with the needed params.
+- setData(), getData()
+    - UNSUPPORTED
 
 
 
@@ -1913,15 +1938,12 @@ PARTIAL
 
 Mostly covered by Application. No longer global.
 
-- fillResultFrame()
-    - Called from `request.html` (the request frame). Roughly corresponds to
-      Application._process_response().
 - appId -> app.app_id
 - appContext -> "ais"
 - webuiContext -> "ais/webui2"
 - getSlashContext() -> "/ais"
-- getAppBody(), getRequestFrame(), getResultFrame(), getDownloadFrame(),
-  getLogFrame(), getDisableDialogsGlass(), webuiVersion, useAria
+- getAppBody(), getRequestFrame(), getDownloadFrame(), getDisableDialogsGlass(),
+  webuiVersion, useAria
     - IRRELEVANT
 - getHost(), getPort(), getProtocol() -> context.ais_url
 - webuiVersion, useAria

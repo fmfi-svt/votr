@@ -59,6 +59,7 @@ known_operations = {
 DEFAULT_IGNORED_MESSAGES = [
     'Činnosť úspešne dokončená.',
     'Podmienkam nevyhovuje žiadny záznam.',
+    'Používate nepodporovaný prehliadač ',
 ]
 
 
@@ -87,6 +88,7 @@ _useless_res = [
     re.compile(r'^dm\(\)\.setActiveDialogName\(\'\w+\'\)$'),
     # TODO: Perhaps we should handle setActiveDialogName, or at least check if
     # it's the same as the current active dialog.
+    re.compile(r'^dm\(\)\.prepareBrowserForDialogsOpen\(showDlgProperties\)$'),
 ]
 _main_re = re.compile(r'^function main0?\(\) \{$')
 _operation_re = re.compile(r'^(webui|dm)\(\)\.(\w+)\((.*)\)$')
@@ -137,6 +139,7 @@ def parse_response(soup):
         raise AISParseError("Unexpected script in result frame response")
 
     in_main = False
+    show_dlg_properties = None
 
     for r in _multiline_res:
         script = r.sub('', script)
@@ -150,6 +153,13 @@ def parse_response(soup):
         if not line: continue
         if any(r.match(line) for r in _useless_res): continue
 
+        if line.startswith('var showDlgProperties ='):
+            if in_main: raise AISParseError("Bad script structure")
+            if show_dlg_properties is not None:
+                raise AISParseError("Duplicate showDlgProperties")
+            show_dlg_properties = json.loads(line.partition('=')[2])
+            continue
+
         if _main_re.match(line):
             if in_main: raise AISParseError("Bad script structure")
             in_main = True
@@ -162,6 +172,16 @@ def parse_response(soup):
 
         if not in_main:
             raise AISParseError("Unexpected line out of main() or main0()")
+
+        if line == 'dm().showDialogs(showDlgProperties)':
+            if show_dlg_properties is None:
+                raise AISParseError("Missing showDlgProperties")
+            for dialog in show_dlg_properties:
+                # openMainDialog doesn't exist anymore, but we kept the name
+                # because it's convenient for existing fladgejt code.
+                method = 'openMainDialog' if dialog['isMain'] else 'openDialog'
+                operations.append(Operation('dm', method, [dialog]))
+            continue
 
         match = _operation_re.match(line)
         if match:
@@ -271,6 +291,7 @@ class Application:
         '''Actually opens the new instance created by :meth:`open`.'''
         self.ctx = ctx
         self.serial = 0
+        self.req_index = 0
         self.dialogs = {}
         self.dialog_stack = []
         self.active_dialog = self.d = None
@@ -375,6 +396,12 @@ class Application:
         finally:
             self.collector = None
 
+    def _prepare_url_base(self):
+        old_req_index = self.req_index
+        self.req_index += 1
+        return { 'appId': self.app_id, 'antiCache': time.time(),
+                 'reqIndex': old_req_index, 'viewer': 'web' }
+
     def _do_request(self, body):
         '''Sends a POST request to AIS and process the response.
 
@@ -388,12 +415,13 @@ class Application:
             self.serial, body)
         self.serial += 1
 
-        params = { 'appId': self.app_id, 'antiCache': time.time() }
+        params = self._prepare_url_base()
         data = params.copy()
         data['xml_spec'] = xml_spec
 
         # WebUIServlet needs charset set in Content-Type. Normal POST requests
-        # don't have it, but request.html manually sets it, so we do the same.
+        # don't have it, but sendRequestEvent manually sets it, so we do the
+        # same.
         headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
         return self.ctx.request_html('/ais/servlets/WebUIServlet',
             method='POST', params=params, data=data, headers=headers)
@@ -547,47 +575,33 @@ class Application:
                'antiCache={}').format(url, params, time.time())
         return self.open(self.ctx, url, ignored_messages)
 
-    def open_main_dialog(self, name, title, code, dlg_based_on_theme,
-                         dlg_style, is_dlg_default_style_used, x, y, min_width,
-                         min_height, width, height, resizeable, minimizeable,
-                         closeable, hide_title_bar):
+    def open_main_dialog(self, props):
         '''Opens the main dialog in response to the openMainDialog
         :class:`Operation`.
 
         Returns:
             The opened :class:`aisikl.dialog.Dialog`.
         '''
-        # We ignore webui's useDialogFrame, so we just call open_dialog.
-        return self.open_dialog(
-            name, title, code, dlg_based_on_theme, dlg_style,
-            is_dlg_default_style_used, None, False, True, 0, 0, width, height,
-            resizeable, minimizeable, closeable, hide_title_bar, min_width,
-            min_height, None, None, False)
+        return self.open_dialog(props)
 
-    def open_dialog(self, name, title, code, dlg_based_on_theme, dlg_style,
-                    is_dlg_default_style_used, parent_dialog_name, modal,
-                    is_main_dialog, x, y, width, height, resizeable,
-                    minimizeable, closeable, hide_title_bar, min_width,
-                    min_height, for_control_of_parent, purl, is_native):
+    def open_dialog(self, props):
         '''Opens a new dialog in response to the openDialog :class:`Operation`.
 
         Returns:
             The opened :class:`aisikl.dialog.Dialog`.
         '''
-        if is_native:
-            # Current theory: isNative probably means the dialog body contains
-            # custom HTML instead of Components. We haven't seen one yet.
-            # (NativeDialog, i.e. MessageBox and the rest, is something else.)
-            raise AISParseError("openDialog() with isNative is not supported")
+        name = props['id']
+        self.ctx.log('operation', 'Opening dialog {} "{}"'.format(
+            name, props['title']))
 
-        self.ctx.log('operation', 'Opening dialog {} "{}"'.format(name, title))
-
-        # Ignore arguments that only affect visuals: dlg_based_on_theme,
-        # dlg_style, is_dlg_default_style_used, x, y, width, height,
-        # resizeable, min_width, min_height, and for_control_of_parent.
-        # (And minimizeable, which actually isn't used in webui at all.)
-        dialog = Dialog(name, title, code, parent_dialog_name, modal,
-                        is_main_dialog, closeable, hide_title_bar, self)
+        # Ignore properties that only affect visuals: basedOnTheme, style,
+        # isDlgDefaultStyleUsed, x, y, w, h, ra (resizeable), ma (minimizeable),
+        # minWidth, minHeight, and forControlOfParent.
+        dialog = Dialog(
+            name=name, title=props['title'], code=props['code'],
+            parent_dialog_name=props.get('parentDlgName'), modal=props['modal'],
+            is_main_dialog=props['isMain'], closeable=props['ca'],
+            hide_title_bar=props['htb'], app=self)
         self.dialog_stack.append(dialog)
         self.dialogs[name] = dialog
 
@@ -596,8 +610,10 @@ class Application:
         modals = [d for d in self.dialog_stack if d.modal]
         self.active_dialog = self.d = modals[-1] if modals else dialog
 
-        url = purl or ('/ais/servlets/WebUIServlet?appId={}&form={}&'
-                       'antiCache={}').format(self.app_id, name, time.time())
+        url = '/ais/servlets/WebUIServlet?{}&form={}'.format(
+            '&'.join('{}={}'.format(k, v)
+                     for k, v in self._prepare_url_base().items()),
+            name)
         dialog._init(url)
 
         return dialog

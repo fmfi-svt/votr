@@ -7,7 +7,7 @@ class WebuiCommonUIMixin:
         # Ciselnik typu SSSC001
         if text is not None:
             old_ignored_messages = app.ignored_messages
-            app.ignored_messages = []
+            app.ignored_messages = [m for m in app.ignored_messages if m != 'Podmienkam nevyhovuje žiadny záznam.']
             try:
                 with app.collect_operations() as ops:
                     app.d.components[select_button].click()
