@@ -52,8 +52,7 @@ const MojeSkuskyColumnsObj = [
       >
         {termin.nazov_predmetu}
       </Link>
-    ),
-    expansionMark: true
+    )
   },
   { label: "Dátum", prop: "datum", process: sortAs.date },
   { label: "Čas", prop: "cas" },
@@ -105,15 +104,16 @@ const MojeSkuskyColumnsObj = [
     label: "Známka",
     process: termin => termin.hodnotenie_terminu || termin.hodnotenie_predmetu,
     cell: termin => (
-      <div>
+      <React.Fragment>
         {termin.hodnotenie_terminu
           ? termin.hodnotenie_terminu
           : termin.hodnotenie_predmetu
           ? termin.hodnotenie_predmetu + " (nepriradená k termínu)"
           : null}
         <SkuskyRegisterButton termin={termin} />
-      </div>
-    )
+      </React.Fragment>
+    ),
+    expansionMark: true
   }
 ];
 
@@ -226,7 +226,7 @@ export function MojeSkuskyPageContent() {
         items={terminy}
         columns={MojeSkuskyColumnsObj}
         queryKey="skuskySort"
-        withButtons="true"
+        withButtons={true}
         message={message}
       />
       {terminy.length && <button onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}

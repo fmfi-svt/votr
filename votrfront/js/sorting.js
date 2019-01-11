@@ -39,43 +39,9 @@ sortAs.interval = function (text) {
 
 
 export function sortTable(items, columns, query, queryKey) {
-  var orderString = query[queryKey] || columns.defaultOrder;
-  var order = orderString ? orderString.split(/(?=[ad])/) : [];
-  var directions = order.map((o) => o.substring(0, 1) == 'a' ? 'asc' : 'desc');
-  var iteratees = order.map((o) => {
-    var [label, prop, process, preferDesc] = columns[o.substring(1)];
-    return (item) => (process || _.identity)(prop ? item[prop] : item);
-  });
-
-  items = _.orderBy(items, iteratees, directions);
-
-  function handleClick(event) {
-    var index = event.currentTarget.getAttribute('data-index');
-    var [label, prop, process, preferDesc] = columns[index];
-
-    var newOrder = _.without(order, 'a' + index, 'd' + index);
-    newOrder.unshift((
-      order[0] == 'a' + index ? 'd' :
-      order[0] == 'd' + index ? 'a' :
-      preferDesc ? 'd' : 'a') + index);
-
-    navigate({ ...query, [queryKey]: newOrder.join('') });
+  if (columns[0][0]){
+    columns = columns.map(([label, prop, process, preferDesc, hiddenClass]) => ({label, prop, process, preferDesc, hiddenClass}));
   }
-
-  var header = <tr>
-    {columns.map(([label, prop, process, preferDesc, hiddenClass], index) =>
-      <th key={index} data-index={index} onClick={handleClick}
-          className={`${hiddenClass} ` + 'sort ' + (order[0] == 'a' + index ? 'asc' :
-                                order[0] == 'd' + index ? 'desc' : '')}>
-        {label}
-      </th>
-    )}
-  </tr>;
-
-  return [items, header];
-};
-
-export function sortTableCopyForObjectCol(items, columns, query, queryKey) {
   var orderString = query[queryKey] || columns.defaultOrder;
   var order = orderString ? orderString.split(/(?=[ad])/) : [];
   var directions = order.map((o) => o.substring(0, 1) == 'a' ? 'asc' : 'desc');
@@ -119,7 +85,10 @@ function toggleInfo(index) {
 }
 
 function expandAll(items) {
-  const opened = items.reduce((acc, curr, idx) => ({...acc, [idx]: true}), {});
+  const opened = {};
+  for ( const i = 0; i < items.length; i++ ) {
+    opened[i] = true;
+  }
   LocalSettings.set("openedRows", JSON.stringify(opened));
 }
 
@@ -141,8 +110,7 @@ export const SortableTable = ({
   message
 }) =>
   queryConsumer(query => {
-    // TODO change to sortTable
-    const [sortedItems, header] = sortTableCopyForObjectCol(
+    const [sortedItems, header] = sortTable(
       items,
       columns,
       query,
@@ -177,7 +145,7 @@ export const SortableTable = ({
               <td
                 key={label}
                 className={hiddenClass.join(" ")}
-                {...(colProps instanceof Function ? colProps(item) : {})}
+                {...(colProps ? colProps(item) : {})}
               >
                 {expansionMark && (
                   <span
@@ -187,7 +155,7 @@ export const SortableTable = ({
                     {isOpened(index) ? "-" : "+"}
                   </span>
                 )}
-                {cell instanceof Function ? cell(item, query) : item[prop]}
+                {cell ? cell(item, query) : item[prop]}
               </td>
             )
           )}
