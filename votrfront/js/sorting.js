@@ -78,148 +78,153 @@ export function sortTable(items, columns, query, queryKey) {
   return [items, header];
 };
 
-function toggleInfo(index) {
-  const opened = JSON.parse(LocalSettings.get("openedRows")) || {};
-  opened[index] = !opened[index];
-  LocalSettings.set("openedRows", JSON.stringify(opened));
-}
-
-function expandAll(items) {
-  const opened = {};
-  for ( const i = 0; i < items.length; i++ ) {
-    opened[i] = true;
+export class SortableTable extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {};
   }
-  LocalSettings.set("openedRows", JSON.stringify(opened));
-}
 
-// TODO: better names
-function collapseAll() {
-  LocalSettings.set("openedRows", JSON.stringify({}));
-}
+  toggleInfo(index) {
+    this.setState((state) => ({[index]: !state[index]}));
+  }
 
-function isOpened(index) {
-  return (JSON.parse(LocalSettings.get("openedRows")) || {})[index];
-}
+  expandAll(items) {
+    const opened = {};
+    for ( const i = 0; i < items.length; i++ ) {
+      opened[i] = true;
+    }
+    this.setState(opened);
+  }
 
-export const SortableTable = ({
-  items,
-  columns,
-  queryKey,
-  withButtons,
-  footer,
-  message
-}) =>
-  queryConsumer(query => {
-    const [sortedItems, header] = sortTable(
-      items,
-      columns,
-      query,
-      queryKey
-    );
+  // TODO: better names
+  collapseAll() {
+    const opened = {};
+    for ( const i = 0; i < items.length; i++ ) {
+      opened[i] = false;
+    }
+    this.setState(opened);
+  }
 
-    const className =
-      "table table-condensed table-bordered table-striped table-hover" +
-      (withButtons ? " with-buttons-table" : "");
+  isOpened(index) {
+    return this.state[index];
+  }
 
-    const notExpandable = columns.reduce(
-      (acc, col) =>
-        acc.filter(item => !(col.hiddenClass && col.hiddenClass.includes(item))),
-      ["hidden-xs", "hidden-sm", "hidden-md", "hidden-lg"]
-    );
+  render() {
+    const {items, columns, queryKey, withButtons, footer, message} = this.props;
 
-    const rows = [];
-
-    sortedItems.forEach((item, index) => {
-      rows.push(
-        <tr key={index} onClick={() => toggleInfo(index)}>
-          {columns.map(
-            ({
-              label,
-              prop,
-              process,
-              hiddenClass = [],
-              cell,
-              colProps,
-              expansionMark
-            }) => (
-              <td
-                key={label}
-                className={hiddenClass.join(" ")}
-                {...(colProps ? colProps(item) : {})}
-              >
-                {expansionMark && (
-                  <span
-                    className={notExpandable.join(" ")}
-                    style={{ fontWeight: "bold", float: "right" }}
-                  >
-                    {isOpened(index) ? "-" : "+"}
-                  </span>
-                )}
-                {cell ? cell(item, query) : item[prop]}
-              </td>
-            )
-          )}
-        </tr>
+    return queryConsumer(query => {
+      const [sortedItems, header] = sortTable(
+        items,
+        columns,
+        query,
+        queryKey
       );
 
-      rows.push(<tr key={`${index}-striped-hack`} className={"hidden"} />);
+      const className =
+        "table table-condensed table-bordered table-striped table-hover" +
+        (withButtons ? " with-buttons-table" : "");
+
+      const notExpandable = columns.reduce(
+        (acc, col) =>
+          acc.filter(item => !(col.hiddenClass && col.hiddenClass.includes(item))),
+        ["hidden-xs", "hidden-sm", "hidden-md", "hidden-lg"]
+      );
 
       function revertHidden(hiddenClass) {
         const all = ["hidden-xs", "hidden-sm", "hidden-md", "hidden-lg"];
         return all.filter(size => !hiddenClass.includes(size)).join(" ");
       }
 
-      rows.push(
-        <tr
-          key={`${index}-info`}
-          className={`${notExpandable.join(" ")} ${
-            isOpened(index) ? "" : "hidden"
-          }`}
-        >
-          {withButtons && <td />}
-          <td colSpan={withButtons ? columns.length - 1 : columns.length}>
-            <table className="table-condensed">
-              <tbody>
-                {columns
-                  .filter(col => col.hiddenClass)
-                  .map(col => (
-                    <tr
-                      key={col.label}
-                      className={revertHidden(col.hiddenClass)}
+      const rows = [];
+
+      sortedItems.forEach((item, index) => {
+        rows.push(
+          <tr key={index} onClick={() => this.toggleInfo(index)}>
+            {columns.map(
+              ({
+                label,
+                prop,
+                process,
+                hiddenClass = [],
+                cell,
+                colProps,
+                expansionMark
+              }) => (
+                <td
+                  key={label}
+                  className={hiddenClass.join(" ")}
+                  {...(colProps ? colProps(item) : {})}
+                >
+                  {expansionMark && (
+                    <span
+                      className={notExpandable.join(" ")}
+                      style={{ fontWeight: "bold", float: "right" }}
                     >
-                      <td>{col.label}:</td>
-                      <td>
-                        {col.cell instanceof Function ? col.cell(item, query) : item[col.prop]}
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </td>
-        </tr>
+                      {this.isOpened(index) ? "-" : "+"}
+                    </span>
+                  )}
+                  {cell ? cell(item, query) : item[prop]}
+                </td>
+              )
+            )}
+          </tr>
+        );
+
+        rows.push(<tr key={`${index}-striped-hack`} className={"hidden"} />);
+
+        rows.push(
+          <tr
+            key={`${index}-info`}
+            className={`${notExpandable.join(" ")} ${
+              this.isOpened(index) ? "" : "hidden"
+            }`}
+          >
+            {withButtons && <td />}
+            <td colSpan={withButtons ? columns.length - 1 : columns.length}>
+              <table className="table-condensed">
+                <tbody>
+                  {columns
+                    .filter(col => col.hiddenClass)
+                    .map(col => (
+                      <tr
+                        key={col.label}
+                        className={revertHidden(col.hiddenClass)}
+                      >
+                        <td>{col.label}:</td>
+                        <td>
+                          {col.cell ? col.cell(item, query) : item[col.prop]}
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+            </td>
+          </tr>
+        );
+      });
+
+      return (
+        <div>
+          <div style={{marginBottom: "5px"}}>
+            <button className="btn btn-default hidden-md hidden-lg" onClick={() => this.expandAll(sortedItems)}>Expand all</button>
+            <button className="btn btn-default hidden-md hidden-lg" onClick={this.collapseAll}>Collapse all</button>
+          </div>
+          <table className={className}>
+            <thead>{header}</thead>
+            <tbody>{rows}</tbody>
+            {(footer || message) && (
+              <tfoot>
+                {footer}
+                {message && (
+                  <tr>
+                    <td colSpan={columns.length}>{message}</td>
+                  </tr>
+                )}
+              </tfoot>
+            )}
+          </table>
+        </div>
       );
     });
-
-    return (
-      <div>
-        <div style={{marginBottom: "5px"}}>
-          <button className="btn btn-default hidden-md hidden-lg" onClick={() => expandAll(sortedItems)}>Expand all</button>
-          <button className="btn btn-default hidden-md hidden-lg" onClick={collapseAll}>Collapse all</button>
-        </div>
-        <table className={className}>
-          <thead>{header}</thead>
-          <tbody>{rows}</tbody>
-          {(footer || message) && (
-            <tfoot>
-              {footer}
-              {message && (
-                <tr>
-                  <td colSpan={columns.length}>{message}</td>
-                </tr>
-              )}
-            </tfoot>
-          )}
-        </table>
-      </div>
-    );
-  });
+  }
+}
