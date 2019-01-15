@@ -1,4 +1,5 @@
 from aisikl.app import assert_ops
+from aisikl.exceptions import AISBehaviorError
 from fladgejt.helpers import find_row_insensitive
 
 
@@ -20,7 +21,7 @@ class WebuiCommonUIMixin:
 
                 assert_ops(ops, 'openDialog')
 
-                if ops[0].args[2] != 'SSSC001':
+                if ops[0].args[0]['code'] != 'SSSC001':
                     raise AISBehaviorError("AIS opened an unexpected dialog: {}".format(ops))
 
                 app.awaited_open_dialog(ops)
