@@ -216,6 +216,26 @@ thead:empty, tbody:empty, tfoot:empty {
   @include box-shadow(none);
 }
 
+.expand-arrow {
+  float: left;
+  font-size: 20px;
+  margin-right: 5px;
+}
+
+.arrow-expanded {
+  display: inline-block;
+  -ms-transform: rotate(-90deg); /* IE 9 */
+  -webkit-transform: rotate(-90deg); /* Safari */
+  transform: rotate(-90deg);
+}
+
+.arrow-collapsed {
+  display: inline-block;
+  -ms-transform: rotate(90deg); /* IE 9 */
+  -webkit-transform: rotate(90deg); /* Safari */
+  transform: rotate(90deg);
+}
+
 .anketa__wrap {
   background-color: #fff;
   font-family: "Open Sans";

@@ -37,7 +37,8 @@ const MojeSkuskyColumns = [
       >
         {termin.nazov_predmetu}
       </Link>
-    )
+    ),
+    expansionMark: true
   },
   { label: "Dátum", prop: "datum", process: sortAs.date },
   { label: "Čas", prop: "cas" },
@@ -97,8 +98,7 @@ const MojeSkuskyColumns = [
           : null}
         <SkuskyRegisterButton termin={termin} />
       </React.Fragment>
-    ),
-    expansionMark: true
+    )
   }
 ];
 

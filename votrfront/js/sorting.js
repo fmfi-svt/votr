@@ -171,11 +171,14 @@ export class SortableTable extends React.Component {
                   {...(colProps ? colProps(item) : {})}
                 >
                   {expansionMark && (
-                    <span
-                      className={notExpandable.join(" ")}
-                      style={{ fontWeight: "bold", float: "right" }}
-                    >
-                      {this.isOpened(item.expandIndex) ? "-" : "+"}
+                    <span className={`${notExpandable.join(" ")} expand-arrow`}>
+                      {
+                        this.isOpened(item.expandIndex) ? (
+                          <span className="arrow-expanded">&raquo;</span>
+                        ) : (
+                          <span className="arrow-collapsed">&raquo;</span>
+                        )
+                      }
                     </span>
                   )}
                   {cell ? cell(item, query) : item[prop]}
