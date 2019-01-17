@@ -42,6 +42,7 @@ export function sortTable(items, columns, query, queryKey) {
   if (columns[0][0]){
     columns = columns.map(([label, prop, process, preferDesc, hiddenClass]) => ({label, prop, process, preferDesc, hiddenClass}));
   }
+  items = items.map((item, index) => ({...item, expandIndex: index}));
   var orderString = query[queryKey] || columns.defaultOrder;
   var order = orderString ? orderString.split(/(?=[ad])/) : [];
   var directions = order.map((o) => o.substring(0, 1) == 'a' ? 'asc' : 'desc');
@@ -88,9 +89,9 @@ export class SortableTable extends React.Component {
     this.setState((state) => ({[index]: !state[index]}));
   }
 
-  expandAll(items) {
+  expandAll() {
     const opened = {};
-    for ( const i = 0; i < items.length; i++ ) {
+    for ( let i = 0; i < this.props.items.length; i++ ) {
       opened[i] = true;
     }
     this.setState(opened);
@@ -99,7 +100,7 @@ export class SortableTable extends React.Component {
   // TODO: better names
   collapseAll() {
     const opened = {};
-    for ( const i = 0; i < items.length; i++ ) {
+    for ( let i = 0; i < this.props.items.length; i++ ) {
       opened[i] = false;
     }
     this.setState(opened);
@@ -145,9 +146,9 @@ export class SortableTable extends React.Component {
 
       const rows = [];
 
-      sortedItems.forEach((item, index) => {
+      sortedItems.forEach((item) => {
         rows.push(
-          <tr key={index} onClick={() => this.toggleInfo(index)}>
+          <tr key={item.expandIndex} onClick={() => this.toggleInfo(item.expandIndex)}>
             {columns.map(
               ({
                 label,
@@ -168,7 +169,7 @@ export class SortableTable extends React.Component {
                       className={notExpandable.join(" ")}
                       style={{ fontWeight: "bold", float: "right" }}
                     >
-                      {this.isOpened(index) ? "-" : "+"}
+                      {this.isOpened(item.expandIndex) ? "-" : "+"}
                     </span>
                   )}
                   {cell ? cell(item, query) : item[prop]}
@@ -178,13 +179,13 @@ export class SortableTable extends React.Component {
           </tr>
         );
 
-        rows.push(<tr key={`${index}-striped-hack`} className={"hidden"} />);
+        rows.push(<tr key={`${item.expandIndex}-striped-hack`} className={"hidden"} />);
 
         rows.push(
           <tr
-            key={`${index}-info`}
+            key={`${item.expandIndex}-info`}
             className={`${notExpandable.join(" ")} ${
-              this.isOpened(index) ? "" : "hidden"
+              this.isOpened(item.expandIndex) ? "" : "hidden"
             }`}
           >
             {Array.apply(null, {length: expandedContentOffset}).map((_, i) => <td key={i} />)}
@@ -222,8 +223,8 @@ export class SortableTable extends React.Component {
       return (
         <div>
           <div className="section">
-            <button className={expandableButtonsClass()} onClick={() => this.expandAll(sortedItems)}>Expand all</button>
-            <button className={expandableButtonsClass()} onClick={this.collapseAll}>Collapse all</button>
+            <button className={expandableButtonsClass()} onClick={() => this.expandAll()}>Expand all</button>
+            <button className={expandableButtonsClass()} onClick={() => this.collapseAll()}>Collapse all</button>
           </div>
           <table className={className}>
             <thead>{header}</thead>
