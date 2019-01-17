@@ -97,17 +97,23 @@ export class SortableTable extends React.Component {
     this.setState(opened);
   }
 
-  // TODO: better names
   collapseAll() {
     const opened = {};
-    for ( let i = 0; i < this.props.items.length; i++ ) {
-      opened[i] = false;
+    for ( const index in this.state ) {
+      opened[index] = false;
     }
     this.setState(opened);
   }
 
   isOpened(index) {
     return this.state[index];
+  }
+
+  allClosed() {
+    for (const index in this.state) {
+      if (this.state[index]) return false;
+    }
+    return true;
   }
 
   render() {
@@ -223,8 +229,12 @@ export class SortableTable extends React.Component {
       return (
         <div>
           <div className="section">
-            <button className={expandableButtonsClass()} onClick={() => this.expandAll()}>Expand all</button>
-            <button className={expandableButtonsClass()} onClick={() => this.collapseAll()}>Collapse all</button>
+            <button
+              className={expandableButtonsClass()}
+              onClick={() => (this.allClosed() ? this.expandAll() : this.collapseAll())}
+            >
+              {this.allClosed() ? "Rozbaliť všetky" : "Zabaliť"}
+            </button>
           </div>
           <table className={className}>
             <thead>{header}</thead>
