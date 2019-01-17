@@ -11,22 +11,7 @@ import { sortAs, SortableTable } from './sorting';
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
 
-// TODO treba to exportovat?
-export var MojeSkuskyColumns = [
-  ["Moje?", null, (termin) => !termin.datum_prihlasenia || termin.datum_odhlasenia ? 'N' : 'A'],
-  ["Predmet", 'nazov_predmetu'],
-  ["Dátum", 'datum', sortAs.date],
-  ["Čas", 'cas'],
-  ["Miestnosť", 'miestnost', null, null, "hidden-xs"],
-  ["Hodnotiaci", 'hodnotiaci', sortAs.personName, null, "hidden-xs hidden-sm"],
-  ["Prihlásení", 'pocet_prihlasenych', sortAs.number, null, "hidden-xs"],
-  ["Poznámka", 'poznamka', null, null, "hidden-xs hidden-sm"],
-  ["Prihlasovanie", 'prihlasovanie', sortAs.interval, null, "hidden-xs hidden-sm"],
-  ["Odhlasovanie", 'odhlasovanie', sortAs.interval, null, "hidden-xs hidden-sm"],
-  ["Známka", null, (termin) => termin.hodnotenie_terminu || termin.hodnotenie_predmetu],
-];
-
-const MojeSkuskyColumnsObj = [
+const MojeSkuskyColumns = [
   {
     label: "Moje?",
     process: termin => !termin.datum_prihlasenia || termin.datum_odhlasenia ? "N" : "A",
@@ -224,10 +209,11 @@ export function MojeSkuskyPageContent() {
     return <React.Fragment>
       <SortableTable
         items={terminy}
-        columns={MojeSkuskyColumnsObj}
+        columns={MojeSkuskyColumns}
         queryKey="skuskySort"
         withButtons={true}
         message={message}
+        expandedContentOffset={1}
       />
       {terminy.length && <button onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}
     </React.Fragment>;

@@ -110,7 +110,15 @@ export class SortableTable extends React.Component {
   }
 
   render() {
-    const {items, columns, queryKey, withButtons, footer, message} = this.props;
+    const {
+      items,
+      columns,
+      queryKey,
+      withButtons,
+      footer,
+      message,
+      expandedContentOffset = 0
+    } = this.props;
 
     return queryConsumer(query => {
       const [sortedItems, header] = sortTable(
@@ -179,8 +187,8 @@ export class SortableTable extends React.Component {
               this.isOpened(index) ? "" : "hidden"
             }`}
           >
-            {withButtons && <td />}
-            <td colSpan={withButtons ? columns.length - 1 : columns.length}>
+            {Array.apply(null, {length: expandedContentOffset}).map((_, i) => <td key={i} />)}
+            <td colSpan={columns.length - expandedContentOffset}>
               <table className="table-condensed">
                 <tbody>
                   {columns
@@ -203,11 +211,19 @@ export class SortableTable extends React.Component {
         );
       });
 
+      function expandableButtonsClass() {
+        const all = ["hidden-xs", "hidden-sm", "hidden-md", "hidden-lg"];
+        let hidden = new Set(all);
+        columns.forEach(({hiddenClass = []}) =>
+          hiddenClass.forEach(item => hidden.delete(item)));
+        return "btn btn-default " + Array.from(hidden).join(" ");
+      }
+
       return (
         <div>
-          <div style={{marginBottom: "5px"}}>
-            <button className="btn btn-default hidden-md hidden-lg" onClick={() => this.expandAll(sortedItems)}>Expand all</button>
-            <button className="btn btn-default hidden-md hidden-lg" onClick={this.collapseAll}>Collapse all</button>
+          <div className="section">
+            <button className={expandableButtonsClass()} onClick={() => this.expandAll(sortedItems)}>Expand all</button>
+            <button className={expandableButtonsClass()} onClick={this.collapseAll}>Collapse all</button>
           </div>
           <table className={className}>
             <thead>{header}</thead>
