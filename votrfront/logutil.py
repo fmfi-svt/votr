@@ -19,6 +19,9 @@ BASE_PATTERN = r'"\w+", "[\w ]+ failed'
 def classify(line):
     if "OSError: failed to write data" in line.content:
         return 'OSError'
+    if ("OSError: Apache/mod_wsgi failed to write response data: Broken pipe"
+            in line.content):
+        return 'OSError'
     if "base.ps.PSException: Nie je connection" in line.content:
         return 'SQLError'
     if "java.sql.SQLException: Connection is not valid" in line.content:
@@ -35,6 +38,9 @@ def classify(line):
         return 'HTTPError'
     if "failed with LoggedOutError" in line.content:
         return 'LoggedOutError'
+    if ("zapis_plan_vyhladaj" in line.content and
+            "AIS did not return all table rows" in line.content):
+        return 'open issue121'
     return 'open'
 
 
