@@ -38,7 +38,7 @@ sortAs.interval = function (text) {
 };
 
 
-export function sortTable(items, columns, query, queryKey) {
+export function sortTable(items, columns, query, queryKey, fullTable) {
   if (columns[0][0]){
     columns = columns.map(([label, prop, process, preferDesc, hiddenClass]) => ({label, prop, process, preferDesc, hiddenClass}));
   }
@@ -69,7 +69,7 @@ export function sortTable(items, columns, query, queryKey) {
   var header = <tr>
     {columns.map(({label, prop, process, preferDesc, hiddenClass = []}, index) =>
       <th key={index} data-index={index} onClick={handleClick}
-          className={`${hiddenClass.join(" ")} ` + 'sort ' + (order[0] == 'a' + index ? 'asc' :
+          className={(fullTable ? "" : hiddenClass.join(" ")) + ' sort ' + (order[0] == 'a' + index ? 'asc' :
                                 order[0] == 'd' + index ? 'desc' : '')}>
         {label}
       </th>
@@ -127,12 +127,15 @@ export class SortableTable extends React.Component {
       expandedContentOffset = 0
     } = this.props;
 
+    var fullTable = JSON.parse(LocalSettings.get('fullTable'));
+
     return queryConsumer(query => {
       const [sortedItems, header] = sortTable(
         items,
         columns,
         query,
-        queryKey
+        queryKey,
+        fullTable
       );
 
       const className =
@@ -154,7 +157,7 @@ export class SortableTable extends React.Component {
 
       sortedItems.forEach((item) => {
         rows.push(
-          <tr key={item.expandIndex} onClick={() => this.toggleInfo(item.expandIndex)}>
+          <tr key={item.expandIndex} onClick={() => !fullTable && this.toggleInfo(item.expandIndex)}>
             {columns.map(
               ({
                 label,
@@ -167,10 +170,10 @@ export class SortableTable extends React.Component {
               }) => (
                 <td
                   key={label}
-                  className={hiddenClass.join(" ")}
+                  className={!fullTable ? hiddenClass.join(" ") : ""}
                   {...(colProps ? colProps(item) : {})}
                 >
-                  {expansionMark && (
+                  {expansionMark && !fullTable && (
                     <span className={`${notExpandable.join(" ")} expand-arrow`}>
                       {
                         this.isOpened(item.expandIndex) ? (
@@ -188,37 +191,36 @@ export class SortableTable extends React.Component {
           </tr>
         );
 
-        rows.push(<tr key={`${item.expandIndex}-striped-hack`} className={"hidden"} />);
+        if (!fullTable){
+          rows.push(<tr key={`${item.expandIndex}-striped-hack`} className={"hidden"} />);
 
-        rows.push(
-          <tr
-            key={`${item.expandIndex}-info`}
-            className={`${notExpandable.join(" ")} ${
-              this.isOpened(item.expandIndex) ? "" : "hidden"
-            }`}
-          >
-            {Array.apply(null, {length: expandedContentOffset}).map((_, i) => <td key={i} />)}
-            <td colSpan={columns.length - expandedContentOffset}>
-              <table className="table-condensed">
-                <tbody>
-                  {columns
-                    .filter(col => col.hiddenClass)
-                    .map(col => (
-                      <tr
-                        key={col.label}
-                        className={revertHidden(col.hiddenClass)}
-                      >
-                        <td>{col.label}:</td>
-                        <td>
-                          {col.cell ? col.cell(item, query) : item[col.prop]}
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </td>
-          </tr>
-        );
+          rows.push(
+            <tr
+              key={`${item.expandIndex}-info`}
+              className={`${notExpandable.join(" ")} ${
+                this.isOpened(item.expandIndex) ? "" : "hidden"
+              }`}
+            >
+              {Array.apply(null, { length: expandedContentOffset }).map((_, i) => (
+                <td key={i} />
+              ))}
+              <td colSpan={columns.length - expandedContentOffset}>
+                <table className="table-condensed">
+                  <tbody>
+                    {columns
+                      .filter(col => col.hiddenClass)
+                      .map(col => (
+                        <tr key={col.label} className={revertHidden(col.hiddenClass)}>
+                          <td>{col.label}:</td>
+                          <td>{col.cell ? col.cell(item, query) : item[col.prop]}</td>
+                        </tr>
+                      ))}
+                  </tbody>
+                </table>
+              </td>
+            </tr>
+          );
+        }
       });
 
       function expandableButtonsClass() {
@@ -226,18 +228,31 @@ export class SortableTable extends React.Component {
         let hidden = new Set(all);
         columns.forEach(({hiddenClass = []}) =>
           hiddenClass.forEach(item => hidden.delete(item)));
-        return "btn btn-default " + Array.from(hidden).join(" ");
+        return Array.from(hidden).join(" ");
       }
 
       return (
         <div>
-          <div className="section">
-            <button
-              className={expandableButtonsClass()}
+          <div className={`btn-toolbar section ${notExpandable.join(" ")}`}>
+            {!fullTable && <button
+              className={`btn btn-default ${expandableButtonsClass()}`}
               onClick={() => (this.allClosed() ? this.expandAll() : this.collapseAll())}
             >
               {this.allClosed() ? "Rozbaliť všetky" : "Zabaliť"}
-            </button>
+            </button>}
+            <div className={"btn checkbox " + expandableButtonsClass()}>
+              <label>
+                <input
+                  type="checkbox"
+                  value={JSON.parse(LocalSettings.get("fullTable")) || false}
+                  checked={JSON.parse(LocalSettings.get("fullTable")) || false}
+                  onChange={event => {
+                    LocalSettings.set("fullTable", !JSON.parse(event.target.value));
+                  }}
+                />{" "}
+                Zobraziť celú tabuľku
+              </label>
+            </div>
           </div>
           <table className={className}>
             <thead>{header}</thead>
