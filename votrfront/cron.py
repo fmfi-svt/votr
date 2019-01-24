@@ -27,6 +27,7 @@ def create_archive(app, prefix):
                 with lzma.open(app.var_path('oldlogs', source)) as f:
                     last = None
                     for line in f: last = line
+                    if last is None: raise Exception(source)
                     if not last.endswith(b']\n'): raise Exception(source)
                     mtime = json.loads(last.decode('utf8'))[0]
                     size = f.tell()
