@@ -31,7 +31,7 @@ servers = [
     dict(
         title='ais2-beta.uniba.sk + REST',
         login_types=('cosignpassword', 'cosigncookie'),
-        ais_cookie='cosign-filter-ais2-beta.uniba.sk',
+        ais_cookie='JSESSIONID',
         ais_url='https://ais2-beta.uniba.sk/',
         rest_cookie='cosign-filter-int-dev.uniba.sk',
         rest_url='https://int-dev.uniba.sk:8443/beta/',
@@ -39,13 +39,13 @@ servers = [
     dict(
         title='ais2-beta.uniba.sk',
         login_types=('cosignpassword', 'cosigncookie'),
-        ais_cookie='cosign-filter-ais2-beta.uniba.sk',
+        ais_cookie='JSESSIONID',
         ais_url='https://ais2-beta.uniba.sk/',
     ),
     dict(
         title='ais2-test.uniba.sk + REST',
         login_types=('cosignpassword', 'cosigncookie'),
-        ais_cookie='cosign-filter-ais2-test.uniba.sk',
+        ais_cookie='JSESSIONID',
         ais_url='https://ais2-test.uniba.sk/',
         rest_cookie='cosign-filter-int-dev.uniba.sk',
         rest_url='https://int-dev.uniba.sk:8443/test/',
@@ -53,7 +53,7 @@ servers = [
     dict(
         title='ais2-test.uniba.sk',
         login_types=('cosignpassword', 'cosigncookie'),
-        ais_cookie='cosign-filter-ais2-test.uniba.sk',
+        ais_cookie='JSESSIONID',
         ais_url='https://ais2-test.uniba.sk/',
     ),
     dict(
