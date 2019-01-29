@@ -42,7 +42,7 @@ export function sortTable(items, columns, query, queryKey, fullTable) {
   if (columns[0][0]){
     columns = columns.map(([label, prop, process, preferDesc, hiddenClass]) => ({label, prop, process, preferDesc, hiddenClass}));
   }
-  items = items.map((item, index) => ({...item, expandIndex: index}));
+  items = items.map((item, index) => ({...item, originalIndex: index}));
   var orderString = query[queryKey] || columns.defaultOrder;
   var order = orderString ? orderString.split(/(?=[ad])/) : [];
   var directions = order.map((o) => o.substring(0, 1) == 'a' ? 'asc' : 'desc');
@@ -127,7 +127,7 @@ export class SortableTable extends React.Component {
       expandedContentOffset = 0
     } = this.props;
 
-    var fullTable = JSON.parse(LocalSettings.get('fullTable'));
+    var fullTable = LocalSettings.get('fullTable') == 'true';
 
     return queryConsumer(query => {
       const [sortedItems, header] = sortTable(
@@ -157,7 +157,7 @@ export class SortableTable extends React.Component {
 
       sortedItems.forEach((item) => {
         rows.push(
-          <tr key={item.expandIndex} onClick={() => !fullTable && this.toggleInfo(item.expandIndex)}>
+          <tr key={item.originalIndex} onClick={() => !fullTable && this.toggleInfo(item.originalIndex)}>
             {columns.map(
               ({
                 label,
@@ -176,7 +176,7 @@ export class SortableTable extends React.Component {
                   {expansionMark && !fullTable && (
                     <span className={`${notExpandable.join(" ")} expand-arrow`}>
                       {
-                        this.isOpened(item.expandIndex) ? (
+                        this.isOpened(item.originalIndex) ? (
                           <span className="arrow-expanded">&raquo;</span>
                         ) : (
                           <span className="arrow-collapsed">&raquo;</span>
@@ -192,13 +192,13 @@ export class SortableTable extends React.Component {
         );
 
         if (!fullTable){
-          rows.push(<tr key={`${item.expandIndex}-striped-hack`} className={"hidden"} />);
+          rows.push(<tr key={`${item.originalIndex}-striped-hack`} className={"hidden"} />);
 
           rows.push(
             <tr
-              key={`${item.expandIndex}-info`}
+              key={`${item.originalIndex}-info`}
               className={`${notExpandable.join(" ")} ${
-                this.isOpened(item.expandIndex) ? "" : "hidden"
+                this.isOpened(item.originalIndex) ? "" : "hidden"
               }`}
             >
               {Array.apply(null, { length: expandedContentOffset }).map((_, i) => (
@@ -223,36 +223,28 @@ export class SortableTable extends React.Component {
         }
       });
 
-      function expandableButtonsClass() {
-        const all = ["hidden-xs", "hidden-sm", "hidden-md", "hidden-lg"];
-        let hidden = new Set(all);
-        columns.forEach(({hiddenClass = []}) =>
-          hiddenClass.forEach(item => hidden.delete(item)));
-        return Array.from(hidden).join(" ");
-      }
-
       return (
         <div>
           <div className={`btn-toolbar section ${notExpandable.join(" ")}`}>
-            {!fullTable && <button
-              className={`btn btn-default ${expandableButtonsClass()}`}
-              onClick={() => (this.allClosed() ? this.expandAll() : this.collapseAll())}
-            >
-              {this.allClosed() ? "Rozbaliť všetky" : "Zabaliť"}
-            </button>}
-            <div className={"btn checkbox " + expandableButtonsClass()}>
+            <div className={"btn checkbox "}>
               <label>
                 <input
                   type="checkbox"
-                  value={JSON.parse(LocalSettings.get("fullTable")) || false}
-                  checked={JSON.parse(LocalSettings.get("fullTable")) || false}
+                  value={fullTable}
+                  checked={fullTable}
                   onChange={event => {
-                    LocalSettings.set("fullTable", !JSON.parse(event.target.value));
+                    LocalSettings.set("fullTable", !fullTable);
                   }}
                 />{" "}
                 Zobraziť celú tabuľku
               </label>
             </div>
+            {!fullTable && <button
+              className={"btn btn-default"}
+              onClick={() => (this.allClosed() ? this.expandAll() : this.collapseAll())}
+            >
+              {this.allClosed() ? "Rozbaliť všetky" : "Zabaliť všetky"}
+            </button>}
           </div>
           <table className={className}>
             <thead>{header}</thead>
