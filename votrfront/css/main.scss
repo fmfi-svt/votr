@@ -217,23 +217,21 @@ thead:empty, tbody:empty, tfoot:empty {
 }
 
 .expand-arrow {
-  float: left;
-  font-size: 20px;
-  margin-right: 5px;
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: middle;
+  border-right: 6px solid transparent;
+  border-left: 6px solid transparent;
+  margin-right: 4px;
 }
 
 .arrow-expanded {
-  display: inline-block;
-  -ms-transform: rotate(-90deg); /* IE 9 */
-  -webkit-transform: rotate(-90deg); /* Safari */
-  transform: rotate(-90deg);
+  border-bottom: 6px dashed #555;
 }
 
 .arrow-collapsed {
-  display: inline-block;
-  -ms-transform: rotate(90deg); /* IE 9 */
-  -webkit-transform: rotate(90deg); /* Safari */
-  transform: rotate(90deg);
+  border-top: 6px dashed #555;
 }
 
 .anketa__wrap {

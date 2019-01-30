@@ -174,15 +174,8 @@ export class SortableTable extends React.Component {
                   {...(colProps ? colProps(item) : {})}
                 >
                   {expansionMark && !fullTable && (
-                    <span className={`${notExpandable.join(" ")} expand-arrow`}>
-                      {
-                        this.isOpened(item.originalIndex) ? (
-                          <span className="arrow-expanded">&raquo;</span>
-                        ) : (
-                          <span className="arrow-collapsed">&raquo;</span>
-                        )
-                      }
-                    </span>
+                    <span className={`${notExpandable.join(" ")} expand-arrow ${
+                      this.isOpened(item.originalIndex) ? "arrow-expanded" : "arrow-collapsed"}`}/>
                   )}
                   {cell ? cell(item, query) : item[prop]}
                 </td>
@@ -201,9 +194,7 @@ export class SortableTable extends React.Component {
                 this.isOpened(item.originalIndex) ? "" : "hidden"
               }`}
             >
-              {Array.apply(null, { length: expandedContentOffset }).map((_, i) => (
-                <td key={i} />
-              ))}
+              {expandedContentOffset > 0 && <td colSpan={expandedContentOffset} />}
               <td colSpan={columns.length - expandedContentOffset}>
                 <table className="table-condensed">
                   <tbody>
@@ -226,19 +217,12 @@ export class SortableTable extends React.Component {
       return (
         <div>
           <div className={`btn-toolbar section ${notExpandable.join(" ")}`}>
-            <div className={"btn checkbox "}>
-              <label>
-                <input
-                  type="checkbox"
-                  value={fullTable}
-                  checked={fullTable}
-                  onChange={event => {
-                    LocalSettings.set("fullTable", !fullTable);
-                  }}
-                />{" "}
-                Zobraziť celú tabuľku
-              </label>
-            </div>
+            <button
+              className={"btn btn-default" + (fullTable ? " active" : "")}
+              onClick={() => {
+                LocalSettings.set("fullTable", !fullTable);
+              }}
+            >Zobraziť celú tabuľku</button>
             {!fullTable && <button
               className={"btn btn-default"}
               onClick={() => (this.allClosed() ? this.expandAll() : this.collapseAll())}
