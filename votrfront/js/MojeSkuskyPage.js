@@ -7,23 +7,99 @@ import { ZapisnyListSelector } from './ZapisnyListSelector';
 import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
 import { PageLayout, PageTitle } from './layout';
 import { Link, queryConsumer } from './router';
-import { sortAs, sortTable } from './sorting';
-
+import { sortAs, SortableTable } from './sorting';
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
 
-export var MojeSkuskyColumns = [
-  ["Moje?", null, (termin) => !termin.datum_prihlasenia || termin.datum_odhlasenia ? 'N' : 'A'],
-  ["Predmet", 'nazov_predmetu'],
-  ["Dátum", 'datum', sortAs.date],
-  ["Čas", 'cas'],
-  ["Miestnosť", 'miestnost'],
-  ["Hodnotiaci", 'hodnotiaci', sortAs.personName],
-  ["Prihlásení", 'pocet_prihlasenych', sortAs.number],
-  ["Poznámka", 'poznamka'],
-  ["Prihlasovanie", 'prihlasovanie', sortAs.interval],
-  ["Odhlasovanie", 'odhlasovanie', sortAs.interval],
-  ["Známka", null, (termin) => termin.hodnotenie_terminu || termin.hodnotenie_predmetu]
+const MojeSkuskyColumns = [
+  {
+    label: "Moje?",
+    process: termin => !termin.datum_prihlasenia || termin.datum_odhlasenia ? "N" : "A",
+    cell: termin => !termin.datum_prihlasenia || termin.datum_odhlasenia ? "\u2718" : "\u2714",
+    colProps: termin => !termin.datum_prihlasenia || termin.datum_odhlasenia
+        ? {
+            title: "Nie ste prihlásení",
+            className: "text-center text-negative"
+          }
+        : { title: "Ste prihlásení", className: "text-center text-positive" }
+  },
+  {
+    label: "Predmet",
+    prop: "nazov_predmetu",
+    cell: (termin, query) => (
+      <Link
+        href={{
+          ...query,
+          modal: "detailPredmetu",
+          modalPredmetKey: termin.predmet_key,
+          modalAkademickyRok: termin.akademicky_rok
+        }}
+      >
+        {termin.nazov_predmetu}
+      </Link>
+    ),
+    expansionMark: true
+  },
+  { label: "Dátum", prop: "datum", process: sortAs.date },
+  { label: "Čas", prop: "cas" },
+  { label: "Miestnosť", prop: "miestnost", hiddenClass: ["hidden-xs"] },
+  {
+    label: "Hodnotiaci",
+    prop: "hodnotiaci",
+    process: sortAs.personName,
+    hiddenClass: ["hidden-xs", "hidden-sm"]
+  },
+  {
+    label: "Prihlásení",
+    prop: "pocet_prihlasenych",
+    process: sortAs.number,
+    hiddenClass: ["hidden-xs"],
+    cell: (termin, query) => (
+      <Link
+        href={{
+          ...query,
+          modal: "zoznamPrihlasenychNaTermin",
+          modalTerminKey: termin.termin_key
+        }}
+      >
+        {termin.pocet_prihlasenych +
+          (termin.maximalne_prihlasenych
+            ? "/" + termin.maximalne_prihlasenych
+            : "")}
+      </Link>
+    )
+  },
+  {
+    label: "Poznámka",
+    prop: "poznamka",
+    hiddenClass: ["hidden-xs", "hidden-sm"]
+  },
+  {
+    label: "Prihlasovanie",
+    prop: "prihlasovanie",
+    process: sortAs.interval,
+    hiddenClass: ["hidden-xs", "hidden-sm"]
+  },
+  {
+    label: "Odhlasovanie",
+    prop: "odhlasovanie",
+    process: sortAs.interval,
+    hiddenClass: ["hidden-xs", "hidden-sm"]
+  },
+  {
+    label: "Známka",
+    process: termin => termin.hodnotenie_terminu || termin.hodnotenie_predmetu,
+    cell: termin => (
+      <React.Fragment>
+        {termin.hodnotenie_terminu
+          ? termin.hodnotenie_terminu
+          : termin.hodnotenie_predmetu
+          ? termin.hodnotenie_predmetu + " (nepriradená k termínu)"
+          : null}
+        <SkuskyRegisterButton termin={termin} />
+      </React.Fragment>
+    )
+  }
 ];
 
 function convertToICAL(terminy) {
@@ -39,7 +115,7 @@ function convertToICAL(terminy) {
     "X-WR-CALDESC:Kalendár skúšok vyexportovaný z aplikácie Votr",
     "X-WR-TIMEZONE:Europe/Bratislava",
   ];
-  
+
   var dtstamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
 
   // VEVENTs
@@ -49,13 +125,13 @@ function convertToICAL(terminy) {
       continue;
     }
     lines.push("BEGIN:VEVENT");
-    
+
     lines.push("SUMMARY:" + termin.nazov_predmetu);
-    
+
     // unique identificator for each event (so we can identify copies of the same event)
     var uid = termin.termin_key + "@votr.uniba.sk";
     lines.push("UID:" + uid);
-    
+
     // DTSTAMP is when this VEVENT was created (exported), must be YYYYMMDDTHHMMSSZ
     lines.push("DTSTAMP:" + dtstamp);
 
@@ -122,9 +198,6 @@ export function MojeSkuskyPageContent() {
     terminyPrihlasene.forEach((termin) => terminy[termin.termin_key] = termin);
     terminy = _.values(terminy);
 
-    var [terminy, header] = sortTable(
-      terminy, MojeSkuskyColumns, query, 'skuskySort');
-
     var message = terminy.length ? null : "Zatiaľ nie sú vypísané žiadne termíny.";
 
     function handleClickICal() {
@@ -134,39 +207,14 @@ export function MojeSkuskyPageContent() {
     }
 
     return <React.Fragment>
-      <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
-        <thead>{header}</thead>
-        <tbody>
-          {terminy.map((termin) =>
-            <tr key={termin.termin_key}>
-              {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
-                <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
-                <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
-              <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
-                {termin.nazov_predmetu}
-              </Link></td>
-              <td>{termin.datum}</td>
-              <td>{termin.cas}</td>
-              <td>{termin.miestnost}</td>
-              <td>{termin.hodnotiaci}</td>
-              <td><Link href={{ ...query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
-                {termin.pocet_prihlasenych +
-                 (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
-              </Link></td>
-              <td>{termin.poznamka}</td>
-              <td>{termin.prihlasovanie}</td>
-              <td>{termin.odhlasovanie}</td>
-              <td>
-                {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
-                 termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
-                 null}
-                 <SkuskyRegisterButton termin={termin}/>
-              </td>
-            </tr>
-          )}
-        </tbody>
-        {message && <tfoot><tr><td colSpan={MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
-      </table>
+      <SortableTable
+        items={terminy}
+        columns={MojeSkuskyColumns}
+        queryKey="skuskySort"
+        withButtons={true}
+        message={message}
+        expandedContentOffset={1}
+      />
       {terminy.length && <button onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}
     </React.Fragment>;
   });

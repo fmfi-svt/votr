@@ -216,6 +216,24 @@ thead:empty, tbody:empty, tfoot:empty {
   @include box-shadow(none);
 }
 
+.expand-arrow {
+  display: inline-block;
+  width: 0;
+  height: 0;
+  vertical-align: middle;
+  border-right: 6px solid transparent;
+  border-left: 6px solid transparent;
+  margin-right: 4px;
+}
+
+.arrow-expanded {
+  border-bottom: 6px dashed #555;
+}
+
+.arrow-collapsed {
+  border-top: 6px dashed #555;
+}
+
 .anketa__wrap {
   background-color: #fff;
   font-family: "Open Sans";
