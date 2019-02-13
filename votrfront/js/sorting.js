@@ -67,11 +67,11 @@ export function sortTable(items, columns, query, queryKey, fullTable) {
   }
 
   var header = <tr>
-    {columns.map(({label, prop, process, preferDesc, hiddenClass = []}, index) =>
+    {columns.map(({label, labelElement, prop, process, preferDesc, hiddenClass = []}, index) =>
       <th key={index} data-index={index} onClick={handleClick}
           className={(fullTable ? "" : hiddenClass.join(" ")) + ' sort ' + (order[0] == 'a' + index ? 'asc' :
                                 order[0] == 'd' + index ? 'desc' : '')}>
-        {label}
+        {labelElement ? labelElement() : label}
       </th>
     )}
   </tr>;
