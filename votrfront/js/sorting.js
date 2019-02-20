@@ -124,6 +124,7 @@ export class SortableTable extends React.Component {
       withButtons,
       footer,
       message,
+      rowClassName,
       expandedContentOffset = 0
     } = this.props;
 
@@ -157,7 +158,11 @@ export class SortableTable extends React.Component {
 
       sortedItems.forEach((item) => {
         rows.push(
-          <tr key={item.originalIndex} onClick={() => !fullTable && this.toggleInfo(item.originalIndex)}>
+          <tr
+            key={item.originalIndex}
+            onClick={() => !fullTable && this.toggleInfo(item.originalIndex)}
+            className={rowClassName && rowClassName(item)}
+          >
             {columns.map(
               ({
                 label,
@@ -235,7 +240,7 @@ export class SortableTable extends React.Component {
             <tbody>{rows}</tbody>
             {(footer || message) && (
               <tfoot>
-                {footer}
+                {footer && footer(fullTable)}
                 {message && (
                   <tr>
                     <td colSpan={columns.length}>{message}</td>

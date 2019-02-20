@@ -1,7 +1,7 @@
 
 import React from 'react';
 import _ from 'lodash';
-import { MojePredmetyColumns } from './MojePredmetyPage';
+import { MojePredmetyColumnsArr } from './MojePredmetyPage';
 import { StudiumSelector } from './StudiumSelector';
 import { CacheRequester, Loading } from './ajax';
 import { coursesStats, renderWeightedStudyAverage } from './coursesStats';
@@ -13,7 +13,7 @@ import { sortAs, sortTable } from './sorting';
 
 export var MojeHodnoteniaColumns = [
   ["Akademický rok", 'akademicky_rok']
-].concat(MojePredmetyColumns);
+].concat(MojePredmetyColumnsArr);
 MojeHodnoteniaColumns.defaultOrder = 'a0d1a2';
 
 
