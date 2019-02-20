@@ -8,17 +8,6 @@ import { PageLayout, PageTitle } from './layout';
 import { Link, queryConsumer } from './router';
 import { sortAs, SortableTable } from './sorting';
 
-export var MojePredmetyColumnsArr = [
-  [<abbr title="Semester">Sem.</abbr>, 'semester', null, true],
-  ["Názov predmetu", 'nazov'],
-  ["Skratka predmetu", 'skratka'],
-  ["Kredit", 'kredit', sortAs.number],
-  ["Typ výučby", 'typ_vyucby'],
-  ["Hodnotenie", 'hodn_znamka'],
-  ["Dátum hodnotenia", 'hodn_datum', sortAs.date],
-  ["Termín hodnotenia", 'hodn_termin']
-];
-
 export var MojePredmetyColumns = [
   {
     label: "Sem.",
