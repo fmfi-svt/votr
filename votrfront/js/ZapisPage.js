@@ -8,7 +8,7 @@ import { coursesStats } from './coursesStats';
 import { humanizeTypVyucby, plural } from './humanizeAISData';
 import { FormItem, PageLayout, PageTitle } from './layout';
 import { Link, navigate, queryConsumer } from './router';
-import { sortAs, sortTable } from './sorting';
+import { sortAs, sortTable, SortableTable } from './sorting';
 
 
 export var ZapisZPlanuColumns = [
@@ -43,10 +43,10 @@ ZapisZPonukyColumns.defaultOrder = 'a3';
 
 
 export var ZapisVlastnostiColumns = [
-  ["Skratka", 'skratka'],
-  ["Názov", 'nazov'],
-  ["Minimálny kredit", 'minimalny_kredit'],
-  ["Poznámka", 'poznamka']
+  {label: "Skratka", prop: 'skratka', expansionMark: true},
+  {label: "Názov", prop: 'nazov'},
+  {label: "Minimálny kredit", prop: 'minimalny_kredit'},
+  {label: "Poznámka", prop: 'poznamka', hiddenClass: ["hidden-xs", "hidden-sm"]}
 ];
 
 
@@ -309,24 +309,13 @@ export function ZapisVlastnostiTable(props) {
     message = "Študijný plán nemá žiadne poznámky.";
   }
 
-  var [vlastnosti, header] = sortTable(
-    vlastnosti, ZapisVlastnostiColumns, props.query, 'vlastnostiSort');
-
   return (
-    <table className="table table-condensed table-bordered table-striped table-hover">
-      <thead>{header}</thead>
-      <tbody>
-        {vlastnosti.map((vlastnost, index) =>
-          <tr key={index}>
-            <td>{vlastnost.skratka}</td>
-            <td>{vlastnost.nazov}</td>
-            <td>{vlastnost.minimalny_kredit}</td>
-            <td>{vlastnost.poznamka}</td>
-          </tr>
-        )}
-      </tbody>
-      {message && <tfoot><tr><td colSpan={ZapisVlastnostiColumns.length}>{message}</td></tr></tfoot>}
-    </table>
+    <SortableTable
+      items={vlastnosti}
+      columns={ZapisVlastnostiColumns}
+      queryKey="vlastnostiSort"
+      message={message}
+    />
   );
 }
 
