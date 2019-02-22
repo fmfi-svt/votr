@@ -14,7 +14,7 @@ import { sortAs, SortableTable } from './sorting';
 const MojeSkuskyColumns = [
   {
     label: "Moje?",
-    labelElement: () => (
+    shortLabel: (
       <React.Fragment>
         <span className="hidden-xs hidden-sm">Moje</span>?
       </React.Fragment>
@@ -46,18 +46,8 @@ const MojeSkuskyColumns = [
     expansionMark: true
   },
   { label: "Dátum",
-    prop: "datum",
-    process: sortAs.date,
-    cell: (termin, query) => (
-      <React.Fragment>
-        {termin.datum}
-        <span className="hidden-md hidden-lg">, {termin.cas}</span>
-      </React.Fragment>
-    )
-  },
-  { label: "Čas",
-    prop: "cas",
-    hiddenClass: ["hidden-xs", "hidden-sm"]
+    process: (termin) => sortAs.date(`${termin.datum}, ${termin.cas}`),
+    cell: (termin, query) => `${termin.datum}, ${termin.cas}`
   },
   { label: "Miestnosť", prop: "miestnost", hiddenClass: ["hidden-xs"] },
   {
