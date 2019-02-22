@@ -67,11 +67,11 @@ export function sortTable(items, columns, query, queryKey, fullTable) {
   }
 
   var header = <tr>
-    {columns.map(({label, labelElement, prop, process, preferDesc, hiddenClass = []}, index) =>
+    {columns.map(({label, shortLabel, prop, process, preferDesc, hiddenClass = []}, index) =>
       <th key={index} data-index={index} onClick={handleClick}
           className={(fullTable ? "" : hiddenClass.join(" ")) + ' sort ' + (order[0] == 'a' + index ? 'asc' :
                                 order[0] == 'd' + index ? 'desc' : '')}>
-        {labelElement ? labelElement() : label}
+        {shortLabel ? shortLabel : label}
       </th>
     )}
   </tr>;
@@ -167,9 +167,9 @@ export class SortableTable extends React.Component {
                 cell,
                 colProps,
                 expansionMark
-              }) => (
+              }, index) => (
                 <td
-                  key={label}
+                  key={index}
                   className={!fullTable ? hiddenClass.join(" ") : ""}
                   {...(colProps ? colProps(item) : {})}
                 >
@@ -200,8 +200,8 @@ export class SortableTable extends React.Component {
                   <tbody>
                     {columns
                       .filter(col => col.hiddenClass)
-                      .map(col => (
-                        <tr key={col.label} className={revertHidden(col.hiddenClass)}>
+                      .map((col, index) => (
+                        <tr key={index} className={revertHidden(col.hiddenClass)}>
                           <td>{col.label}:</td>
                           <td>{col.cell ? col.cell(item, query) : item[col.prop]}</td>
                         </tr>
