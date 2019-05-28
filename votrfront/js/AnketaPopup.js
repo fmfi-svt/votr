@@ -5,9 +5,9 @@ import { CacheRequester, Loading } from './ajax';
 var dropCookie = true;  // false disables the Cookie, allowing you to style the banner
 var cookieDurationClose = 3;
 var cookieDurationVote = 60;
-var cookieName = 'anketaKolacik2018Zima'; // Name of our cookie
+var cookieName = 'anketaKolacik2019Leto'; // Name of our cookie
 var cookieValue = 'on'; // Value of cookie
-var cookieHideDate = Date.parse('19 February 2019'); // Starting this day the cookie won't be visible
+var cookieHideDate = Date.parse('02 July 2019'); // Starting this day the cookie won't be visible
 
 
 export class AnketaPopup extends React.Component {
