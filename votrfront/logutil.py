@@ -10,6 +10,7 @@ import sqlite3
 import subprocess
 import sys
 import time
+import traceback
 from . import sessions
 
 
@@ -123,18 +124,28 @@ def set_tags(app, sessid, lineno, tags_to_add, tags_to_remove):
 def process_logfiles(app, files):
     c = _connect(app).cursor()
 
+    errors = []
+
     for filename in files:
         sessid = os.path.basename(filename).partition('.')[0]
-        with sessions.lock(app, sessid), open_log(filename) as f:
-            lineno = 0
-            for line in f:
-                lineno += 1
-                if re.search(BASE_PATTERN, line):
-                    try:
-                        c.execute('INSERT INTO lines VALUES (?, ?, ?, ?)',
-                            (sessid, lineno, 'new', line.strip()))
-                    except sqlite3.IntegrityError:
-                        pass   # row already present
+        with sessions.lock(app, sessid):
+            try:
+                with open_log(filename) as f:
+                    lineno = 0
+                    for line in f:
+                        json.loads(line)  # Validate JSON.
+                        lineno += 1
+                        if re.search(BASE_PATTERN, line):
+                            try:
+                                c.execute(
+                                    'INSERT INTO lines VALUES (?, ?, ?, ?)',
+                                    (sessid, lineno, 'new', line.strip()))
+                            except sqlite3.IntegrityError:
+                                pass   # row already present
+                    if lineno == 0:
+                        raise Exception('Log file is empty')
+            except Exception:
+                errors.append((filename, sys.exc_info()))
 
     for line in get_lines(app):
         if line.tags == 'new':
@@ -143,6 +154,15 @@ def process_logfiles(app, files):
                 set_tags(app, line.sessid, line.lineno, new_tags, ['new'])
 
     _connect(app).commit()
+
+    if errors:
+        msgs = ['{} errors occurred while processing logs:'.format(len(errors))]
+        for filename, exc_info in errors:
+            errmsg = ''.join(traceback.format_exception(*exc_info))
+            msgs.append(
+                '{}:\n'.format(filename) +
+                '\n'.join('    ' + line for line in errmsg.split('\n')))
+        raise Exception('\n\n'.join(msgs))
 
 @contextlib.contextmanager
 def wrap_pager():
