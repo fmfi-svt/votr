@@ -9,6 +9,7 @@ import subprocess
 import tarfile
 import time
 from . import logutil
+from . import sessions
 
 
 def create_archive(app, prefix):
@@ -61,25 +62,28 @@ def cron(app):
     now = time.time()
 
     for sessid in os.listdir(app.var_path('sessions')):
-        path = app.var_path('sessions', sessid)
-        mtime = os.path.getmtime(path)
-        if now - mtime > app.settings.session_max_age:
-            os.unlink(path)
+        with sessions.lock(app, sessid):
+            path = app.var_path('sessions', sessid)
+            if not os.path.exists(path): continue  # Logged out just now?
+            mtime = os.path.getmtime(path)
+            if now - mtime > app.settings.session_max_age:
+                os.unlink(path)
 
     for filename in os.listdir(app.var_path('logs')):
         if not filename.endswith('.gz'): continue
         path = app.var_path('logs', filename)
         sessid = filename.partition('.')[0]
-        mtime = os.path.getmtime(path)
-        if not (now - mtime > app.settings.session_max_age): continue
-        if os.path.exists(app.var_path('sessions', sessid)): continue
+        with sessions.lock(app, sessid):
+            mtime = os.path.getmtime(path)
+            if not (now - mtime > app.settings.session_max_age): continue
+            if os.path.exists(app.var_path('sessions', sessid)): continue
 
-        newpath = app.var_path('oldlogs', sessid + '.xz')
+            newpath = app.var_path('oldlogs', sessid + '.xz')
 
-        with gzip.open(path) as src:
-            with lzma.open(newpath, 'w', preset=9) as dest:
-                shutil.copyfileobj(src, dest)
-        os.unlink(path)
+            with gzip.open(path) as src:
+                with lzma.open(newpath, 'w', preset=9) as dest:
+                    shutil.copyfileobj(src, dest)
+            os.unlink(path)
 
     this_month = datetime.datetime.utcfromtimestamp(now).strftime('%Y%m')
     prefixes = set(

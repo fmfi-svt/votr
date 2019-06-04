@@ -19,11 +19,14 @@ def set_session_cookie(request, response, sessid):
     return response
 
 
-def get_filename(request, sessid, *, logs=False):
+def check_sessid(sessid):
     for ch in sessid:
         if ch not in '0123456789abcdef_':
             raise ValueError('Invalid sessid')
 
+
+def get_filename(request, sessid, *, logs=False):
+    check_sessid(sessid)
     return request.app.var_path('logs' if logs else 'sessions', sessid)
 
 
@@ -50,39 +53,75 @@ def delete(request, sessid=None):
 
 
 @contextlib.contextmanager
+def lock(app, sessid):
+    """Acquires a named mutex identified by ``sessid``, waiting if another
+    process/thread is already holding it. If a process dies, its held locks are
+    automatically released. Locks are per user."""
+    # This is implemented with file locks, specifically BSD locks (flock). See
+    # https://gavv.github.io/articles/file-locks/ for a comparison. lockf and
+    # POSIX locks (fcntl) behave badly on close (threads can unlock each other).
+    #
+    # Instead of locking the session file or the log file, we use dedicated
+    # lock files, because it can be significant to delete the session or log
+    # file while the sessid is still locked.
+    #
+    # The lock file is deleted when we're done (to clean up after ourselves). We
+    # use the algorithm from https://stackoverflow.com/q/17708885 to avoid race
+    # conditions when one thread deletes the file but another thread already has
+    # it open and is trying to lock it.
+    check_sessid(sessid)
+    lock_path = os.path.join(
+        app.settings.lock_path,
+        '{}.{}.{}'.format(app.settings.instance_name, os.getuid(), sessid))
+    while True:
+        f = open(lock_path, 'ab')
+        try:
+            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+
+            # Lock acquired, but is it still the same file? Compare inodes.
+            my_inode = os.fstat(f.fileno()).st_ino
+            try:
+                inode_on_disk = os.stat(lock_path).st_ino
+            except FileNotFoundError:
+                inode_on_disk = None
+            if my_inode != inode_on_disk:
+                # File was already deleted. Close it and try to open it again.
+                continue
+
+            try:
+                yield
+            finally:
+                # Whether the body succeeded or not, unlink and close the file.
+                os.unlink(lock_path)
+
+            return
+        finally:
+            f.close()
+
+
+@contextlib.contextmanager
 def transaction(request, sessid=None):
     if not sessid: sessid = get_session_cookie(request)
     if not sessid: raise LoggedOutError('Session cookie not found')
 
-    try:
-        f = open(get_filename(request, sessid), 'r+b')
-    except FileNotFoundError as e:
-        raise LoggedOutError('Votr session does not exist') from e
+    with lock(request.app, sessid):
+        try:
+            f = open(get_filename(request, sessid), 'r+b')
+        except FileNotFoundError as e:
+            raise LoggedOutError('Votr session does not exist') from e
 
-    with f:
-        # Use flock instead of fcntl or lockf. flock has sane semantics on
-        # close(2), and we don't need fcntl's byte range locks.
-        fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+        with f:
+            session = pickle.load(f)
 
-        session = pickle.load(f)
+            yield session
 
-        if not session:
-            # If the session is empty, there was probably a race between this
-            # request and a logout. The logout arrived first, emptied the
-            # session, saved it and unlinked the file. But this request already
-            # managed to open the file and was waiting for flock while that was
-            # happening. We can react as if the session file didn't exist.
-            raise LoggedOutError('Votr session is currently logging out')
+            # Use pickle.dumps instead of pickle.dump, so that if it fails, the
+            # session file is not truncated.
+            new_content = pickle.dumps(session, pickle.HIGHEST_PROTOCOL)
 
-        yield session
-
-        # Use pickle.dumps instead of pickle.dump, so that if it fails, the
-        # session file is not truncated.
-        new_content = pickle.dumps(session, pickle.HIGHEST_PROTOCOL)
-
-        f.seek(0)
-        f.truncate(0)
-        f.write(new_content)
+            f.seek(0)
+            f.truncate(0)
+            f.write(new_content)
 
 
 @contextlib.contextmanager

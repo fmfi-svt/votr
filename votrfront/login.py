@@ -36,14 +36,14 @@ def do_logout(request):
                 log('logout',
                     'Logout failed with {}'.format(type(e).__name__),
                     traceback.format_exc())
-                # But clear the session and save it anyway.
+                # But delete the session anyway.
             else:
                 log('logout', 'Logout finished')
-            session.clear()
+            sessions.delete(request)
+            # When the with statement ends, the session dict is still written
+            # to the open session fd, but the file was already deleted.
     except Exception:
         pass
-
-    sessions.delete(request)
 
     return credentials
 
@@ -62,7 +62,8 @@ def finish_login(request, destination, params):
         fladgejt_params = params
 
     sessid = datetime.utcnow().strftime('%Y%m%d_') + generate_key()
-    with sessions.open_log_file(request, sessid) as log_file:
+    with sessions.lock(request.app, sessid), \
+            sessions.open_log_file(request, sessid) as log_file:
         logger = Logger()
         logger.log_file = log_file
 

@@ -3,6 +3,8 @@ instance_name = 'votr'
 
 var_path = '.'
 
+lock_path = '/run/lock'
+
 session_max_age = 60 * 60 * 24
 
 log_max_age = 60 * 60 * 25

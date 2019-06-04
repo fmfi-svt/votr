@@ -10,6 +10,7 @@ import sqlite3
 import subprocess
 import sys
 import time
+from . import sessions
 
 
 TAG_PREFIX = '%'
@@ -124,7 +125,7 @@ def process_logfiles(app, files):
 
     for filename in files:
         sessid = os.path.basename(filename).partition('.')[0]
-        with open_log(filename) as f:
+        with sessions.lock(app, sessid), open_log(filename) as f:
             lineno = 0
             for line in f:
                 lineno += 1
