@@ -55,10 +55,6 @@ def create_archive(app, prefix):
 
 
 def cron(app):
-    logutil.process_logfiles(
-        app, [app.var_path('logs', filename)
-              for filename in os.listdir(app.var_path('logs'))])
-
     now = time.time()
 
     for sessid in os.listdir(app.var_path('sessions')):
@@ -68,6 +64,10 @@ def cron(app):
             mtime = os.path.getmtime(path)
             if now - mtime > app.settings.session_max_age:
                 os.unlink(path)
+
+    logutil.process_logfiles(
+        app, [app.var_path('logs', filename)
+              for filename in os.listdir(app.var_path('logs'))])
 
     for filename in os.listdir(app.var_path('logs')):
         if not filename.endswith('.gz'): continue
