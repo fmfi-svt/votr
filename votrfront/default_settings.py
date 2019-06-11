@@ -15,6 +15,9 @@ cosign_proxy_logout = 'https://login.uniba.sk/logout.cgi'
 
 ua_code = None
 
+anketa_cookie_name = 'anketaKolacik2019Leto'
+anketa_cookie_hide_date = '02 July 2019'
+
 servers = [
     dict(
         title='ais2.uniba.sk + REST',

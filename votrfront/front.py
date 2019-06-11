@@ -65,6 +65,8 @@ def static_url(filename):
 def app_response(request, **my_data):
     my_data['url_root'] = request.url_root
     my_data['instance_name'] = request.app.settings.instance_name
+    my_data['anketa_cookie_name'] = request.app.settings.anketa_cookie_name
+    my_data['anketa_cookie_hide_date'] = request.app.settings.anketa_cookie_hide_date
     if 'csrf_token' not in my_data:
         my_data['servers'] = request.app.settings.servers
 
