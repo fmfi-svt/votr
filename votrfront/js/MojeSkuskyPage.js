@@ -1,6 +1,6 @@
 
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { Fragment } from 'react';
 import _ from 'lodash';
 import { saveAs } from 'file-saver';
 import { ZapisnyListSelector } from './ZapisnyListSelector';
@@ -8,6 +8,9 @@ import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
 import { PageLayout, PageTitle } from './layout';
 import { Link, queryConsumer } from './router';
 import { sortAs, SortableTable } from './sorting';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
 
@@ -171,10 +174,109 @@ function convertToICAL(terminy) {
   return lines.map((l) => l.replace(/\n/g, "\\n")).join("\r\n");
 }
 
+function MojeSkuskyMenuLink(props) {
+  return (<Link className={"btn btn-default" + (props.active ? " active" : "")} href={props.href}>{props.label}</Link>);
+}
+
+/*export function MojeSkuskyMenu(props) {
+  //var {action, cast, zapisnyListKey} = props.query;
+  return (
+    <div className="header">
+      <div className="pull-right">
+        <div className="btn-group">
+          <MojeSkuskyMenuLink
+            label="Zoznam"
+            href={{ action: 'mojeSkusky', cast: 'ZZ', zapisnyListKey }}
+            active={cast != 'CA'}
+          />
+          <MojeSkuskyMenuLink
+            label="Kalendár"
+            href={{ action: 'mojeSkusky', cast: 'CA', zapisnyListKey }}
+            active={cast == 'CA'}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}*/
+
+export function MojeSkuskyMenu() {
+    return queryConsumer(query => {
+      var {action, cast, zapisnyListKey} = query;
+      return(
+        <div className="pull-left">
+            <div className="switch">
+                <div className="btn-group">
+                  <MojeSkuskyMenuLink
+                    label="Zoznam"
+                    href={{ action: 'mojeSkusky', cast: 'ZZ', zapisnyListKey }}
+                    active={cast != 'CA'}
+                  />
+                  <MojeSkuskyMenuLink
+                    label="Kalendár"
+                    href={{ action: 'mojeSkusky', cast: 'CA', zapisnyListKey }}
+                    active={cast == 'CA'}
+                  />
+                </div>
+              </div>
+        </div>)
+    });
+}
+
+function convertToEvents(terminy){
+    return terminy.map((termin, i) => {
+      return {id: i,
+      title: `${termin.nazov_predmetu}${" ("}${termin.cas}${termin.miestnost != "" ? ", "  + termin.miestnost : ""}${")"}`,
+      start: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').toDate(),
+      end: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').add(3,"hours").toDate(),
+      prihlaseny: termin.datum_prihlasenia && !termin.datum_odhlasenia};
+    })
+}
+
+export function KalendarUdalosti(props) {
+    const localizer = momentLocalizer(moment)
+
+    return (
+      <Calendar
+        localizer={localizer}
+        events={props.eventList}
+        views={["month", "week", "day"]}
+        defaultDate = {new Date()}
+        elementProps={{className: "calendar"}}
+        messages={{
+          allDay: "Celý deň",
+          previous: "Späť",
+          next: "Ďalej",
+          today: "Dnes",
+          month: "Mesiac",
+          week: "Týždeň",
+          day: "Deň",
+          agenda: "Agenda",
+
+          date: "Dátum",
+          time: "Čas",
+          event: "Skúška"
+        }}
+        culture={"sk"}
+        eventPropGetter={
+          event => {
+            return {
+              className: event.prihlaseny? "signed":"unsigned"
+            };
+          }
+        }
+        //remove start and end times (we need only one included in title)
+        formats={{
+          eventTimeRangeFormat: ({ start, end }, culture, local) => {}
+        }}
+      />
+    )
+}
+
 export function MojeSkuskyPageContent() {
   return queryConsumer(query => {
     var cache = new CacheRequester();
-    var {zapisnyListKey} = query;
+    var {zapisnyListKey, cast} = query;
 
     var vidim = cache.get('get_vidim_terminy_hodnotenia', zapisnyListKey);
 
@@ -207,14 +309,44 @@ export function MojeSkuskyPageContent() {
     }
 
     return <React.Fragment>
-      <SortableTable
-        items={terminy}
-        columns={MojeSkuskyColumns}
-        queryKey="skuskySort"
-        withButtons={true}
-        message={message}
-        expandedContentOffset={1}
-      />
+      {cast === "CA"?
+        <div className="calendar">
+          <KalendarUdalosti eventList={convertToEvents(terminy)}/>
+        </div>
+        :
+        <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
+          <tbody>
+            {terminy.map((termin) =>
+              <tr key={termin.termin_key}>
+                {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
+                  <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
+                  <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
+                <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
+                  {termin.nazov_predmetu}
+                </Link></td>
+                <td>{termin.datum}</td>
+                <td>{termin.cas}</td>
+                <td>{termin.miestnost}</td>
+                <td>{termin.hodnotiaci}</td>
+                <td><Link href={{ ...query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
+                  {termin.pocet_prihlasenych +
+                   (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
+                </Link></td>
+                <td>{termin.poznamka}</td>
+                <td>{termin.prihlasovanie}</td>
+                <td>{termin.odhlasovanie}</td>
+                <td>
+                  {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
+                   termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
+                   null}
+                   <SkuskyRegisterButton termin={termin}/>
+                </td>
+              </tr>
+            )}
+          </tbody>
+          {message && <tfoot><tr><td colSpan={MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
+        </table>
+      }
       {terminy.length && <button onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}
     </React.Fragment>;
   });
@@ -282,6 +414,7 @@ export function MojeSkuskyPage() {
       <ZapisnyListSelector>
         <div className="header">
           <PageTitle>Moje skúšky</PageTitle>
+          {MojeSkuskyMenu()}
         </div>
         <MojeSkuskyPageContent />
       </ZapisnyListSelector>
