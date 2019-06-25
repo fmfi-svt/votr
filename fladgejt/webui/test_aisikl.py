@@ -58,7 +58,7 @@ class WebuiTestAisiklMixin:
                 app.close_dialog(name)
             return 'openDialog'
         if o[0].method == 'confirmBox':
-            app.confirm_box(-2) # DEFAULT
+            app.confirm_box(2) # vsetko odsuhlasime
             o.pop()
             return 'confirmBox'
         if o[0].method == 'closeDialog':
@@ -94,7 +94,7 @@ class WebuiTestAisiklMixin:
         if len(ops) == 3: # kvoli aplikacii VSUB051
             app.close_all_dialogs()
             return
-        if len(ops) == 2: # obcas vyskocia hned 2 okna; predpokladame, ze viac nie
+        if len(ops) == 2: # obcas vyskocia hned 2 okna
             app.awaited_open_main_dialog(ops[:1])
             with app.collect_operations() as o:
                 o.append(ops[1])
