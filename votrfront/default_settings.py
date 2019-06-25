@@ -43,7 +43,7 @@ servers = [
     ),
     dict(
         title='ais2-beta.uniba.sk',
-        login_types=('cosignpassword', 'cosigncookie'),
+        login_types=('samlpassword'),
         ais_cookie='JSESSIONID',
         ais_url='https://ais2-beta.uniba.sk/',
     ),
@@ -57,7 +57,7 @@ servers = [
     ),
     dict(
         title='ais2-test.uniba.sk',
-        login_types=('cosignpassword', 'cosigncookie'),
+        login_types=('samlpassword'),
         ais_cookie='JSESSIONID',
         ais_url='https://ais2-test.uniba.sk/',
     ),
