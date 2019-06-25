@@ -72,7 +72,7 @@ def get_cosign_cookies(server, params, logger):
 
         form_submit_url = 'ais2-beta.uniba.sk/ais/login.do'
         send_request('POST', form_submit_url, data=dict(
-            login=params['username'], password=params['password'], ref=url)
+            login=params['username'], password=params['password'], ref=url))
 
         if 'ais_cookie' in server:
             result[server['ais_cookie']] = session.cookies[server['ais_cookie']]
