@@ -5,6 +5,7 @@ from aisikl.app import Application
 class WebuiTestAisiklMixin:
 
     _testing_started = set()
+    _seen_types = set()
 
     # aby tlacidla, ktore zatvaraju dialog, boli stlacene ako posledne
     def _sort_buttons(self, buts):
@@ -27,6 +28,14 @@ class WebuiTestAisiklMixin:
                 _testing_started.add(ops[0].args[0]['code'])
                 return False
 
+    # zaznamenavanie typov
+    def _process(self, app):
+        for dialog in app.dialog_stack:
+            for c in dialog.components.values():
+                if c.component_type not in seen_types:
+                    _seen_types.add(c.component_type)
+                    self.context.log('benchmark', "Saw " + str(c.component_type) + " '" + str(repr(c.id)) + "'")
+
     def _test_inside_app(self, app, o):
         if len(o) == 2: # kvoli AS042 -> stavy prispevku; predpokladame, ze viac ako 2 operacie tu nedostaneme
             t1 = _test_inside_app(app, o[:1])
@@ -40,6 +49,7 @@ class WebuiTestAisiklMixin:
             app.awaited_open_dialog(o)
             name = o[0].args[0]['id']
             o.pop()
+            _process(app)
             buttons = [cname for cname in app.d.components if type(app.d.components[cname]) == aisikl.components.button.Button]
             _sort_buttons(buttons)
             for b in buttons:
@@ -98,6 +108,7 @@ class WebuiTestAisiklMixin:
                 _test_inside_app(app, o)
         else:
             app.awaited_open_main_dialog(ops)
+        _process(app)
         buttons = [cname for cname in app.d.components if type(app.d.components[cname]) == aisikl.components.button.Button]
         _sort_buttons(buttons)
         for b in buttons:
