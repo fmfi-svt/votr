@@ -42,10 +42,8 @@ class WebuiTestAisiklMixin:
             o.pop()
             buttons = [cname for cname in app.d.components if type(app.d.components[cname]) == aisikl.components.button.Button]
             _sort_buttons(buttons)
-            print(buttons)
             for b in buttons:
                 app.d.components[b].click()
-                print(o)
                 if len(o) > 0:
                     if _check_testing_started(app, o):
                         continue
@@ -90,7 +88,6 @@ class WebuiTestAisiklMixin:
             return 'shellExec'
 
     def _test_app(self, app, ops):
-        print(ops)
         if len(ops) == 3: # kvoli aplikacii VSUB051
             app.close_all_dialogs()
             return
@@ -103,14 +100,12 @@ class WebuiTestAisiklMixin:
             app.awaited_open_main_dialog(ops)
         buttons = [cname for cname in app.d.components if type(app.d.components[cname]) == aisikl.components.button.Button]
         _sort_buttons(buttons)
-        print(buttons)
         for b in buttons:
             with app.collect_operations() as ops:
                 try: # tento blok je tu kvoli refreshom v aplikacii VSES333
                     app.d.components[b].click()
                 except KeyError:
                     continue
-                print(ops)
                 if len(ops) > 0:
                     if ops[0].method == 'serverCloseApplication':
                         app.close_all_dialogs()
