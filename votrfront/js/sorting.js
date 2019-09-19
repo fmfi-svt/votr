@@ -160,7 +160,11 @@ export class SortableTable extends React.Component {
         rows.push(
           <tr
             key={item.originalIndex}
-            onClick={() => !fullTable && this.toggleInfo(item.originalIndex)}
+            onClick={(event) => {
+              if (event.target.tagName != "INPUT" && event.target.tagName != "A"){
+                return !fullTable && this.toggleInfo(item.originalIndex);
+              }
+            }}
             className={rowClassName && rowClassName(item)}
           >
             {columns.map(

@@ -10,7 +10,7 @@ import { sortAs, SortableTable } from './sorting';
 
 export var MojePredmetyColumns = [
   {
-    label: "Sem.",
+    label: "Semester",
     shortLabel: <abbr title="Semester">Sem.</abbr>,
     prop: "semester",
     preferDesc: true
@@ -47,8 +47,8 @@ export var MojePredmetyColumns = [
   {
     label: "Hodnotenie",
     prop: "hodn_znamka",
-    cell: hodnotenie => `${hodnotenie.hodn_znamka}${
-      hodnotenie.hodn_znamka ? " - " : null}${
+    cell: hodnotenie => `${hodnotenie.hodn_znamka ? hodnotenie.hodn_znamka : ""}${
+      hodnotenie.hodn_znamka ? " - " : ""}${
         hodnotenie.hodn_znamka_popis}`
   },
   {

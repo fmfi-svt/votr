@@ -39,6 +39,7 @@ export var MojePriemeryColumns = [
   { label: "Akademický rok", prop: "akademicky_rok" },
   {
     label: "Semester",
+    shortLabel: <abbr title="Semester">Sem.</abbr>,
     prop: "semester",
     preferDesc: true
   },
