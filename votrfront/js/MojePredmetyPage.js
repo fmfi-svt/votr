@@ -2,7 +2,7 @@
 import React from 'react';
 import { ZapisnyListSelector } from './ZapisnyListSelector';
 import { CacheRequester, Loading } from './ajax';
-import { coursesStats, renderWeightedStudyAverage } from './coursesStats';
+import { coursesStats, renderCredits, renderWeightedStudyAverage } from './coursesStats';
 import { classForSemester, humanizeTerminHodnotenia, humanizeTypVyucby, plural } from './humanizeAISData';
 import { PageLayout, PageTitle } from './layout';
 import { Link, queryConsumer } from './router';
@@ -65,7 +65,7 @@ export function MojePredmetyPageContent() {
               Celkom {stats.spolu.count} {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
               {" ("}{stats.zima.count} v zime, {stats.leto.count} v lete)
             </td>
-            <td>{stats.spolu.creditsCount} ({stats.zima.creditsCount}+{stats.leto.creditsCount})</td>
+            <td>{renderCredits(stats.spolu)} ({renderCredits(stats.zima)}&nbsp;+&nbsp;{renderCredits(stats.leto)})</td>
             <td></td>
             <td>{renderWeightedStudyAverage(hodnotenia)}</td>
             <td></td>

@@ -118,8 +118,8 @@ export function ZapisTableFooter(props) {
             {!jedinySemester && " ("+stats.zima.count+" v zime, "+stats.leto.count+" v lete)"}
           </td>
           <td>
-            {stats.spolu.creditsCount}
-            {!jedinySemester && " ("+stats.zima.creditsCount+"+"+stats.leto.creditsCount+")"}
+            {stats.spolu.creditsEnrolled}
+            {!jedinySemester && " ("+stats.zima.creditsEnrolled+"+"+stats.leto.creditsEnrolled+")"}
           </td>
           <td colSpan="3"></td>
         </tr>;

@@ -6,32 +6,22 @@ var ZNAMKY = {'A': 1, 'B': 1.5, 'C': 2, 'D': 2.5, 'E': 3, 'F': 4};
 export function coursesStats(hodnotenia) {
   var result = {};
 
-  result.zima = {};
-  result.zima.count = 0;
-  result.zima.creditsCount = 0;
+  ['zima', 'leto', 'spolu'].forEach((type) => {
+    result[type] = { count: 0, creditsEnrolled: 0, creditsObtained: 0 };
+  });
 
-  result.leto = {};
-  result.leto.count = 0;
-  result.leto.creditsCount = 0;
-
-  result.spolu = {};
-  result.spolu.count = hodnotenia.length;
-  result.spolu.creditsCount = 0;
+  function add(type, credits, obtained) {
+    result[type].count++;
+    result[type].creditsEnrolled += credits;
+    result[type].creditsObtained += obtained ? credits : 0;
+  }
 
   hodnotenia.forEach((row) => {
     var credits = parseInt(row.kredit);
-    if (row.hodn_znamka && row.hodn_znamka[0] === 'F') {
-        credits = 0;
-    }
-    result.spolu.creditsCount += credits;
-    if (row.semester == 'Z') {
-      result.zima.count += 1;
-      result.zima.creditsCount += credits;
-    }
-    if (row.semester == 'L') {
-      result.leto.count += 1;
-      result.leto.creditsCount += credits;
-    }
+    var obtained = row.hodn_znamka && row.hodn_znamka[0] !== 'F';
+    add('spolu', credits, obtained);
+    if (row.semester == 'Z') add('zima', credits, obtained);
+    if (row.semester == 'L') add('leto', credits, obtained);
   });
 
   return result;
@@ -58,6 +48,12 @@ export function renderWeightedStudyAverage(hodnotenia) {
   if (average === null) return null;
   return <span title="Neoficiálny vážený študijný priemer z doteraz ohodnotených predmetov">{average.toFixed(2)}</span>
 };
+
+export function renderCredits({ creditsObtained, creditsEnrolled }) {
+  return creditsObtained && creditsObtained != creditsEnrolled
+      ? `${creditsObtained}/${creditsEnrolled}`
+      : `${creditsEnrolled}`;
+}
 
 export function currentAcademicYear() {
   var date = new Date();
