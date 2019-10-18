@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { CacheRequester, Loading } from './ajax';
-import SmileLogo from '../img/smile.svg'
+import SmileLogo from './smile.svg';
 
 var dropCookie = true;  // false disables the Cookie, allowing you to style the banner
 var cookieDurationClose = 3;
