@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { CacheRequester, Loading } from './ajax';
+import SmileLogo from '../img/smile.svg'
 
 var dropCookie = true;  // false disables the Cookie, allowing you to style the banner
 var cookieDurationClose = 3;
@@ -38,7 +39,7 @@ export class AnketaPopup extends React.Component {
     return <div className="anketa__wrap">
              <div className="anketa__container">
                 <div className="anketa__text-block">
-                    <img src="http://svt.virpo.sk/smile.svg" className="anketa__image"/>
+                    <img src={SmileLogo} className="anketa__image"/>
                         <div className="anketa__subtitle">Daj semestru ešte chvíľu</div>
                 </div>
                 <div className="anketa__button-wrap">
