@@ -1,6 +1,6 @@
 
 import PropTypes from 'prop-types';
-import React, { Fragment } from 'react';
+import React from 'react';
 import _ from 'lodash';
 import { saveAs } from 'file-saver';
 import { ZapisnyListSelector } from './ZapisnyListSelector';
@@ -178,44 +178,22 @@ function MojeSkuskyMenuLink(props) {
   return (<Link className={"btn btn-default" + (props.active ? " active" : "")} href={props.href}>{props.label}</Link>);
 }
 
-/*export function MojeSkuskyMenu(props) {
-  //var {action, cast, zapisnyListKey} = props.query;
-  return (
-    <div className="header">
-      <div className="pull-right">
-        <div className="btn-group">
-          <MojeSkuskyMenuLink
-            label="Zoznam"
-            href={{ action: 'mojeSkusky', cast: 'ZZ', zapisnyListKey }}
-            active={cast != 'CA'}
-          />
-          <MojeSkuskyMenuLink
-            label="Kalendár"
-            href={{ action: 'mojeSkusky', cast: 'CA', zapisnyListKey }}
-            active={cast == 'CA'}
-          />
-        </div>
-      </div>
-    </div>
-  );
-}*/
-
 export function MojeSkuskyMenu() {
     return queryConsumer(query => {
-      var {action, cast, zapisnyListKey} = query;
+      var {action, kalendar, zapisnyListKey} = query;
       return(
         <div className="pull-left">
-            <div className="switch">
+            <div className="moje-skusky-calendar">
                 <div className="btn-group">
                   <MojeSkuskyMenuLink
                     label="Zoznam"
-                    href={{ action: 'mojeSkusky', cast: 'ZZ', zapisnyListKey }}
-                    active={cast != 'CA'}
+                    href={{ action: 'mojeSkusky', kalendar: 0, zapisnyListKey }}
+                    active={kalendar != 1}
                   />
                   <MojeSkuskyMenuLink
                     label="Kalendár"
-                    href={{ action: 'mojeSkusky', cast: 'CA', zapisnyListKey }}
-                    active={cast == 'CA'}
+                    href={{ action: 'mojeSkusky', kalendar: 1, zapisnyListKey }}
+                    active={kalendar == 1}
                   />
                 </div>
               </div>
@@ -233,6 +211,20 @@ function convertToEvents(terminy){
     })
 }
 
+function defaultDate(props){
+  var today = new Date();
+  var temparr = []
+  for (var i=0; i<props["eventList"].length; i++ ) {
+    temparr.push([props["eventList"][i]["start"].valueOf(), props["eventList"][i]["start"]]);
+  }
+  temparr.sort(function(a,b){
+    return a[0].valueOf() - b[0].valueOf();
+  });
+  if(temparr[temparr.length - 1][0] < today.valueOf())
+    return temparr[temparr.length - 1][1];
+  return today;
+}
+
 export function KalendarUdalosti(props) {
     const localizer = momentLocalizer(moment)
 
@@ -241,7 +233,7 @@ export function KalendarUdalosti(props) {
         localizer={localizer}
         events={props.eventList}
         views={["month", "week", "day"]}
-        defaultDate = {new Date()}
+        defaultDate = {defaultDate(props)}
         elementProps={{className: "calendar"}}
         messages={{
           allDay: "Celý deň",
@@ -252,7 +244,6 @@ export function KalendarUdalosti(props) {
           week: "Týždeň",
           day: "Deň",
           agenda: "Agenda",
-
           date: "Dátum",
           time: "Čas",
           event: "Skúška"
@@ -276,7 +267,7 @@ export function KalendarUdalosti(props) {
 export function MojeSkuskyPageContent() {
   return queryConsumer(query => {
     var cache = new CacheRequester();
-    var {zapisnyListKey, cast} = query;
+    var {zapisnyListKey, kalendar} = query;
 
     var vidim = cache.get('get_vidim_terminy_hodnotenia', zapisnyListKey);
 
@@ -309,43 +300,19 @@ export function MojeSkuskyPageContent() {
     }
 
     return <React.Fragment>
-      {cast === "CA"?
+      {kalendar == 1?
         <div className="calendar">
           <KalendarUdalosti eventList={convertToEvents(terminy)}/>
         </div>
         :
-        <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
-          <tbody>
-            {terminy.map((termin) =>
-              <tr key={termin.termin_key}>
-                {!termin.datum_prihlasenia || termin.datum_odhlasenia ?
-                  <td title="Nie ste prihlásení" className="text-center text-negative">{"\u2718"}</td> :
-                  <td title="Ste prihlásení" className="text-center text-positive">{"\u2714"}</td> }
-                <td><Link href={{ ...query, modal: 'detailPredmetu', modalPredmetKey: termin.predmet_key, modalAkademickyRok: termin.akademicky_rok }}>
-                  {termin.nazov_predmetu}
-                </Link></td>
-                <td>{termin.datum}</td>
-                <td>{termin.cas}</td>
-                <td>{termin.miestnost}</td>
-                <td>{termin.hodnotiaci}</td>
-                <td><Link href={{ ...query, modal: 'zoznamPrihlasenychNaTermin', modalTerminKey: termin.termin_key }}>
-                  {termin.pocet_prihlasenych +
-                   (termin.maximalne_prihlasenych ? "/" + termin.maximalne_prihlasenych : "")}
-                </Link></td>
-                <td>{termin.poznamka}</td>
-                <td>{termin.prihlasovanie}</td>
-                <td>{termin.odhlasovanie}</td>
-                <td>
-                  {termin.hodnotenie_terminu ? termin.hodnotenie_terminu :
-                   termin.hodnotenie_predmetu ? termin.hodnotenie_predmetu + ' (nepriradená k termínu)' :
-                   null}
-                   <SkuskyRegisterButton termin={termin}/>
-                </td>
-              </tr>
-            )}
-          </tbody>
-          {message && <tfoot><tr><td colSpan={MojeSkuskyColumns.length}>{message}</td></tr></tfoot>}
-        </table>
+        <SortableTable
+          items={terminy}
+          columns={MojeSkuskyColumns}
+          queryKey="skuskySort"
+          withButtons={true}
+          message={message}
+          expandedContentOffset={1}
+        />
       }
       {terminy.length && <button onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}
     </React.Fragment>;

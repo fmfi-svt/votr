@@ -22,7 +22,7 @@ $table-condensed-cell-padding: 4px;
 @import "votr-bootstrap";
 @import "layout";
 @import "forms";
-@import "../../node_modules/react-big-calendar/lib/css/react-big-calendar";
+@import "~react-big-calendar/lib/css/react-big-calendar";
 
 
 html, body {
@@ -88,7 +88,7 @@ a, .btn.btn-link {
   margin-bottom: $line-height-computed;
 }
 
-.switch {
+.moje-skusky-calendar {
     margin-left: 10px;
 }
 

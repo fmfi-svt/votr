@@ -1,6 +1,6 @@
 const fs = require('fs');
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-
+const webpack = require('webpack');
 const bootstrapPath = __dirname + '/node_modules/bootstrap-sass/assets/stylesheets';
 
 // A custom node-sass importer that removes some unwanted rules from _normalize.scss.
@@ -93,6 +93,7 @@ module.exports = function (env, args) {
       new MiniCssExtractPlugin({ filename: 'style.css' }),
       new StatusFilePlugin(mode == 'development' ? 'dev' : 'prod'),
       new CleanMapFilesPlugin(),
+      new webpack.ContextReplacementPlugin(/moment[/\\]locale$/, /sk/),
     ],
     module: {
       rules: [
