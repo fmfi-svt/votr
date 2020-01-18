@@ -9,13 +9,16 @@ dist
 .*
 !.git*
 /*env
+var
 docs/_build
 *.ipynb
+*_settings.py
+!default_settings.py
+*.log
+
+# TODO: Remove later.
 /sessions
 /logs
 /logdb
 /oldlogs
 /logarchive
-*_settings.py
-!default_settings.py
-*.log

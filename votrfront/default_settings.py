@@ -1,7 +1,7 @@
 
 instance_name = 'votr'
 
-var_path = '.'
+var_path = './var'
 
 lock_path = '/run/lock'
 
