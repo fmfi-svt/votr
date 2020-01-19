@@ -5,8 +5,70 @@ import _ from 'lodash';
 import $ from 'jquery';
 import 'bootstrap-sass/assets/javascripts/bootstrap/transition';  // needed by modal.js.
 import 'bootstrap-sass/assets/javascripts/bootstrap/modal';  // needed for $node.modal().
-import { CacheRequester, Loading, goLogout, goReset, logs } from './ajax';
+import { CacheRequester, Loading, goLogout, goReset, goResetHome, logs } from './ajax';
 import { FakeLink, Link, queryConsumer } from './router';
+
+
+export class ErrorBoundary extends React.Component {
+  state = { error: undefined, open: false };
+
+  componentDidCatch(error, errorInfo) {
+    setTimeout(function () {
+      console.error('ErrorBoundary caught error:', [error, errorInfo]);
+      var body = {
+        errorString: '' + error,
+        stack: error && error.stack,
+        componentStack: errorInfo.componentStack,
+      };
+      var xhr = new XMLHttpRequest();
+      xhr.open("POST", "report?type=errorboundary", true);
+      xhr.setRequestHeader("Content-Type", "application/json");
+      xhr.send(JSON.stringify(body));
+    }, 0);
+  }
+
+  static getDerivedStateFromError(error) {
+    return { error: error };
+  }
+
+  handleDetails = () => {
+    this.setState({ open: true });
+  }
+
+  render() {
+    if (this.state.error) {
+      var error = this.state.error.stack;
+      var details = String(error && error.stack || error);
+      var firstLine = details.trim("\n").split("\n")[0];
+      return (
+        <div className="alert alert-danger">
+          <h3>Chyba</h3>
+          <p>Vyskytla sa chyba a túto stránku nebolo možné zobraziť.</p>
+          <p>
+            Ak problém pretrváva, napíšte nám na <a
+            href="mailto:fmfi-svt@googlegroups.com">fmfi-svt@googlegroups.com</a>.
+          </p>
+          <br />
+          <ul className="list-inline">
+            <li><button type="button" className="btn btn-primary"
+                        onClick={goResetHome}>Späť na začiatok</button></li>
+            <li><button type="button" className="btn btn-default"
+                        onClick={goLogout}>Odhlásiť</button></li>
+          </ul>
+          <br />
+          {this.state.open ?
+            <pre>{details}</pre> :
+            <p className="text-muted">
+              Technické detaily: <code>{firstLine}</code>{" "}
+              <FakeLink onClick={this.handleDetails}>Viac detailov...</FakeLink>
+            </p>}
+        </div>
+      );
+    } else {
+      return this.props.children;
+    }
+  }
+};
 
 
 export function PageLayout(props) {
@@ -19,7 +81,9 @@ export function PageLayout(props) {
         </div>
         <div className="layout-content">
           <div className="container-fluid">
-            {props.children}
+            <ErrorBoundary>
+              {props.children}
+            </ErrorBoundary>
           </div>
         </div>
       </div>
@@ -185,7 +249,11 @@ export class ModalBase extends React.Component {
     return <div data-show={Boolean(C)} className="modal fade" ref={this.modalRef}
                 tabIndex="-1" role="dialog" aria-hidden="true">
       <div className="modal-dialog modal-lg">
-        {C && <C />}
+        {C && (
+          <ErrorBoundary>
+            <C />
+          </ErrorBoundary>
+        )}
       </div>
     </div>;
   }
@@ -204,7 +272,9 @@ export function Modal(props) {
         <h4 className="modal-title">{props.title}</h4>
       </div>
       <div className="modal-body">
-        {props.children}
+        <ErrorBoundary>
+          {props.children}
+        </ErrorBoundary>
       </div>
       {props.footer}
     </div>
