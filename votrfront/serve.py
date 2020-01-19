@@ -16,6 +16,7 @@ def serve(app, *args):
     os.makedirs(app.var_path('oldlogs'), exist_ok=True)
     os.makedirs(app.var_path('logarchive'), exist_ok=True)
     os.makedirs(app.var_path('sessions'), exist_ok=True)
+    os.makedirs(app.var_path('reportlogs'), exist_ok=True)
 
     app.wrap_static()
     run_simple('127.0.0.1', int(os.getenv('PORT') or 5000), app,

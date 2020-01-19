@@ -6,8 +6,8 @@ from werkzeug.routing import Map
 from werkzeug.wrappers import Request
 from werkzeug.wsgi import SharedDataMiddleware
 
-from . import login, front, rpc, serve, cron, logutil
-site_modules = [login, front, rpc, serve, cron, logutil]
+from . import login, front, rpc, serve, cron, logutil, report
+site_modules = [login, front, rpc, serve, cron, logutil, report]
 
 class VotrApp(object):
     '''The main WSGI application class.'''
