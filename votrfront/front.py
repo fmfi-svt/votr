@@ -1,4 +1,5 @@
 
+import base64
 import os
 import json
 import time
@@ -37,14 +38,14 @@ vaše hodnotenia a skontrolujte si počet kreditov bez zbytočného klikania.</p
 </div>
 </div>
 </noscript>
-<script>Votr = %(init_json)s</script>
+<script nonce="%(nonce)s">Votr = %(init_json)s</script>
 %(scripts)s
 </body>
 </html>
 '''.lstrip()
 
 analytics_template = '''
-<script>
+<script nonce="%(nonce)s">
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
 m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
@@ -63,8 +64,11 @@ def static_url(filename):
 
 
 def app_response(request, **my_data):
-    my_data['url_root'] = request.url_root
-    my_data['instance_name'] = request.app.settings.instance_name
+    url_root = request.url_root
+    instance_name = request.app.settings.instance_name
+
+    my_data['url_root'] = url_root
+    my_data['instance_name'] = instance_name
     my_data['anketa_cookie_name'] = request.app.settings.anketa_cookie_name
     my_data['anketa_cookie_hide_date'] = request.app.settings.anketa_cookie_hide_date
     if 'csrf_token' not in my_data:
@@ -92,14 +96,21 @@ def app_response(request, **my_data):
     else:
         return Response('Unexpected webpack status.', status=500)
 
+    nonce = base64.b64encode(os.urandom(18)).decode('ascii')
+
     content = template % dict(
+        nonce=nonce,
         init_json=json.dumps({ 'settings': my_data }).replace('</', '<\\/'),
         css=static_url('style.css'),
         scripts='\n'.join(
-            '<script src="{}"></script>'.format(static_url(script))
+            '<script nonce="{}" src="{}"></script>'.format(
+                nonce, static_url(script))
             for script in scripts),
-        analytics=('' if not request.app.settings.ua_code else
-            analytics_template % dict(ua_code=request.app.settings.ua_code)))
+        analytics=(
+            '' if not request.app.settings.ua_code else
+            analytics_template %
+                dict(nonce=nonce, ua_code=request.app.settings.ua_code)),
+    )
 
     return Response(content,
         content_type='text/html; charset=UTF-8',
@@ -107,6 +118,24 @@ def app_response(request, **my_data):
             # no-store == force refresh even after pressing the back button.
             # http://blog.55minutes.com/2011/10/how-to-defeat-the-browser-back-button-cache/
             'Cache-Control': 'no-cache, max-age=0, must-revalidate, no-store',
+
+            # based on https://csp.withgoogle.com/docs/strict-csp.html
+            # object-src 'self' - they say 'none' may block Chrome's PDF reader.
+            # TODO: Revisit object-src if http://crbug.com/271452 gets fixed.
+            # TODO: Remove "-Report-Only" if results look good.
+            'Content-Security-Policy-Report-Only':
+                "object-src 'self'; " +
+                "script-src 'nonce-%s' 'strict-dynamic' " % nonce +
+                "'unsafe-inline' https: http: 'report-sample'; " +
+                "base-uri 'none'; " +
+                "report-uri %sreport?type=csp; " % request.url_root +
+                "report-to csp_%s" % instance_name,
+
+            'Report-To': json.dumps({
+                'group': 'csp_%s' % instance_name,
+                'max_age': 24 * 60 * 60,
+                'endpoints': [{ 'url': '%sreport?type=csp-rt' % url_root }]
+            }),
         })
 
 
