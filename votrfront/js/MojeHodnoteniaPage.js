@@ -4,7 +4,7 @@ import _ from 'lodash';
 import { MojePredmetyColumns } from './MojePredmetyPage';
 import { StudiumSelector } from './StudiumSelector';
 import { CacheRequester, Loading } from './ajax';
-import { coursesStats, renderWeightedStudyAverage } from './coursesStats';
+import { coursesStats, renderCredits, renderWeightedStudyAverage } from './coursesStats';
 import { classForSemester, humanizeNazovPriemeru, humanizeTerminHodnotenia, humanizeTypVyucby, plural } from './humanizeAISData';
 import { PageLayout, PageTitle } from './layout';
 import { Link, queryConsumer } from './router';
@@ -96,7 +96,7 @@ export function MojeHodnoteniaHodnoteniaTable() {
           Celkom {stats.spolu.count}{" "}
           {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
         </td>
-        <td>{stats.spolu.creditsCount}</td>
+        <td>{renderCredits(stats.spolu)}</td>
         <td className={fullTable ? "" : "hidden-xs"} />
         <td>{renderWeightedStudyAverage(hodnotenia)}</td>
         <td className={fullTable ? "" : "hidden-xs hidden-sm"} />

@@ -184,8 +184,8 @@ export function ZapisTableFooter(props) {
                 {!jedinySemester && " ("+stats.zima.count+" v zime, "+stats.leto.count+" v lete)"}
               </td>
               <td>
-                {stats.spolu.creditsCount}
-                {!jedinySemester && " ("+stats.zima.creditsCount+"+"+stats.leto.creditsCount+")"}
+                {stats.spolu.creditsEnrolled}
+                {!jedinySemester && " ("+stats.zima.creditsEnrolled+"+"+stats.leto.creditsEnrolled+")"}
               </td>
               <td colSpan="3"></td>
             </tr>
@@ -197,14 +197,14 @@ export function ZapisTableFooter(props) {
                 {!jedinySemester && " ("+stats.zima.count+" v zime, "+stats.leto.count+" v lete)"}
                 <span className="hidden-sm">
                   {", "}
-                  {stats.spolu.creditsCount}
-                  {!jedinySemester && " ("+stats.zima.creditsCount+"+"+stats.leto.creditsCount+")"}
-                  {" " + plural(stats.spolu.creditsCount, "kredit", "kredity", "kreditov")}
+                  {stats.spolu.creditsEnrolled}
+                  {!jedinySemester && " ("+stats.zima.creditsEnrolled+"+"+stats.leto.creditsEnrolled+")"}
+                  {" " + plural(stats.spolu.creditsEnrolled, "kredit", "kredity", "kreditov")}
                 </span>
               </td>
               <td colSpan="2" className="hidden-xs">
-                {stats.spolu.creditsCount}
-                {!jedinySemester && " ("+stats.zima.creditsCount+"+"+stats.leto.creditsCount+")"}
+                {stats.spolu.creditsEnrolled}
+                {!jedinySemester && " ("+stats.zima.creditsEnrolled+"+"+stats.leto.creditsEnrolled+")"}
               </td>
             </tr>
           </React.Fragment>
