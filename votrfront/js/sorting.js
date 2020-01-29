@@ -161,8 +161,9 @@ export class SortableTable extends React.Component {
           <tr
             key={item.originalIndex}
             onClick={(event) => {
-              if (event.target.tagName != "INPUT" && event.target.tagName != "A"){
-                return !fullTable && this.toggleInfo(item.originalIndex);
+              // Don't toggle the row if we just clicked some link or input in the row.
+              if (!event.target.closest("a, input, button") && !fullTable) {
+                this.toggleInfo(item.originalIndex);
               }
             }}
             className={rowClassName && rowClassName(item)}
@@ -227,12 +228,14 @@ export class SortableTable extends React.Component {
         <div>
           <div className={`btn-toolbar section ${notExpandable.join(" ")}`}>
             <button
+              type="button"
               className={"btn btn-default" + (fullTable ? " active" : "")}
               onClick={() => {
                 LocalSettings.set("fullTable", !fullTable);
               }}
             >Zobraziť celú tabuľku</button>
             {!fullTable && <button
+              type="button"
               className={"btn btn-default"}
               onClick={() => (this.allClosed() ? this.expandAll() : this.collapseAll())}
             >

@@ -95,13 +95,8 @@ export function MojeHodnoteniaHodnoteniaTable() {
         <td colSpan="2">
           Celkom {stats.spolu.count}{" "}
           {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
-          {" ("}
-          {stats.zima.count} v zime, {stats.leto.count} v lete)
         </td>
-        <td>
-          {stats.spolu.creditsCount} ({stats.zima.creditsCount}+
-          {stats.leto.creditsCount})
-        </td>
+        <td>{stats.spolu.creditsCount}</td>
         <td className={fullTable ? "" : "hidden-xs"} />
         <td>{renderWeightedStudyAverage(hodnotenia)}</td>
         <td className={fullTable ? "" : "hidden-xs hidden-sm"} />

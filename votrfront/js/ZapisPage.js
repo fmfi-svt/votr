@@ -110,7 +110,7 @@ export var ZapisVlastnostiColumns = [
   {label: "Skratka", prop: 'skratka', expansionMark: true},
   {label: "Názov", prop: 'nazov'},
   {label: "Minimálny kredit", prop: 'minimalny_kredit'},
-  {label: "Poznámka", prop: 'poznamka', hiddenClass: ["hidden-xs", "hidden-sm"]}
+  {label: "Poznámka", prop: 'poznamka'}
 ];
 
 
