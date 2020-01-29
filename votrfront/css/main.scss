@@ -88,20 +88,23 @@ a, .btn.btn-link {
   margin-bottom: $line-height-computed;
 }
 
-.moje-skusky-calendar {
+.skusky-calendar-menu {
     margin-left: 10px;
 }
 
-.signed {
-    background-color: #D9534F !important;
-}
-
-.unsigned {
-    background-color: #5CB85C !important;
-}
-
-.calendar {
-    height:90vh;
+/* "html" = specificity tie breaker */
+/* must win vs ".rbc-calendar", ".rbc-event", ".rbc-event.rbc-selected" */
+html .skusky-calendar {
+  height: 90vh;
+  .rbc-event {
+    cursor: inherit;  /* there is no onClick event - for now */
+  }
+  .skusky-calendar-registered {
+    background-color: #337ab7;
+  }
+  .skusky-calendar-unregistered {
+    background-color: #999999;
+  }
 }
 
 .loading {

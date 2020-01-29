@@ -183,7 +183,7 @@ export function MojeSkuskyMenu() {
       var {action, kalendar, zapisnyListKey} = query;
       return(
         <div className="pull-left">
-            <div className="moje-skusky-calendar">
+            <div className="skusky-calendar-menu">
                 <div className="btn-group">
                   <MojeSkuskyMenuLink
                     label="Zoznam"
@@ -204,24 +204,21 @@ export function MojeSkuskyMenu() {
 function convertToEvents(terminy){
     return terminy.map((termin, i) => {
       return {id: i,
-      title: `${termin.nazov_predmetu}${" ("}${termin.cas}${termin.miestnost != "" ? ", "  + termin.miestnost : ""}${")"}`,
+      title: `${termin.nazov_predmetu} (${termin.cas}${termin.miestnost ? ", "  + termin.miestnost : ""})`,
       start: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').toDate(),
       end: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').add(3,"hours").toDate(),
       prihlaseny: termin.datum_prihlasenia && !termin.datum_odhlasenia};
     })
 }
 
-function defaultDate(props){
+function defaultDate(eventList) {
   var today = new Date();
-  var temparr = []
-  for (var i=0; i<props["eventList"].length; i++ ) {
-    temparr.push([props["eventList"][i]["start"].valueOf(), props["eventList"][i]["start"]]);
+
+  if (eventList.length) {
+    var lastExamDate = _.maxBy(eventList, 'start').start;
+    if (lastExamDate < today) return lastExamDate;
   }
-  temparr.sort(function(a,b){
-    return a[0].valueOf() - b[0].valueOf();
-  });
-  if(temparr[temparr.length - 1][0] < today.valueOf())
-    return temparr[temparr.length - 1][1];
+
   return today;
 }
 
@@ -233,8 +230,8 @@ export function KalendarUdalosti(props) {
         localizer={localizer}
         events={props.eventList}
         views={["month", "week", "day"]}
-        defaultDate = {defaultDate(props)}
-        elementProps={{className: "calendar"}}
+        defaultDate = {defaultDate(props.eventList)}
+        className="skusky-calendar"
         messages={{
           allDay: "Celý deň",
           previous: "Späť",
@@ -252,7 +249,7 @@ export function KalendarUdalosti(props) {
         eventPropGetter={
           event => {
             return {
-              className: event.prihlaseny? "signed":"unsigned"
+              className: event.prihlaseny ? "skusky-calendar-registered" : "skusky-calendar-unregistered"
             };
           }
         }
@@ -301,9 +298,7 @@ export function MojeSkuskyPageContent() {
 
     return <React.Fragment>
       {kalendar == 1?
-        <div className="calendar">
-          <KalendarUdalosti eventList={convertToEvents(terminy)}/>
-        </div>
+        <KalendarUdalosti eventList={convertToEvents(terminy)} />
         :
         <SortableTable
           items={terminy}
@@ -381,7 +376,7 @@ export function MojeSkuskyPage() {
       <ZapisnyListSelector>
         <div className="header">
           <PageTitle>Moje skúšky</PageTitle>
-          {MojeSkuskyMenu()}
+          <MojeSkuskyMenu />
         </div>
         <MojeSkuskyPageContent />
       </ZapisnyListSelector>
