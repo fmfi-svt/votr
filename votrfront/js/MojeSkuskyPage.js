@@ -8,6 +8,9 @@ import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
 import { PageLayout, PageTitle } from './layout';
 import { Link, queryConsumer } from './router';
 import { sortAs, SortableTable } from './sorting';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
 
@@ -177,10 +180,97 @@ function convertToICAL(terminy) {
   return lines.map((l) => l.replace(/\n/g, "\\n")).join("\r\n");
 }
 
+function MojeSkuskyMenuLink(props) {
+  return (<Link className={"btn btn-default" + (props.active ? " active" : "")} href={props.href}>{props.label}</Link>);
+}
+
+export function MojeSkuskyMenu() {
+    return queryConsumer(query => {
+      var {action, kalendar, zapisnyListKey} = query;
+      return(
+        <div className="pull-left">
+            <div className="skusky-calendar-menu">
+                <div className="btn-group">
+                  <MojeSkuskyMenuLink
+                    label="Zoznam"
+                    href={{ action: 'mojeSkusky', kalendar: 0, zapisnyListKey }}
+                    active={kalendar != 1}
+                  />
+                  <MojeSkuskyMenuLink
+                    label="Kalendár"
+                    href={{ action: 'mojeSkusky', kalendar: 1, zapisnyListKey }}
+                    active={kalendar == 1}
+                  />
+                </div>
+              </div>
+        </div>)
+    });
+}
+
+function convertToEvents(terminy){
+    return terminy.map((termin, i) => {
+      return {id: i,
+      title: `${termin.nazov_predmetu} (${termin.cas}${termin.miestnost ? ", "  + termin.miestnost : ""})`,
+      start: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').toDate(),
+      end: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').add(3,"hours").toDate(),
+      prihlaseny: termin.datum_prihlasenia && !termin.datum_odhlasenia};
+    })
+}
+
+function defaultDate(eventList) {
+  var today = new Date();
+
+  if (eventList.length) {
+    var lastExamDate = _.maxBy(eventList, 'start').start;
+    if (lastExamDate < today) return lastExamDate;
+  }
+
+  return today;
+}
+
+export function KalendarUdalosti(props) {
+    const localizer = momentLocalizer(moment)
+
+    return (
+      <Calendar
+        localizer={localizer}
+        events={props.eventList}
+        views={["month", "week", "day"]}
+        defaultDate = {defaultDate(props.eventList)}
+        className="skusky-calendar"
+        messages={{
+          allDay: "Celý deň",
+          previous: "Späť",
+          next: "Ďalej",
+          today: "Dnes",
+          month: "Mesiac",
+          week: "Týždeň",
+          day: "Deň",
+          agenda: "Agenda",
+          date: "Dátum",
+          time: "Čas",
+          event: "Skúška"
+        }}
+        culture={"sk"}
+        eventPropGetter={
+          event => {
+            return {
+              className: event.prihlaseny ? "skusky-calendar-registered" : "skusky-calendar-unregistered"
+            };
+          }
+        }
+        //remove start and end times (we need only one included in title)
+        formats={{
+          eventTimeRangeFormat: ({ start, end }, culture, local) => {}
+        }}
+      />
+    )
+}
+
 export function MojeSkuskyPageContent() {
   return queryConsumer(query => {
     var cache = new CacheRequester();
-    var {zapisnyListKey} = query;
+    var {zapisnyListKey, kalendar} = query;
 
     var vidim = cache.get('get_vidim_terminy_hodnotenia', zapisnyListKey);
 
@@ -213,14 +303,18 @@ export function MojeSkuskyPageContent() {
     }
 
     return <React.Fragment>
-      <SortableTable
-        items={terminy}
-        columns={MojeSkuskyColumns}
-        queryKey="skuskySort"
-        withButtons={true}
-        message={message}
-        expandedContentOffset={1}
-      />
+      {kalendar == 1?
+        <KalendarUdalosti eventList={convertToEvents(terminy)} />
+        :
+        <SortableTable
+          items={terminy}
+          columns={MojeSkuskyColumns}
+          queryKey="skuskySort"
+          withButtons={true}
+          message={message}
+          expandedContentOffset={1}
+        />
+      }
       {terminy.length && <button type="button" onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}
     </React.Fragment>;
   });
@@ -288,6 +382,7 @@ export function MojeSkuskyPage() {
       <ZapisnyListSelector>
         <div className="header">
           <PageTitle>Moje skúšky</PageTitle>
+          <MojeSkuskyMenu />
         </div>
         <MojeSkuskyPageContent />
       </ZapisnyListSelector>

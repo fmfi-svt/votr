@@ -22,6 +22,7 @@ $table-condensed-cell-padding: 4px;
 @import "votr-bootstrap";
 @import "layout";
 @import "forms";
+@import "~react-big-calendar/lib/css/react-big-calendar";
 
 
 html, body {
@@ -85,6 +86,25 @@ a, .btn.btn-link {
 .section {
   margin-top: $line-height-computed;
   margin-bottom: $line-height-computed;
+}
+
+.skusky-calendar-menu {
+    margin-left: 10px;
+}
+
+/* "html" = specificity tie breaker */
+/* must win vs ".rbc-calendar", ".rbc-event", ".rbc-event.rbc-selected" */
+html .skusky-calendar {
+  height: 90vh;
+  .rbc-event {
+    cursor: inherit;  /* there is no onClick event - for now */
+  }
+  .skusky-calendar-registered {
+    background-color: #337ab7;
+  }
+  .skusky-calendar-unregistered {
+    background-color: #999999;
+  }
 }
 
 .loading {
