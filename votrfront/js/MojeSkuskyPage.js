@@ -13,8 +13,7 @@ import { sortAs, SortableTable } from './sorting';
 
 const MojeSkuskyColumns = [
   {
-    label: "Moje?",
-    shortLabel: (
+    label: (
       <React.Fragment>
         <span className="hidden-xs hidden-sm">Moje</span>?
       </React.Fragment>
