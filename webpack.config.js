@@ -121,9 +121,11 @@ module.exports = function (env, args) {
             {
               loader: 'sass-loader',
               options: {
-                includePaths: [bootstrapPath],
-                outputStyle: mode == 'development' ? undefined : 'compressed',
-                importer: importerWhichRewritesBootstrapNormalizeScss,
+                sassOptions: {
+                  includePaths: [bootstrapPath],
+                  outputStyle: mode == 'development' ? undefined : 'compressed',
+                  importer: importerWhichRewritesBootstrapNormalizeScss,
+                },
               },
             },
           ],
