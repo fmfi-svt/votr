@@ -82,9 +82,9 @@ export function PridatZapisnyListButton (props) {
         }
         if (studium.koniec === '') { // ak este neskoncilo studium
             if (aktualny_zapisny_list !== 0) { // ak uz mame zapisny list na tento rok
-                return <button className='btn btn-xs btn-success' disabled={true}>Vytvoriť</button>
+                return <button type="button" className='btn btn-xs btn-success' disabled={true}>Vytvoriť</button>
             } else { //  ak studium prebieha a nemame este zapisny list na tento rok
-                return <button onClick={() => {
+                return <button type="button" onClick={() => {
                     if (confirm(`Vytvoriť zápisný list pre akademický rok ${currentAcademicYear()}?`)) {
                             sendRpc('create_zapisny_list', [studium.studium_key, currentAcademicYear(), null],(message) =>
                                 {if (message !== null) {alert(message);}

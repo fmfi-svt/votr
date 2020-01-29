@@ -221,7 +221,7 @@ export function MojeSkuskyPageContent() {
         message={message}
         expandedContentOffset={1}
       />
-      {terminy.length && <button onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}
+      {terminy.length && <button type="button" onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}
     </React.Fragment>;
   });
 }
@@ -277,7 +277,7 @@ export class SkuskyRegisterButton extends React.Component {
     var buttonClass = "btn btn-xs " + (this.isSigninButton() ? "btn-success" : "btn-danger") + (this.isDisabled() ? " appear-disabled" : "");
     var buttonText = this.state.pressed ? <Loading /> : this.isSigninButton() ? "Prihlásiť" : "Odhlásiť";
 
-    return <button onClick={this.state.pressed ? null : this.handleClick} className={buttonClass}>{buttonText}</button>;
+    return <button type="button" onClick={this.state.pressed ? null : this.handleClick} className={buttonClass}>{buttonText}</button>;
   }
 }
 
