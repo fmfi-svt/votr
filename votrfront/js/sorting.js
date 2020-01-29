@@ -67,11 +67,11 @@ export function sortTable(items, columns, query, queryKey, fullTable) {
   }
 
   var header = <tr>
-    {columns.map(({label, prop, process, preferDesc, hiddenClass = []}, index) =>
+    {columns.map(({label, shortLabel, prop, process, preferDesc, hiddenClass = []}, index) =>
       <th key={index} data-index={index} onClick={handleClick}
           className={(fullTable ? "" : hiddenClass.join(" ")) + ' sort ' + (order[0] == 'a' + index ? 'asc' :
                                 order[0] == 'd' + index ? 'desc' : '')}>
-        {label}
+        {shortLabel ? shortLabel : label}
       </th>
     )}
   </tr>;
@@ -124,6 +124,7 @@ export class SortableTable extends React.Component {
       withButtons,
       footer,
       message,
+      rowClassName,
       expandedContentOffset = 0
     } = this.props;
 
@@ -157,7 +158,16 @@ export class SortableTable extends React.Component {
 
       sortedItems.forEach((item) => {
         rows.push(
-          <tr key={item.originalIndex} onClick={() => !fullTable && this.toggleInfo(item.originalIndex)}>
+          <tr
+            key={item.originalIndex}
+            onClick={(event) => {
+              // Don't toggle the row if we just clicked some link or input in the row.
+              if (!event.target.closest("a, input, button") && !fullTable) {
+                this.toggleInfo(item.originalIndex);
+              }
+            }}
+            className={rowClassName && rowClassName(item)}
+          >
             {columns.map(
               ({
                 label,
@@ -167,9 +177,9 @@ export class SortableTable extends React.Component {
                 cell,
                 colProps,
                 expansionMark
-              }) => (
+              }, index) => (
                 <td
-                  key={label}
+                  key={index}
                   className={!fullTable ? hiddenClass.join(" ") : ""}
                   {...(colProps ? colProps(item) : {})}
                 >
@@ -200,8 +210,8 @@ export class SortableTable extends React.Component {
                   <tbody>
                     {columns
                       .filter(col => col.hiddenClass)
-                      .map(col => (
-                        <tr key={col.label} className={revertHidden(col.hiddenClass)}>
+                      .map((col, index) => (
+                        <tr key={index} className={revertHidden(col.hiddenClass)}>
                           <td>{col.label}:</td>
                           <td>{col.cell ? col.cell(item, query) : item[col.prop]}</td>
                         </tr>
@@ -218,12 +228,14 @@ export class SortableTable extends React.Component {
         <div>
           <div className={`btn-toolbar section ${notExpandable.join(" ")}`}>
             <button
+              type="button"
               className={"btn btn-default" + (fullTable ? " active" : "")}
               onClick={() => {
                 LocalSettings.set("fullTable", !fullTable);
               }}
             >Zobraziť celú tabuľku</button>
             {!fullTable && <button
+              type="button"
               className={"btn btn-default"}
               onClick={() => (this.allClosed() ? this.expandAll() : this.collapseAll())}
             >
@@ -235,7 +247,7 @@ export class SortableTable extends React.Component {
             <tbody>{rows}</tbody>
             {(footer || message) && (
               <tfoot>
-                {footer}
+                {footer && footer(fullTable)}
                 {message && (
                   <tr>
                     <td colSpan={columns.length}>{message}</td>

@@ -8,45 +8,109 @@ import { coursesStats } from './coursesStats';
 import { humanizeTypVyucby, plural } from './humanizeAISData';
 import { FormItem, PageLayout, PageTitle } from './layout';
 import { Link, navigate, queryConsumer } from './router';
-import { sortAs, sortTable } from './sorting';
+import { sortAs, SortableTable } from './sorting';
+
+
+const typVyucbyColumn = {
+  label: <abbr title="Typ výučby">Typ</abbr>,
+  prop: "typ_vyucby",
+  cell: predmet => (
+    <abbr title={humanizeTypVyucby(predmet.typ_vyucby)}>
+      {predmet.typ_vyucby}
+    </abbr>
+  )
+};
+const skratkaColumn = {
+  label: "Skratka predmetu",
+  prop: "skratka",
+  hiddenClass: ["hidden-xs", "hidden-sm"]
+};
+const semesterColumn = {
+  label: "Semester",
+  shortLabel: <abbr title="Semester">Sem.</abbr>,
+  prop: "semester",
+  preferDesc: true
+};
+const rozsahVyucbyColumn = {
+  label: "Rozsah výučby",
+  prop: "rozsah_vyucby",
+  hiddenClass: ["hidden-xs", "hidden-sm"]
+};
+const kreditColumn = {
+  label: "Kredit",
+  prop: "kredit",
+  process: sortAs.number,
+  hiddenClass: ["hidden-xs"]
+};
+const prihlaseniColumn = {
+  label: "Prihlásení",
+  prop: "pocet_prihlasenych",
+  process: sortAs.number,
+  cell: predmet =>
+    <React.Fragment>
+      {RequestCache["pocet_prihlasenych_je_stary" + predmet.predmet_key] ? (
+        <del>{predmet.pocet_prihlasenych}</del>
+      ) : (
+        predmet.pocet_prihlasenych
+      )}
+      {predmet.maximalne_prihlasenych && "/" + predmet.maximalne_prihlasenych}
+    </React.Fragment>,
+  hiddenClass: ["hidden-xs"]
+};
+const jazykColumn = {
+  label: "Jazyk",
+  prop: "jazyk",
+  cell: predmet => predmet.jazyk.replace(/ ,/g, ", "),
+  hiddenClass: ["hidden-xs", "hidden-sm"]
+};
 
 
 export var ZapisZPlanuColumns = [
-  ["Moje?", 'moje', null, true],
-  [<abbr title="Typ výučby">Typ</abbr>, 'typ_vyucby'],
-  ["Blok", null, (predmet) => parseInt(predmet.blok_index || 0) * 1000 + parseInt(predmet.v_bloku_index || 0)],
-  ["Názov predmetu", 'nazov'],
-  ["Skratka predmetu", 'skratka'],
-  [<abbr title="Semester">Sem.</abbr>, 'semester', null, true],
-  ["Rozsah výučby", 'rozsah_vyucby'],
-  ["Kredit", 'kredit', sortAs.number],
-  ["Prihlásení", 'pocet_prihlasenych', sortAs.number],
-  [<abbr title="Odporúčaný ročník">Odp. ročník</abbr>, 'odporucany_rocnik'],
-  ["Jazyk", 'jazyk']
+  typVyucbyColumn,
+  {
+    label: "Blok",
+    process: (predmet) => parseInt(predmet.blok_index || 0) * 1000 + parseInt(predmet.v_bloku_index || 0),
+    hiddenClass: ["hidden-xs", "hidden-sm"],
+    cell:  predmet =>
+      predmet.blok_nazov ? (
+        <abbr title={predmet.blok_nazov}>{predmet.blok_skratka}</abbr>
+      ) : (
+        predmet.blok_skratka
+      )
+  },
+  skratkaColumn,
+  semesterColumn,
+  rozsahVyucbyColumn,
+  kreditColumn,
+  prihlaseniColumn,
+  {
+    label: <abbr title="Odporúčaný ročník">Odp. ročník</abbr>,
+    prop: 'odporucany_rocnik',
+    hiddenClass: ["hidden-xs", "hidden-sm"]
+  },
+  jazykColumn
 ];
 ZapisZPlanuColumns.defaultOrder = 'a1a2a9a3';
 
 
 export var ZapisZPonukyColumns = [
-  ["Moje?", 'moje', null, true],
-  [<abbr title="Typ výučby">Typ</abbr>, 'typ_vyucby'],
-  ["Blok", 'blok_skratka'],
-  ["Názov predmetu", 'nazov'],
-  ["Skratka predmetu", 'skratka'],
-  [<abbr title="Semester">Sem.</abbr>, 'semester', null, true],
-  ["Rozsah výučby", 'rozsah_vyucby'],
-  ["Kredit", 'kredit', sortAs.number],
-  ["Prihlásení", 'pocet_prihlasenych', sortAs.number],
-  ["Jazyk", 'jazyk']
+  typVyucbyColumn,
+  { label: "Blok", prop: 'blok_skratka', hiddenClass: ["hidden-xs", "hidden-sm"] },
+  skratkaColumn,
+  semesterColumn,
+  rozsahVyucbyColumn,
+  kreditColumn,
+  prihlaseniColumn,
+  jazykColumn
 ];
 ZapisZPonukyColumns.defaultOrder = 'a3';
 
 
 export var ZapisVlastnostiColumns = [
-  ["Skratka", 'skratka'],
-  ["Názov", 'nazov'],
-  ["Minimálny kredit", 'minimalny_kredit'],
-  ["Poznámka", 'poznamka']
+  {label: "Skratka", prop: 'skratka', expansionMark: true},
+  {label: "Názov", prop: 'nazov'},
+  {label: "Minimálny kredit", prop: 'minimalny_kredit'},
+  {label: "Poznámka", prop: 'poznamka'}
 ];
 
 
@@ -107,24 +171,46 @@ export function ZapisTableFooter(props) {
   var jedinySemester = _.keys(semestre).length <= 1;
 
   return (
-    <tfoot>
+    <React.Fragment>
       {_.map(bloky, (blok, skratka) => {
         var stats = coursesStats(blok);
-        return <tr key={skratka}>
-          <td colSpan="2">{skratka ? "Súčet bloku" : "Dokopy"}</td>
-          <td>{nazvy[skratka] ? <abbr title={nazvy[skratka]}>{skratka}</abbr> : skratka}</td>
-          <td colSpan="4">
-            {stats.spolu.count} {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
-            {!jedinySemester && " ("+stats.zima.count+" v zime, "+stats.leto.count+" v lete)"}
-          </td>
-          <td>
-            {stats.spolu.creditsCount}
-            {!jedinySemester && " ("+stats.zima.creditsCount+"+"+stats.leto.creditsCount+")"}
-          </td>
-          <td colSpan="3"></td>
-        </tr>;
+        return (
+          <React.Fragment key={skratka}>
+            <tr key={skratka} className={props.fullTable ? null : "hidden-xs hidden-sm"}>
+              <td colSpan="2">{skratka ? "Súčet bloku" : "Dokopy"}</td>
+              <td>{nazvy[skratka] ? <abbr title={nazvy[skratka]}>{skratka}</abbr> : skratka}</td>
+              <td colSpan="4">
+                {stats.spolu.count} {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
+                {!jedinySemester && " ("+stats.zima.count+" v zime, "+stats.leto.count+" v lete)"}
+              </td>
+              <td>
+                {stats.spolu.creditsEnrolled}
+                {!jedinySemester && " ("+stats.zima.creditsEnrolled+"+"+stats.leto.creditsEnrolled+")"}
+              </td>
+              <td colSpan="3"></td>
+            </tr>
+            <tr key={skratka+"sm"} className={"hidden-md hidden-lg"}>
+              <td>{skratka ? "Súčet bloku" : "Dokopy"}</td>
+              <td>{nazvy[skratka] ? <abbr title={nazvy[skratka]}>{skratka}</abbr> : skratka}</td>
+              <td colSpan="2">
+                {stats.spolu.count} {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
+                {!jedinySemester && " ("+stats.zima.count+" v zime, "+stats.leto.count+" v lete)"}
+                <span className="hidden-sm">
+                  {", "}
+                  {stats.spolu.creditsEnrolled}
+                  {!jedinySemester && " ("+stats.zima.creditsEnrolled+"+"+stats.leto.creditsEnrolled+")"}
+                  {" " + plural(stats.spolu.creditsEnrolled, "kredit", "kredity", "kreditov")}
+                </span>
+              </td>
+              <td colSpan="2" className="hidden-xs">
+                {stats.spolu.creditsEnrolled}
+                {!jedinySemester && " ("+stats.zima.creditsEnrolled+"+"+stats.leto.creditsEnrolled+")"}
+              </td>
+            </tr>
+          </React.Fragment>
+        );
       })}
-    </tfoot>
+    </React.Fragment>
   );
 }
 
@@ -251,44 +337,65 @@ export class ZapisTable extends React.Component {
       </button>
     </div>;
 
-    var [predmety, header] = sortTable(_.values(predmety), columns, query, 'predmetySort');
+    // mojeColumn
+    const mojeColumn = {
+      label: "Moje?",
+      prop: "moje",
+      preferDesc: true,
+      colProps: () => ({ className: "text-center" }),
+      cell: (predmet, query) => (
+        <input
+          type="checkbox"
+          name={predmet.predmet_key}
+          checked={checked[predmet.predmet_key]}
+          onChange={this.handleChange}
+        />
+      )
+    };
+
+    // nazovColumn
+    const nazovColumn = {
+      label: "Názov predmetu",
+      prop: "nazov",
+      expansionMark: true,
+      cell: predmet => {
+        var href = {
+          ...this.props.query,
+          modal: "detailPredmetu",
+          modalPredmetKey: predmet.predmet_key,
+          modalAkademickyRok: this.props.akademickyRok
+        };
+        var nazov = <Link href={href}>{predmet.nazov}</Link>;
+        if (predmet.moje) nazov = <strong>{nazov}</strong>;
+        if (predmet.aktualnost)
+        nazov = (
+          <React.Fragment>
+          <del>{nazov}</del> (nekoná sa)
+          </React.Fragment>
+        );
+        return nazov;
+      }
+    };
+    columns = [mojeColumn, ...columns.slice(0, 2), nazovColumn, ...columns.slice(2)];
+
+    const footer = fullTable =>
+      this.props.showFooter && (
+        <ZapisTableFooter
+          predmety={this.props.predmety}
+          moje={checked}
+          fullTable={fullTable}
+        />
+      );
 
     return <form onSubmit={this.handleSave}>
       {saveButton}
-      <table className="table table-condensed table-bordered table-striped table-hover with-buttons-table">
-        <thead>{header}</thead>
-        <tbody>
-          {predmety.map((predmet) => {
-            var predmet_key = predmet.predmet_key;
-            var href = { ...this.props.query, modal: 'detailPredmetu', modalPredmetKey: predmet.predmet_key, modalAkademickyRok: this.props.akademickyRok };
-            var nazov = <Link href={href}>{predmet.nazov}</Link>;
-            if (predmet.moje) nazov = <strong>{nazov}</strong>;
-            if (predmet.aktualnost) nazov = <React.Fragment><del>{nazov}</del> (nekoná sa)</React.Fragment>;
-            var blok = predmet.blok_skratka;
-            if (predmet.blok_nazov) blok = <abbr title={predmet.blok_nazov}>{blok}</abbr>;
-
-            return <tr key={predmet_key} className={classes[predmet_key]}>
-              <td className="text-center">
-                <input type="checkbox" name={predmet_key} checked={checked[predmet_key]} onChange={this.handleChange} />
-              </td>
-              <td><abbr title={humanizeTypVyucby(predmet.typ_vyucby)}>{predmet.typ_vyucby}</abbr></td>
-              <td>{blok}</td>
-              <td>{nazov}</td>
-              <td>{predmet.skratka}</td>
-              <td>{predmet.semester}</td>
-              <td>{predmet.rozsah_vyucby}</td>
-              <td>{predmet.kredit}</td>
-              <td>{RequestCache['pocet_prihlasenych_je_stary' + predmet_key] ?
-                      <del>{predmet.pocet_prihlasenych}</del> : predmet.pocet_prihlasenych}
-                  {predmet.maximalne_prihlasenych && "/" + predmet.maximalne_prihlasenych}</td>
-              {columns == ZapisZPlanuColumns && <td>{predmet.odporucany_rocnik}</td>}
-              <td>{predmet.jazyk.replace(/ ,/g, ', ')}</td>
-            </tr>;
-          })}
-        </tbody>
-        {this.props.showFooter && <ZapisTableFooter predmety={this.props.predmety} moje={checked} />}
-        {message && <tfoot><tr><td colSpan={columns.length}>{message}</td></tr></tfoot>}
-      </table>
+      <SortableTable
+        items={_.values(predmety)}
+        columns={columns}
+        queryKey="predmetySort"
+        footer={footer}
+        message={message}
+      />
       {saveButton}
     </form>;
   }
@@ -309,24 +416,13 @@ export function ZapisVlastnostiTable(props) {
     message = "Študijný plán nemá žiadne poznámky.";
   }
 
-  var [vlastnosti, header] = sortTable(
-    vlastnosti, ZapisVlastnostiColumns, props.query, 'vlastnostiSort');
-
   return (
-    <table className="table table-condensed table-bordered table-striped table-hover">
-      <thead>{header}</thead>
-      <tbody>
-        {vlastnosti.map((vlastnost, index) =>
-          <tr key={index}>
-            <td>{vlastnost.skratka}</td>
-            <td>{vlastnost.nazov}</td>
-            <td>{vlastnost.minimalny_kredit}</td>
-            <td>{vlastnost.poznamka}</td>
-          </tr>
-        )}
-      </tbody>
-      {message && <tfoot><tr><td colSpan={ZapisVlastnostiColumns.length}>{message}</td></tr></tfoot>}
-    </table>
+    <SortableTable
+      items={vlastnosti}
+      columns={ZapisVlastnostiColumns}
+      queryKey="vlastnostiSort"
+      message={message}
+    />
   );
 }
 

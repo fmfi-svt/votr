@@ -96,15 +96,6 @@ def open_log(filename):
         return open(filename, encoding='utf8')
 
 
-def get_lines(app):
-    lines = []
-    c = _connect(app).cursor()
-    c.execute('SELECT * FROM lines')
-    for sessid, lineno, tags, content in c.fetchall():
-        lines.append(Line(sessid, lineno, tags, content))
-    return sorted(lines, key=lambda l: l.timestamp)
-
-
 def set_tags(app, sessid, lineno, tags_to_add, tags_to_remove):
     c = _connect(app).cursor()
     c.execute('SELECT tags FROM lines WHERE sessid = ? AND lineno = ?',
@@ -147,11 +138,12 @@ def process_logfiles(app, files):
             except Exception:
                 errors.append((filename, sys.exc_info()))
 
-    for line in get_lines(app):
-        if line.tags == 'new':
-            new_tags = classify(line).split()
-            if new_tags:
-                set_tags(app, line.sessid, line.lineno, new_tags, ['new'])
+    c.execute("SELECT * FROM lines WHERE tags = 'new'")
+    for sessid, lineno, tags, content in c:
+        line = Line(sessid, lineno, tags, content)
+        new_tags = classify(line).split()
+        if new_tags:
+            set_tags(app, sessid, lineno, new_tags, ['new'])
 
     _connect(app).commit()
 
@@ -286,16 +278,25 @@ def cli_list(app, *args):
         else:
             match.append(arg)
 
-    with wrap_pager() as out:
-        for line in get_lines(app):
-            plain = format_plain(app, line)
-            tm = time.localtime(line.timestamp)
-            date = int('%d%02d%02d' % (tm.tm_year, tm.tm_mon, tm.tm_mday))
+    lines = []
+    c = _connect(app).cursor()
+    c.execute('SELECT * FROM lines')
+    for sessid, lineno, tags, content in c:
+        line = Line(sessid, lineno, tags, content)
+        plain = format_plain(app, line)
+        tm = time.localtime(line.timestamp)
+        date = int('%d%02d%02d' % (tm.tm_year, tm.tm_mon, tm.tm_mday))
 
-            if (all(re.search(pattern, plain) for pattern in match) and
-                all(not re.search(pattern, plain) for pattern in match_not) and
-                match_from <= date <= match_to):
-                print(formatter(app, line), file=out)
+        if (all(re.search(pattern, plain) for pattern in match) and
+            all(not re.search(pattern, plain) for pattern in match_not) and
+            match_from <= date <= match_to):
+            lines.append(line)
+
+    lines.sort(key=lambda l: l.timestamp)
+
+    with wrap_pager() as out:
+        for line in lines:
+            print(formatter(app, line), file=out)
 
 
 def cli_process(app, *files):
