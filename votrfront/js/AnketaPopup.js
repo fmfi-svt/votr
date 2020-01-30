@@ -44,7 +44,7 @@ export class AnketaPopup extends React.Component {
                 </div>
                 <div className="anketa__button-wrap">
                     <a className="anketa__button anketa__button--main" onClick={() => {this.onClosePopup(0)}} href="https://anketa.fmph.uniba.sk/?anketaPopup" target="_blank" rel="noopener noreferrer" >Hlasuj v ankete</a>
-                    <a className="anketa__button anketa__button--secondary" onClick={() => {this.onClosePopup(1)}} href="javascript:void(0);">Neskôr</a>
+                    <a className="anketa__button anketa__button--secondary" onClick={(e) => {e.preventDefault(); this.onClosePopup(1)}} href="#">Neskôr</a>
                 </div>
             </div>
            </div>;
