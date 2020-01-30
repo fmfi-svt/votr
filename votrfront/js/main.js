@@ -11,7 +11,7 @@ import '../css/main.scss';
 
 (function () {
 
-if (!history.pushState || !window.Set || !window.Map) {
+if (!history.pushState || !window.Set || !window.Map || !Array.prototype.includes) {
   return;   // see prologue.js
 }
 

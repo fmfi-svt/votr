@@ -4,7 +4,7 @@ Votr.setDebug = function (enabled) {
   location.reload();
 }
 
-if (!history.pushState || !window.Set || !window.Map) {
+if (!history.pushState || !window.Set || !window.Map || !Array.prototype.includes) {
   document.getElementById('votr').innerHTML = `
     <div class="central-box">
     <h1>Votr</h1>
@@ -13,11 +13,11 @@ if (!history.pushState || !window.Set || !window.Map) {
     <p>Prosím stiahnite si novší prehliadač. Nové prehliadače sú rýchlejšie, pohodlnejšie a navyše bezpečnejšie.</p>
     <br>
     <ul class="list-inline">
-    <li><a class="btn btn-link" href="https://www.firefox.com/">Mozilla Firefox</a>
-    <li><a class="btn btn-link" href="https://www.google.com/chrome">Google Chrome</a>
+    <li><a class="btn btn-link" href="https://www.firefox.com/">Firefox</a>
+    <li><a class="btn btn-link" href="https://www.google.com/chrome">Chrome</a>
     <li><a class="btn btn-link" href="https://www.opera.com/">Opera</a>
     <li><a class="btn btn-link" href="https://www.apple.com/safari/">Safari</a>
-    <li><a class="btn btn-link" href="http://windows.microsoft.com/ie">Internet Explorer 11</a>
+    <li><a class="btn btn-link" href="https://www.microsoft.com/en-us/edge">Edge</a>
     </ul>
     </div>
   `;
