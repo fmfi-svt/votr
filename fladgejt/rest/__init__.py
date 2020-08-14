@@ -14,5 +14,5 @@ class RestClient(RestStudiumMixin, RestTerminyMixin):
     def check_connection(self):
         self.context.request_json('')
 
-    def logout(self):
+    def logout(self, ais_logout_suffix):
         pass

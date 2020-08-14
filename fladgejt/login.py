@@ -40,12 +40,12 @@ def get_login_session(logger):
     return session, send_request
 
 
-def get_cosign_cookies(server, params, logger):
+def get_cosign_cookies(server, params, ais_login_suffix, logger):
     result = {}
 
     if params['type'] == 'cosignpassword':
         if 'ais_url' in server:
-            url = server['ais_url'] + 'ais/loginCosign.do?'
+            url = server['ais_url'] + '{}?'.format(ais_login_suffix)
         else:
             url = server['rest_url']
 
@@ -87,7 +87,7 @@ def get_cosign_cookies(server, params, logger):
     return result
 
 
-def create_client(server, params, *, logger=None):
+def create_client(server, params, ais_login_suffix, *, logger=None):
     logger = logger or Logger()
 
     if params['type'] not in server['login_types']:
@@ -102,7 +102,7 @@ def create_client(server, params, *, logger=None):
         server.pop('rest_cookie', None)
 
     # Do the cosign login if required.
-    cookies = get_cosign_cookies(server, params, logger)
+    cookies = get_cosign_cookies(server, params, ais_login_suffix, logger)
 
     ctx = Context(cookies,
                   ais_url=server.get('ais_url'),
@@ -115,7 +115,8 @@ def create_client(server, params, *, logger=None):
         if params['type'] == 'plainpassword':
             data['login'] = params['username']
             data['password'] = params['password']
-        soup = ctx.request_html('/ais/loginCosign.do', method='POST', data=data)
+        soup = ctx.request_html('/{}'.format(ais_login_suffix), method='POST',
+                                data=data)
         username_element = soup.find(class_='user-name')
         if not (username_element and username_element.get_text().strip()):
             raise Exception('AIS login unsuccessful.')

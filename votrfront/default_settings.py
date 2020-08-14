@@ -13,6 +13,9 @@ cosign_proxy = None
 
 cosign_proxy_logout = 'https://login.uniba.sk/logout.cgi'
 
+ais_cosign_login = 'ais/loginCosign.do'
+ais_cosign_logout = 'ais/logoutCosign.do'
+
 ua_code = None
 
 anketa_cookie_name = 'anketaKolacik2019Leto'

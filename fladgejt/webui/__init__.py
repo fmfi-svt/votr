@@ -19,5 +19,5 @@ class WebuiClient(WebuiCommonUIMixin, WebuiHodnoteniaMixin, WebuiObdobiaMixin,
     def check_connection(self):
         check_connection(self.context)
 
-    def logout(self):
-        self.context.request_html('/ais/logoutCosign.do')
+    def logout(self, ais_logout_suffix):
+        self.context.request_html('/{}'.format(ais_logout_suffix))

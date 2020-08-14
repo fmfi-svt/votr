@@ -8,6 +8,6 @@ class HybridClient(RestClient, WebuiClient):
         RestClient.check_connection(self)
         WebuiClient.check_connection(self)
 
-    def logout(self):
-        RestClient.logout(self)
-        WebuiClient.logout(self)
+    def logout(self, ais_logout_suffix):
+        RestClient.logout(self, ais_logout_suffix)
+        WebuiClient.logout(self, ais_logout_suffix)

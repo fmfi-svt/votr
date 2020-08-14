@@ -31,7 +31,8 @@ def do_logout(request):
             log = session['client'].context.log
             try:
                 log('logout', 'Logout started', request.full_path)
-                session['client'].logout()
+                ais_logout_suffix = request.app.settings.ais_cosign_logout
+                session['client'].logout(ais_logout_suffix)
             except Exception as e:
                 log('logout',
                     'Logout failed with {}'.format(type(e).__name__),
@@ -70,7 +71,9 @@ def finish_login(request, destination, params):
         try:
             logger.log('login', 'Login started',
                 [server.get('title'), params.get('type'), destination])
-            client = create_client(server, fladgejt_params, logger=logger)
+            ais_login_suffix = request.app.settings.ais_cosign_login
+            client = create_client(server, fladgejt_params, ais_login_suffix,
+                                   logger=logger)
             csrf_token = generate_key()
             session = dict(
                 csrf_token=csrf_token, credentials=save_credentials(params),
