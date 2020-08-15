@@ -51,6 +51,8 @@ def get_cosign_cookies(server, params, logger):
 
         session, send_request = get_login_session(logger)
         response = send_request('GET', url)
+        if '/cosign.cgi' not in response.text:
+            raise Exception("Opening the Cosign login page was unsuccessful.")
         form_submit_url = response.url.partition('?')[0] + 'cosign.cgi'
         response = send_request('POST', form_submit_url, data=dict(
             login=params['username'], password=params['password'], ref=url))
