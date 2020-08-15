@@ -21,13 +21,16 @@ class Context:
     Arguments:
         cookies: A dictionary of initial cookies.
         ais_url: The AIS server to connect to, e.g. "https://ais2.uniba.sk/".
+        ais_logout_path: The relative path of the AIS logout page.
         rest_url: The REST server to connect to
         logger: An optional :class:`Logger` instance to use.
     '''
 
-    def __init__(self, cookies, *, ais_url=None, rest_url=None, logger=None):
+    def __init__(self, cookies, *, ais_url=None, ais_logout_path=None,
+                 rest_url=None, logger=None):
         self.ais_url = ais_url
         self.rest_url = rest_url
+        self.ais_logout_path = ais_logout_path
         self.logger = logger or Logger()
 
         self.connection = requests.Session()
