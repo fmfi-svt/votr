@@ -207,7 +207,7 @@ export function MojeSkuskyMenu() {
     });
 }
 
-export class PublishNameCheckboxHandleClick extends React.Component {
+export class PublishNameCheckbox extends React.Component {
 
   static state = false;
 
@@ -219,7 +219,7 @@ export class PublishNameCheckboxHandleClick extends React.Component {
             type="checkbox" 
             id="publish-name-checkbox-input" 
             name="publish-name-checkbox-input" 
-            onClick={() => {PublishNameCheckboxHandleClick.state = document.getElementById("publish-name-checkbox-input").checked}} 
+            onClick={() => {PublishNameCheckbox.state = document.getElementById("publish-name-checkbox-input").checked}} 
           />
           <label htmlFor="publish-name-checkbox-input"> Po prihlásení sa na skúšku zverejniť moje meno v zozname prihlasených.</label>
         </div>
@@ -355,7 +355,7 @@ export class SkuskyRegisterButton extends React.Component {
   handleClick = () => {
     var command = this.isSigninButton() ? 'prihlas_na_termin' : 'odhlas_z_terminu';
     var termin = this.props.termin;
-    var publishName = PublishNameCheckboxHandleClick.state;
+    var publishName = PublishNameCheckbox.state;
 
     sendRpc(command, [termin.termin_key, publishName], (message) => {
       if (message) {
@@ -406,7 +406,7 @@ export function MojeSkuskyPage() {
         <div className="header">
           <PageTitle>Moje skúšky</PageTitle>
           <MojeSkuskyMenu />
-          <PublishNameCheckboxHandleClick.prototype.render />
+          <PublishNameCheckbox.prototype.render />
         </div>
         <MojeSkuskyPageContent />
       </ZapisnyListSelector>
