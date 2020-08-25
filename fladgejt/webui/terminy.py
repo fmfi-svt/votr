@@ -224,7 +224,7 @@ class WebuiTerminyMixin:
 
         return result
 
-    def prihlas_na_termin(self, termin_key):
+    def prihlas_na_termin(self, termin_key, zverejnit_meno):
         zapisny_list_key, predmet_key, datum, cas, miestnost, poznamka = (
             decode_key(termin_key))
 
@@ -237,6 +237,11 @@ class WebuiTerminyMixin:
             app.d.zoznamTerminovTable.all_rows(),
             dat=datum, cas=cas, miestnosti=miestnost, poznamka=poznamka))
 
+        
+        # Ak chceme zverejnit meno pri skuske, klikneme checkbox.
+        if zverejnit_meno:
+            app.d.suhlasZobrazCheckBox.set_to(True)
+        
         # Stlacime OK.
         with app.collect_operations() as ops:
             app.d.enterButton.click()
@@ -253,7 +258,7 @@ class WebuiTerminyMixin:
 
         return message
 
-    def odhlas_z_terminu(self, termin_key):
+    def odhlas_z_terminu(self, termin_key, zverejnit_meno):
         zapisny_list_key, predmet_key, datum, cas, miestnost, poznamka = (
             decode_key(termin_key))
         (skratka_predmetu,) = decode_key(predmet_key)

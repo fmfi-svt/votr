@@ -22,6 +22,8 @@ class RestStudiumMixin:
                           rok_studia=row['rokStudia'],
                           organizacna_jednotka=row['organizacnaJednotka'])
                   for row in studia]
+        print(result)
+        print('\n')
         return result
 
     def get_zapisne_listy(self, studium_key):
@@ -39,5 +41,4 @@ class RestStudiumMixin:
                               datum_zapisu=row['datumZapisu'],
                               studium_key=studium_key)
                   for row in zapisne_listy]
-
         return result

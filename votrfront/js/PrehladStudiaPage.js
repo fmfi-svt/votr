@@ -73,6 +73,11 @@ export function PridatZapisnyListButton (props) {
     var studium = props.studium;
     var cache = new CacheRequester();
     var zapisne_listy = cache.get('get_zapisne_listy', studium.studium_key);
+    console.log('PridatZapisnyListButton');
+    console.log('props');
+    console.log(props);
+    console.log('zapisne_listy');
+    console.log(zapisne_listy);
     if (!cache.loadedAll) {
       return <Loading requests={cache.missing} />;
     }
