@@ -221,7 +221,7 @@ export class PublishNameCheckbox extends React.Component {
             name="publish-name-checkbox-input" 
             onClick={() => {PublishNameCheckbox.state = document.getElementById("publish-name-checkbox-input").checked}} 
           />
-          <label htmlFor="publish-name-checkbox-input"> Po prihlásení sa na skúšku zverejniť moje meno v zozname prihlasených.</label>
+          <label htmlFor="publish-name-checkbox-input"> Po prihlásení sa na skúšku zverejniť moje meno v zozname prihlásených.</label>
         </div>
       </div>
     );
