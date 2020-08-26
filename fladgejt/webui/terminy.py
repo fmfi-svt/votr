@@ -258,7 +258,7 @@ class WebuiTerminyMixin:
 
         return message
 
-    def odhlas_z_terminu(self, termin_key, zverejnit_meno):
+    def odhlas_z_terminu(self, termin_key):
         zapisny_list_key, predmet_key, datum, cas, miestnost, poznamka = (
             decode_key(termin_key))
         (skratka_predmetu,) = decode_key(predmet_key)

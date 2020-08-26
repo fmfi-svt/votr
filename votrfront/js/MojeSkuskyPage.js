@@ -353,11 +353,13 @@ export class SkuskyRegisterButton extends React.Component {
   }
 
   handleClick = () => {
-    var command = this.isSigninButton() ? 'prihlas_na_termin' : 'odhlas_z_terminu';
+    var isSigninButton = this.isSigninButton();
+    var command = isSigninButton ? 'prihlas_na_termin' : 'odhlas_z_terminu';
     var termin = this.props.termin;
     var publishName = PublishNameCheckbox.state;
+    var args = isSigninButton ? [termin.termin_key, publishName] : [termin.termin_key]
 
-    sendRpc(command, [termin.termin_key, publishName], (message) => {
+    sendRpc(command, args, (message) => {
       if (message) {
         this.setState({ pressed: false });
         alert(message);
