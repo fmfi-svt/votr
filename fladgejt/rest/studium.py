@@ -39,5 +39,4 @@ class RestStudiumMixin:
                               datum_zapisu=row['datumZapisu'],
                               studium_key=studium_key)
                   for row in zapisne_listy]
-
         return result

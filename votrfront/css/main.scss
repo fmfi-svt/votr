@@ -92,6 +92,11 @@ a, .btn.btn-link {
     margin-left: 10px;
 }
 
+.publish-name-checkbox {
+    margin-left: 20px;
+    width: 60%;
+}
+
 /* "html" = specificity tie breaker */
 /* must win vs ".rbc-calendar", ".rbc-event", ".rbc-event.rbc-selected" */
 html .skusky-calendar {

@@ -1,5 +1,5 @@
 
-import PropTypes from 'prop-types';
+import PropTypes, { func } from 'prop-types';
 import React from 'react';
 import _ from 'lodash';
 import { saveAs } from 'file-saver';
@@ -207,6 +207,28 @@ export function MojeSkuskyMenu() {
     });
 }
 
+export class PublishNameCheckbox extends React.Component {
+
+  static state = false;
+
+  render() {
+    return (
+      <div className="pull-left">
+        <div className="publish-name-checkbox">
+          <input 
+            type="checkbox" 
+            id="publish-name-checkbox-input" 
+            name="publish-name-checkbox-input" 
+            onClick={() => {PublishNameCheckbox.state = document.getElementById("publish-name-checkbox-input").checked}} 
+          />
+          <label htmlFor="publish-name-checkbox-input"> Po prihlásení sa na skúšku zverejniť moje meno v zozname prihlásených.</label>
+        </div>
+      </div>
+    );
+  }
+}
+
+
 function convertToEvents(terminy){
     return terminy.map((termin, i) => {
       return {id: i,
@@ -331,10 +353,13 @@ export class SkuskyRegisterButton extends React.Component {
   }
 
   handleClick = () => {
-    var command = this.isSigninButton() ? 'prihlas_na_termin' : 'odhlas_z_terminu';
+    var isSigninButton = this.isSigninButton();
+    var command = isSigninButton ? 'prihlas_na_termin' : 'odhlas_z_terminu';
     var termin = this.props.termin;
+    var publishName = PublishNameCheckbox.state;
+    var args = isSigninButton ? [termin.termin_key, publishName] : [termin.termin_key]
 
-    sendRpc(command, [termin.termin_key], (message) => {
+    sendRpc(command, args, (message) => {
       if (message) {
         this.setState({ pressed: false });
         alert(message);
@@ -383,6 +408,7 @@ export function MojeSkuskyPage() {
         <div className="header">
           <PageTitle>Moje skúšky</PageTitle>
           <MojeSkuskyMenu />
+          <PublishNameCheckbox.prototype.render />
         </div>
         <MojeSkuskyPageContent />
       </ZapisnyListSelector>
