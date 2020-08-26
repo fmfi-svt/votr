@@ -69,10 +69,30 @@ export function PrehladStudiaObdobia() {
   });
 }
 
+function GetOficialnaDlzkaStudia(studium){
+
+  // asi najlepsi test
+  if (studium.sp_doplnujuce_udaje.includes("bakalársky")) return 3;
+  if (studium.sp_doplnujuce_udaje.includes("magisterský")) return 2;
+
+  // ak by bol nejaky preklep v skorsej informacii, pride dalsi test
+  if (studium.sp_doplnujuce_udaje.includes("I. st.")) return 3;
+  if (studium.sp_doplnujuce_udaje.includes("II. st.")) return 2;
+
+  // a posledny
+  if (studium.sp_skratka.charAt(0) == "m") return 2;
+  else return 3;
+}
+
+
 export function PridatZapisnyListButton (props) {
     var studium = props.studium;
     var cache = new CacheRequester();
     var zapisne_listy = cache.get('get_zapisne_listy', studium.studium_key);
+    var pocet_rokov_studovania = studium.rok_studia;
+    var oficialna_dlzka_studia = GetOficialnaDlzkaStudia(studium);
+    var rok_studia = pocet_rokov_studovania < oficialna_dlzka_studia ? pocet_rokov_studovania : oficialna_dlzka_studia;
+
     if (!cache.loadedAll) {
       return <Loading requests={cache.missing} />;
     }
@@ -86,7 +106,7 @@ export function PridatZapisnyListButton (props) {
             } else { //  ak studium prebieha a nemame este zapisny list na tento rok
                 return <button type="button" onClick={() => {
                     if (confirm(`Vytvoriť zápisný list pre akademický rok ${currentAcademicYear()}?`)) {
-                            sendRpc('create_zapisny_list', [studium.studium_key, currentAcademicYear(), null],(message) =>
+                            sendRpc('create_zapisny_list', [studium.studium_key, currentAcademicYear(), rok_studia],(message) =>
                                 {if (message !== null) {alert(message);}
                                 else {RequestCache.invalidate('get_zapisne_listy');}})}}}
                         className='btn btn-xs btn-success'>Vytvoriť</button>
