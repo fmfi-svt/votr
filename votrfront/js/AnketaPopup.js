@@ -43,7 +43,7 @@ export class AnketaPopup extends React.Component {
                         <div className="anketa__subtitle">Daj semestru ešte chvíľu</div>
                 </div>
                 <div className="anketa__button-wrap">
-                    <a className="anketa__button anketa__button--main" onClick={() => {this.onClosePopup(0)}} href="https://anketa.fmph.uniba.sk/?anketaPopup" target="_blank" rel="noopener noreferrer" >Hlasuj v ankete</a>
+                    <a className="anketa__button anketa__button--main" onClick={() => {this.onClosePopup(0)}} href="https://anketa.uniba.sk/fmph/?anketaPopup" target="_blank" rel="noopener noreferrer" >Hlasuj v ankete</a>
                     <a className="anketa__button anketa__button--secondary" onClick={(e) => {e.preventDefault(); this.onClosePopup(1)}} href="#">Neskôr</a>
                 </div>
             </div>
