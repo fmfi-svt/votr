@@ -2,9 +2,9 @@
 import os
 import sys
 from werkzeug.exceptions import HTTPException
+from werkzeug.middleware.shared_data import SharedDataMiddleware
 from werkzeug.routing import Map
 from werkzeug.wrappers import Request
-from werkzeug.wsgi import SharedDataMiddleware
 
 from . import login, front, rpc, serve, cron, logutil, report
 site_modules = [login, front, rpc, serve, cron, logutil, report]

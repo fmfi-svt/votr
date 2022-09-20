@@ -1,6 +1,6 @@
 
 import React from 'react';
-import ReactDOM from 'react-dom';
+import { createRoot } from 'react-dom/client';
 import { ErrorPage } from './ErrorPage';
 import { LoginPage } from './LoginPage';
 import { App } from './actions';
@@ -49,7 +49,7 @@ var app =
     App;
 var root = <Root app={app} />;
 
-Votr.appRoot = ReactDOM.render(root, document.getElementById('votr'));
+createRoot(document.getElementById('votr')).render(root);
 
 
 })();

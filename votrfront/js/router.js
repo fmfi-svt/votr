@@ -45,6 +45,7 @@ export class Root extends React.Component {
   }
 
   componentDidMount() {
+    Votr.appRoot = this;
     window.addEventListener('popstate', this.handlePopState, false);
     trackPageView();
   }

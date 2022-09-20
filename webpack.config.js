@@ -88,7 +88,7 @@ module.exports = function (env, args) {
     output: {
       path: outputPath,
       filename: mode == 'development' ? '[name].dev.js' : '[name].min.js',
-      sourceMapFilename: '[file].[hash].map',   // it seems Chrome caches source maps even if "Disable cache" is enabled
+      sourceMapFilename: '[file].[contenthash].map',   // it seems Chrome caches source maps even if "Disable cache" is enabled
     },
     plugins: [
       new MiniCssExtractPlugin({ filename: 'style.css' }),
@@ -111,7 +111,7 @@ module.exports = function (env, args) {
         {
           test: /node_modules\/bootstrap-sass\//,
           loader: 'imports-loader',
-          options: { 'jQuery': 'jquery' },
+          options: { imports: ['default jquery jQuery'] },
         },
         {
           test: /\.scss$/,
@@ -132,7 +132,7 @@ module.exports = function (env, args) {
         },
         {
           test: /\.svg$/,
-          loader: 'url-loader',
+          type: 'asset/inline',
         },
       ],
     },
@@ -140,7 +140,11 @@ module.exports = function (env, args) {
       splitChunks: {
         chunks: 'all',
         minSize: 0,
-        automaticNameDelimiter: '_',
+        name: (module, chunks, cacheGroupKey) => {
+          if (cacheGroupKey !== 'defaultVendors') throw Error('wat');
+          if (chunks.length !== 1) throw Error('wat');
+          return `vendors_${chunks[0].name}`;
+        },
       },
     },
     devtool: 'source-map',

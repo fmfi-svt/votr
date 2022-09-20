@@ -1,7 +1,8 @@
+@use "sass:math";
 
 .form-item {
   display: block;
-  margin-bottom: ($line-height-computed / 2);
+  margin-bottom: math.div($line-height-computed, 2);
   @include make-row();
   max-width: 40em;
 }

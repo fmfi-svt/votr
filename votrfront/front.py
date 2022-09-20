@@ -74,7 +74,7 @@ def app_response(request, **my_data):
     if 'csrf_token' not in my_data:
         my_data['servers'] = request.app.settings.servers
 
-    for i in range(60):
+    for i in range(30 * 10):
         try:
             with open(static_path + 'status') as f:
                 status = f.read().strip()

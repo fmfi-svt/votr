@@ -1,8 +1,9 @@
 
 from base64 import b64decode, b64encode
 from datetime import datetime
+import hashlib
+import os
 import traceback
-from werkzeug.contrib.sessions import generate_key
 from werkzeug.exceptions import InternalServerError
 from werkzeug.routing import Rule
 from werkzeug.utils import redirect
@@ -10,6 +11,10 @@ from aisikl.context import Logger
 from fladgejt.login import create_client
 from . import sessions
 from .front import app_response
+
+
+def generate_key():
+    return hashlib.sha1(os.urandom(30)).hexdigest()
 
 
 def load_credentials(credentials):
