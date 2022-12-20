@@ -8,7 +8,10 @@ try:
         import votrfront.default_settings as settings
 
     from votrfront.app import VotrApp
+    from votrfront.proxied import ProxiedMiddleware
+
     application = VotrApp(settings=settings)
+    proxied_application = ProxiedMiddleware(application)
 except Exception:
     import os, sys, time, traceback
     if not (__name__ == '__main__' and os.getenv('WERKZEUG_RUN_MAIN')): raise
