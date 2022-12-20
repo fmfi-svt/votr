@@ -49,10 +49,13 @@ def rpc_handle_sessions(request, send_json):
 
 def rpc_handle_exceptions(request, send_json):
     try:
+        request.environ['votr.log_status'] = 'rpc:interrupted'
         result = rpc_handle_sessions(request, send_json)
-    except Exception:
+    except Exception as e:
+        request.environ['votr.log_status'] = 'rpc:{}'.format(type(e).__name__)
         send_json({ 'error': traceback.format_exc() })
     else:
+        request.environ['votr.log_status'] = 'rpc:ok'
         send_json({ 'result': result })
 
 
