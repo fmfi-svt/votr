@@ -1,4 +1,5 @@
 beautifulsoup4
+gunicorn[setproctitle] @ https://github.com/TomiBelan/gunicorn/archive/refs/heads/tomi.tar.gz
 lxml
 requests
 werkzeug
