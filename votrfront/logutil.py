@@ -24,6 +24,8 @@ def classify(line):
     if ("OSError: Apache/mod_wsgi failed to write response data: Broken pipe"
             in line.content):
         return 'OSError'
+    if "failed with BrokenPipeError" in line.content:
+        return 'OSError'
     if "base.ps.PSException: Nie je connection" in line.content:
         return 'SQLError'
     if "java.sql.SQLException: Connection is not valid" in line.content:
