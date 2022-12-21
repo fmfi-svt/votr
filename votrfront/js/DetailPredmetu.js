@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useContext } from 'react';
 import { ZoznamPrihlasenychNaTerminColumns } from './ZoznamPrihlasenychNaTermin';
 import { CacheRequester, Loading } from './ajax';
 import { Modal } from './layout';
-import { queryConsumer } from './router';
+import { QueryContext } from './router';
 import { sortAs, sortTable } from './sorting';
 
 
@@ -23,7 +23,7 @@ function getZapisaniStudenti(cache, predmetKey, akademickyRok) {
 
 
 function DetailPredmetuInformacnyList() {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var cache = new CacheRequester();
     var {modalAkademickyRok, modalPredmetKey} = query;
 
@@ -35,12 +35,11 @@ function DetailPredmetuInformacnyList() {
 
     var url = "data:application/pdf;base64," + escape(data);
     return <a href={url} download>Stiahnuť</a>;
-  });
 }
 
 
 function DetailPredmetuUcitelia() {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var cache = new CacheRequester();
     var {modalAkademickyRok, modalPredmetKey} = query;
 
@@ -79,12 +78,11 @@ function DetailPredmetuUcitelia() {
       </tbody>
       {message && <tfoot><tr><td colSpan={DetailPredmetuUciteliaColumns.length}>{message}</td></tr></tfoot>}
     </table>;
-  });
 }
 
 
 function DetailPredmetuZapisaniStudenti() {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var cache = new CacheRequester();
     var {modalAkademickyRok, modalPredmetKey} = query;
 
@@ -122,12 +120,11 @@ function DetailPredmetuZapisaniStudenti() {
       </tbody>
       {message && <tfoot><tr><td colSpan={DetailPredmetuStudentiColumns.length}>{message}</td></tr></tfoot>}
     </table>;
-  });
 }
 
 
 function DetailPredmetuTitle() {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var cache = new CacheRequester();
     var {modalAkademickyRok, modalPredmetKey} = query;
 
@@ -144,7 +141,6 @@ function DetailPredmetuTitle() {
     }
 
     return predmet.nazov;
-  });
 }
 
 

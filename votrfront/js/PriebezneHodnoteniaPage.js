@@ -1,14 +1,14 @@
 
-import React from 'react';
+import React, { useContext } from 'react';
 import { ZapisnyListSelector } from './ZapisnyListSelector';
 import { CacheRequester, Loading } from './ajax';
 import { PageLayout, PageTitle } from './layout';
-import { Link, queryConsumer } from './router';
+import { Link, QueryContext } from './router';
 import { humanizeBoolean } from './humanizeAISData';
 
 
 export function PriebezneHodnoteniaPageContent() {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var cache = new CacheRequester();
     var {zapisnyListKey} = query;
     var [priebezneHodnotenia, message] = cache.get('get_priebezne_hodnotenia', zapisnyListKey) || [];
@@ -55,7 +55,6 @@ export function PriebezneHodnoteniaPageContent() {
       {message && <strong>{message}</strong>}
       </React.Fragment>
     );
-  });
 }
 
 

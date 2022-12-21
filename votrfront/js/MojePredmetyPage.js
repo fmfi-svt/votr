@@ -1,11 +1,11 @@
 
-import React from 'react';
+import React, { useContext } from 'react';
 import { ZapisnyListSelector } from './ZapisnyListSelector';
 import { CacheRequester, Loading } from './ajax';
 import { coursesStats, renderCredits, renderWeightedStudyAverage } from './coursesStats';
 import { classForSemester, humanizeTerminHodnotenia, humanizeTypVyucby, plural } from './humanizeAISData';
 import { PageLayout, PageTitle } from './layout';
-import { Link, queryConsumer } from './router';
+import { Link, QueryContext } from './router';
 import { sortAs, SortableTable } from './sorting';
 
 export var MojePredmetyColumns = [
@@ -68,7 +68,7 @@ MojePredmetyColumns.defaultOrder = 'd0a1';
 
 
 export function MojePredmetyPageContent() {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var cache = new CacheRequester();
     var {zapisnyListKey} = query;
     var [hodnotenia, message] = cache.get('get_hodnotenia', zapisnyListKey) || [];
@@ -105,7 +105,6 @@ export function MojePredmetyPageContent() {
       footer={footer}
       rowClassName={hodnotenie => classForSemester(hodnotenie.semester)}
     />;
-  });
 }
 
 

@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useContext } from 'react';
 import { CacheRequester, Loading } from './ajax';
 import { Modal } from './layout';
-import { queryConsumer } from './router';
+import { QueryContext } from './router';
 import { sortAs, sortTable } from './sorting';
 
 
@@ -16,7 +16,7 @@ export var ZoznamPrihlasenychNaTerminColumns = [
 
 
 function ZoznamPrihlasenychNaTerminModalContent() {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var cache = new CacheRequester();
     var {modalTerminKey} = query;
 
@@ -50,7 +50,6 @@ function ZoznamPrihlasenychNaTerminModalContent() {
       </tbody>
       {message && <tfoot><tr><td colSpan={ZoznamPrihlasenychNaTerminColumns.length}>{message}</td></tr></tfoot>}
     </table>;
-  });
 }
 
 export function ZoznamPrihlasenychNaTerminModal() {

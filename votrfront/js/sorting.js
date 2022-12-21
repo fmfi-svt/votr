@@ -1,7 +1,7 @@
 
 import React from 'react';
 import _ from 'lodash';
-import { navigate, queryConsumer } from './router';
+import { navigate, QueryContext } from './router';
 import { LocalSettings } from './LocalSettings';
 
 
@@ -130,7 +130,8 @@ export class SortableTable extends React.Component {
 
     var fullTable = LocalSettings.get('fullTable') == 'true';
 
-    return queryConsumer(query => {
+    // TODO: Use useContext.
+    return <QueryContext.Consumer>{query => {
       const [sortedItems, header] = sortTable(
         items,
         columns,
@@ -258,6 +259,6 @@ export class SortableTable extends React.Component {
           </table>
         </div>
       );
-    });
+    }}</QueryContext.Consumer>;
   }
 }

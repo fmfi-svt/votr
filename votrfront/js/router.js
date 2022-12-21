@@ -34,11 +34,6 @@ function parseQueryString(queryString) {
 export var QueryContext = React.createContext();
 
 
-export function queryConsumer(callback) {
-  return <QueryContext.Consumer>{callback}</QueryContext.Consumer>;
-}
-
-
 export class Root extends React.Component {
   handlePopState = () => {
     Votr.appRoot.forceUpdate();

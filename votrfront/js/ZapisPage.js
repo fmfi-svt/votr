@@ -7,7 +7,7 @@ import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
 import { coursesStats } from './coursesStats';
 import { humanizeTypVyucby, plural } from './humanizeAISData';
 import { FormItem, PageLayout, PageTitle } from './layout';
-import { Link, navigate, queryConsumer } from './router';
+import { Link, navigate, QueryContext } from './router';
 import { sortAs, SortableTable } from './sorting';
 
 
@@ -513,10 +513,13 @@ export class ZapisZPlanuPageContent extends React.Component {
 
 
 export function ZapisZPlanuPage() {
+  // TODO: Use useContext inside ZapisZPlanuPageContent.
   return (
     <PageLayout>
       <ZapisnyListSelector>
-        {queryConsumer(query => <ZapisZPlanuPageContent query={query} />)}
+        <QueryContext.Consumer>
+          {query => <ZapisZPlanuPageContent query={query} />}
+        </QueryContext.Consumer>
       </ZapisnyListSelector>
     </PageLayout>
   );
@@ -667,10 +670,13 @@ export class ZapisZPonukyPageContent extends React.Component {
 
 
 export function ZapisZPonukyPage() {
+  // TODO: Use useContext inside ZapisZPonukyPageContent.
   return (
     <PageLayout>
       <ZapisnyListSelector>
-        {queryConsumer(query => <ZapisZPonukyPageContent query={query} />)}
+        <QueryContext.Consumer>
+          {query => <ZapisZPonukyPageContent query={query} />}
+        </QueryContext.Consumer>
       </ZapisnyListSelector>
     </PageLayout>
   );

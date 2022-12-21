@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useContext } from 'react';
 import _ from 'lodash';
 import { MojePredmetyColumns } from './MojePredmetyPage';
 import { StudiumSelector } from './StudiumSelector';
@@ -7,7 +7,7 @@ import { CacheRequester, Loading } from './ajax';
 import { coursesStats, renderCredits, renderWeightedStudyAverage } from './coursesStats';
 import { classForSemester, humanizeNazovPriemeru, humanizeTerminHodnotenia, humanizeTypVyucby, plural } from './humanizeAISData';
 import { PageLayout, PageTitle } from './layout';
-import { Link, queryConsumer } from './router';
+import { Link, QueryContext } from './router';
 import { sortAs, SortableTable } from './sorting';
 
 
@@ -78,7 +78,7 @@ MojePriemeryColumns.defaultOrder = "a0a2a1";
 
 
 export function MojeHodnoteniaHodnoteniaTable() {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var cache = new CacheRequester();
     var {studiumKey} = query;
     var [hodnotenia, message] = cache.get('get_prehlad_kreditov', studiumKey) || [];
@@ -114,11 +114,10 @@ export function MojeHodnoteniaHodnoteniaTable() {
         rowClassName={hodnotenie => classForSemester(hodnotenie.semester)}
       />
     );
-  });
 }
 
 export function MojeHodnoteniaPriemeryTable() {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var cache = new CacheRequester();
     var {studiumKey} = query;
 
@@ -149,7 +148,6 @@ export function MojeHodnoteniaPriemeryTable() {
         message={message}
       />
     );
-  });
 }
 
 

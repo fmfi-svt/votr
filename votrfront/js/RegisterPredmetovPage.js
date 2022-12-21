@@ -1,10 +1,10 @@
 
-import React from 'react';
+import React, { useContext } from 'react';
 import { CacheRequester, Loading } from './ajax';
 import { currentAcademicYear } from './coursesStats';
 import { classForSemester, humanizeBoolean } from './humanizeAISData';
 import { FormItem, PageLayout, PageTitle } from './layout';
-import { Link, navigate, queryConsumer } from './router';
+import { Link, navigate, QueryContext } from './router';
 import { sortAs, sortTable } from './sorting';
 
 
@@ -153,7 +153,9 @@ export function RegisterPredmetovResultTable(props) {
 
 
 export function RegisterPredmetovPage() {
-  return queryConsumer(query => (
+  // TODO: Move useContext into RegisterPredmetovForm and RegisterPredmetovResultTable?
+  var query = useContext(QueryContext);
+  return (
     <PageLayout>
       <div className="header">
         <PageTitle>Register predmetov</PageTitle>
@@ -161,5 +163,5 @@ export function RegisterPredmetovPage() {
       <RegisterPredmetovForm query={query} />
       <RegisterPredmetovResultTable query={query} />
     </PageLayout>
-  ));
+  );
 }

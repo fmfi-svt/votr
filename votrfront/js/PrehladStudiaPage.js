@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useContext } from 'react';
 import { CacheRequester, Loading, sendRpc, RequestCache } from './ajax';
 import { PageLayout, PageTitle } from './layout';
-import { queryConsumer } from './router';
+import { QueryContext } from './router';
 import { sortAs, sortTable } from './sorting';
 import { currentAcademicYear } from './coursesStats';
 
@@ -50,7 +50,7 @@ export function PrehladStudiaObdobie(props) {
 
 
 export function PrehladStudiaObdobia() {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     // Obdobia predsalen neukazujeme, lebo AIS ma vacsinou zle informacie
     // (skuskove je umelo predlzene kvoli moznosti zapisovat znamky, apod) a
     // nechceme byt matuci. Zapnut sa daju tymto schovanym query flagom.
@@ -66,7 +66,6 @@ export function PrehladStudiaObdobia() {
         <PrehladStudiaObdobie label="Letné skúškové" rpc="get_skuskove_obdobie" semester="L" />
       </tbody>
     </table>;
-  });
 }
 
 export function PridatZapisnyListButton (props) {
@@ -97,7 +96,7 @@ export function PridatZapisnyListButton (props) {
 }
 
 export function PrehladStudiaStudia() {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var cache = new CacheRequester();
 
     var studia = cache.get('get_studia');
@@ -128,12 +127,11 @@ export function PrehladStudiaStudia() {
       </tbody>
       {message && <tfoot><tr><td colSpan={PrehladStudiumColumns.length}>{message}</td></tr></tfoot>}
     </table>;
-  });
 }
 
 
 export function PrehladStudiaZapisneListy() {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var cache = new CacheRequester();
 
     var studia = cache.get('get_studia');
@@ -177,7 +175,6 @@ export function PrehladStudiaZapisneListy() {
           {message && <tfoot><tr><td colSpan={PrehladZapisnyListColumns.length}>{message}</td></tr></tfoot>}
         </table>}
     </React.Fragment>;
-  });
 }
 
 

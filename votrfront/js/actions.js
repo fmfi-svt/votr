@@ -15,7 +15,7 @@ import { RegisterPredmetovPage } from './RegisterPredmetovPage';
 import { ZapisZPlanuPage, ZapisZPonukyPage } from './ZapisPage';
 import { ZoznamPrihlasenychNaTerminModal } from './ZoznamPrihlasenychNaTermin';
 import { ModalBase, PageLayout, ErrorBoundary } from './layout';
-import { navigate, queryConsumer } from './router';
+import { navigate, QueryContext } from './router';
 import { AnketaPopup } from './AnketaPopup';
 
 
@@ -52,7 +52,8 @@ export var modalActions = {
 export function App() {
   return (
     <ErrorBoundary>
-      {queryConsumer(query => {
+      <QueryContext.Consumer>
+        {query => {
         var action = query.action || 'index';
         var mainComponent = actions[action] || NotFoundPage;
         var modalComponent = Votr.ajaxError ? ErrorModal : modalActions[query.modal];
@@ -69,7 +70,8 @@ export function App() {
           <LogViewer />
           <AnketaPopup />
         </React.Fragment>;
-      })}
+        }}
+      </QueryContext.Consumer>
     </ErrorBoundary>
   );
 }

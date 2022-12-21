@@ -1,12 +1,12 @@
 
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useContext } from 'react';
 import _ from 'lodash';
 import $ from 'jquery';
 import 'bootstrap-sass/assets/javascripts/bootstrap/transition';  // needed by modal.js.
 import 'bootstrap-sass/assets/javascripts/bootstrap/modal';  // needed for $node.modal().
 import { CacheRequester, Loading, goLogout, goReset, goResetHome, logs } from './ajax';
-import { FakeLink, Link, queryConsumer } from './router';
+import { FakeLink, Link, QueryContext } from './router';
 
 
 export class ErrorBoundary extends React.Component {
@@ -93,7 +93,8 @@ export function PageLayout(props) {
 
 
 export function PageNavbar() {
-  return queryConsumer(query => (
+  var query = useContext(QueryContext);
+  return (
     <div className="navbar navbar-inverse navbar-static-top">
       <div className="container-fluid">
         <div className="navbar-header">
@@ -111,7 +112,7 @@ export function PageNavbar() {
         </div>
       </div>
     </div>
-  ));
+  );
 }
 
 
@@ -149,14 +150,13 @@ export class PageTitle extends React.Component {
 
 
 function MenuItem(props) {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var isActive = props.active || props.href.action == query.action;
     return (
       <li className={isActive ? 'active' : null}>
         <Link href={props.href}>{props.label}</Link>
       </li>
     );
-  });
 }
 
 
@@ -167,7 +167,7 @@ function DisabledItem(props) {
 
 
 export function MainMenu() {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var { action, studiumKey, zapisnyListKey } = query;
 
     var cache = new CacheRequester();
@@ -197,7 +197,6 @@ export function MainMenu() {
         <DisabledItem label="Register študijných programov" />
       </ul>
     );
-  });
 }
 
 

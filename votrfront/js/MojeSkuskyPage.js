@@ -1,12 +1,12 @@
 
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useContext } from 'react';
 import _ from 'lodash';
 import { saveAs } from 'file-saver';
 import { ZapisnyListSelector } from './ZapisnyListSelector';
 import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
 import { PageLayout, PageTitle } from './layout';
-import { Link, queryConsumer } from './router';
+import { Link, QueryContext } from './router';
 import { sortAs, SortableTable } from './sorting';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
@@ -185,7 +185,7 @@ function MojeSkuskyMenuLink(props) {
 }
 
 export function MojeSkuskyMenu() {
-    return queryConsumer(query => {
+      var query = useContext(QueryContext);
       var {action, kalendar, zapisnyListKey} = query;
       return(
         <div className="pull-left">
@@ -204,7 +204,6 @@ export function MojeSkuskyMenu() {
                 </div>
               </div>
         </div>)
-    });
 }
 
 function convertToEvents(terminy){
@@ -268,7 +267,7 @@ export function KalendarUdalosti(props) {
 }
 
 export function MojeSkuskyPageContent() {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var cache = new CacheRequester();
     var {zapisnyListKey, kalendar} = query;
 
@@ -317,7 +316,6 @@ export function MojeSkuskyPageContent() {
       }
       {terminy.length && <button type="button" onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}
     </React.Fragment>;
-  });
 }
 
 

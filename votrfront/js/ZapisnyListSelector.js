@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useContext } from 'react';
 import _ from 'lodash';
 import { CacheRequester, Loading } from './ajax';
-import { Link, QueryContext, queryConsumer } from './router';
+import { Link, QueryContext } from './router';
 import { sortAs } from './sorting';
 import { currentAcademicYear } from './coursesStats';
 
@@ -31,7 +31,7 @@ function getItems(cache) {
 
 
 export function ZapisnyListSelector(props) {
-  return queryConsumer(query => {
+    var query = useContext(QueryContext);
     var cache = new CacheRequester();
     var [items, buttonNovyZapisnyList] = getItems(cache);
 
@@ -70,5 +70,4 @@ export function ZapisnyListSelector(props) {
         ) : null}
       </React.Fragment>
     );
-  });
 }

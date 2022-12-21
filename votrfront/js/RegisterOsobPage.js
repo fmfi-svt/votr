@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useContext } from 'react';
 import { CacheRequester, Loading } from './ajax';
 import { currentAcademicYear } from './coursesStats';
 import { FormItem, PageLayout, PageTitle } from './layout';
-import { navigate, queryConsumer } from './router';
+import { navigate, QueryContext } from './router';
 import { sortAs, sortTable } from './sorting';
 
 
@@ -200,7 +200,9 @@ export function RegisterOsobResultTable(props) {
 
 
 export function RegisterOsobPage() {
-  return queryConsumer(query => (
+  // TODO: Move useContext into RegisterOsobForm and RegisterOsobResultTable?
+  var query = useContext(QueryContext);
+  return (
     <PageLayout>
       <div className="header">
         <PageTitle>Register osôb</PageTitle>
@@ -208,5 +210,5 @@ export function RegisterOsobPage() {
       <RegisterOsobForm query={query} />
       <RegisterOsobResultTable query={query} />
     </PageLayout>
-  ));
+  );
 }
