@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import _ from 'lodash';
 
 export function sendRpc(name, args, callback) {
@@ -110,22 +110,14 @@ CacheRequester.prototype.get = function (...request) {
 };
 
 
-export class Loading extends React.Component {
-  componentDidMount() {
-    if (this.props.requests) this.props.requests.forEach((request) => {
+export function Loading({ requests }) {
+  useEffect(() => {
+    if (requests) requests.forEach((request) => {
       RequestCache.sendRequest(request);
     });
-  }
+  });
 
-  componentDidUpdate() {
-    if (this.props.requests) this.props.requests.forEach((request) => {
-      RequestCache.sendRequest(request);
-    });
-  }
-
-  render() {
     return <span className="loading">Načítavam...</span>;
-  }
 }
 
 

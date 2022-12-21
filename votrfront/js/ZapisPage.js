@@ -1,6 +1,6 @@
 
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useContext, useState } from 'react';
 import _ from 'lodash';
 import { ZapisnyListSelector } from './ZapisnyListSelector';
 import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
@@ -119,8 +119,8 @@ function ZapisLink(props) {
 }
 
 
-export function ZapisMenu(props) {
-  var {action, cast, zapisnyListKey} = props.query;
+export function ZapisMenu() {
+  var {action, cast, zapisnyListKey} = useContext(QueryContext);
   return (
     <div className="header">
       <PageTitle>Zápis predmetov</PageTitle>
@@ -146,10 +146,6 @@ export function ZapisMenu(props) {
     </div>
   );
 }
-
-ZapisMenu.propTypes = {
-  query: PropTypes.object.isRequired
-};
 
 
 export function ZapisTableFooter(props) {
@@ -220,64 +216,53 @@ ZapisTableFooter.propTypes = {
 };
 
 
-export class ZapisTable extends React.Component {
-  static propTypes = {
-    query: PropTypes.object.isRequired,
-    predmety: PropTypes.object,
-    akademickyRok: PropTypes.string,
-    message: PropTypes.node,
-    columns: PropTypes.array.isRequired,
-    showFooter: PropTypes.bool,
-    odoberPredmety: PropTypes.func.isRequired,
-    pridajPredmety: PropTypes.func.isRequired
-  };
+export function ZapisTable(props) {
+  var query = useContext(QueryContext);
+  var [saving, setSaving] = useState(false);
+  var [changes, setChanges] = useState({});
 
-  state = { odoberanePredmety: {}, pridavanePredmety: {} };
+  var predmety = props.predmety;
 
-  handleChange = (event) => {
+  function handleChange(event) {
     var predmetKey = event.target.name;
-    var predmet = this.props.predmety[predmetKey];
+    var predmet = predmety[predmetKey];
 
-    delete this.state.odoberanePredmety[predmetKey];
-    delete this.state.pridavanePredmety[predmetKey];
-    if (predmet.moje && !event.target.checked) this.state.odoberanePredmety[predmetKey] = true;
-    if (!predmet.moje && event.target.checked) this.state.pridavanePredmety[predmetKey] = true;
-
-    this.forceUpdate();
+    var want = predmet.moje && !event.target.checked ? false : !predmet.moje && event.target.checked ? true : undefined;
+    setChanges(changes => ({ ...changes, [predmetKey]: want }));
   }
 
-  handleSave = (event) => {
+  function handleSave(event) {
     event.preventDefault();
 
-    if (this.state.saving) return;
-
-    var predmety = this.props.predmety;
+    if (saving) return;
 
     var odoberanePredmety = [], pridavanePredmety = [];
     for (var predmet_key in predmety) {
-      if (this.state.odoberanePredmety[predmet_key] && predmety[predmet_key].moje) {
+      if (changes[predmet_key] === false && predmety[predmet_key].moje) {
         odoberanePredmety.push(predmety[predmet_key]);
       }
-      if (this.state.pridavanePredmety[predmet_key] && !predmety[predmet_key].moje) {
+      if (changes[predmet_key] === true && !predmety[predmet_key].moje) {
         pridavanePredmety.push(predmety[predmet_key]);
       }
     }
 
-    this.setState({ saving: true });
+    setSaving(true);
 
     var koniec = (odobral, pridal) => {
+      setSaving(false);
+
       if (odobral) {
         odoberanePredmety.forEach((predmet) => {
           RequestCache['pocet_prihlasenych_je_stary' + predmet.predmet_key] = true;
         });
-        this.setState({ odoberanePredmety: {} });
+        setChanges(changes => _.pickBy(changes, (value) => value === true));
       }
 
       if (pridal) {
         pridavanePredmety.forEach((predmet) => {
           RequestCache['pocet_prihlasenych_je_stary' + predmet.predmet_key] = true;
         });
-        this.setState({ pridavanePredmety: {} });
+        setChanges(changes => _.pickBy(changes, (value) => value === false));
       }
 
       // Aj ked skoncime neuspechom, je mozne, ze niektore predmety sa zapisali.
@@ -288,14 +273,12 @@ export class ZapisTable extends React.Component {
       RequestCache.invalidate('zapis_get_zapisane_predmety');
     };
 
-    this.props.odoberPredmety(odoberanePredmety, (message) => {
+    props.odoberPredmety(odoberanePredmety, (message) => {
       if (message) {
-        this.setState({ saving: false });
         alert(message);
         koniec(false, false);
       } else {
-        this.props.pridajPredmety(pridavanePredmety, (message) => {
-          this.setState({ saving: false });
+        props.pridajPredmety(pridavanePredmety, (message) => {
           if (message) {
             alert(message);
             koniec(true, false);
@@ -307,25 +290,22 @@ export class ZapisTable extends React.Component {
     });
   }
 
-  render() {
-    // Chceme, aby sa pre ZapisTable zachoval this.state aj vtedy, ked tabulku
+    // Chceme, aby sa pre ZapisTable zachoval state aj vtedy, ked tabulku
     // nevidno, lebo sme prave zapisali predmety a obnovujeme zoznam predmetov.
     // Takze komponent ZapisTable sa bude renderovat vzdy, aby nikdy nezanikol
-    // a neprisiel o state. Niekedy proste nedostane this.props.predmety.
-    if (!this.props.predmety || !this.props.akademickyRok) {
+    // a neprisiel o state. Niekedy proste dostane predmety == undefined.
+    if (!predmety || !props.akademickyRok) {
       return <span />;
     }
-
-    var {predmety, columns, query, message} = this.props;
 
     var classes = {}, checked = {};
     for (var predmet_key in predmety) {
       checked[predmet_key] = predmety[predmet_key].moje;
-      if (this.state.odoberanePredmety[predmet_key] && predmety[predmet_key].moje) {
+      if (changes[predmet_key] === false && predmety[predmet_key].moje) {
         classes[predmet_key] = 'danger';
         checked[predmet_key] = false;
       }
-      if (this.state.pridavanePredmety[predmet_key] && !predmety[predmet_key].moje) {
+      if (changes[predmet_key] === true && !predmety[predmet_key].moje) {
         classes[predmet_key] = 'success';
         checked[predmet_key] = true;
       }
@@ -333,7 +313,7 @@ export class ZapisTable extends React.Component {
 
     var saveButton = <div className="section">
       <button type="submit" className="btn btn-primary" disabled={_.isEmpty(classes)}>
-        {this.state.saving ? <Loading /> : "Uložiť zmeny"}
+        {saving ? <Loading /> : "Uložiť zmeny"}
       </button>
     </div>;
 
@@ -348,7 +328,7 @@ export class ZapisTable extends React.Component {
           type="checkbox"
           name={predmet.predmet_key}
           checked={checked[predmet.predmet_key]}
-          onChange={this.handleChange}
+          onChange={handleChange}
         />
       )
     };
@@ -360,10 +340,10 @@ export class ZapisTable extends React.Component {
       expansionMark: true,
       cell: predmet => {
         var href = {
-          ...this.props.query,
+          ...query,
           modal: "detailPredmetu",
           modalPredmetKey: predmet.predmet_key,
-          modalAkademickyRok: this.props.akademickyRok
+          modalAkademickyRok: props.akademickyRok
         };
         var nazov = <Link href={href}>{predmet.nazov}</Link>;
         if (predmet.moje) nazov = <strong>{nazov}</strong>;
@@ -376,35 +356,44 @@ export class ZapisTable extends React.Component {
         return nazov;
       }
     };
-    columns = [mojeColumn, ...columns.slice(0, 2), nazovColumn, ...columns.slice(2)];
+    var columns = [mojeColumn, ...props.columns.slice(0, 2), nazovColumn, ...props.columns.slice(2)];
 
     const footer = fullTable =>
-      this.props.showFooter && (
+      props.showFooter && (
         <ZapisTableFooter
-          predmety={this.props.predmety}
+          predmety={predmety}
           moje={checked}
           fullTable={fullTable}
         />
       );
 
-    return <form onSubmit={this.handleSave}>
+    return <form onSubmit={handleSave}>
       {saveButton}
       <SortableTable
         items={_.values(predmety)}
         columns={columns}
         queryKey="predmetySort"
         footer={footer}
-        message={message}
+        message={props.message}
       />
       {saveButton}
     </form>;
-  }
 }
 
+ZapisTable.propTypes = {
+  predmety: PropTypes.object,
+  akademickyRok: PropTypes.string,
+  message: PropTypes.node,
+  columns: PropTypes.array.isRequired,
+  showFooter: PropTypes.bool,
+  odoberPredmety: PropTypes.func.isRequired,
+  pridajPredmety: PropTypes.func.isRequired
+};
 
-export function ZapisVlastnostiTable(props) {
+
+export function ZapisVlastnostiTable() {
+  var { zapisnyListKey } = useContext(QueryContext);
   var cache = new CacheRequester();
-  var {zapisnyListKey} = props.query;
 
   var [vlastnosti, message] = cache.get('zapis_get_vlastnosti_programu', zapisnyListKey) || [];
 
@@ -426,21 +415,13 @@ export function ZapisVlastnostiTable(props) {
   );
 }
 
-ZapisVlastnostiTable.propTypes = {
-  query: PropTypes.object.isRequired
-};
 
+export function ZapisZPlanuPageContent() {
+  var query = useContext(QueryContext);
+  var {zapisnyListKey, cast} = query;
+  cast = (cast == 'SS' ? 'SS' : 'SC');
 
-export class ZapisZPlanuPageContent extends React.Component {
-  getQuery() {
-    var {zapisnyListKey, cast} = this.props.query;
-    cast = (cast == 'SS' ? 'SS' : 'SC');
-    return {zapisnyListKey, cast};
-  }
-
-  render() {
     var cache = new CacheRequester();
-    var {zapisnyListKey, cast} = this.getQuery();
 
     var [zapisanePredmety, zapisaneMessage] = cache.get('zapis_get_zapisane_predmety', zapisnyListKey, cast) || [];
     var [ponukanePredmety, ponukaneMessage] = cache.get('zapis_plan_vyhladaj', zapisnyListKey, cast) || [];
@@ -481,31 +462,28 @@ export class ZapisZPlanuPageContent extends React.Component {
     }
 
     return <React.Fragment>
-      <ZapisMenu query={this.props.query} />
+      <ZapisMenu />
       {outerMessage}
       <ZapisTable
-          query={this.props.query} predmety={predmety} message={tableMessage}
+          predmety={predmety} message={tableMessage}
           akademickyRok={akademickyRok}
-          odoberPredmety={this.odoberPredmety}
-          pridajPredmety={this.pridajPredmety}
+          odoberPredmety={odoberPredmety}
+          pridajPredmety={pridajPredmety}
           columns={ZapisZPlanuColumns} showFooter={true} />
       <h2>Poznámky k študijnému plánu</h2>
-      <ZapisVlastnostiTable query={this.props.query} />
+      <ZapisVlastnostiTable />
     </React.Fragment>;
-  }
 
-  pridajPredmety = (predmety, callback) => {
+  function pridajPredmety(predmety, callback) {
     if (!predmety.length) return callback(null);
 
-    var {zapisnyListKey, cast} = this.getQuery();
     var dvojice = predmety.map((predmet) => [predmet.typ_vyucby, predmet.skratka]);
     sendRpc('zapis_plan_pridaj_predmety', [zapisnyListKey, cast, dvojice], callback);
   }
 
-  odoberPredmety = (predmety, callback) => {
+  function odoberPredmety(predmety, callback) {
     if (!predmety.length) return callback(null);
 
-    var {zapisnyListKey, cast} = this.getQuery();
     var kluce = predmety.map((predmet) => predmet.predmet_key);
     sendRpc('zapis_odstran_predmety', [zapisnyListKey, cast, kluce], callback);
   }
@@ -513,52 +491,50 @@ export class ZapisZPlanuPageContent extends React.Component {
 
 
 export function ZapisZPlanuPage() {
-  // TODO: Use useContext inside ZapisZPlanuPageContent.
   return (
     <PageLayout>
       <ZapisnyListSelector>
-        <QueryContext.Consumer>
-          {query => <ZapisZPlanuPageContent query={query} />}
-        </QueryContext.Consumer>
+        <ZapisZPlanuPageContent />
       </ZapisnyListSelector>
     </PageLayout>
   );
 }
 
 
-export class ZapisZPonukyForm extends React.Component {
-  constructor(props) {
-    super(props);
-    var query = props.query;
-    this.state = {
+export function ZapisZPonukyForm() {
+  var query = useContext(QueryContext);
+
+  var [state, setState] = useState({
       fakulta: query.fakulta,
       stredisko: query.stredisko,
       skratkaPredmetu: query.skratkaPredmetu,
       nazovPredmetu: query.nazovPredmetu
-    };
+  });
+
+  function handleFieldChange(event) {
+    var name = event.target.name;
+    var value = event.target.value;
+    setState(old => ({ ...old, [name]: value }));
   }
 
-  handleFieldChange = (event) => {
-    this.setState({ [event.target.name]: event.target.value });
-  }
-
-  handleSubmit = (event) => {
+  function handleSubmit(event) {
     event.preventDefault();
-    var {zapisnyListKey} = this.props.query;
-    navigate({ action: 'zapisZPonuky', zapisnyListKey, ...this.state });
+    navigate({ action: 'zapisZPonuky', zapisnyListKey: query.zapisnyListKey, ...state });
   }
 
-  renderTextInput(label, name, focus) {
+  var cache = new CacheRequester();
+
+  function renderTextbox(label, name, focus = false) {
     return <FormItem label={label}>
       <input className="form-item-control" name={name} autoFocus={focus}
-             value={this.state[name]} type="text" onChange={this.handleFieldChange} />
+             value={state[name] || ''} type="text" onChange={handleFieldChange} />
     </FormItem>;
   }
 
-  renderSelect(label, name, items, cache) {
+  function renderSelect(label, name, items) {
     return <FormItem label={label}>
       {items ?
-        <select className="form-item-control" name={name} value={this.state[name]} onChange={this.handleFieldChange}>
+        <select className="form-item-control" name={name} value={state[name]} onChange={handleFieldChange}>
           {items.map((item) =>
             <option key={item.id} value={item.id}>{item.title}</option>
           )}
@@ -566,9 +542,7 @@ export class ZapisZPonukyForm extends React.Component {
     </FormItem>;
   }
 
-  render() {
-    var cache = new CacheRequester();
-    var [fakulty, message] = cache.get('zapis_ponuka_options', this.props.query.zapisnyListKey) || [];
+    var [fakulty, message] = cache.get('zapis_ponuka_options', query.zapisnyListKey) || [];
 
     if (!fakulty) {
       return <Loading requests={cache.missing} />;
@@ -578,23 +552,21 @@ export class ZapisZPonukyForm extends React.Component {
       return <p>{message}</p>;
     }
 
-    return <form onSubmit={this.handleSubmit}>
-      {this.renderTextInput("Názov predmetu: ", "nazovPredmetu", true)}
-      {this.renderTextInput("Skratka predmetu: ", "skratkaPredmetu", false)}
-      {this.renderSelect("Fakulta: ", "fakulta", fakulty, cache)}
-      {this.renderTextInput("Stredisko: ", "stredisko", false)}
+    return <form onSubmit={handleSubmit}>
+      {renderTextbox("Názov predmetu: ", "nazovPredmetu", true)}
+      {renderTextbox("Skratka predmetu: ", "skratkaPredmetu")}
+      {renderSelect("Fakulta: ", "fakulta", fakulty)}
+      {renderTextbox("Stredisko: ", "stredisko")}
       <FormItem>
         <button className="btn btn-primary" type="submit">Vyhľadaj</button>
       </FormItem>
     </form>;
-  }
 }
 
 
-export class ZapisZPonukyPageContent extends React.Component {
-  render() {
+export function ZapisZPonukyPageContent() {
+    var query = useContext(QueryContext);
     var cache = new CacheRequester();
-    var query = this.props.query;
 
     var outerMessage, tableMessage, predmety, akademickyRok;
 
@@ -633,23 +605,21 @@ export class ZapisZPonukyPageContent extends React.Component {
     }
 
     return <React.Fragment>
-      <ZapisMenu query={this.props.query} />
-      <ZapisZPonukyForm query={this.props.query} />
+      <ZapisMenu />
+      <ZapisZPonukyForm />
       {outerMessage}
       {predmety && <h2>Výsledky</h2>}
       <ZapisTable
-          query={this.props.query} predmety={predmety} message={tableMessage}
+          predmety={predmety} message={tableMessage}
           akademickyRok={akademickyRok}
-          odoberPredmety={this.odoberPredmety}
-          pridajPredmety={this.pridajPredmety}
+          odoberPredmety={odoberPredmety}
+          pridajPredmety={pridajPredmety}
           columns={ZapisZPonukyColumns} />
     </React.Fragment>;
-  }
 
-  pridajPredmety = (predmety, callback) => {
+  function pridajPredmety(predmety, callback) {
     if (!predmety.length) return callback(null);
 
-    var query = this.props.query;
     var skratky = predmety.map((predmet) => predmet.skratka);
     sendRpc('zapis_ponuka_pridaj_predmety', [query.zapisnyListKey,
         query.fakulta || null,
@@ -659,10 +629,9 @@ export class ZapisZPonukyPageContent extends React.Component {
         skratky], callback);
   }
 
-  odoberPredmety = (predmety, callback) => {
+  function odoberPredmety(predmety, callback) {
     if (!predmety.length) return callback(null);
 
-    var query = this.props.query;
     var kluce = predmety.map((predmet) => predmet.predmet_key);
     sendRpc('zapis_odstran_predmety', [query.zapisnyListKey, 'SC', kluce], callback);
   }
@@ -670,13 +639,10 @@ export class ZapisZPonukyPageContent extends React.Component {
 
 
 export function ZapisZPonukyPage() {
-  // TODO: Use useContext inside ZapisZPonukyPageContent.
   return (
     <PageLayout>
       <ZapisnyListSelector>
-        <QueryContext.Consumer>
-          {query => <ZapisZPonukyPageContent query={query} />}
-        </QueryContext.Consumer>
+        <ZapisZPonukyPageContent />
       </ZapisnyListSelector>
     </PageLayout>
   );

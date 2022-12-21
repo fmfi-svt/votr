@@ -1,6 +1,6 @@
 
 import PropTypes from 'prop-types';
-import React, { useContext } from 'react';
+import React, { useContext, useEffect, useRef } from 'react';
 import _ from 'lodash';
 import $ from 'jquery';
 import 'bootstrap-sass/assets/javascripts/bootstrap/transition';  // needed by modal.js.
@@ -132,20 +132,14 @@ export function LogStatus() {
 }
 
 
-export class PageTitle extends React.Component {
-  titleRef = React.createRef()
+export function PageTitle({ children }) {
+  var titleRef = useRef(null);
 
-  componentDidMount() {
-    document.title = this.titleRef.current.textContent;
-  }
+  useEffect(() => {
+    document.title = titleRef.current.textContent;
+  });
 
-  componentDidUpdate() {
-    document.title = this.titleRef.current.textContent;
-  }
-
-  render() {
-    return <h1 ref={this.titleRef}>{this.props.children}</h1>;
-  }
+  return <h1 ref={titleRef}>{children}</h1>;
 }
 
 

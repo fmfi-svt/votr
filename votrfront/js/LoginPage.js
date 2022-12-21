@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import _ from 'lodash';
 import { AboutModal } from './About';
 import { Modal, ModalBase } from './layout';
@@ -15,26 +15,28 @@ var TYPE_NAMES = {
 };
 
 
-export class LoginForm extends React.Component {
-  state = {
+export function LoginForm({ onOpenError }) {
+  var [state, setState] = useState({
     server: Votr.settings.server || 0,
     type: Votr.settings.type
-  }
+  });
 
-  handleServerChange = (event) => {
+  function handleServerChange(event) {
     var server = event.target.value;
     var newTypes = Votr.settings.servers[server].login_types;
-    var type = _.includes(newTypes, this.state.type) ? this.state.type : null;
-    this.setState({ server, type });
+    setState(old => ({
+      server,
+      type: _.includes(newTypes, old.type) ? old.type : null,
+    }));
   }
 
-  handleTypeChange = (event) => {
-    this.setState({ type: event.target.value });
+  function handleTypeChange(event) {
+    var type = event.target.value;
+    setState(old => ({ server: old.server, type }));
   }
 
-  render() {
-    var serverConfig = Votr.settings.servers[this.state.server];
-    var currentType = this.state.type || serverConfig.login_types[0];
+  var serverConfig = Votr.settings.servers[state.server];
+  var currentType = state.type || serverConfig.login_types[0];
 
     return <form className="login" action="login" method="POST">
       {Votr.settings.invalid_session &&
@@ -49,7 +51,7 @@ export class LoginForm extends React.Component {
               {_.last(Votr.settings.error.trim("\n").split("\n"))}
             </code>
             {" "}
-            <FakeLink onClick={this.props.onOpenError}>Viac detailov...</FakeLink>
+            <FakeLink onClick={onOpenError}>Viac detailov...</FakeLink>
           </p>
           <p>
             Ak problém pretrváva, napíšte nám na <a className="text-nowrap"
@@ -65,7 +67,7 @@ export class LoginForm extends React.Component {
         <p>
           <label>
             {"Server: "}
-            <select name="server" value={this.state.server} onChange={this.handleServerChange}>
+            <select name="server" value={state.server} onChange={handleServerChange}>
               {Votr.settings.servers.map((server, index) =>
                 <option key={index} value={index}>{server.title}</option>
               )}
@@ -79,7 +81,7 @@ export class LoginForm extends React.Component {
         <p>
           <label>
             {"Typ prihlásenia: "}
-            <select name="type" value={currentType} onChange={this.handleTypeChange}>
+            <select name="type" value={currentType} onChange={handleTypeChange}>
               {serverConfig.login_types.map((type) =>
                 <option key={type} value={type}>{TYPE_NAMES[type]}</option>
               )}
@@ -126,7 +128,6 @@ export class LoginForm extends React.Component {
 
       <button type="submit" className="btn btn-lg btn-primary center-block">Prihlásiť</button>
     </form>;
-  }
 }
 
 
@@ -139,23 +140,11 @@ export function LoginErrorModal() {
 }
 
 
-export class LoginPage extends React.Component {
-  state = {}
+export function LoginPage() {
+  var [modal, setModal] = useState(null);
 
-  openAbout = () => {
-    this.setState({ modal: 'about' });
-  }
-
-  openError = () => {
-    this.setState({ modal: 'error' });
-  }
-
-  closeModal = () => {
-    this.setState({ modal: null });
-  }
-
-  render() {
-    var content = <div className="login-page">
+  return <React.Fragment>
+    <div className="login-page">
       <div className="navbar navbar-inverse navbar-static-top">
         <div className="container-fluid">
           <div className="navbar-header">
@@ -171,23 +160,17 @@ export class LoginPage extends React.Component {
           bez zbytočného klikania.
         </p>
         <hr />
-        <LoginForm onOpenError={this.openError} />
+        <LoginForm onOpenError={() => setModal(() => LoginErrorModal)} />
       </div>
       <div className="text-center">
         <ul className="list-inline">
-          <li><FakeLink className="btn btn-link" onClick={this.openAbout}>O aplikácii</FakeLink></li>
+          <li><FakeLink className="btn btn-link" onClick={() => setModal(() => AboutModal)}>O aplikácii</FakeLink></li>
           <li><a className="btn btn-link" href="https://uniba.sk/" target="_blank">Univerzita Komenského</a></li>
           <li><a className="btn btn-link" href="https://moja.uniba.sk/" target="_blank">IT služby na UK</a></li>
         </ul>
       </div>
-    </div>;
+    </div>
 
-    var modals = { 'about': AboutModal, 'error': LoginErrorModal };
-    var modalComponent = modals[this.state.modal];
-
-    return <React.Fragment>
-      {content}
-      <ModalBase component={modalComponent} onClose={this.closeModal} />
-    </React.Fragment>;
-  }
+    <ModalBase component={modal} onClose={() => setModal(null)} />
+  </React.Fragment>;
 }

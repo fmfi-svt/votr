@@ -1,5 +1,5 @@
 
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { CacheRequester, Loading } from './ajax';
 import { currentAcademicYear } from './coursesStats';
 import { classForSemester, humanizeBoolean } from './humanizeAISData';
@@ -19,11 +19,10 @@ export var RegisterPredmetovColumns = [
 ];
 RegisterPredmetovColumns.defaultOrder = 'a0';
 
-export class RegisterPredmetovForm extends React.Component {
-  constructor(props) {
-    super(props);
-    var query = props.query;
-    this.state = {
+export function RegisterPredmetovForm() {
+  var query = useContext(QueryContext);
+
+  var [state, setState] = useState(() => ({
       fakulta: query.fakulta,
       stredisko: query.stredisko,
       semester: query.semester,
@@ -32,29 +31,32 @@ export class RegisterPredmetovForm extends React.Component {
       skratkaPredmetu: query.skratkaPredmetu,
       nazovPredmetu: query.nazovPredmetu,
       akademickyRok: query.akademickyRok || currentAcademicYear()
-    };
+  }));
+
+  function handleFieldChange(event) {
+    var name = event.target.name;
+    var value = event.target.value;
+    setState(old => ({ ...old, [name]: value }));
   }
 
-  handleFieldChange = (event) => {
-    this.setState({ [event.target.name]: event.target.value });
-  }
-
-  handleSubmit = (event) => {
+  function handleSubmit(event) {
     event.preventDefault();
-    navigate({ action: 'registerPredmetov', ...this.state });
+    navigate({ action: 'registerPredmetov', ...state });
   }
 
-  renderTextInput(label, name, focus) {
+  var cache = new CacheRequester();
+
+  function renderTextbox(label, name, focus = false) {
     return <FormItem label={label}>
       <input className="form-item-control" name={name} autoFocus={focus}
-             value={this.state[name] || ''} type="text" onChange={this.handleFieldChange} />
+             value={state[name] || ''} type="text" onChange={handleFieldChange} />
     </FormItem>;
   }
 
-  renderSelect(label, name, items, cache) {
+  function renderSelect(label, name, items) {
     return <FormItem label={label}>
       {items ?
-        <select className="form-item-control" name={name} value={this.state[name]} onChange={this.handleFieldChange}>
+        <select className="form-item-control" name={name} value={state[name]} onChange={handleFieldChange}>
           {items.map((item) =>
             <option key={item.id} value={item.id}>{item.title}</option>
           )}
@@ -62,32 +64,30 @@ export class RegisterPredmetovForm extends React.Component {
     </FormItem>;
   }
 
-  render() {
-    var cache = new CacheRequester();
     var fakulty = cache.get('get_register_predmetov_fakulta_options');
     var rocniky = cache.get('get_register_predmetov_akademicky_rok_options');
     var stupne = cache.get('get_register_predmetov_stupen_options');
     var semestre = cache.get('get_register_predmetov_semester_options');
 
-    return <form onSubmit={this.handleSubmit}>
-      {this.renderTextInput("Názov predmetu: ", "nazovPredmetu", true)}
-      {this.renderTextInput("Skratka predmetu: ", "skratkaPredmetu", false)}
-      {this.renderTextInput("Študijný program (skratka): ", "studijnyProgramSkratka", false)}
-      {this.renderSelect("Fakulta: ", "fakulta", fakulty, cache)}
-      {this.renderTextInput("Stredisko: ", "stredisko", false)}
-      {this.renderSelect("Stupeň: ", "stupen", stupne, cache)}
-      {this.renderSelect("Akademický rok: ", "akademickyRok", rocniky, cache)}
-      {this.renderSelect("Semester: ", "semester", semestre, cache)}
+    return <form onSubmit={handleSubmit}>
+      {renderTextbox("Názov predmetu: ", "nazovPredmetu", true)}
+      {renderTextbox("Skratka predmetu: ", "skratkaPredmetu")}
+      {renderTextbox("Študijný program (skratka): ", "studijnyProgramSkratka")}
+      {renderSelect("Fakulta: ", "fakulta", fakulty)}
+      {renderTextbox("Stredisko: ", "stredisko")}
+      {renderSelect("Stupeň: ", "stupen", stupne)}
+      {renderSelect("Akademický rok: ", "akademickyRok", rocniky)}
+      {renderSelect("Semester: ", "semester", semestre)}
       <FormItem>
         <button className="btn btn-primary" type="submit">Vyhľadaj</button>
       </FormItem>
     </form>;
-  }
 }
 
 export function RegisterPredmetovResultTable(props) {
+  var query = useContext(QueryContext);
   var cache = new CacheRequester();
-  var query = props.query;
+
   if(!query.fakulta &&
      !query.stredisko &&
      !query.studijnyProgramSkratka &&
@@ -153,15 +153,13 @@ export function RegisterPredmetovResultTable(props) {
 
 
 export function RegisterPredmetovPage() {
-  // TODO: Move useContext into RegisterPredmetovForm and RegisterPredmetovResultTable?
-  var query = useContext(QueryContext);
   return (
     <PageLayout>
       <div className="header">
         <PageTitle>Register predmetov</PageTitle>
       </div>
-      <RegisterPredmetovForm query={query} />
-      <RegisterPredmetovResultTable query={query} />
+      <RegisterPredmetovForm />
+      <RegisterPredmetovResultTable />
     </PageLayout>
   );
 }

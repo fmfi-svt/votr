@@ -1,26 +1,23 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import _ from 'lodash';
 import { goLogout, goReset, goResetHome } from './ajax';
 import { Modal, ModalBase } from './layout';
 import { AnalyticsMixin, FakeLink } from './router';
 
 
-export class ErrorModal extends React.Component {
-  state = {
-    open: false
-  }
+export function ErrorModal() {
+  var [open, setOpen] = useState(false);
 
-  handleIgnore = () => {
+  function handleIgnore() {
     Votr.ajaxError = null;
     Votr.appRoot.forceUpdate();
   }
 
-  handleDetails = () => {
-    this.setState({ open: true });
+  function handleDetails() {
+    setOpen(true);
   }
 
-  render() {
     var error = Votr.settings.error || Votr.ajaxError;
     var lastLine = _.last(error.trim("\n").split("\n"));
     var type = lastLine.split(":")[0]
@@ -74,17 +71,16 @@ export class ErrorModal extends React.Component {
                     onClick={goLogout}>Odhlásiť</button></li>
       </ul>
       <br />
-      {this.state.open ?
+      {open ?
         <pre>{error}</pre> :
         <p className="text-center text-muted">
           Technické detaily: <code>{lastLine}</code>{" "}
-          <FakeLink onClick={this.handleDetails}>Viac detailov...</FakeLink>
+          <FakeLink onClick={handleDetails}>Viac detailov...</FakeLink>
         </p>}
-      {!Votr.settings.error && this.state.open &&
+      {!Votr.settings.error && open &&
         <button type="button" className="btn btn-default"
-                onClick={this.handleIgnore}>Ignorovať chybu</button>}
+                onClick={handleIgnore}>Ignorovať chybu</button>}
     </Modal>;
-  }
 }
 
 

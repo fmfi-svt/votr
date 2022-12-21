@@ -1,5 +1,5 @@
 
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import { CacheRequester, Loading } from './ajax';
 import { currentAcademicYear } from './coursesStats';
 import { FormItem, PageLayout, PageTitle } from './layout';
@@ -13,11 +13,10 @@ export var RegisterOsobColumns = [
 ];
 RegisterOsobColumns.defaultOrder = 'a0';
 
-export class RegisterOsobForm extends React.Component {
-  constructor(props) {
-    super(props);
-    var query = props.query;
-    this.state = {
+export function RegisterOsobForm() {
+  var query = useContext(QueryContext);
+
+  var [state, setState] = useState(() => ({
       meno: query.meno,
       priezvisko: query.priezvisko,
       absolventi: query.absolventi,
@@ -36,33 +35,38 @@ export class RegisterOsobForm extends React.Component {
       siedmyRocnik: query.siedmyRocnik,
       osmyRocnik: query.osmyRocnik,
       absolventiRocnik: query.absolventiRocnik
-    };
+  }));
+
+  function handleFieldChange(event) {
+    var name = event.target.name;
+    var value = event.target.value;
+    setState(old => ({ ...old, [name]: value }));
   }
 
-  handleFieldChange = (event) => {
-    this.setState({ [event.target.name]: event.target.value });
+  function handleCheckBoxChange(event) {
+    var name = event.target.name;
+    var value = String(event.target.checked);
+    setState(old => ({ ...old, [name]: value }));
   }
 
-  handleCheckBoxChange = (event) => {
-    this.setState({ [event.target.name]: String(event.target.checked) });
-  }
-
-  handleSubmit = (event) => {
+  function handleSubmit(event) {
     event.preventDefault();
-    navigate({ action: 'registerOsob', ...this.state });
+    navigate({ action: 'registerOsob', ...state });
   }
 
-  renderTextInput(label, name, focus) {
+  var cache = new CacheRequester();
+
+  function renderTextbox(label, name, focus = false) {
     return <FormItem label={label}>
       <input className="form-item-control" name={name} autoFocus={focus}
-             value={this.state[name] || ''} type="text" onChange={this.handleFieldChange} />
+             value={state[name] || ''} type="text" onChange={handleFieldChange} />
     </FormItem>;
   }
 
-  renderSelect(label, name, items, cache) {
+  function renderSelect(label, name, items) {
     return <FormItem label={label}>
       {items ?
-        <select className="form-item-control" name={name} value={this.state[name]} onChange={this.handleFieldChange}>
+        <select className="form-item-control" name={name} value={state[name]} onChange={handleFieldChange}>
           {items.map((item) =>
             <option key={item.id} value={item.id}>{item.title}</option>
           )}
@@ -70,58 +74,55 @@ export class RegisterOsobForm extends React.Component {
     </FormItem>;
   }
 
-  renderCheckbox(label, name) {
+  function renderCheckbox(label, name) {
     return <label>
-      <input name={name} checked={this.state[name] == "true"} type="checkbox" onChange={this.handleCheckBoxChange} />
+      <input name={name} checked={state[name] == "true"} type="checkbox" onChange={handleCheckBoxChange} />
       {label}
     </label>;
   }
 
-  render() {
-    var cache = new CacheRequester();
     var akademickeRoky = cache.get('get_register_osob_akademicky_rok_options');
     var fakulty = cache.get('get_register_osob_fakulty');
 
-    return <form onSubmit={this.handleSubmit}>
-      {this.renderTextInput("Priezvisko: ", "priezvisko", true)}
-      {this.renderTextInput("Meno: ", "meno", false)}
-      {this.renderSelect("Fakulta: ", "fakulta", fakulty, cache)}
-      {this.renderTextInput("Študijný program (skratka): ", "skratkaSp", false)}
-      {this.renderSelect("Akademický rok: ", "akademickyRok", akademickeRoky, cache)}
+    return <form onSubmit={handleSubmit}>
+      {renderTextbox("Priezvisko: ", "priezvisko", true)}
+      {renderTextbox("Meno: ", "meno")}
+      {renderSelect("Fakulta: ", "fakulta", fakulty)}
+      {renderTextbox("Študijný program (skratka): ", "skratkaSp")}
+      {renderSelect("Akademický rok: ", "akademickyRok", akademickeRoky)}
       <div className="form-item">
         <div className="col-sm-4 form-item-label">Typ osoby:</div>
         <div className="col-sm-8">
-          {this.renderCheckbox(" Absolventi ", "absolventi")}
-          {this.renderCheckbox(" Študenti ", "studenti")}
-          {this.renderCheckbox(" Zamestnanci ", "zamestnanci")}
+          {renderCheckbox(" Absolventi ", "absolventi")}
+          {renderCheckbox(" Študenti ", "studenti")}
+          {renderCheckbox(" Zamestnanci ", "zamestnanci")}
         </div>
       </div>
       <div className="form-item">
         <div className="col-sm-4 form-item-label">Rok štúdia:</div>
         <div className="col-sm-8">
-          {this.renderCheckbox(" 1. ", 'prvyRocnik')}
-          {this.renderCheckbox(" 2. ", 'druhyRocnik')}
-          {this.renderCheckbox(" 3. ", 'tretiRocnik')}
-          {this.renderCheckbox(" 4. ", 'stvrtyRocnik')}
-          {this.renderCheckbox(" 5. ", 'piatyRocnik')}
-          {this.renderCheckbox(" 6. ", 'siestyRocnik')}
-          {this.renderCheckbox(" 7. ", 'siedmyRocnik')}
-          {this.renderCheckbox(" 8. ", 'osmyRocnik')}
+          {renderCheckbox(" 1. ", 'prvyRocnik')}
+          {renderCheckbox(" 2. ", 'druhyRocnik')}
+          {renderCheckbox(" 3. ", 'tretiRocnik')}
+          {renderCheckbox(" 4. ", 'stvrtyRocnik')}
+          {renderCheckbox(" 5. ", 'piatyRocnik')}
+          {renderCheckbox(" 6. ", 'siestyRocnik')}
+          {renderCheckbox(" 7. ", 'siedmyRocnik')}
+          {renderCheckbox(" 8. ", 'osmyRocnik')}
           <br/>
-          {this.renderCheckbox(" Uchádzači ", 'uchadzaciRocnik')}
-          {this.renderCheckbox(" Absolventi ", 'absolventiRocnik')}
+          {renderCheckbox(" Uchádzači ", 'uchadzaciRocnik')}
+          {renderCheckbox(" Absolventi ", 'absolventiRocnik')}
         </div>
       </div>
       <FormItem>
         <button className="btn btn-primary" type="submit">Vyhľadaj</button>
       </FormItem>
     </form>;
-  }
 }
 
 export function RegisterOsobResultTable(props) {
+  var query = useContext(QueryContext);
   var cache = new CacheRequester();
-  var query = props.query;
 
   if(!query.akademickyRok ||
      !(query.meno ||
@@ -200,15 +201,13 @@ export function RegisterOsobResultTable(props) {
 
 
 export function RegisterOsobPage() {
-  // TODO: Move useContext into RegisterOsobForm and RegisterOsobResultTable?
-  var query = useContext(QueryContext);
   return (
     <PageLayout>
       <div className="header">
         <PageTitle>Register osôb</PageTitle>
       </div>
-      <RegisterOsobForm query={query} />
-      <RegisterOsobResultTable query={query} />
+      <RegisterOsobForm />
+      <RegisterOsobResultTable />
     </PageLayout>
   );
 }

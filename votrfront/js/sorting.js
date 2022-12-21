@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useContext, useState } from 'react';
 import _ from 'lodash';
 import { navigate, QueryContext } from './router';
 import { LocalSettings } from './LocalSettings';
@@ -79,44 +79,7 @@ export function sortTable(items, columns, query, queryKey, fullTable) {
   return [items, header];
 };
 
-export class SortableTable extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
-
-  toggleInfo(index) {
-    this.setState((state) => ({[index]: !state[index]}));
-  }
-
-  expandAll() {
-    const opened = {};
-    for ( let i = 0; i < this.props.items.length; i++ ) {
-      opened[i] = true;
-    }
-    this.setState(opened);
-  }
-
-  collapseAll() {
-    const opened = {};
-    for ( const index in this.state ) {
-      opened[index] = false;
-    }
-    this.setState(opened);
-  }
-
-  isOpened(index) {
-    return this.state[index];
-  }
-
-  allClosed() {
-    for (const index in this.state) {
-      if (this.state[index]) return false;
-    }
-    return true;
-  }
-
-  render() {
+export function SortableTable(props) {
     const {
       items,
       columns,
@@ -126,12 +89,24 @@ export class SortableTable extends React.Component {
       message,
       rowClassName,
       expandedContentOffset = 0
-    } = this.props;
+    } = props;
+
+  var query = useContext(QueryContext);
+
+  var [open, setOpen] = useState([]);
+
+  var anyOpen = open.includes(true);
+
+  function toggleInfo(index) {
+    setOpen(open => {
+      open = open.slice();
+      open[index] = !open[index];
+      return open;
+    });
+  }
 
     var fullTable = LocalSettings.get('fullTable') == 'true';
 
-    // TODO: Use useContext.
-    return <QueryContext.Consumer>{query => {
       const [sortedItems, header] = sortTable(
         items,
         columns,
@@ -164,7 +139,7 @@ export class SortableTable extends React.Component {
             onClick={(event) => {
               // Don't toggle the row if we just clicked some link or input in the row.
               if (!event.target.closest("a, input, button") && !fullTable) {
-                this.toggleInfo(item.originalIndex);
+                toggleInfo(item.originalIndex);
               }
             }}
             className={rowClassName && rowClassName(item)}
@@ -186,7 +161,7 @@ export class SortableTable extends React.Component {
                 >
                   {expansionMark && !fullTable && (
                     <span className={`${notExpandable.join(" ")} expand-arrow ${
-                      this.isOpened(item.originalIndex) ? "arrow-expanded" : "arrow-collapsed"}`}/>
+                      open[item.originalIndex] ? "arrow-expanded" : "arrow-collapsed"}`}/>
                   )}
                   {cell ? cell(item, query) : item[prop]}
                 </td>
@@ -202,7 +177,7 @@ export class SortableTable extends React.Component {
             <tr
               key={`${item.originalIndex}-info`}
               className={`${notExpandable.join(" ")} ${
-                this.isOpened(item.originalIndex) ? "" : "hidden"
+                open[item.originalIndex] ? "" : "hidden"
               }`}
             >
               {expandedContentOffset > 0 && <td colSpan={expandedContentOffset} />}
@@ -238,9 +213,9 @@ export class SortableTable extends React.Component {
             {!fullTable && <button
               type="button"
               className={"btn btn-default"}
-              onClick={() => (this.allClosed() ? this.expandAll() : this.collapseAll())}
+              onClick={() => setOpen(Array(items.length).fill(!anyOpen))}
             >
-              {this.allClosed() ? "Rozbaliť všetky" : "Zabaliť všetky"}
+              {anyOpen ? "Zabaliť všetky" : "Rozbaliť všetky"}
             </button>}
           </div>
           <table className={className}>
@@ -259,6 +234,4 @@ export class SortableTable extends React.Component {
           </table>
         </div>
       );
-    }}</QueryContext.Consumer>;
-  }
 }

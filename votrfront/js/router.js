@@ -80,43 +80,37 @@ export function navigate(href) {
 };
 
 
-export class Link extends React.Component {
-  handleClick = (event) => {
+export function Link(props) {
+  function handleClick(event) {
     // Chrome fires onclick on middle click. Firefox only fires it on document,
     // see <http://lists.w3.org/Archives/Public/www-dom/2013JulSep/0203.html>,
     // but React adds event listeners to document so we still see a click event.
     if (event.button != 0) return;
 
     event.preventDefault();
-    navigate(this.props.href);
+    navigate(props.href);
   }
 
-  render() {
-    return <a {...this.props} href={buildUrl(this.props.href)}
-              onClick={this.handleClick} />;
-  }
+  return <a {...props} href={buildUrl(props.href)} onClick={handleClick} />;
 }
 
 
 // Looks and acts like a link, but doesn't have a href and cannot be opened in
 // a new tab when middle-clicked or ctrl-clicked.
-export class FakeLink extends React.Component {
-  static propTypes = {
-    onClick: PropTypes.func.isRequired
-  };
-
+export function FakeLink(props) {
   // Pressing Enter on <a href=...> emits a click event, and the HTML5 spec
   // says elements with tabindex should do that too, but they don't.
   // <http://www.w3.org/TR/WCAG20-TECHS/SCR29> suggests using a keyup event:
-  handleKeyUp = (event) => {
+  function handleKeyUp(event) {
     if (event.which == 13) {
       event.preventDefault();
-      this.props.onClick(event);
+      props.onClick(event);
     }
   }
 
-  render() {
-    return <a {...this.props} onKeyUp={this.handleKeyUp}
-              tabIndex="0" role="button" />;
-  }
+  return <a {...props} onKeyUp={handleKeyUp} tabIndex="0" role="button" />;
 }
+
+FakeLink.propTypes = {
+  onClick: PropTypes.func.isRequired
+};

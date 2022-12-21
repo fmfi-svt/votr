@@ -1,6 +1,6 @@
 
 import PropTypes from 'prop-types';
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 import _ from 'lodash';
 import { saveAs } from 'file-saver';
 import { ZapisnyListSelector } from './ZapisnyListSelector';
@@ -319,22 +319,18 @@ export function MojeSkuskyPageContent() {
 }
 
 
-export class SkuskyRegisterButton extends React.Component {
-  static propTypes = {
-    termin: PropTypes.object.isRequired
-  };
+export function SkuskyRegisterButton({ termin }) {
+  var [pressed, setPressed] = useState(false);
 
-  state = {
-    pressed: false
-  }
+  var isSigninButton = !termin.datum_prihlasenia || termin.datum_odhlasenia;
+  var appearDisabled = (isSigninButton && termin.moznost_prihlasit !== 'A') || pressed;
 
-  handleClick = () => {
-    var command = this.isSigninButton() ? 'prihlas_na_termin' : 'odhlas_z_terminu';
-    var termin = this.props.termin;
+  function handleClick() {
+    var command = isSigninButton ? 'prihlas_na_termin' : 'odhlas_z_terminu';
 
     sendRpc(command, [termin.termin_key], (message) => {
       if (message) {
-        this.setState({ pressed: false });
+        setPressed(false);
         alert(message);
       } else {
         RequestCache.invalidate('get_prihlasene_terminy');
@@ -343,21 +339,8 @@ export class SkuskyRegisterButton extends React.Component {
       }
     });
 
-    this.setState({ pressed: true });
+    setPressed(true);
   }
-
-  isDisabled() {
-    var termin = this.props.termin;
-    return (this.isSigninButton() && termin.moznost_prihlasit !== 'A') || this.state.pressed;
-  }
-
-  isSigninButton() {
-    var termin = this.props.termin;
-    return !termin.datum_prihlasenia || termin.datum_odhlasenia;
-  }
-
-  render() {
-    var termin = this.props.termin;
 
     if (termin.hodnotenie_terminu) {
       return null;
@@ -366,11 +349,10 @@ export class SkuskyRegisterButton extends React.Component {
     var today = new Date().toJSON().replace(/-/g, '').substring(0, 8);
     if (today > sortAs.date(termin.datum)) return null;
 
-    var buttonClass = "btn btn-xs " + (this.isSigninButton() ? "btn-success" : "btn-danger") + (this.isDisabled() ? " appear-disabled" : "");
-    var buttonText = this.state.pressed ? <Loading /> : this.isSigninButton() ? "Prihlásiť" : "Odhlásiť";
+    var buttonClass = "btn btn-xs " + (isSigninButton ? "btn-success" : "btn-danger") + (appearDisabled ? " appear-disabled" : "");
+    var buttonText = pressed ? <Loading /> : isSigninButton ? "Prihlásiť" : "Odhlásiť";
 
-    return <button type="button" onClick={this.state.pressed ? null : this.handleClick} className={buttonClass}>{buttonText}</button>;
-  }
+    return <button type="button" onClick={pressed ? null : handleClick} className={buttonClass}>{buttonText}</button>;
 }
 
 
