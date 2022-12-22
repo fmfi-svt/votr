@@ -255,14 +255,13 @@ class WebuiStudiumMixin:
 
         return options
 
-    def create_zapisny_list(self, studium_key, akademicky_rok, rok_studia):
+    def create_zapisny_list(self, studium_key, akademicky_rok):
         '''Creates enrollment list.
 
         Args:
             studium_key: studium identifier
             akademicky_rok: Academic year of the time range in the form of
                 'start/end'. E.g. '2013/2014'. (optional)
-            rok_studia: year of the study
         '''
         app = self._open_administracia_studia()
 
@@ -270,9 +269,12 @@ class WebuiStudiumMixin:
 
         message = None
 
+        rok_studia = max(list(map(lambda a : a.id ,app.d.rocnikComboBox.options)))
+
         # V combo boxe vyberieme rok studia.
         if rok_studia is not None:
             app.d.rocnikComboBox.select(find_option(app.d.rocnikComboBox.options, id=str(rok_studia)))
+
 
         # Ak je nastaveny akademicky rok, vyberieme ho v combo boxe.
         if akademicky_rok is not None:

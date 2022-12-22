@@ -73,6 +73,7 @@ export function PridatZapisnyListButton (props) {
     var studium = props.studium;
     var cache = new CacheRequester();
     var zapisne_listy = cache.get('get_zapisne_listy', studium.studium_key);
+
     if (!cache.loadedAll) {
       return <Loading requests={cache.missing} />;
     }
@@ -86,10 +87,11 @@ export function PridatZapisnyListButton (props) {
             } else { //  ak studium prebieha a nemame este zapisny list na tento rok
                 return <button type="button" onClick={() => {
                     if (confirm(`Vytvoriť zápisný list pre akademický rok ${currentAcademicYear()}?`)) {
-                            sendRpc('create_zapisny_list', [studium.studium_key, currentAcademicYear(), null],(message) =>
+                            sendRpc('create_zapisny_list', [studium.studium_key, currentAcademicYear()],(message) =>
                                 {if (message !== null) {alert(message);}
-                                else {RequestCache.invalidate('get_zapisne_listy');}})}}}
-                        className='btn btn-xs btn-success'>Vytvoriť</button>
+                                else {RequestCache.invalidate('get_zapisne_listy');}})}
+                    }}
+                  className='btn btn-xs btn-success'>Vytvoriť</button>
             }
         } else { // ak studium uz skoncilo
             return null;
