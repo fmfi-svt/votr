@@ -1,47 +1,48 @@
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import _ from 'lodash';
 import { LocalSettings } from './LocalSettings';
 import { logs } from './ajax';
 
 
-export class LogViewerContent extends React.Component {
-  state = {
+export function LogViewerContent(props) {
+  var [hidden, setHidden] = useState({
     benchmark: true,
     http: true,
     table: true
+  });
+
+  var scrollRef = useRef(null);
+  var lastTimeRef = useRef(null);
+
+  function handleChange(e) {
+    var name = e.target.name;
+    var value = !e.target.checked;
+    setHidden(hidden => ({ ...hidden, [name]: value }));
   }
 
-  scrollRef = React.createRef()
-
-  handleChange = (e) => {
-    var update = {};
-    update[e.target.name] = !e.target.checked;
-    this.setState(update);
-  }
-
-  componentDidUpdate() {
-    var div = this.scrollRef.current;
+  useEffect(() => {
+    var div = scrollRef.current;
+    if (!logs.length) return;
     var time = _.last(logs).time;
-    if (time != this.lastTime) {
-      this.lastTime = time;
+    if (time != lastTimeRef.current) {
+      lastTimeRef.current = time;
       div.scrollTop = div.scrollHeight;
     }
-  }
+  });
 
-  render() {
     var types = _.countBy(logs, 'log');
 
     return <div className="log-viewer">
       <div className="options">
-        {this.props.closeButton}
-        {this.props.modeButton}
+        {props.closeButton}
+        {props.modeButton}
         <ul className="list-inline">
           {_.sortBy(_.keys(types)).map((type) =>
             <li key={type}>
               <label>
-                <input type="checkbox" name={type} checked={!this.state[type]}
-                       onChange={this.handleChange} />
+                <input type="checkbox" name={type} checked={!hidden[type]}
+                       onChange={handleChange} />
                 {" " + type + " (" + types[type] + ")"}
               </label>
             </li>
@@ -49,10 +50,10 @@ export class LogViewerContent extends React.Component {
         </ul>
       </div>
 
-      <div className="scroll" ref={this.scrollRef}>
+      <div className="scroll" ref={scrollRef}>
         <table>
           <tbody>
-            {logs.map((entry, index) => !this.state[entry.log] &&
+            {logs.map((entry, index) => !hidden[entry.log] &&
               <tr key={index}>
                 <td className="text-right">{(entry.time - logs[0].time).toFixed(3)}</td>
                 <td><code>{entry.log}</code></td>
@@ -63,7 +64,6 @@ export class LogViewerContent extends React.Component {
         </table>
       </div>
     </div>;
-  }
 }
 
 
@@ -130,26 +130,29 @@ export function LogViewerBenchmarkContent(props) {
 var explainedLogViewer = false;
 
 
-export class LogViewer extends React.Component {
-  toggle = () => {
+export function LogViewer() {
+  function toggle() {
     LocalSettings.set("logViewer",
       LocalSettings.get("logViewer") ? "" : "log");
   }
 
-  toggleMode = () => {
+  function toggleMode() {
     LocalSettings.set("logViewer",
       LocalSettings.get("logViewer") == "log" ? "benchmark" : "log");
   }
 
-  handleKeypress = (e) => {
-    if (e.altKey && (e.key == 'L' || e.key == 'l' || e.code == 'KeyL')) {   // Alt+L
-      this.toggle();
-      e.preventDefault();
+  useEffect(() => {
+    function handleKeypress(e) {
+      if (e.altKey && (e.key == 'L' || e.key == 'l' || e.code == 'KeyL')) {   // Alt+L
+        toggle();
+        e.preventDefault();
+      }
     }
-  }
+    window.addEventListener('keydown', handleKeypress);
+    return () => window.removeEventListener('keydown', handleKeypress);
+  }, []);
 
-  componentDidMount() {
-    window.addEventListener('keydown', this.handleKeypress);
+  useEffect(() => {
     if (!explainedLogViewer) {
       explainedLogViewer = true;
       console.log(
@@ -160,25 +163,19 @@ export class LogViewer extends React.Component {
           " (Najprv klikni do stránky, nech má focus.)",
       );
     }
-  }
+  }, []);
 
-  componentWillUnmount() {
-    window.removeEventListener('keydown', this.handleKeypress);
-  }
-
-  render() {
     var mode = LocalSettings.get("logViewer");
 
     if (mode != "log" && mode != "benchmark") return null;
 
-    var modeButton = <button type="button" className="pull-left" onClick={this.toggleMode}>{mode}</button>;
+    var modeButton = <button type="button" className="pull-left" onClick={toggleMode}>{mode}</button>;
 
-    var closeButton = <button type="button" className="close" onClick={this.toggle}>
+    var closeButton = <button type="button" className="close" onClick={toggle}>
       <span aria-hidden="true">&times;</span>
       <span className="sr-only">Close</span>
     </button>;
 
     var C = mode == "log" ? LogViewerContent : LogViewerBenchmarkContent;
     return <C modeButton={modeButton} closeButton={closeButton} />;
-  }
 }

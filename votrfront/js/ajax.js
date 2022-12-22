@@ -34,7 +34,7 @@ export function sendRpc(name, args, callback) {
         callback(result);
       }
     }
-    Votr.appRoot.forceUpdate();
+    Votr.updateRoot();
   }
 
   function fail(e) {
@@ -43,7 +43,7 @@ export function sendRpc(name, args, callback) {
     console.log("FAILED!", e);
     if (!Votr.ajaxError) {
       Votr.ajaxError = _.isString(e) ? e : "Network error";
-      Votr.appRoot.forceUpdate();
+      Votr.updateRoot();
     }
   }
 

@@ -212,45 +212,54 @@ export function FormItem(props) {
 }
 
 
-export class ModalBase extends React.Component {
-  static propTypes = {
-    component: PropTypes.func,
-    onClose: PropTypes.func.isRequired,
-  };
+export function ModalBase({ onClose, component }) {
+  var modalRef = useRef(null);
 
-  modalRef = React.createRef()
+  var open = Boolean(component);
 
-  componentDidMount() {
-    var $node = $(this.modalRef.current);
-    $node.modal();
-    $node.on('hide.bs.modal', (e) => {
-      if ($node.attr('data-show') == 'true') {
+  // This is so dumb.
+  // TODO: "useEffectEvent" might simplify this in a future React version.
+  var closeHandlerRef = useRef(null);
+  useEffect(() => {
+    closeHandlerRef.current = (e) => {
+      if (open) {
         e.preventDefault();
-        this.props.onClose();
+        onClose();
       }
-    });
-  }
+    };
+  }, [onClose, open]);
 
-  componentDidUpdate() {
-    var $node = $(this.modalRef.current);
-    $node.modal($node.attr('data-show') == 'true' ? 'show' : 'hide');
-  }
+  useEffect(() => {
+    var $node = $(modalRef.current);
+    $node.modal();
+    var handler = (e) => {
+      closeHandlerRef.current(e);
+    };
+    $node.on('hide.bs.modal', handler);
+    return () => { $node.off('hide.bs.modal', handler); };
+  }, []);
 
-  render() {
-    var C = this.props.component;
+  useEffect(() => {
+    var $node = $(modalRef.current);
+    $node.modal(open ? 'show' : 'hide');
+  }, [open]);
 
-    return <div data-show={Boolean(C)} className="modal fade" ref={this.modalRef}
-                tabIndex="-1" role="dialog" aria-hidden="true">
+  var C = component;
+
+  return (
+    <div className="modal fade" ref={modalRef}
+         tabIndex="-1" role="dialog" aria-hidden="true">
       <div className="modal-dialog modal-lg">
-        {C && (
-          <ErrorBoundary>
-            <C />
-          </ErrorBoundary>
-        )}
+        {open && <ErrorBoundary><C /></ErrorBoundary>}
       </div>
-    </div>;
-  }
+    </div>
+  );
 }
+
+ModalBase.propTypes = {
+  component: PropTypes.func,
+  onClose: PropTypes.func.isRequired,
+};
 
 
 export function Modal(props) {

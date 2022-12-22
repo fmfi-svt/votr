@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useContext } from 'react';
 import _ from 'lodash';
 import { AboutModal, IndexPage } from './About';
 import { DetailPredmetuModal } from './DetailPredmetu';
@@ -14,7 +14,7 @@ import { RegisterOsobPage } from './RegisterOsobPage';
 import { RegisterPredmetovPage } from './RegisterPredmetovPage';
 import { ZapisZPlanuPage, ZapisZPonukyPage } from './ZapisPage';
 import { ZoznamPrihlasenychNaTerminModal } from './ZoznamPrihlasenychNaTermin';
-import { ModalBase, PageLayout, ErrorBoundary } from './layout';
+import { ModalBase, PageLayout } from './layout';
 import { navigate, QueryContext } from './router';
 import { AnketaPopup } from './AnketaPopup';
 
@@ -50,10 +50,7 @@ export var modalActions = {
 
 
 export function App() {
-  return (
-    <ErrorBoundary>
-      <QueryContext.Consumer>
-        {query => {
+  var query = useContext(QueryContext);
         var action = query.action || 'index';
         var mainComponent = actions[action] || NotFoundPage;
         var modalComponent = Votr.ajaxError ? ErrorModal : modalActions[query.modal];
@@ -70,8 +67,4 @@ export function App() {
           <LogViewer />
           <AnketaPopup />
         </React.Fragment>;
-        }}
-      </QueryContext.Consumer>
-    </ErrorBoundary>
-  );
 }

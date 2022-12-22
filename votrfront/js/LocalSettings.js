@@ -6,6 +6,6 @@ export var LocalSettings = {
 
   set(key, value) {
     localStorage.setItem(Votr.settings.instance_name + "_" + key, value);
-    Votr.appRoot.forceUpdate();
+    Votr.updateRoot();
   }
 };

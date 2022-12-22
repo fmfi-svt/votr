@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import _ from 'lodash';
 import { goLogout, goReset, goResetHome } from './ajax';
 import { Modal, ModalBase } from './layout';
-import { AnalyticsMixin, FakeLink } from './router';
+import { FakeLink } from './router';
 
 
 export function ErrorModal() {
@@ -11,7 +11,7 @@ export function ErrorModal() {
 
   function handleIgnore() {
     Votr.ajaxError = null;
-    Votr.appRoot.forceUpdate();
+    Votr.updateRoot();
   }
 
   function handleDetails() {

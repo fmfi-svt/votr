@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client';
 import { ErrorPage } from './ErrorPage';
 import { LoginPage } from './LoginPage';
 import { App } from './actions';
+import { ErrorBoundary } from './layout';
 import { Root } from './router';
 
 import '../css/main.scss';
@@ -43,11 +44,17 @@ if (query !== undefined && (query == '' || query.substring(0, 1) == '?')) {
   }
 }
 
-var app =
-    Votr.settings.servers ? LoginPage :
-    Votr.settings.error ? ErrorPage :
-    App;
-var root = <Root app={app} />;
+var root = (
+  <React.StrictMode>
+    <ErrorBoundary>
+      <Root
+        app={Votr.settings.servers ? LoginPage :
+          Votr.settings.error ? ErrorPage :
+          App}
+      />
+    </ErrorBoundary>
+  </React.StrictMode>
+);
 
 createRoot(document.getElementById('votr')).render(root);
 

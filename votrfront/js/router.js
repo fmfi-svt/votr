@@ -1,6 +1,6 @@
 
 import PropTypes from 'prop-types';
-import React from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import _ from 'lodash';
 import $ from 'jquery';
 
@@ -34,36 +34,37 @@ function parseQueryString(queryString) {
 export var QueryContext = React.createContext();
 
 
-export class Root extends React.Component {
-  handlePopState = () => {
-    Votr.appRoot.forceUpdate();
-  }
+export function Root({ app }) {
+  var [, setState] = useState({});
 
-  componentDidMount() {
-    Votr.appRoot = this;
-    window.addEventListener('popstate', this.handlePopState, false);
-    trackPageView();
-  }
+  useEffect(() => {
+    Votr.updateRoot = () => {
+      // Don't use `setState(state => !state)` as a forceUpdate alternative!
+      // It won't update if called twice before React schedules a rerender,
+      // because state wraps back to the old value. Especially twice in one
+      // tick, but the scheduler can be random. (Maybe only with StrictMode
+      // in the development build.)
+      setState({});
+    };
 
-  componentDidUpdate() {
-    trackPageView();
-  }
-
-  render() {
-    var queryString = location.search.substring(1);
-    if (queryString !== this.lastQueryString) {
-      this.query = parseQueryString(queryString);
-      this.lastQueryString = queryString;
+    function handlePopState() {
+      Votr.updateRoot();
     }
 
-    return (
-      <React.StrictMode>
-        <QueryContext.Provider value={this.query}>
-          <this.props.app />
-        </QueryContext.Provider>
-      </React.StrictMode>
-    );
-  }
+    window.addEventListener('popstate', handlePopState, false);
+    return () => window.removeEventListener('popstate', handlePopState, false);
+  }, []);
+
+  useEffect(() => {
+    trackPageView();
+  });
+
+  var queryString = location.search.substring(1);
+
+  var query = useMemo(() => parseQueryString(queryString), [queryString]);
+
+  var C = app;
+  return <QueryContext.Provider value={query}><C /></QueryContext.Provider>;
 }
 
 
@@ -76,7 +77,7 @@ export function buildUrl(href) {
 export function navigate(href) {
   Votr.didNavigate = true;
   history.pushState(null, '', Votr.settings.url_root + buildUrl(href));
-  Votr.appRoot.forceUpdate();
+  Votr.updateRoot();
 };
 
 
