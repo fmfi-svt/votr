@@ -89,7 +89,7 @@ export class LoginForm extends React.Component {
         <input type="hidden" name="type" value={currentType} />
       }
 
-      {(currentType == 'cosignpassword' || currentType == 'plainpassword') &&
+      {(currentType == 'cosignpassword' || currentType == 'plainpassword' || currentType == 'samlpassword') &&
         <React.Fragment>
           <p>
             <label>

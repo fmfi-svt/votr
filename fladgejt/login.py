@@ -63,6 +63,22 @@ def get_cosign_cookies(server, params, logger):
             if key in server:
                 result[server[key]] = session.cookies[server[key]]
 
+    # - namiesto <hodnota> ma byt konkretne jsessionid, ako ho dostanem? Zda sa, ze to nie je
+    # to iste ako na ais2-beta.uniba.sk;
+    # - takto sa to sprava pri prvom pokuse, ale pri druhom, tretom atd. je to trochu ine, ako to riesit?
+    if params['type'] == 'samlpassword':
+        url = 'idp.uniba.sk/idp/profile/SAML2/Redirect/SSO;jsessionid="<hodnota>"?execution=e1s1'
+
+        session, send_request = get_login_session(logger)
+        send_request('POST', url)
+
+        form_submit_url = 'ais2-beta.uniba.sk/ais/login.do'
+        send_request('POST', form_submit_url, data=dict(
+            login=params['username'], password=params['password'], ref=url))
+
+        if 'ais_cookie' in server:
+            result[server['ais_cookie']] = session.cookies[server['ais_cookie']]
+
     if params['type'] == 'cosignproxy':
         # http://webapps.itcs.umich.edu/cosign/index.php/Using_Proxy_Cookies
         name, value = params['cosign_service']
