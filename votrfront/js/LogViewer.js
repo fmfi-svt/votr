@@ -127,6 +127,9 @@ export function LogViewerBenchmarkContent(props) {
 }
 
 
+var explainedLogViewer = false;
+
+
 export class LogViewer extends React.Component {
   toggle = () => {
     LocalSettings.set("logViewer",
@@ -147,6 +150,16 @@ export class LogViewer extends React.Component {
 
   componentDidMount() {
     window.addEventListener('keydown', this.handleKeypress);
+    if (!explainedLogViewer) {
+      explainedLogViewer = true;
+      console.log(
+          "%c%s%c%s",
+          "font-size: 1.4em; font-weight: bold; color: #B3231B;",
+          "Stlač Alt+L a uvidíš interné podrobnosti o tom, čo Votr robí.",
+          "font-size: 1.4em;",
+          " (Najprv klikni do stránky, nech má focus.)",
+      );
+    }
   }
 
   componentWillUnmount() {
