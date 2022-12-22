@@ -178,7 +178,7 @@ export function PrehladStudiaZapisneListy() {
 }
 
 
-export function PrehladStudiaPage() {
+export function makePrehladStudiaPage() {
   return (
     <PageLayout>
       <div className="header">

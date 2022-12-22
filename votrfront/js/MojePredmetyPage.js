@@ -108,7 +108,7 @@ export function MojePredmetyPageContent() {
 }
 
 
-export function MojePredmetyPage() {
+export function makeMojePredmetyPage() {
   return (
     <PageLayout>
       <ZapisnyListSelector>

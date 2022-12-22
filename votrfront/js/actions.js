@@ -1,25 +1,25 @@
 
 import React, { useContext } from 'react';
 import _ from 'lodash';
-import { AboutModal, IndexPage } from './About';
+import { AboutModal, makeIndexPage } from './About';
 import { DetailPredmetuModal } from './DetailPredmetu';
 import { ErrorModal } from './ErrorPage';
 import { LogViewer } from './LogViewer';
-import { MojeHodnoteniaPage } from './MojeHodnoteniaPage';
-import { PriebezneHodnoteniaPage } from './PriebezneHodnoteniaPage';
-import { MojePredmetyPage } from './MojePredmetyPage';
-import { MojeSkuskyPage } from './MojeSkuskyPage';
-import { PrehladStudiaPage } from './PrehladStudiaPage';
-import { RegisterOsobPage } from './RegisterOsobPage';
-import { RegisterPredmetovPage } from './RegisterPredmetovPage';
-import { ZapisZPlanuPage, ZapisZPonukyPage } from './ZapisPage';
+import { makeMojeHodnoteniaPage } from './MojeHodnoteniaPage';
+import { makePriebezneHodnoteniaPage } from './PriebezneHodnoteniaPage';
+import { makeMojePredmetyPage } from './MojePredmetyPage';
+import { makeMojeSkuskyPage } from './MojeSkuskyPage';
+import { makePrehladStudiaPage } from './PrehladStudiaPage';
+import { makeRegisterOsobPage } from './RegisterOsobPage';
+import { makeRegisterPredmetovPage } from './RegisterPredmetovPage';
+import { makeZapisZPlanuPage, makeZapisZPonukyPage } from './ZapisPage';
 import { ZoznamPrihlasenychNaTerminModal } from './ZoznamPrihlasenychNaTermin';
 import { ModalBase, PageLayout } from './layout';
 import { navigate, QueryContext } from './router';
 import { AnketaPopup } from './AnketaPopup';
 
 
-export function NotFoundPage() {
+export function makeNotFoundPage() {
   return (
     <PageLayout>
       <p>Action not found!</p>
@@ -29,16 +29,16 @@ export function NotFoundPage() {
 
 
 export var actions = {
-  index: IndexPage,
-  priebezneHodnotenia: PriebezneHodnoteniaPage,
-  mojeHodnotenia: MojeHodnoteniaPage,
-  mojePredmety: MojePredmetyPage,
-  mojeSkusky: MojeSkuskyPage,
-  prehladStudia: PrehladStudiaPage,
-  registerOsob: RegisterOsobPage,
-  registerPredmetov: RegisterPredmetovPage,
-  zapisZPlanu: ZapisZPlanuPage,
-  zapisZPonuky: ZapisZPonukyPage
+  index: makeIndexPage,
+  priebezneHodnotenia: makePriebezneHodnoteniaPage,
+  mojeHodnotenia: makeMojeHodnoteniaPage,
+  mojePredmety: makeMojePredmetyPage,
+  mojeSkusky: makeMojeSkuskyPage,
+  prehladStudia: makePrehladStudiaPage,
+  registerOsob: makeRegisterOsobPage,
+  registerPredmetov: makeRegisterPredmetovPage,
+  zapisZPlanu: makeZapisZPlanuPage,
+  zapisZPonuky: makeZapisZPonukyPage
 };
 
 
@@ -52,7 +52,7 @@ export var modalActions = {
 export function App() {
   var query = useContext(QueryContext);
         var action = query.action || 'index';
-        var mainComponent = actions[action] || NotFoundPage;
+        var maker = actions[action] || makeNotFoundPage;
         var modalComponent = Votr.ajaxError ? ErrorModal : modalActions[query.modal];
 
         function handleClose() {
@@ -60,9 +60,8 @@ export function App() {
           navigate(_.omitBy(query, (value, key) => key.substring(0, 5) == 'modal'));
         }
 
-        var C = mainComponent;
         return <React.Fragment>
-          <C />
+          {maker()}
           <ModalBase component={modalComponent} onClose={handleClose} />
           <LogViewer />
           <AnketaPopup />

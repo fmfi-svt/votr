@@ -58,7 +58,7 @@ export function AboutModal() {
 export function IndexPage() {
   // TODO: Use PageTitle, but show different h1.
   return (
-    <PageLayout>
+    <React.Fragment>
       <h1>Vitajte</h1>
       <p>
         Votr je alternatívne rozhranie pre systém AIS2. Cez menu sa dostanete
@@ -98,6 +98,14 @@ export function IndexPage() {
           informácie o ich učiteľoch a zoznamy zapísaných študentov
         </p></li>
       </ul>
+    </React.Fragment>
+  );
+}
+
+export function makeIndexPage() {
+  return (
+    <PageLayout>
+      <IndexPage />
     </PageLayout>
   );
 }

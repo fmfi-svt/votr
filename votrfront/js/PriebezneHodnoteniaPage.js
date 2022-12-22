@@ -58,7 +58,7 @@ export function PriebezneHodnoteniaPageContent() {
 }
 
 
-export function PriebezneHodnoteniaPage() {
+export function makePriebezneHodnoteniaPage() {
   return (
     <PageLayout>
       <ZapisnyListSelector>

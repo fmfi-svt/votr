@@ -151,7 +151,7 @@ export function MojeHodnoteniaPriemeryTable() {
 }
 
 
-export function MojeHodnoteniaPage() {
+export function makeMojeHodnoteniaPage() {
   return (
     <PageLayout>
       <StudiumSelector>

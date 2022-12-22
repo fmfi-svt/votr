@@ -356,7 +356,7 @@ export function SkuskyRegisterButton({ termin }) {
 }
 
 
-export function MojeSkuskyPage() {
+export function makeMojeSkuskyPage() {
   return (
     <PageLayout>
       <ZapisnyListSelector>

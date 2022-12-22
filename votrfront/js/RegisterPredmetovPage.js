@@ -152,7 +152,7 @@ export function RegisterPredmetovResultTable(props) {
 }
 
 
-export function RegisterPredmetovPage() {
+export function makeRegisterPredmetovPage() {
   return (
     <PageLayout>
       <div className="header">

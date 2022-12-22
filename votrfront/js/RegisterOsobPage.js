@@ -200,7 +200,7 @@ export function RegisterOsobResultTable(props) {
 }
 
 
-export function RegisterOsobPage() {
+export function makeRegisterOsobPage() {
   return (
     <PageLayout>
       <div className="header">

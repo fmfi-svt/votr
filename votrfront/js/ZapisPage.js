@@ -490,7 +490,7 @@ export function ZapisZPlanuPageContent() {
 }
 
 
-export function ZapisZPlanuPage() {
+export function makeZapisZPlanuPage() {
   return (
     <PageLayout>
       <ZapisnyListSelector>
@@ -638,7 +638,7 @@ export function ZapisZPonukyPageContent() {
 }
 
 
-export function ZapisZPonukyPage() {
+export function makeZapisZPonukyPage() {
   return (
     <PageLayout>
       <ZapisnyListSelector>
