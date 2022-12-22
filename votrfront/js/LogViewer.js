@@ -139,7 +139,7 @@ export class LogViewer extends React.Component {
   }
 
   handleKeypress = (e) => {
-    if (e.ctrlKey && e.altKey && e.shiftKey && (e.key == 'L' || e.key == 'l')) {   // Ctrl+Alt+Shift+L
+    if (e.altKey && (e.key == 'L' || e.key == 'l' || e.code == 'KeyL')) {   // Alt+L
       this.toggle();
       e.preventDefault();
     }
