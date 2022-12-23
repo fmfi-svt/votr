@@ -21,6 +21,7 @@
     "lodash": "^4.17.21",
     "mini-css-extract-plugin": "^2.6.1",
     "moment": "^2.29.4",
+    "prettier": "2.8.1",
     "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-big-calendar": "^1.5.0",
@@ -39,6 +40,10 @@
     "distclean": "rm -rf votrfront/static node_modules"
   },
   "browserslist": "defaults, not dead",
+  "prettier": {
+    "proseWrap": "always",
+    "quoteProps": "preserve"
+  },
   "babel": {
     "presets": [
       [

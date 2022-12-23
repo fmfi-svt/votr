@@ -1,0 +1,6 @@
+build
+static
+dist
+/*env
+var
+_build
