@@ -4,11 +4,14 @@ Votr.setDebug = function (enabled) {
 };
 
 if (
-  !history.pushState ||
-  !window.Set ||
-  !window.Map ||
-  !Array.prototype.includes
+  history.pushState &&
+  window.Set &&
+  window.Map &&
+  Array.prototype.includes &&
+  Object.values
 ) {
+  Votr.prologueCheck = true;
+} else {
   document.getElementById("votr").innerHTML = `
     <div class="central-box">
     <h1>Votr</h1>

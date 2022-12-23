@@ -70,7 +70,7 @@ function CleanMapFilesPlugin() {
     compiler.hooks.afterEmit.tapAsync(
       "CleanMapFilesPlugin",
       function (compilation, callback) {
-        fs.readdirSync(outputPath).forEach((file) => {
+        for (const file of fs.readdirSync(outputPath)) {
           if (
             file.match(/\.map$/) &&
             !compilation.assets[file] &&
@@ -78,7 +78,7 @@ function CleanMapFilesPlugin() {
           ) {
             fs.unlinkSync(outputPath + "/" + file);
           }
-        });
+        }
         callback();
       }
     );

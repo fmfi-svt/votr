@@ -13,7 +13,7 @@ function getItems(cache) {
   var buttonNovyZapisnyList = false;
 
   if (studia) {
-    studia.forEach((studium) => {
+    for (const studium of studia) {
       var zapisneListy = cache.get("get_zapisne_listy", studium.studium_key);
       if (zapisneListy) items.push(...zapisneListy);
 
@@ -26,7 +26,7 @@ function getItems(cache) {
       if (studium.koniec === "" && aktualny === 0) {
         buttonNovyZapisnyList = true;
       }
-    });
+    }
   }
 
   return [

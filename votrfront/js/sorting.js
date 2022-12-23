@@ -159,7 +159,7 @@ export function SortableTable(props) {
 
   const rows = [];
 
-  sortedItems.forEach((item) => {
+  for (const item of sortedItems) {
     rows.push(
       <tr
         key={item.originalIndex}
@@ -237,7 +237,7 @@ export function SortableTable(props) {
         </tr>
       );
     }
-  });
+  }
 
   return (
     <div>

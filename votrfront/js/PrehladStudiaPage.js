@@ -192,14 +192,10 @@ export function PrehladStudiaZapisneListy() {
 
   var zapisneListy = [];
 
-  studia.forEach((studium) => {
+  for (const studium of studia) {
     var mojeZapisneListy = cache.get("get_zapisne_listy", studium.studium_key);
-    if (mojeZapisneListy) {
-      mojeZapisneListy.forEach((zapisnyList) => {
-        zapisneListy.push(zapisnyList);
-      });
-    }
-  });
+    if (mojeZapisneListy) zapisneListy.push(...mojeZapisneListy);
+  }
 
   var [zapisneListy, header] = sortTable(
     zapisneListy,

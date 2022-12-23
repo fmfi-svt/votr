@@ -93,7 +93,7 @@ function computeBenchmarks() {
     delete beginnings[what];
   }
 
-  logs.forEach((entry) => {
+  for (const entry of logs) {
     if (entry.log == "benchmark" && entry.message.substr(0, 6) == "Begin ") {
       start(entry.message.substr(6), entry.time);
     }
@@ -106,7 +106,7 @@ function computeBenchmarks() {
     if (entry.log == "rpc" && entry.message.substr(-9) == " finished") {
       end("total RPC time", entry.time);
     }
-  });
+  }
 
   return _.sortBy(_.toPairs(sums), 1).reverse();
 }

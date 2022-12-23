@@ -9,14 +9,7 @@ import { Root } from "./router";
 import "../css/main.scss";
 
 (function () {
-  if (
-    !history.pushState ||
-    !window.Set ||
-    !window.Map ||
-    !Array.prototype.includes
-  ) {
-    return; // see prologue.js
-  }
+  if (!Votr.prologueCheck) return; // see prologue.js
 
   window.addEventListener(
     "error",

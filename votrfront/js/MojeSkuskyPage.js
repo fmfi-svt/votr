@@ -309,8 +309,8 @@ export function MojeSkuskyPageContent() {
   }
 
   var terminy = {};
-  terminyVypisane.forEach((termin) => (terminy[termin.termin_key] = termin));
-  terminyPrihlasene.forEach((termin) => (terminy[termin.termin_key] = termin));
+  for (const termin of terminyVypisane) terminy[termin.termin_key] = termin;
+  for (const termin of terminyPrihlasene) terminy[termin.termin_key] = termin;
   terminy = _.values(terminy);
 
   var message = terminy.length

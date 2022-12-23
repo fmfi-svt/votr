@@ -107,9 +107,7 @@ CacheRequester.prototype.get = function (...request) {
 export function Loading({ requests }) {
   useEffect(() => {
     if (requests) {
-      requests.forEach((request) => {
-        RequestCache.sendRequest(request);
-      });
+      for (const request of requests) RequestCache.sendRequest(request);
     }
   });
 

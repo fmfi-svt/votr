@@ -158,19 +158,19 @@ export function ZapisTableFooter(props) {
   var bloky = {},
     nazvy = {},
     semestre = {};
-  _.forEach(props.predmety, (predmet) => {
+  for (const predmet of Object.values(props.predmety)) {
     semestre[predmet.semester] = true;
     nazvy[predmet.blok_skratka] = predmet.blok_nazov;
-  });
+  }
 
-  _.forEach(_.sortBy(_.keys(nazvy)), (skratka) => (bloky[skratka] = []));
+  for (const skratka of _.sortBy(_.keys(nazvy))) bloky[skratka] = [];
   bloky[""] = [];
 
-  _.forEach(props.predmety, (predmet) => {
-    if (!props.moje[predmet.predmet_key]) return;
+  for (const predmet of Object.values(props.predmety)) {
+    if (!props.moje[predmet.predmet_key]) continue;
     if (predmet.blok_skratka) bloky[predmet.blok_skratka].push(predmet);
     bloky[""].push(predmet);
-  });
+  }
 
   var jedinySemester = _.keys(semestre).length <= 1;
 
@@ -291,20 +291,20 @@ export function ZapisTable(props) {
       setSaving(false);
 
       if (odobral) {
-        odoberanePredmety.forEach((predmet) => {
+        for (const predmet of odoberanePredmety) {
           RequestCache[
             "pocet_prihlasenych_je_stary" + predmet.predmet_key
           ] = true;
-        });
+        }
         setChanges((changes) => _.pickBy(changes, (value) => value === true));
       }
 
       if (pridal) {
-        pridavanePredmety.forEach((predmet) => {
+        for (const predmet of pridavanePredmety) {
           RequestCache[
             "pocet_prihlasenych_je_stary" + predmet.predmet_key
           ] = true;
-        });
+        }
         setChanges((changes) => _.pickBy(changes, (value) => value === false));
       }
 
@@ -499,14 +499,14 @@ export function ZapisZPlanuPageContent() {
     var vidnoZimne = false;
 
     predmety = {};
-    ponukanePredmety.forEach((predmet) => {
+    for (const predmet of ponukanePredmety) {
       predmety[predmet.predmet_key] = { moje: false, ...predmet };
       if (predmet.semester == "Z") vidnoZimne = true;
-    });
-    zapisanePredmety.forEach((predmet) => {
+    }
+    for (const predmet of zapisanePredmety) {
       var predmet_key = predmet.predmet_key;
       if (!predmety[predmet_key]) {
-        if (predmet.semester == "Z" && !vidnoZimne) return;
+        if (predmet.semester == "Z" && !vidnoZimne) continue;
         predmety[predmet_key] = { moje: true, ...predmet };
       } else {
         for (var property in predmet) {
@@ -516,7 +516,7 @@ export function ZapisZPlanuPageContent() {
         }
         predmety[predmet_key].moje = true;
       }
-    });
+    }
 
     if (_.isEmpty(predmety)) {
       tableMessage = "Zoznam ponúkaných predmetov je prázdny.";
@@ -699,14 +699,14 @@ export function ZapisZPonukyPageContent() {
       outerMessage = <Loading requests={cache.missing} />;
     } else {
       var predmety = {};
-      ponukanePredmety.forEach((predmet) => {
+      for (const predmet of ponukanePredmety) {
         predmety[predmet.predmet_key] = { moje: false, ...predmet };
-      });
-      zapisanePredmety.forEach((predmet) => {
+      }
+      for (const predmet of zapisanePredmety) {
         if (predmety[predmet.predmet_key]) {
           predmety[predmet.predmet_key].moje = true;
         }
-      });
+      }
 
       tableMessage = ponukaneMessage;
       if (_.isEmpty(predmety) && !tableMessage) {
