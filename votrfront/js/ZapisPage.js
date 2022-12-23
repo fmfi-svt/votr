@@ -160,7 +160,7 @@ export function ZapisTableFooter(props) {
     semestre = {};
   for (const predmet of Object.values(props.predmety)) {
     semestre[predmet.semester] = true;
-    nazvy[predmet.blok_skratka] = predmet.blok_nazov;
+    if (predmet.blok_skratka) nazvy[predmet.blok_skratka] = predmet.blok_nazov;
   }
 
   for (const skratka of _.sortBy(_.keys(nazvy))) bloky[skratka] = [];
