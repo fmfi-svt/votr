@@ -159,7 +159,7 @@ export function ZapisTableFooter(props) {
     nazvy = {},
     semestre = {};
   _.forEach(props.predmety, (predmet) => {
-    semestre[predmet.semestre] = true;
+    semestre[predmet.semester] = true;
     nazvy[predmet.blok_skratka] = predmet.blok_nazov;
   });
 
