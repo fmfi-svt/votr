@@ -12,28 +12,25 @@ function importerWhichRewritesBootstrapNormalizeScss(url, prev, done) {
     return;
   }
 
-  fs.readFile(
-    bootstrapPath + "/bootstrap/_normalize.scss",
-    "utf8",
-    (err, data) => {
-      if (err) return done(err);
+  var originalPath = bootstrapPath + "/bootstrap/_normalize.scss";
+  fs.readFile(originalPath, "utf8", (err, data) => {
+    if (err) return done(err);
 
-      function remove(what) {
-        if (!data.includes(what)) throw Error(`"${what}" not found`);
-        data = data.replace(what, "");
-      }
-
-      // Don't use pointer cursor on buttons.
-      // http://lists.w3.org/Archives/Public/public-css-testsuite/2010Jul/0024.html
-      remove("cursor: pointer; // 3");
-
-      // Don't inherit color and font on inputs and selects.
-      remove("color: inherit; // 1");
-      remove("font: inherit; // 2");
-
-      done({ contents: data });
+    function remove(what) {
+      if (!data.includes(what)) throw Error(`"${what}" not found`);
+      data = data.replace(what, "");
     }
-  );
+
+    // Don't use pointer cursor on buttons.
+    // http://lists.w3.org/Archives/Public/public-css-testsuite/2010Jul/0024.html
+    remove("cursor: pointer; // 3");
+
+    // Don't inherit color and font on inputs and selects.
+    remove("color: inherit; // 1");
+    remove("font: inherit; // 2");
+
+    done({ contents: data });
+  });
 }
 
 const outputPath = __dirname + "/votrfront/static";

@@ -83,65 +83,51 @@ export function PrehladStudiaObdobia() {
 }
 
 export function PridatZapisnyListButton(props) {
+  var rok = currentAcademicYear();
   var studium = props.studium;
-  var cache = new CacheRequester();
-  var zapisne_listy = cache.get("get_zapisne_listy", studium.studium_key);
-  if (!cache.loadedAll) {
-    return <Loading requests={cache.missing} />;
-  }
-  var aktualny_zapisny_list = 0;
-  if (zapisne_listy !== null) {
-    aktualny_zapisny_list = zapisne_listy.filter(
-      (zl) => zl.akademicky_rok === currentAcademicYear()
-    ).length;
-  }
-  if (studium.koniec === "") {
-    // ak este neskoncilo studium
-    if (aktualny_zapisny_list !== 0) {
-      // ak uz mame zapisny list na tento rok
-      return (
-        <button
-          type="button"
-          className="btn btn-xs btn-success"
-          disabled={true}
-        >
-          Vytvoriť
-        </button>
-      );
-    } else {
-      //  ak studium prebieha a nemame este zapisny list na tento rok
-      return (
-        <button
-          type="button"
-          onClick={() => {
-            if (
-              confirm(
-                `Vytvoriť zápisný list pre akademický rok ${currentAcademicYear()}?`
-              )
-            ) {
-              sendRpc(
-                "create_zapisny_list",
-                [studium.studium_key, currentAcademicYear(), null],
-                (message) => {
-                  if (message !== null) {
-                    alert(message);
-                  } else {
-                    RequestCache.invalidate("get_zapisne_listy");
-                  }
-                }
-              );
-            }
-          }}
-          className="btn btn-xs btn-success"
-        >
-          Vytvoriť
-        </button>
-      );
-    }
-  } else {
-    // ak studium uz skoncilo
+
+  if (studium.koniec !== "") {
+    // Ak studium uz skoncilo, neukazeme nic.
     return null;
   }
+
+  var cache = new CacheRequester();
+
+  var zapisneListy = cache.get("get_zapisne_listy", studium.studium_key);
+
+  if (!zapisneListy) {
+    return <Loading requests={cache.missing} />;
+  }
+
+  // Ak uz mame zapisny list na tento rok, ukazeme disabled button.
+  var uzExistuje = zapisneListy.some((zl) => zl.akademicky_rok === rok);
+
+  function handleClick() {
+    if (confirm(`Vytvoriť zápisný list pre akademický rok ${rok}?`)) {
+      sendRpc(
+        "create_zapisny_list",
+        [studium.studium_key, rok, null],
+        (message) => {
+          if (message !== null) {
+            alert(message);
+          } else {
+            RequestCache.invalidate("get_zapisne_listy");
+          }
+        }
+      );
+    }
+  }
+
+  return (
+    <button
+      type="button"
+      className="btn btn-xs btn-success"
+      disabled={uzExistuje}
+      onClick={uzExistuje ? null : handleClick}
+    >
+      Vytvoriť
+    </button>
+  );
 }
 
 export function PrehladStudiaStudia() {
@@ -206,17 +192,14 @@ export function PrehladStudiaZapisneListy() {
 
   var zapisneListy = [];
 
-  if (studia)
-    studia.forEach((studium) => {
-      var mojeZapisneListy = cache.get(
-        "get_zapisne_listy",
-        studium.studium_key
-      );
-      if (mojeZapisneListy)
-        mojeZapisneListy.forEach((zapisnyList) => {
-          zapisneListy.push(zapisnyList);
-        });
-    });
+  studia.forEach((studium) => {
+    var mojeZapisneListy = cache.get("get_zapisne_listy", studium.studium_key);
+    if (mojeZapisneListy) {
+      mojeZapisneListy.forEach((zapisnyList) => {
+        zapisneListy.push(zapisnyList);
+      });
+    }
+  });
 
   var [zapisneListy, header] = sortTable(
     zapisneListy,

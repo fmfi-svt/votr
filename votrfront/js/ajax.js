@@ -106,10 +106,11 @@ CacheRequester.prototype.get = function (...request) {
 
 export function Loading({ requests }) {
   useEffect(() => {
-    if (requests)
+    if (requests) {
       requests.forEach((request) => {
         RequestCache.sendRequest(request);
       });
+    }
   });
 
   return <span className="loading">Načítavam...</span>;

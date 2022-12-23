@@ -56,9 +56,8 @@ export var MojePredmetyColumns = [
     label: "Hodnotenie",
     prop: "hodn_znamka",
     cell: (hodnotenie) =>
-      `${hodnotenie.hodn_znamka ? hodnotenie.hodn_znamka : ""}${
-        hodnotenie.hodn_znamka ? " - " : ""
-      }${hodnotenie.hodn_znamka_popis}`,
+      (hodnotenie.hodn_znamka ? hodnotenie.hodn_znamka + " - " : "") +
+      hodnotenie.hodn_znamka_popis,
   },
   {
     label: "Dátum hodnotenia",

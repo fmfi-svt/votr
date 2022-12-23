@@ -51,9 +51,7 @@ export function sortTable(items, columns, query, queryKey, fullTable) {
   items = items.map((item, index) => ({ ...item, originalIndex: index }));
   var orderString = query[queryKey] || columns.defaultOrder;
   var order = orderString ? orderString.split(/(?=[ad])/) : [];
-  var directions = order.map((o) =>
-    o.substring(0, 1) == "a" ? "asc" : "desc"
-  );
+  var directions = order.map((o) => (o.charAt(0) == "a" ? "asc" : "desc"));
   var iteratees = order.map((o) => {
     var { label, prop, process, preferDesc } = columns[o.substring(1)];
     return (item) => (process || _.identity)(prop ? item[prop] : item);
@@ -66,15 +64,11 @@ export function sortTable(items, columns, query, queryKey, fullTable) {
     var { label, prop, process, preferDesc } = columns[index];
 
     var newOrder = _.without(order, "a" + index, "d" + index);
-    newOrder.unshift(
-      (order[0] == "a" + index
-        ? "d"
-        : order[0] == "d" + index
-        ? "a"
-        : preferDesc
-        ? "d"
-        : "a") + index
-    );
+    // prettier-ignore
+    newOrder.unshift((
+      order[0] == "a" + index ? "d" :
+      order[0] == "d" + index ? "a" :
+      preferDesc ? "d" : "a") + index);
 
     navigate({ ...query, [queryKey]: newOrder.join("") });
   }

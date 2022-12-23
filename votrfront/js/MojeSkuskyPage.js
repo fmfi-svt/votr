@@ -75,10 +75,10 @@ const MojeSkuskyColumns = [
           modalTerminKey: termin.termin_key,
         }}
       >
-        {termin.pocet_prihlasenych +
-          (termin.maximalne_prihlasenych
-            ? "/" + termin.maximalne_prihlasenych
-            : "")}
+        {termin.pocet_prihlasenych}
+        {termin.maximalne_prihlasenych
+          ? "/" + termin.maximalne_prihlasenych
+          : null}
       </Link>
     ),
   },
@@ -173,16 +173,12 @@ function convertToICAL(terminy) {
     }
 
     // DESCRIPTION
-    //@TODO ake vsetky informacie chceme zobrazovat v popise eventu? (zatial su take, ako vo FAJR)
-    var desc =
-      "Prihlasovanie: " +
-      termin.prihlasovanie +
-      "\n" +
-      "Odhlasovanie: " +
-      termin.odhlasovanie +
-      "\n" +
-      "Poznámka: " +
-      termin.poznamka;
+    // TODO ake vsetky informacie chceme zobrazovat v popise eventu? (zatial su take, ako vo FAJR)
+    var desc = [
+      "Prihlasovanie: " + termin.prihlasovanie,
+      "Odhlasovanie: " + termin.odhlasovanie,
+      "Poznámka: " + termin.poznamka,
+    ].join("\n");
     lines.push("DESCRIPTION:" + desc);
 
     lines.push("END:VEVENT");
@@ -230,18 +226,13 @@ export function MojeSkuskyMenu() {
 
 function convertToEvents(terminy) {
   return terminy.map((termin, i) => {
+    var miestnostStr = termin.miestnost ? ", " + termin.miestnost : "";
+    var cas = termin.datum + " " + termin.cas;
     return {
       id: i,
-      title: `${termin.nazov_predmetu} (${termin.cas}${
-        termin.miestnost ? ", " + termin.miestnost : ""
-      })`,
-      start: moment(
-        termin.datum + " " + termin.cas,
-        "DD.MM.YYYY HH:mm"
-      ).toDate(),
-      end: moment(termin.datum + " " + termin.cas, "DD.MM.YYYY HH:mm")
-        .add(3, "hours")
-        .toDate(),
+      title: `${termin.nazov_predmetu} (${termin.cas}${miestnostStr})`,
+      start: moment(cas, "DD.MM.YYYY HH:mm").toDate(),
+      end: moment(cas, "DD.MM.YYYY HH:mm").add(3, "hours").toDate(),
       prihlaseny: termin.datum_prihlasenia && !termin.datum_odhlasenia,
     };
   });
@@ -282,14 +273,12 @@ export function KalendarUdalosti(props) {
         event: "Skúška",
       }}
       culture={"sk"}
-      eventPropGetter={(event) => {
-        return {
-          className: event.prihlaseny
-            ? "skusky-calendar-registered"
-            : "skusky-calendar-unregistered",
-        };
-      }}
-      //remove start and end times (we need only one included in title)
+      eventPropGetter={(event) => ({
+        className: event.prihlaseny
+          ? "skusky-calendar-registered"
+          : "skusky-calendar-unregistered",
+      })}
+      // remove start and end times (we need only one included in title)
       formats={{
         eventTimeRangeFormat: ({ start, end }, culture, local) => {},
       }}

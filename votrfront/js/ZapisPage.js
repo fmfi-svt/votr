@@ -196,20 +196,12 @@ export function ZapisTableFooter(props) {
                 {stats.spolu.count}{" "}
                 {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
                 {!jedinySemester &&
-                  " (" +
-                    stats.zima.count +
-                    " v zime, " +
-                    stats.leto.count +
-                    " v lete)"}
+                  ` (${stats.zima.count} v zime, ${stats.leto.count} v lete)`}
               </td>
               <td>
                 {stats.spolu.creditsEnrolled}
                 {!jedinySemester &&
-                  " (" +
-                    stats.zima.creditsEnrolled +
-                    "+" +
-                    stats.leto.creditsEnrolled +
-                    ")"}
+                  ` (${stats.zima.creditsEnrolled}+${stats.leto.creditsEnrolled})`}
               </td>
               <td colSpan="3"></td>
             </tr>
@@ -226,37 +218,24 @@ export function ZapisTableFooter(props) {
                 {stats.spolu.count}{" "}
                 {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
                 {!jedinySemester &&
-                  " (" +
-                    stats.zima.count +
-                    " v zime, " +
-                    stats.leto.count +
-                    " v lete)"}
+                  ` (${stats.zima.count} v zime, ${stats.leto.count} v lete)`}
                 <span className="hidden-sm">
                   {", "}
                   {stats.spolu.creditsEnrolled}
                   {!jedinySemester &&
-                    " (" +
-                      stats.zima.creditsEnrolled +
-                      "+" +
-                      stats.leto.creditsEnrolled +
-                      ")"}
-                  {" " +
-                    plural(
-                      stats.spolu.creditsEnrolled,
-                      "kredit",
-                      "kredity",
-                      "kreditov"
-                    )}
+                    ` (${stats.zima.creditsEnrolled}+${stats.leto.creditsEnrolled})`}{" "}
+                  {plural(
+                    stats.spolu.creditsEnrolled,
+                    "kredit",
+                    "kredity",
+                    "kreditov"
+                  )}
                 </span>
               </td>
               <td colSpan="2" className="hidden-xs">
                 {stats.spolu.creditsEnrolled}
                 {!jedinySemester &&
-                  " (" +
-                    stats.zima.creditsEnrolled +
-                    "+" +
-                    stats.leto.creditsEnrolled +
-                    ")"}
+                  ` (${stats.zima.creditsEnrolled}+${stats.leto.creditsEnrolled})`}
               </td>
             </tr>
           </React.Fragment>
@@ -282,12 +261,11 @@ export function ZapisTable(props) {
     var predmetKey = event.target.name;
     var predmet = predmety[predmetKey];
 
+    // prettier-ignore
     var want =
-      predmet.moje && !event.target.checked
-        ? false
-        : !predmet.moje && event.target.checked
-        ? true
-        : undefined;
+      predmet.moje && !event.target.checked ? false :
+      !predmet.moje && event.target.checked ? true :
+      undefined;
     setChanges((changes) => ({ ...changes, [predmetKey]: want }));
   }
 
@@ -419,12 +397,13 @@ export function ZapisTable(props) {
       };
       var nazov = <Link href={href}>{predmet.nazov}</Link>;
       if (predmet.moje) nazov = <strong>{nazov}</strong>;
-      if (predmet.aktualnost)
+      if (predmet.aktualnost) {
         nazov = (
           <React.Fragment>
             <del>{nazov}</del> (nekoná sa)
           </React.Fragment>
         );
+      }
       return nazov;
     },
   };
