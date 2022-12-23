@@ -16,7 +16,6 @@ import { makeZapisZPlanuPage, makeZapisZPonukyPage } from './ZapisPage';
 import { ZoznamPrihlasenychNaTerminModal } from './ZoznamPrihlasenychNaTermin';
 import { ModalBase, PageLayout } from './layout';
 import { navigate, QueryContext } from './router';
-import { AnketaPopup } from './AnketaPopup';
 
 
 export function makeNotFoundPage() {
@@ -64,6 +63,5 @@ export function App() {
           {maker()}
           <ModalBase component={modalComponent} onClose={handleClose} />
           <LogViewer />
-          <AnketaPopup />
         </React.Fragment>;
 }

@@ -7,6 +7,7 @@ import 'bootstrap-sass/assets/javascripts/bootstrap/transition';  // needed by m
 import 'bootstrap-sass/assets/javascripts/bootstrap/modal';  // needed for $node.modal().
 import { CacheRequester, Loading, goLogout, goReset, goResetHome, logs } from './ajax';
 import { FakeLink, Link, QueryContext } from './router';
+import { AnketaPopup } from './AnketaPopup';
 
 
 export class ErrorBoundary extends React.Component {
@@ -82,6 +83,7 @@ export function PageLayout(props) {
         <div className="layout-content">
           <div className="container-fluid">
             <ErrorBoundary>
+              <AnketaPopup />
               {props.children}
             </ErrorBoundary>
           </div>

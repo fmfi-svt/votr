@@ -1,80 +1,57 @@
 
 import React from 'react';
 import { CacheRequester, Loading } from './ajax';
-import SmileLogo from './smile.svg';
-
-var dropCookie = true;  // false disables the Cookie, allowing you to style the banner
-var cookieDurationClose = 3;
-var cookieDurationVote = 60;
-var cookieName = Votr.settings.anketa_cookie_name; // Name of our cookie
-var cookieValue = 'on'; // Value of cookie
-var cookieHideDate = Date.parse(Votr.settings.anketa_cookie_hide_date); // Starting this day the cookie won't be visible
+import { LocalSettings } from './LocalSettings';
 
 
-export class AnketaPopup extends React.Component {
-  constructor(props) {
-    super(props);
-    var today = new Date();
-    var showPopup = checkCookie(cookieName) != cookieValue && cookieHideDate > today;
-    this.state = { showPopup };
+export function AnketaPopup() {
+  var season = Votr.settings.anketa_season;
+
+  if (!season) return null;
+
+  if (Date.now() > Votr.settings.anketa_end_msec) return null;
+
+  var wasClosedBefore = false;
+
+  try {
+    var state = LocalSettings.get("anketapopup");
+    if (state) {
+      state = JSON.parse(state);
+      if (state[0] == season) {
+        wasClosedBefore = true;
+        if (state[1] == -1 || Date.now() < state[1]) {
+          return null;
+        }
+      }
+    }
+  } catch (e) {}
+
+  var cache = new CacheRequester();
+  var studia = cache.get('get_studia');
+  if (!studia) {
+    return <div className="hidden"><Loading requests={cache.missing} /></div>;
+  }
+  if (!studia.some(s => s.organizacna_jednotka == 'FMFI')) return null;
+
+  function closePopup(until) {
+    LocalSettings.set("anketapopup", JSON.stringify([season, until]));
   }
 
-  onClosePopup = (action) => {
-    if(action == 0) {
-      createCookie(cookieName, cookieValue, cookieDurationVote); // Create vote cookie
-    } else {
-      createCookie(cookieName, cookieValue, cookieDurationClose); // Create close cookie
-    }
-    this.setState({showPopup: false})
-  }
+  const later = 3 * 24 * 3600 * 1000;
+  const laterText = "Pripomenúť o 3 dni";
 
-  render() {
-    if (!this.state.showPopup) return null;
-
-    var cache = new CacheRequester();
-    var studia = cache.get('get_studia');
-    if (!studia) return <div className="hidden"><Loading requests={cache.missing} /></div>;
-    if (!studia.some(s => s.organizacna_jednotka == 'FMFI')) return null;
-
-    return <div className="anketa__wrap">
-             <div className="anketa__container">
-                <div className="anketa__text-block">
-                    <img src={SmileLogo} className="anketa__image"/>
-                        <div className="anketa__subtitle">Daj semestru ešte chvíľu</div>
-                </div>
-                <div className="anketa__button-wrap">
-                    <a className="anketa__button anketa__button--main" onClick={() => {this.onClosePopup(0)}} href="https://anketa.fmph.uniba.sk/?anketaPopup" target="_blank" rel="noopener noreferrer" >Hlasuj v ankete</a>
-                    <a className="anketa__button anketa__button--secondary" onClick={(e) => {e.preventDefault(); this.onClosePopup(1)}} href="#">Neskôr</a>
-                </div>
-            </div>
-           </div>;
-  }
-}
-
-
-function createCookie(name, value, days) {
-    if (days) {
-        var date = new Date();
-        date.setTime(date.getTime()+(days*24*60*60*1000)); 
-        var expires = "; expires="+date.toGMTString(); 
-    }
-    else var expires = "";
-    if(dropCookie) { 
-        document.cookie = name+"="+value+expires+"; path=/"; 
-    }
-}
- 
-function checkCookie(name) {
-    var nameEQ = name + "=";
-    var ca = document.cookie.split(';');
-    for(var i=0;i < ca.length;i++) {
-        var c = ca[i];
-        while (c.charAt(0)==' ') c = c.substring(1,c.length);
-        if (c.indexOf(nameEQ) == 0) return c.substring(nameEQ.length,c.length);
-    }
-    return null;
-}
- 
-function eraseCookie(name) {
-    createCookie(name,"",-1);
+  return (
+    <div className="anketapopup">
+      <button type="button" className="close" onClick={() => closePopup(Date.now() + later)} aria-label="Zavrieť">
+        <span aria-hidden="true">&times;</span>
+      </button>
+      <div className="anketapopup-line1">Daj semestru ešte chvíľu</div>
+      <div className="anketapopup-line2"><strong>Hlasuj v ankete</strong></div>
+      <div className="anketapopup-buttons">
+        <a className="btn btn-primary" onClick={() => closePopup(-1)} href="https://anketa.fmph.uniba.sk/?anketaPopup" target="_blank" rel="noopener noreferrer">Otvoriť anketu</a>
+        <button type="button" className="btn btn-default" onClick={() => closePopup(Date.now() + later)} title={laterText}>Neskôr</button>
+        {wasClosedBefore && <button type="button" className="btn btn-default" onClick={() => closePopup(-1)} title="Už nepripomínať">Stop</button>}
+      </div>
+    </div>
+  );
 }

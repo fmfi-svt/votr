@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="200">
+<defs>
+<path id="p" d="M 155.137 175.62 L 99.699 146.473 L 44.257 175.624 L 54.844 113.888 L 10 70.175 L 71.976 61.169 L 99.696 5 L 127.413 61.166 L 189.391 70.177 L 144.541 113.894 Z" />
+<clipPath id="c"><use href="#p" /></clipPath>
+<use id="s" href="#p" clip-path="url(#c)" stroke-width="25" stroke="#2b0000" fill="#e6cf00" opacity="0.1" />
+</defs>
+<use href="#s" />
+<use href="#s" x="200" />
+<use href="#s" x="400" />
+<use href="#s" x="600" />
+<use href="#s" x="800" />
+</svg>

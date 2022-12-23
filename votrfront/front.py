@@ -1,5 +1,6 @@
 
 import base64
+import datetime
 import os
 import json
 import time
@@ -18,7 +19,6 @@ template = '''
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Votr</title>
 <link rel="stylesheet" type="text/css" href="%(css)s">
-<link href="https://fonts.googleapis.com/css?family=Open+Sans:300,400,700&amp;subset=latin-ext" rel="stylesheet">
 <meta name="description" content="Votr ponúka študentom jednoduchší a \
 pohodlnejší spôsob, ako robiť najčastejšie činnosti zo systému AIS. Zapíšte \
 sa na skúšky, prezrite si vaše hodnotenia a skontrolujte si počet kreditov \
@@ -69,8 +69,12 @@ def app_response(request, **my_data):
 
     my_data['url_root'] = url_root
     my_data['instance_name'] = instance_name
-    my_data['anketa_cookie_name'] = request.app.settings.anketa_cookie_name
-    my_data['anketa_cookie_hide_date'] = request.app.settings.anketa_cookie_hide_date
+
+    if request.app.settings.anketa_season and request.app.settings.anketa_end_ymd:
+        my_data['anketa_season'] = request.app.settings.anketa_season
+        dt = datetime.datetime(*request.app.settings.anketa_end_ymd)
+        my_data['anketa_end_msec'] = int(dt.timestamp() * 1000)
+
     if 'csrf_token' not in my_data:
         my_data['servers'] = request.app.settings.servers
 
