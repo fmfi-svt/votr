@@ -24,7 +24,9 @@
 
 .form-item.has-error {
   color: $state-danger-text;
-  input, select, textarea {
+  input,
+  select,
+  textarea {
     border: solid $state-danger-text 1px;
   }
 }

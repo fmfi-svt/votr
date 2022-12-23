@@ -1,16 +1,14 @@
-
-import PropTypes from 'prop-types';
-import React, { useContext, useState } from 'react';
-import _ from 'lodash';
-import { saveAs } from 'file-saver';
-import { ZapisnyListSelector } from './ZapisnyListSelector';
-import { CacheRequester, Loading, RequestCache, sendRpc } from './ajax';
-import { PageLayout, PageTitle } from './layout';
-import { Link, QueryContext } from './router';
-import { sortAs, SortableTable } from './sorting';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
-import moment from 'moment';
-
+import PropTypes from "prop-types";
+import React, { useContext, useState } from "react";
+import _ from "lodash";
+import { saveAs } from "file-saver";
+import { ZapisnyListSelector } from "./ZapisnyListSelector";
+import { CacheRequester, Loading, RequestCache, sendRpc } from "./ajax";
+import { PageLayout, PageTitle } from "./layout";
+import { Link, QueryContext } from "./router";
+import { sortAs, SortableTable } from "./sorting";
+import { Calendar, momentLocalizer } from "react-big-calendar";
+import moment from "moment";
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
 
@@ -21,14 +19,19 @@ const MojeSkuskyColumns = [
         <span className="hidden-xs hidden-sm">Moje</span>?
       </React.Fragment>
     ),
-    process: termin => !termin.datum_prihlasenia || termin.datum_odhlasenia ? "N" : "A",
-    cell: termin => !termin.datum_prihlasenia || termin.datum_odhlasenia ? "\u2718" : "\u2714",
-    colProps: termin => !termin.datum_prihlasenia || termin.datum_odhlasenia
+    process: (termin) =>
+      !termin.datum_prihlasenia || termin.datum_odhlasenia ? "N" : "A",
+    cell: (termin) =>
+      !termin.datum_prihlasenia || termin.datum_odhlasenia
+        ? "\u2718"
+        : "\u2714",
+    colProps: (termin) =>
+      !termin.datum_prihlasenia || termin.datum_odhlasenia
         ? {
             title: "Nie ste prihlásení",
-            className: "text-center text-negative"
+            className: "text-center text-negative",
           }
-        : { title: "Ste prihlásení", className: "text-center text-positive" }
+        : { title: "Ste prihlásení", className: "text-center text-positive" },
   },
   {
     label: "Predmet",
@@ -39,24 +42,25 @@ const MojeSkuskyColumns = [
           ...query,
           modal: "detailPredmetu",
           modalPredmetKey: termin.predmet_key,
-          modalAkademickyRok: termin.akademicky_rok
+          modalAkademickyRok: termin.akademicky_rok,
         }}
       >
         {termin.nazov_predmetu}
       </Link>
     ),
-    expansionMark: true
+    expansionMark: true,
   },
-  { label: "Dátum",
+  {
+    label: "Dátum",
     process: (termin) => sortAs.date(`${termin.datum} ${termin.cas}`),
-    cell: (termin, query) => `${termin.datum} ${termin.cas}`
+    cell: (termin, query) => `${termin.datum} ${termin.cas}`,
   },
   { label: "Miestnosť", prop: "miestnost", hiddenClass: ["hidden-xs"] },
   {
     label: "Hodnotiaci",
     prop: "hodnotiaci",
     process: sortAs.personName,
-    hiddenClass: ["hidden-xs", "hidden-sm"]
+    hiddenClass: ["hidden-xs", "hidden-sm"],
   },
   {
     label: "Prihlásení",
@@ -68,7 +72,7 @@ const MojeSkuskyColumns = [
         href={{
           ...query,
           modal: "zoznamPrihlasenychNaTermin",
-          modalTerminKey: termin.termin_key
+          modalTerminKey: termin.termin_key,
         }}
       >
         {termin.pocet_prihlasenych +
@@ -76,29 +80,30 @@ const MojeSkuskyColumns = [
             ? "/" + termin.maximalne_prihlasenych
             : "")}
       </Link>
-    )
+    ),
   },
   {
     label: "Poznámka",
     prop: "poznamka",
-    hiddenClass: ["hidden-xs", "hidden-sm"]
+    hiddenClass: ["hidden-xs", "hidden-sm"],
   },
   {
     label: "Prihlasovanie",
     prop: "prihlasovanie",
     process: sortAs.interval,
-    hiddenClass: ["hidden-xs", "hidden-sm"]
+    hiddenClass: ["hidden-xs", "hidden-sm"],
   },
   {
     label: "Odhlasovanie",
     prop: "odhlasovanie",
     process: sortAs.interval,
-    hiddenClass: ["hidden-xs", "hidden-sm"]
+    hiddenClass: ["hidden-xs", "hidden-sm"],
   },
   {
     label: "Známka",
-    process: termin => termin.hodnotenie_terminu || termin.hodnotenie_predmetu,
-    cell: termin => (
+    process: (termin) =>
+      termin.hodnotenie_terminu || termin.hodnotenie_predmetu,
+    cell: (termin) => (
       <React.Fragment>
         {termin.hodnotenie_terminu
           ? termin.hodnotenie_terminu
@@ -107,8 +112,8 @@ const MojeSkuskyColumns = [
           : null}
         <SkuskyRegisterButton termin={termin} />
       </React.Fragment>
-    )
-  }
+    ),
+  },
 ];
 
 function convertToICAL(terminy) {
@@ -125,7 +130,10 @@ function convertToICAL(terminy) {
     "X-WR-TIMEZONE:Europe/Bratislava",
   ];
 
-  var dtstamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, '');
+  var dtstamp = new Date()
+    .toISOString()
+    .replace(/[-:]/g, "")
+    .replace(/\.\d+/, "");
 
   // VEVENTs
   for (var termin of terminy) {
@@ -166,9 +174,15 @@ function convertToICAL(terminy) {
 
     // DESCRIPTION
     //@TODO ake vsetky informacie chceme zobrazovat v popise eventu? (zatial su take, ako vo FAJR)
-    var desc = "Prihlasovanie: " + termin.prihlasovanie + "\n" +
-      "Odhlasovanie: " + termin.odhlasovanie + "\n" +
-      "Poznámka: " + termin.poznamka;
+    var desc =
+      "Prihlasovanie: " +
+      termin.prihlasovanie +
+      "\n" +
+      "Odhlasovanie: " +
+      termin.odhlasovanie +
+      "\n" +
+      "Poznámka: " +
+      termin.poznamka;
     lines.push("DESCRIPTION:" + desc);
 
     lines.push("END:VEVENT");
@@ -181,46 +195,63 @@ function convertToICAL(terminy) {
 }
 
 function MojeSkuskyMenuLink(props) {
-  return (<Link className={"btn btn-default" + (props.active ? " active" : "")} href={props.href}>{props.label}</Link>);
+  return (
+    <Link
+      className={"btn btn-default" + (props.active ? " active" : "")}
+      href={props.href}
+    >
+      {props.label}
+    </Link>
+  );
 }
 
 export function MojeSkuskyMenu() {
-      var query = useContext(QueryContext);
-      var {action, kalendar, zapisnyListKey} = query;
-      return(
-        <div className="pull-left">
-            <div className="skusky-calendar-menu">
-                <div className="btn-group">
-                  <MojeSkuskyMenuLink
-                    label="Zoznam"
-                    href={{ action: 'mojeSkusky', kalendar: 0, zapisnyListKey }}
-                    active={kalendar != 1}
-                  />
-                  <MojeSkuskyMenuLink
-                    label="Kalendár"
-                    href={{ action: 'mojeSkusky', kalendar: 1, zapisnyListKey }}
-                    active={kalendar == 1}
-                  />
-                </div>
-              </div>
-        </div>)
+  var query = useContext(QueryContext);
+  var { action, kalendar, zapisnyListKey } = query;
+  return (
+    <div className="pull-left">
+      <div className="skusky-calendar-menu">
+        <div className="btn-group">
+          <MojeSkuskyMenuLink
+            label="Zoznam"
+            href={{ action: "mojeSkusky", kalendar: 0, zapisnyListKey }}
+            active={kalendar != 1}
+          />
+          <MojeSkuskyMenuLink
+            label="Kalendár"
+            href={{ action: "mojeSkusky", kalendar: 1, zapisnyListKey }}
+            active={kalendar == 1}
+          />
+        </div>
+      </div>
+    </div>
+  );
 }
 
-function convertToEvents(terminy){
-    return terminy.map((termin, i) => {
-      return {id: i,
-      title: `${termin.nazov_predmetu} (${termin.cas}${termin.miestnost ? ", "  + termin.miestnost : ""})`,
-      start: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').toDate(),
-      end: moment(termin.datum+" "+termin.cas, 'DD.MM.YYYY HH:mm').add(3,"hours").toDate(),
-      prihlaseny: termin.datum_prihlasenia && !termin.datum_odhlasenia};
-    })
+function convertToEvents(terminy) {
+  return terminy.map((termin, i) => {
+    return {
+      id: i,
+      title: `${termin.nazov_predmetu} (${termin.cas}${
+        termin.miestnost ? ", " + termin.miestnost : ""
+      })`,
+      start: moment(
+        termin.datum + " " + termin.cas,
+        "DD.MM.YYYY HH:mm"
+      ).toDate(),
+      end: moment(termin.datum + " " + termin.cas, "DD.MM.YYYY HH:mm")
+        .add(3, "hours")
+        .toDate(),
+      prihlaseny: termin.datum_prihlasenia && !termin.datum_odhlasenia,
+    };
+  });
 }
 
 function defaultDate(eventList) {
   var today = new Date();
 
   if (eventList.length) {
-    var lastExamDate = _.maxBy(eventList, 'start').start;
+    var lastExamDate = _.maxBy(eventList, "start").start;
     if (lastExamDate < today) return lastExamDate;
   }
 
@@ -228,83 +259,86 @@ function defaultDate(eventList) {
 }
 
 export function KalendarUdalosti(props) {
-    const localizer = momentLocalizer(moment)
+  const localizer = momentLocalizer(moment);
 
-    return (
-      <Calendar
-        localizer={localizer}
-        events={props.eventList}
-        views={["month", "week", "day"]}
-        defaultDate = {defaultDate(props.eventList)}
-        className="skusky-calendar"
-        messages={{
-          allDay: "Celý deň",
-          previous: "Späť",
-          next: "Ďalej",
-          today: "Dnes",
-          month: "Mesiac",
-          week: "Týždeň",
-          day: "Deň",
-          agenda: "Agenda",
-          date: "Dátum",
-          time: "Čas",
-          event: "Skúška"
-        }}
-        culture={"sk"}
-        eventPropGetter={
-          event => {
-            return {
-              className: event.prihlaseny ? "skusky-calendar-registered" : "skusky-calendar-unregistered"
-            };
-          }
-        }
-        //remove start and end times (we need only one included in title)
-        formats={{
-          eventTimeRangeFormat: ({ start, end }, culture, local) => {}
-        }}
-      />
-    )
+  return (
+    <Calendar
+      localizer={localizer}
+      events={props.eventList}
+      views={["month", "week", "day"]}
+      defaultDate={defaultDate(props.eventList)}
+      className="skusky-calendar"
+      messages={{
+        allDay: "Celý deň",
+        previous: "Späť",
+        next: "Ďalej",
+        today: "Dnes",
+        month: "Mesiac",
+        week: "Týždeň",
+        day: "Deň",
+        agenda: "Agenda",
+        date: "Dátum",
+        time: "Čas",
+        event: "Skúška",
+      }}
+      culture={"sk"}
+      eventPropGetter={(event) => {
+        return {
+          className: event.prihlaseny
+            ? "skusky-calendar-registered"
+            : "skusky-calendar-unregistered",
+        };
+      }}
+      //remove start and end times (we need only one included in title)
+      formats={{
+        eventTimeRangeFormat: ({ start, end }, culture, local) => {},
+      }}
+    />
+  );
 }
 
 export function MojeSkuskyPageContent() {
-    var query = useContext(QueryContext);
-    var cache = new CacheRequester();
-    var {zapisnyListKey, kalendar} = query;
+  var query = useContext(QueryContext);
+  var cache = new CacheRequester();
+  var { zapisnyListKey, kalendar } = query;
 
-    var vidim = cache.get('get_vidim_terminy_hodnotenia', zapisnyListKey);
+  var vidim = cache.get("get_vidim_terminy_hodnotenia", zapisnyListKey);
 
-    if (!cache.loadedAll) {
-      return <Loading requests={cache.missing} />;
-    }
+  if (!cache.loadedAll) {
+    return <Loading requests={cache.missing} />;
+  }
 
-    if (!vidim) {
-      return <p>Skúšky pre tento zápisný list už nie sú k dispozícii.</p>;
-    }
+  if (!vidim) {
+    return <p>Skúšky pre tento zápisný list už nie sú k dispozícii.</p>;
+  }
 
-    var terminyPrihlasene = cache.get('get_prihlasene_terminy', zapisnyListKey);
-    var terminyVypisane = cache.get('get_vypisane_terminy', zapisnyListKey);
+  var terminyPrihlasene = cache.get("get_prihlasene_terminy", zapisnyListKey);
+  var terminyVypisane = cache.get("get_vypisane_terminy", zapisnyListKey);
 
-    if (!terminyPrihlasene || !terminyVypisane) {
-      return <Loading requests={cache.missing} />;
-    }
+  if (!terminyPrihlasene || !terminyVypisane) {
+    return <Loading requests={cache.missing} />;
+  }
 
-    var terminy = {};
-    terminyVypisane.forEach((termin) => terminy[termin.termin_key] = termin);
-    terminyPrihlasene.forEach((termin) => terminy[termin.termin_key] = termin);
-    terminy = _.values(terminy);
+  var terminy = {};
+  terminyVypisane.forEach((termin) => (terminy[termin.termin_key] = termin));
+  terminyPrihlasene.forEach((termin) => (terminy[termin.termin_key] = termin));
+  terminy = _.values(terminy);
 
-    var message = terminy.length ? null : "Zatiaľ nie sú vypísané žiadne termíny.";
+  var message = terminy.length
+    ? null
+    : "Zatiaľ nie sú vypísané žiadne termíny.";
 
-    function handleClickICal() {
-      var icalText = convertToICAL(terminyPrihlasene);
-      var blob = new Blob([icalText], {type: "text/calendar;charset=utf-8"});
-      saveAs(blob, "MojeTerminy.ics", true);
-    }
+  function handleClickICal() {
+    var icalText = convertToICAL(terminyPrihlasene);
+    var blob = new Blob([icalText], { type: "text/calendar;charset=utf-8" });
+    saveAs(blob, "MojeTerminy.ics", true);
+  }
 
-    return <React.Fragment>
-      {kalendar == 1?
+  return (
+    <React.Fragment>
+      {kalendar == 1 ? (
         <KalendarUdalosti eventList={convertToEvents(terminy)} />
-        :
+      ) : (
         <SortableTable
           items={terminy}
           columns={MojeSkuskyColumns}
@@ -313,48 +347,69 @@ export function MojeSkuskyPageContent() {
           message={message}
           expandedContentOffset={1}
         />
-      }
-      {terminy.length && <button type="button" onClick={handleClickICal} className="btn">Stiahnuť ako iCal</button>}
-    </React.Fragment>;
+      )}
+      {terminy.length && (
+        <button type="button" onClick={handleClickICal} className="btn">
+          Stiahnuť ako iCal
+        </button>
+      )}
+    </React.Fragment>
+  );
 }
-
 
 export function SkuskyRegisterButton({ termin }) {
   var [pressed, setPressed] = useState(false);
 
   var isSigninButton = !termin.datum_prihlasenia || termin.datum_odhlasenia;
-  var appearDisabled = (isSigninButton && termin.moznost_prihlasit !== 'A') || pressed;
+  var appearDisabled =
+    (isSigninButton && termin.moznost_prihlasit !== "A") || pressed;
 
   function handleClick() {
-    var command = isSigninButton ? 'prihlas_na_termin' : 'odhlas_z_terminu';
+    var command = isSigninButton ? "prihlas_na_termin" : "odhlas_z_terminu";
 
     sendRpc(command, [termin.termin_key], (message) => {
       if (message) {
         setPressed(false);
         alert(message);
       } else {
-        RequestCache.invalidate('get_prihlasene_terminy');
-        RequestCache.invalidate('get_vypisane_terminy');
-        RequestCache.invalidate('get_prihlaseni_studenti');
+        RequestCache.invalidate("get_prihlasene_terminy");
+        RequestCache.invalidate("get_vypisane_terminy");
+        RequestCache.invalidate("get_prihlaseni_studenti");
       }
     });
 
     setPressed(true);
   }
 
-    if (termin.hodnotenie_terminu) {
-      return null;
-    }
+  if (termin.hodnotenie_terminu) {
+    return null;
+  }
 
-    var today = new Date().toJSON().replace(/-/g, '').substring(0, 8);
-    if (today > sortAs.date(termin.datum)) return null;
+  var today = new Date().toJSON().replace(/-/g, "").substring(0, 8);
+  if (today > sortAs.date(termin.datum)) return null;
 
-    var buttonClass = "btn btn-xs " + (isSigninButton ? "btn-success" : "btn-danger") + (appearDisabled ? " appear-disabled" : "");
-    var buttonText = pressed ? <Loading /> : isSigninButton ? "Prihlásiť" : "Odhlásiť";
+  var buttonClass =
+    "btn btn-xs " +
+    (isSigninButton ? "btn-success" : "btn-danger") +
+    (appearDisabled ? " appear-disabled" : "");
+  var buttonText = pressed ? (
+    <Loading />
+  ) : isSigninButton ? (
+    "Prihlásiť"
+  ) : (
+    "Odhlásiť"
+  );
 
-    return <button type="button" onClick={pressed ? null : handleClick} className={buttonClass}>{buttonText}</button>;
+  return (
+    <button
+      type="button"
+      onClick={pressed ? null : handleClick}
+      className={buttonClass}
+    >
+      {buttonText}
+    </button>
+  );
 }
-
 
 export function makeMojeSkuskyPage() {
   return (

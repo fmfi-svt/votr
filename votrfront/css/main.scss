@@ -1,5 +1,4 @@
-
-$uniba-color: #B3231B;
+$uniba-color: #b3231b;
 $brand-primary: $uniba-color;
 $link-color: $uniba-color;
 
@@ -7,39 +6,41 @@ $font-size-base: 13px;
 $font-size-h4: 18px;
 $font-family-monospace: 9pt monospace;
 
-$code-color: #333;   // $text-color
-$code-bg: #F5F5F5;
+$code-color: #333; // $text-color
+$code-bg: #f5f5f5;
 
 $nav-link-padding: 8px 13px;
 
 $navbar-inverse-bg: #535250;
-$navbar-inverse-color: #ADADAD;
-$navbar-inverse-link-color: #ADADAD;
+$navbar-inverse-color: #adadad;
+$navbar-inverse-link-color: #adadad;
 
 $table-condensed-cell-padding: 4px;
-
 
 @import "votr-bootstrap";
 @import "layout";
 @import "forms";
 @import "~react-big-calendar/lib/css/react-big-calendar";
 
-
-html, body {
+html,
+body {
   position: relative;
   height: 100%;
 }
 
-body, .modal-open .modal {
+body,
+.modal-open .modal {
   overflow-y: scroll;
 }
 
-a, .btn.btn-link {
+a,
+.btn.btn-link {
   text-decoration: underline;
-  cursor: pointer;   // for Votr.FakeLink
+  cursor: pointer; // for Votr.FakeLink
 }
 
-.nav a, a.btn {
+.nav a,
+a.btn {
   text-decoration: none;
 }
 
@@ -72,7 +73,8 @@ a, .btn.btn-link {
   border-radius: $border-radius-large;
   display: inline-block;
 
-  li a:hover, li a:focus {
+  li a:hover,
+  li a:focus {
     background-color: #ddd;
   }
   .text-pill {
@@ -96,7 +98,7 @@ a, .btn.btn-link {
 }
 
 .skusky-calendar-menu {
-    margin-left: 10px;
+  margin-left: 10px;
 }
 
 /* "html" = specificity tie breaker */
@@ -104,7 +106,7 @@ a, .btn.btn-link {
 html .skusky-calendar {
   height: 90vh;
   .rbc-event {
-    cursor: inherit;  /* there is no onClick event - for now */
+    cursor: inherit; /* there is no onClick event - for now */
   }
   .skusky-calendar-registered {
     background-color: #337ab7;
@@ -122,7 +124,8 @@ html .skusky-calendar {
 }
 
 .table-bordered {
-  th, td {
+  th,
+  td {
     border-left-style: none !important;
     border-right-style: none !important;
   }
@@ -134,19 +137,20 @@ html .skusky-calendar {
 
 th.sort {
   cursor: pointer;
-  &.asc, &.desc {
+  &.asc,
+  &.desc {
     background: $gray-lighter;
   }
   &:after {
-    content: "\00a0↕";   // \00a0 is &nbsp;
+    content: "\00a0↕"; // \00a0 is &nbsp;
     visibility: hidden;
   }
   &.asc:after {
-    content: "\00a0↑";   // \00a0 is &nbsp;
+    content: "\00a0↑"; // \00a0 is &nbsp;
     visibility: visible;
   }
   &.desc:after {
-    content: "\00a0↓";   // \00a0 is &nbsp;
+    content: "\00a0↓"; // \00a0 is &nbsp;
     visibility: visible;
   }
 }
@@ -172,7 +176,7 @@ th.sort {
     border-width: 2px 2px 1px;
   }
   .list-inline {
-    margin: .2em;
+    margin: 0.2em;
   }
   .close {
     padding: 0.2em;
@@ -198,7 +202,7 @@ th.sort {
     max-width: 30em;
     padding: 2em 15px;
     margin: auto;
-    align-self: center;   // "margin: auto" is not enough for IE11
+    align-self: center; // "margin: auto" is not enough for IE11
   }
   .list-inline a {
     color: $navbar-default-link-color;
@@ -222,7 +226,9 @@ th.sort {
 
 // ugly workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=217769
 // suggested in https://bugzilla.mozilla.org/show_bug.cgi?id=409254
-thead:empty, tbody:empty, tfoot:empty {
+thead:empty,
+tbody:empty,
+tfoot:empty {
   display: none;
 }
 
@@ -239,7 +245,7 @@ thead:empty, tbody:empty, tfoot:empty {
 }
 
 .appear-disabled {
-  @include opacity(.65);
+  @include opacity(0.65);
   @include box-shadow(none);
 }
 
@@ -273,7 +279,8 @@ thead:empty, tbody:empty, tfoot:empty {
 
   color: white;
   background-color: #ff7035;
-  background: no-repeat content-box center top / contain url(stars.svg), linear-gradient(135deg, #ff7035, #ff5862);
+  background: no-repeat content-box center top / contain url(stars.svg),
+    linear-gradient(135deg, #ff7035, #ff5862);
 
   text-align: center;
 
@@ -281,7 +288,10 @@ thead:empty, tbody:empty, tfoot:empty {
     // override default color and opacity from _close.scss
     color: white;
     @include opacity(0.8);
-    &:hover, &:focus { @include opacity(1); }
+    &:hover,
+    &:focus {
+      @include opacity(1);
+    }
 
     // keep both lines of text centered
     float: none;

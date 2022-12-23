@@ -1,38 +1,38 @@
-
-import PropTypes from 'prop-types';
-import React, { useEffect, useMemo, useState } from 'react';
-import _ from 'lodash';
-import $ from 'jquery';
+import PropTypes from "prop-types";
+import React, { useEffect, useMemo, useState } from "react";
+import _ from "lodash";
+import $ from "jquery";
 
 export function trackPageView() {
   if (!window.ga) return;
-  var current = location.protocol + '//' + location.hostname +
-                location.pathname + location.search;
+  var current =
+    location.protocol +
+    "//" +
+    location.hostname +
+    location.pathname +
+    location.search;
   if (current == trackPageView.last) return;
   trackPageView.last = current;
-  ga('send', 'pageview', { location: current });
-};
-
+  ga("send", "pageview", { location: current });
+}
 
 function parseQueryString(queryString) {
   if (!queryString) return {};
   var result = {};
-  var pairs = queryString.split('&');
+  var pairs = queryString.split("&");
   for (var i = 0; i < pairs.length; i++) {
-    var index = pairs[i].indexOf('=');
+    var index = pairs[i].indexOf("=");
     if (index == -1) {
       index = pairs[i].length;
     }
     var name = pairs[i].substring(0, index);
     var value = pairs[i].substring(index + 1);
-    result[name] = decodeURIComponent(value.replace(/\+/g, ' '));
+    result[name] = decodeURIComponent(value.replace(/\+/g, " "));
   }
   return result;
 }
 
-
 export var QueryContext = React.createContext();
-
 
 export function Root({ app }) {
   var [, setState] = useState({});
@@ -51,8 +51,8 @@ export function Root({ app }) {
       Votr.updateRoot();
     }
 
-    window.addEventListener('popstate', handlePopState, false);
-    return () => window.removeEventListener('popstate', handlePopState, false);
+    window.addEventListener("popstate", handlePopState, false);
+    return () => window.removeEventListener("popstate", handlePopState, false);
   }, []);
 
   useEffect(() => {
@@ -64,22 +64,23 @@ export function Root({ app }) {
   var query = useMemo(() => parseQueryString(queryString), [queryString]);
 
   var C = app;
-  return <QueryContext.Provider value={query}><C /></QueryContext.Provider>;
+  return (
+    <QueryContext.Provider value={query}>
+      <C />
+    </QueryContext.Provider>
+  );
 }
-
 
 export function buildUrl(href) {
   if (_.isString(href)) return href;
-  return '?' + $.param(_.omitBy(href, _.isUndefined), true);
-};
-
+  return "?" + $.param(_.omitBy(href, _.isUndefined), true);
+}
 
 export function navigate(href) {
   Votr.didNavigate = true;
-  history.pushState(null, '', Votr.settings.url_root + buildUrl(href));
+  history.pushState(null, "", Votr.settings.url_root + buildUrl(href));
   Votr.updateRoot();
-};
-
+}
 
 export function Link(props) {
   function handleClick(event) {
@@ -94,7 +95,6 @@ export function Link(props) {
 
   return <a {...props} href={buildUrl(props.href)} onClick={handleClick} />;
 }
-
 
 // Looks and acts like a link, but doesn't have a href and cannot be opened in
 // a new tab when middle-clicked or ctrl-clicked.
@@ -113,5 +113,5 @@ export function FakeLink(props) {
 }
 
 FakeLink.propTypes = {
-  onClick: PropTypes.func.isRequired
+  onClick: PropTypes.func.isRequired,
 };

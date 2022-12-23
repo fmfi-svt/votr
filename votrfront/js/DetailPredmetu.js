@@ -1,148 +1,189 @@
-
-import React, { useContext } from 'react';
-import { ZoznamPrihlasenychNaTerminColumns } from './ZoznamPrihlasenychNaTermin';
-import { CacheRequester, Loading } from './ajax';
-import { Modal } from './layout';
-import { QueryContext } from './router';
-import { sortAs, sortTable } from './sorting';
-
+import React, { useContext } from "react";
+import { ZoznamPrihlasenychNaTerminColumns } from "./ZoznamPrihlasenychNaTermin";
+import { CacheRequester, Loading } from "./ajax";
+import { Modal } from "./layout";
+import { QueryContext } from "./router";
+import { sortAs, sortTable } from "./sorting";
 
 export var DetailPredmetuUciteliaColumns = [
-  ["Meno", 'plne_meno', sortAs.personName],
-  ["Typ", 'typ']
+  ["Meno", "plne_meno", sortAs.personName],
+  ["Typ", "typ"],
 ];
-DetailPredmetuUciteliaColumns.defaultOrder = 'a0';
+DetailPredmetuUciteliaColumns.defaultOrder = "a0";
 
-export var DetailPredmetuStudentiColumns = ZoznamPrihlasenychNaTerminColumns.slice();
-DetailPredmetuStudentiColumns.defaultOrder = 'a0';
-
+export var DetailPredmetuStudentiColumns =
+  ZoznamPrihlasenychNaTerminColumns.slice();
+DetailPredmetuStudentiColumns.defaultOrder = "a0";
 
 function getZapisaniStudenti(cache, predmetKey, akademickyRok) {
-  return cache.get('get_studenti_zapisani_na_predmet', predmetKey, akademickyRok);
+  return cache.get(
+    "get_studenti_zapisani_na_predmet",
+    predmetKey,
+    akademickyRok
+  );
 }
-
 
 function DetailPredmetuInformacnyList() {
-    var query = useContext(QueryContext);
-    var cache = new CacheRequester();
-    var {modalAkademickyRok, modalPredmetKey} = query;
+  var query = useContext(QueryContext);
+  var cache = new CacheRequester();
+  var { modalAkademickyRok, modalPredmetKey } = query;
 
-    var data = cache.get('get_informacny_list', modalPredmetKey, modalAkademickyRok);
+  var data = cache.get(
+    "get_informacny_list",
+    modalPredmetKey,
+    modalAkademickyRok
+  );
 
-    if (!data) {
-      return <Loading requests={cache.missing} />;
-    }
+  if (!data) {
+    return <Loading requests={cache.missing} />;
+  }
 
-    var url = "data:application/pdf;base64," + escape(data);
-    return <a href={url} download>Stiahnuť</a>;
+  var url = "data:application/pdf;base64," + escape(data);
+  return (
+    <a href={url} download>
+      Stiahnuť
+    </a>
+  );
 }
 
-
 function DetailPredmetuUcitelia() {
-    var query = useContext(QueryContext);
-    var cache = new CacheRequester();
-    var {modalAkademickyRok, modalPredmetKey} = query;
+  var query = useContext(QueryContext);
+  var cache = new CacheRequester();
+  var { modalAkademickyRok, modalPredmetKey } = query;
 
-    var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
+  var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 
-    if (!data) {
-      return <Loading requests={cache.missing} />;
-    }
+  if (!data) {
+    return <Loading requests={cache.missing} />;
+  }
 
-    var [studenti, predmet] = data;
+  var [studenti, predmet] = data;
 
-    if (!predmet) {
-      return "Dáta pre predmet neboli nájdené.";
-    }
+  if (!predmet) {
+    return "Dáta pre predmet neboli nájdené.";
+  }
 
-    var ucitelia = cache.get('get_ucitelia_predmetu', modalPredmetKey, modalAkademickyRok, predmet.semester, predmet.fakulta);
+  var ucitelia = cache.get(
+    "get_ucitelia_predmetu",
+    modalPredmetKey,
+    modalAkademickyRok,
+    predmet.semester,
+    predmet.fakulta
+  );
 
-    if (!ucitelia) {
-      return <Loading requests={cache.missing} />;
-    }
+  if (!ucitelia) {
+    return <Loading requests={cache.missing} />;
+  }
 
-    var [ucitelia, header] = sortTable(
-      ucitelia, DetailPredmetuUciteliaColumns, query, 'modalUciteliaSort');
+  var [ucitelia, header] = sortTable(
+    ucitelia,
+    DetailPredmetuUciteliaColumns,
+    query,
+    "modalUciteliaSort"
+  );
 
-    var message = ucitelia.length ? null : "Predmet nemá v AISe žiadnych učiteľov.";
+  var message = ucitelia.length
+    ? null
+    : "Predmet nemá v AISe žiadnych učiteľov.";
 
-    return <table className="table table-condensed table-bordered table-striped table-hover">
+  return (
+    <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
-        {ucitelia.map((ucitel, index) =>
+        {ucitelia.map((ucitel, index) => (
           <tr key={index}>
             <td>{ucitel.plne_meno}</td>
             <td>{ucitel.typ}</td>
           </tr>
-        )}
+        ))}
       </tbody>
-      {message && <tfoot><tr><td colSpan={DetailPredmetuUciteliaColumns.length}>{message}</td></tr></tfoot>}
-    </table>;
+      {message && (
+        <tfoot>
+          <tr>
+            <td colSpan={DetailPredmetuUciteliaColumns.length}>{message}</td>
+          </tr>
+        </tfoot>
+      )}
+    </table>
+  );
 }
 
-
 function DetailPredmetuZapisaniStudenti() {
-    var query = useContext(QueryContext);
-    var cache = new CacheRequester();
-    var {modalAkademickyRok, modalPredmetKey} = query;
+  var query = useContext(QueryContext);
+  var cache = new CacheRequester();
+  var { modalAkademickyRok, modalPredmetKey } = query;
 
-    var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
+  var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 
-    if (!data) {
-      return <Loading requests={cache.missing} />;
-    }
+  if (!data) {
+    return <Loading requests={cache.missing} />;
+  }
 
-    var [studenti, predmet] = data;
+  var [studenti, predmet] = data;
 
-    if (!predmet) {
-      return "Dáta pre predmet neboli nájdené.";
-    }
+  if (!predmet) {
+    return "Dáta pre predmet neboli nájdené.";
+  }
 
-    var [studenti, header] = sortTable(
-      studenti, DetailPredmetuStudentiColumns, query, 'modalStudentiSort');
+  var [studenti, header] = sortTable(
+    studenti,
+    DetailPredmetuStudentiColumns,
+    query,
+    "modalStudentiSort"
+  );
 
-    var message = studenti.length ? null : "Predmet nemá v AISe žiadnych zapísaných študentov.";
+  var message = studenti.length
+    ? null
+    : "Predmet nemá v AISe žiadnych zapísaných študentov.";
 
-    return <table className="table table-condensed table-bordered table-striped table-hover">
+  return (
+    <table className="table table-condensed table-bordered table-striped table-hover">
       <thead>{header}</thead>
       <tbody>
-        {studenti.map((student, index) =>
+        {studenti.map((student, index) => (
           <tr key={index}>
             <td>{student.plne_meno}</td>
             <td>{student.sp_skratka}</td>
             <td>{student.rocnik}</td>
-            <td>{student.email &&
-                    <a href={"mailto:" + student.email}>{student.email}</a>}
+            <td>
+              {student.email && (
+                <a href={"mailto:" + student.email}>{student.email}</a>
+              )}
             </td>
             <td>{student.datum_prihlasenia}</td>
           </tr>
-        )}
+        ))}
       </tbody>
-      {message && <tfoot><tr><td colSpan={DetailPredmetuStudentiColumns.length}>{message}</td></tr></tfoot>}
-    </table>;
+      {message && (
+        <tfoot>
+          <tr>
+            <td colSpan={DetailPredmetuStudentiColumns.length}>{message}</td>
+          </tr>
+        </tfoot>
+      )}
+    </table>
+  );
 }
-
 
 function DetailPredmetuTitle() {
-    var query = useContext(QueryContext);
-    var cache = new CacheRequester();
-    var {modalAkademickyRok, modalPredmetKey} = query;
+  var query = useContext(QueryContext);
+  var cache = new CacheRequester();
+  var { modalAkademickyRok, modalPredmetKey } = query;
 
-    var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
+  var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 
-    if (!data) {
-      return <Loading requests={cache.missing} />;
-    }
+  if (!data) {
+    return <Loading requests={cache.missing} />;
+  }
 
-    var [studenti, predmet] = data;
+  var [studenti, predmet] = data;
 
-    if (!predmet) {
-      return "Dáta nenájdené";
-    }
+  if (!predmet) {
+    return "Dáta nenájdené";
+  }
 
-    return predmet.nazov;
+  return predmet.nazov;
 }
-
 
 export function DetailPredmetuModal() {
   return (

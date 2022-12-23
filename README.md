@@ -1,6 +1,4 @@
-
-Votr
-====
+# Votr
 
 Votr is an alternative frontend providing easier access to AIS2, the academic
 information system used at many universities in Slovakia. If you are a student
@@ -21,18 +19,16 @@ based on). **Fladgejt** contains the business logic for various AIS2 tasks and
 knows where to find which buttons and tables. And **Votrfront** is the web app
 that Votr's users interact with.
 
-Installing and running Votr
----------------------------
+## Installing and running Votr
 
 System requirements:
 
-*   Install Python 3.4+ and virtualenv. E.g. on Ubuntu 18.04: `sudo apt install
-    virtualenv`
-*   Install [node.js 8+][1]. E.g. on Ubuntu 18.04: `sudo apt install nodejs`
-    *   If your Linux distribution doesn't have node.js >= 8, or if you don't
-        want to install node.js system-wide, you can use nvm or nodeenv.
-        [Read more.][2]
-*   [Install Yarn.][3]
+- Install Python 3.4+ and virtualenv. E.g. on Ubuntu 18.04:
+  `sudo apt install virtualenv`
+- Install [node.js 8+][1]. E.g. on Ubuntu 18.04: `sudo apt install nodejs`
+  - If your Linux distribution doesn't have node.js >= 8, or if you don't want
+    to install node.js system-wide, you can use nvm or nodeenv. [Read more.][2]
+- [Install Yarn.][3]
 
 [1]: https://nodejs.org/en/download/package-manager/
 [2]: https://github.com/fmfi-svt/votr/wiki/Installation-options
@@ -67,8 +63,7 @@ venv/bin/python console.py serve --debug
 yarn watch
 ```
 
-Contributing to Votr
---------------------
+## Contributing to Votr
 
 If you'd like to help improve Votr, please get in touch! E-mail us at
 fmfi-svt@googlegroups.com and we'll help you with anything you need -- whether
@@ -76,8 +71,7 @@ it's [choosing a task](https://github.com/fmfi-svt/votr/issues) to work on,
 understanding Votr's code, implementing your changes, or sending a pull request
 on GitHub.
 
-Developer documentation
------------------------
+## Developer documentation
 
 Some documentation is on the wiki: https://github.com/fmfi-svt/votr/wiki
 

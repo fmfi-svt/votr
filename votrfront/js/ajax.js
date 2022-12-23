@@ -1,6 +1,5 @@
-
-import React, { useEffect } from 'react';
-import _ from 'lodash';
+import React, { useEffect } from "react";
+import _ from "lodash";
 
 export function sendRpc(name, args, callback) {
   var HEADER_LENGTH = 10;
@@ -18,7 +17,7 @@ export function sendRpc(name, args, callback) {
       if (waiting < HEADER_LENGTH + length) break;
       var payload = xhr.responseText.substr(processed + HEADER_LENGTH, length);
       var data = JSON.parse(payload);
-      console.log('RECEIVED', data);
+      console.log("RECEIVED", data);
       if (data.log !== undefined) logs.push(data);
       if (data.result !== undefined) result = data.result;
       if (data.error !== undefined) return fail(data.error);
@@ -26,7 +25,7 @@ export function sendRpc(name, args, callback) {
     }
     if (xhr.readyState == 4) {
       if (processed != xhr.responseText.length || result === undefined) {
-        console.log('INCOMPLETE!');
+        console.log("INCOMPLETE!");
         return fail("Network error: Incomplete response");
       }
       finished = true;
@@ -57,19 +56,16 @@ export function sendRpc(name, args, callback) {
   xhr.send(JSON.stringify(args));
 }
 
-
 Votr.ajaxError = null;
 
-
 export var logs = [];
-
 
 export var RequestCache = {};
 
 RequestCache.pending = {};
 
 RequestCache.sendRequest = function (request) {
-  var cacheKey = request.join('\0');
+  var cacheKey = request.join("\0");
   if (RequestCache[cacheKey]) return;
   if (RequestCache.pending[cacheKey]) return;
   RequestCache.pending[cacheKey] = true;
@@ -80,26 +76,25 @@ RequestCache.sendRequest = function (request) {
 
 RequestCache.invalidate = function (command) {
   for (var key in RequestCache) {
-    if (key.split('\0')[0] === command) {
+    if (key.split("\0")[0] === command) {
       delete RequestCache[key];
     }
   }
 
   for (var key in RequestCache.pending) {
-    if (key.split('\0')[0] === command) {
+    if (key.split("\0")[0] === command) {
       delete RequestCache.pending[key];
     }
   }
-}
-
+};
 
 export function CacheRequester() {
   this.missing = [];
   this.loadedAll = true;
-};
+}
 
 CacheRequester.prototype.get = function (...request) {
-  var cacheKey = request.join('\0');
+  var cacheKey = request.join("\0");
   if (RequestCache[cacheKey] !== undefined) {
     return RequestCache[cacheKey];
   } else {
@@ -109,34 +104,33 @@ CacheRequester.prototype.get = function (...request) {
   }
 };
 
-
 export function Loading({ requests }) {
   useEffect(() => {
-    if (requests) requests.forEach((request) => {
-      RequestCache.sendRequest(request);
-    });
+    if (requests)
+      requests.forEach((request) => {
+        RequestCache.sendRequest(request);
+      });
   });
 
-    return <span className="loading">Načítavam...</span>;
+  return <span className="loading">Načítavam...</span>;
 }
 
-
 export function goPost(url) {
-  var form = document.createElement('form');
-  form.method = 'POST';
+  var form = document.createElement("form");
+  form.method = "POST";
   form.action = url;
   document.body.appendChild(form);
   form.submit();
-};
+}
 
 export function goLogout() {
-  goPost('logout');
-};
+  goPost("logout");
+}
 
 export function goReset() {
-  goPost('reset?destination=' + encodeURIComponent(location.search));
-};
+  goPost("reset?destination=" + encodeURIComponent(location.search));
+}
 
 export function goResetHome() {
-  goPost('reset?destination=');
-};
+  goPost("reset?destination=");
+}

@@ -1,11 +1,15 @@
-
 Votr.setDebug = function (enabled) {
-  document.cookie = enabled ? 'votr_debug=true' : 'votr_debug=';
+  document.cookie = enabled ? "votr_debug=true" : "votr_debug=";
   location.reload();
-}
+};
 
-if (!history.pushState || !window.Set || !window.Map || !Array.prototype.includes) {
-  document.getElementById('votr').innerHTML = `
+if (
+  !history.pushState ||
+  !window.Set ||
+  !window.Map ||
+  !Array.prototype.includes
+) {
+  document.getElementById("votr").innerHTML = `
     <div class="central-box">
     <h1>Votr</h1>
     <p>Votr ponúka študentom jednoduchší a pohodlnejší spôsob, ako robiť najčastejšie činnosti zo systému AIS.</p>
@@ -21,5 +25,5 @@ if (!history.pushState || !window.Set || !window.Map || !Array.prototype.include
     </ul>
     </div>
   `;
-  if (window.ga) ga('send', 'pageview');
+  if (window.ga) ga("send", "pageview");
 }

@@ -1,12 +1,11 @@
+import React from "react";
 
-import React from 'react';
-
-var ZNAMKY = {'A': 1, 'B': 1.5, 'C': 2, 'D': 2.5, 'E': 3, 'F': 4};
+var ZNAMKY = { "A": 1, "B": 1.5, "C": 2, "D": 2.5, "E": 3, "F": 4 };
 
 export function coursesStats(hodnotenia) {
   var result = {};
 
-  ['zima', 'leto', 'spolu'].forEach((type) => {
+  ["zima", "leto", "spolu"].forEach((type) => {
     result[type] = { count: 0, creditsEnrolled: 0, creditsObtained: 0 };
   });
 
@@ -18,14 +17,14 @@ export function coursesStats(hodnotenia) {
 
   hodnotenia.forEach((row) => {
     var credits = parseInt(row.kredit);
-    var obtained = row.hodn_znamka && row.hodn_znamka[0] !== 'F';
-    add('spolu', credits, obtained);
-    if (row.semester == 'Z') add('zima', credits, obtained);
-    if (row.semester == 'L') add('leto', credits, obtained);
+    var obtained = row.hodn_znamka && row.hodn_znamka[0] !== "F";
+    add("spolu", credits, obtained);
+    if (row.semester == "Z") add("zima", credits, obtained);
+    if (row.semester == "L") add("leto", credits, obtained);
   });
 
   return result;
-};
+}
 
 export function weightedStudyAverage(hodnotenia) {
   var weightedSum = 0;
@@ -41,18 +40,22 @@ export function weightedStudyAverage(hodnotenia) {
 
   if (creditsSum == 0) return null;
   return weightedSum / creditsSum;
-};
+}
 
 export function renderWeightedStudyAverage(hodnotenia) {
   var average = weightedStudyAverage(hodnotenia);
   if (average === null) return null;
-  return <span title="Neoficiálny vážený študijný priemer z doteraz ohodnotených predmetov">{average.toFixed(2)}</span>
-};
+  return (
+    <span title="Neoficiálny vážený študijný priemer z doteraz ohodnotených predmetov">
+      {average.toFixed(2)}
+    </span>
+  );
+}
 
 export function renderCredits({ creditsObtained, creditsEnrolled }) {
   return creditsObtained && creditsObtained != creditsEnrolled
-      ? `${creditsObtained}/${creditsEnrolled}`
-      : `${creditsEnrolled}`;
+    ? `${creditsObtained}/${creditsEnrolled}`
+    : `${creditsEnrolled}`;
 }
 
 export function currentAcademicYear() {
@@ -62,8 +65,8 @@ export function currentAcademicYear() {
   var month = date.getMonth() + 1;
 
   if (month < 8) {
-    return (year - 1) + '/' + year;
+    return year - 1 + "/" + year;
   } else {
-    return year + '/' + (year + 1);
+    return year + "/" + (year + 1);
   }
-};
+}
