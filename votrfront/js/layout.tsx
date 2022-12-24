@@ -15,7 +15,10 @@ import {
 import { FakeLink, Link, QueryContext } from "./router";
 import { AnketaPopup } from "./AnketaPopup";
 
-export class ErrorBoundary extends React.Component {
+export class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { error: unknown; open: boolean }
+> {
   state = { error: undefined, open: false };
 
   componentDidCatch(error, errorInfo) {
@@ -45,7 +48,7 @@ export class ErrorBoundary extends React.Component {
     if (this.state.error) {
       var error = this.state.error.stack;
       var details = String((error && error.stack) || error);
-      var firstLine = details.trim("\n").split("\n")[0];
+      var firstLine = details.trim().split("\n")[0];
       return (
         <div className="alert alert-danger">
           <h3>Chyba</h3>
@@ -314,7 +317,7 @@ export function ModalBase({ onClose, component }) {
     <div
       className="modal fade"
       ref={modalRef}
-      tabIndex="-1"
+      tabIndex={-1}
       role="dialog"
       aria-hidden="true"
     >
@@ -334,7 +337,12 @@ ModalBase.propTypes = {
   onClose: PropTypes.func.isRequired,
 };
 
-export function Modal(props) {
+export function Modal(props: {
+  closeButton: boolean;
+  title: React.ReactNode;
+  footer?: React.ReactNode;
+  children?: React.ReactNode;
+}) {
   return (
     <div className="modal-content">
       <div className="modal-header">

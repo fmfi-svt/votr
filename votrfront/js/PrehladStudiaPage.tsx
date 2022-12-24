@@ -4,12 +4,13 @@ import { PageLayout, PageTitle } from "./layout";
 import { QueryContext } from "./router";
 import { sortAs, sortTable } from "./sorting";
 import { currentAcademicYear } from "./coursesStats";
+import { Columns } from "./types";
 
 // TODO: Pridat kadejake sumarne informacie, aby to vyzeralo ako dashboard.
 // TODO: Ked to raz bude rychle, pouzit to ako "home page" pri prazdnom action.
 // TODO: Zvyraznit aktualne obdobia a pisat kolko casu zostava do dalsich.
 
-export var PrehladStudiumColumns = [
+export var PrehladStudiumColumns: Columns = [
   ["Študijný program", "sp_popis"],
   ["Rok štúdia", "rok_studia", sortAs.number],
   ["Dĺžka v semestroch", "sp_dlzka", sortAs.number],
@@ -20,7 +21,7 @@ export var PrehladStudiumColumns = [
 ];
 PrehladStudiumColumns.defaultOrder = "d4";
 
-export var PrehladZapisnyListColumns = [
+export var PrehladZapisnyListColumns: Columns = [
   ["Akademický rok", "akademicky_rok"],
   ["Študijný program", "sp_popis"],
   ["Ročník", "rocnik", sortAs.number],
@@ -190,7 +191,7 @@ export function PrehladStudiaZapisneListy() {
     return <Loading requests={cache.missing} />;
   }
 
-  var zapisneListy = [];
+  var zapisneListy: any = [];
 
   for (const studium of studia) {
     var mojeZapisneListy = cache.get("get_zapisne_listy", studium.studium_key);

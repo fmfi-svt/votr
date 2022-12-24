@@ -4,14 +4,15 @@ import { CacheRequester, Loading } from "./ajax";
 import { Modal } from "./layout";
 import { QueryContext } from "./router";
 import { sortAs, sortTable } from "./sorting";
+import { Columns } from "./types";
 
-export var DetailPredmetuUciteliaColumns = [
+export var DetailPredmetuUciteliaColumns: Columns = [
   ["Meno", "plne_meno", sortAs.personName],
   ["Typ", "typ"],
 ];
 DetailPredmetuUciteliaColumns.defaultOrder = "a0";
 
-export var DetailPredmetuStudentiColumns =
+export var DetailPredmetuStudentiColumns: Columns =
   ZoznamPrihlasenychNaTerminColumns.slice();
 DetailPredmetuStudentiColumns.defaultOrder = "a0";
 
@@ -60,7 +61,8 @@ function DetailPredmetuUcitelia() {
   var [studenti, predmet] = data;
 
   if (!predmet) {
-    return "Dáta pre predmet neboli nájdené.";
+    // https://github.com/microsoft/TypeScript/issues/21699
+    return "Dáta pre predmet neboli nájdené." as unknown as JSX.Element;
   }
 
   var ucitelia = cache.get(
@@ -122,7 +124,8 @@ function DetailPredmetuZapisaniStudenti() {
   var [studenti, predmet] = data;
 
   if (!predmet) {
-    return "Dáta pre predmet neboli nájdené.";
+    // https://github.com/microsoft/TypeScript/issues/21699
+    return "Dáta pre predmet neboli nájdené." as unknown as JSX.Element;
   }
 
   var [studenti, header] = sortTable(

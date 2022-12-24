@@ -3,6 +3,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import _ from "lodash";
 import $ from "jquery";
 
+var trackPageViewLast;
+
 export function trackPageView() {
   if (!window.ga) return;
   var current =
@@ -11,8 +13,8 @@ export function trackPageView() {
     location.hostname +
     location.pathname +
     location.search;
-  if (current == trackPageView.last) return;
-  trackPageView.last = current;
+  if (current == trackPageViewLast) return;
+  trackPageViewLast = current;
   ga("send", "pageview", { location: current });
 }
 
@@ -32,7 +34,7 @@ function parseQueryString(queryString) {
   return result;
 }
 
-export var QueryContext = React.createContext();
+export var QueryContext = React.createContext<any>(undefined);
 
 export function Root({ app }) {
   var [, setState] = useState({});
@@ -98,7 +100,9 @@ export function Link(props) {
 
 // Looks and acts like a link, but doesn't have a href and cannot be opened in
 // a new tab when middle-clicked or ctrl-clicked.
-export function FakeLink(props) {
+export function FakeLink(
+  props: { onClick: () => void } & React.HTMLAttributes<HTMLAnchorElement>
+) {
   // Pressing Enter on <a href=...> emits a click event, and the HTML5 spec
   // says elements with tabindex should do that too, but they don't.
   // <http://www.w3.org/TR/WCAG20-TECHS/SCR29> suggests using a keyup event:
@@ -109,7 +113,7 @@ export function FakeLink(props) {
     }
   }
 
-  return <a {...props} onKeyUp={handleKeyUp} tabIndex="0" role="button" />;
+  return <a {...props} onKeyUp={handleKeyUp} tabIndex={0} role="button" />;
 }
 
 FakeLink.propTypes = {

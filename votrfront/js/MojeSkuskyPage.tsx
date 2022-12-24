@@ -224,7 +224,15 @@ export function MojeSkuskyMenu() {
   );
 }
 
-function convertToEvents(terminy) {
+interface CalendarEvent {
+  id: number;
+  title: string;
+  start: Date;
+  end: Date;
+  prihlaseny: boolean;
+}
+
+function convertToEvents(terminy): CalendarEvent[] {
   return terminy.map((termin, i) => {
     var miestnostStr = termin.miestnost ? ", " + termin.miestnost : "";
     var cas = termin.datum + " " + termin.cas;
@@ -238,7 +246,7 @@ function convertToEvents(terminy) {
   });
 }
 
-function defaultDate(eventList) {
+function defaultDate(eventList: CalendarEvent[]) {
   var today = new Date();
 
   if (eventList.length) {
@@ -249,7 +257,7 @@ function defaultDate(eventList) {
   return today;
 }
 
-export function KalendarUdalosti(props) {
+export function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
   const localizer = momentLocalizer(moment);
 
   return (
@@ -280,7 +288,7 @@ export function KalendarUdalosti(props) {
       })}
       // remove start and end times (we need only one included in title)
       formats={{
-        eventTimeRangeFormat: ({ start, end }, culture, local) => {},
+        eventTimeRangeFormat: ({ start, end }, culture, local) => "",
       }}
     />
   );
@@ -308,10 +316,10 @@ export function MojeSkuskyPageContent() {
     return <Loading requests={cache.missing} />;
   }
 
-  var terminy = {};
-  for (const termin of terminyVypisane) terminy[termin.termin_key] = termin;
-  for (const termin of terminyPrihlasene) terminy[termin.termin_key] = termin;
-  terminy = _.values(terminy);
+  var terminMap = {};
+  for (const termin of terminyVypisane) terminMap[termin.termin_key] = termin;
+  for (const termin of terminyPrihlasene) terminMap[termin.termin_key] = termin;
+  var terminy = _.values(terminMap);
 
   var message = terminy.length
     ? null

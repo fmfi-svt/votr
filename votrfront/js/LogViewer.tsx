@@ -80,7 +80,7 @@ export function LogViewerContent(props) {
 }
 
 function computeBenchmarks() {
-  var sums = {};
+  var sums: Record<string, number> = {};
   var beginnings = {};
 
   function start(what, time) {

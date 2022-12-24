@@ -5,7 +5,7 @@ import { Link, QueryContext } from "./router";
 import { sortAs } from "./sorting";
 import { currentAcademicYear } from "./coursesStats";
 
-function getItems(cache) {
+function getItems(cache): [any[], boolean] {
   var studia = cache.get("get_studia");
 
   var items = [];

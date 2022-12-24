@@ -18,8 +18,9 @@ import {
 import { PageLayout, PageTitle } from "./layout";
 import { Link, QueryContext } from "./router";
 import { sortAs, SortableTable } from "./sorting";
+import { Columns } from "./types";
 
-export var MojeHodnoteniaColumns = [
+export var MojeHodnoteniaColumns: Columns = [
   {
     label: "Akademický rok",
     prop: "akademicky_rok",
@@ -31,7 +32,7 @@ MojeHodnoteniaColumns[1] = {
 };
 MojeHodnoteniaColumns.defaultOrder = "a0d1a2";
 
-export var MojePriemeryColumns = [
+export var MojePriemeryColumns: Columns = [
   {
     label: "Dátum výpočtu priemeru",
     prop: "datum_vypoctu",
@@ -98,8 +99,8 @@ export function MojeHodnoteniaHodnoteniaTable() {
 
   var footer = (fullTable) => (
     <tr>
-      <td className={fullTable ? "" : "hidden-xs hidden-sm"} colSpan="2" />
-      <td colSpan="2">
+      <td className={fullTable ? "" : "hidden-xs hidden-sm"} colSpan={2} />
+      <td colSpan={2}>
         Celkom {stats.spolu.count}{" "}
         {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
       </td>
@@ -129,7 +130,7 @@ export function MojeHodnoteniaPriemeryTable() {
   var { studiumKey } = query;
 
   var priemery, message;
-  var zapisneListy = cache.get("get_zapisne_listy", studiumKey);
+  var zapisneListy: any[] = cache.get("get_zapisne_listy", studiumKey);
 
   if (zapisneListy && zapisneListy.length == 0) {
     priemery = [];

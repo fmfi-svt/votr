@@ -14,10 +14,10 @@ export function AnketaPopup() {
   try {
     var state = LocalSettings.get("anketapopup");
     if (state) {
-      state = JSON.parse(state);
-      if (state[0] == season) {
+      var [savedSeason, savedTime] = JSON.parse(state);
+      if (savedSeason == season) {
         wasClosedBefore = true;
-        if (state[1] == -1 || Date.now() < state[1]) {
+        if (savedTime == -1 || Date.now() < savedTime) {
           return null;
         }
       }

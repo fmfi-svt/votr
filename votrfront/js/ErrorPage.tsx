@@ -16,8 +16,9 @@ export function ErrorModal() {
     setOpen(true);
   }
 
-  var error = Votr.settings.error || Votr.ajaxError;
-  var lastLine = _.last(error.trim("\n").split("\n"));
+  // TODO: temporary `string` annotation
+  var error: string = Votr.settings.error || Votr.ajaxError;
+  var lastLine = _.last(error.trim().split("\n"));
   var type = lastLine.split(":")[0];
 
   var title = "Chyba";

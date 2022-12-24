@@ -1,3 +1,5 @@
+export {};
+
 Votr.setDebug = function (enabled) {
   document.cookie = enabled ? "votr_debug=true" : "votr_debug=";
   location.reload();

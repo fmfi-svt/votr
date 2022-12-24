@@ -15,8 +15,9 @@ import {
 import { PageLayout, PageTitle } from "./layout";
 import { Link, QueryContext } from "./router";
 import { sortAs, SortableTable } from "./sorting";
+import { Columns } from "./types";
 
-export var MojePredmetyColumns = [
+export var MojePredmetyColumns: Columns = [
   {
     label: "Semester",
     shortLabel: <abbr title="Semester">Sem.</abbr>,
@@ -89,7 +90,7 @@ export function MojePredmetyPageContent() {
   var footer = (fullTable) => (
     <tr>
       <td className={fullTable ? "" : "hidden-xs hidden-sm"} />
-      <td colSpan="2">
+      <td colSpan={2}>
         Celkom {stats.spolu.count}{" "}
         {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
         {" ("}

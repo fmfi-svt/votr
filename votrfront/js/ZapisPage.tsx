@@ -8,6 +8,7 @@ import { humanizeTypVyucby, plural } from "./humanizeAISData";
 import { FormItem, PageLayout, PageTitle } from "./layout";
 import { Link, navigate, QueryContext } from "./router";
 import { sortAs, SortableTable } from "./sorting";
+import { Columns } from "./types";
 
 const typVyucbyColumn = {
   label: <abbr title="Typ výučby">Typ</abbr>,
@@ -63,7 +64,7 @@ const jazykColumn = {
   hiddenClass: ["hidden-xs", "hidden-sm"],
 };
 
-export var ZapisZPlanuColumns = [
+export var ZapisZPlanuColumns: Columns = [
   typVyucbyColumn,
   {
     label: "Blok",
@@ -92,7 +93,7 @@ export var ZapisZPlanuColumns = [
 ];
 ZapisZPlanuColumns.defaultOrder = "a1a2a9a3";
 
-export var ZapisZPonukyColumns = [
+export var ZapisZPonukyColumns: Columns = [
   typVyucbyColumn,
   {
     label: "Blok",
@@ -154,7 +155,11 @@ export function ZapisMenu() {
   );
 }
 
-export function ZapisTableFooter(props) {
+export function ZapisTableFooter(props: {
+  predmety: Record<string, any>;
+  moje: Record<string, boolean>;
+  fullTable: boolean;
+}) {
   var bloky = {},
     nazvy = {},
     semestre = {};
@@ -184,7 +189,7 @@ export function ZapisTableFooter(props) {
               key={skratka}
               className={props.fullTable ? null : "hidden-xs hidden-sm"}
             >
-              <td colSpan="2">{skratka ? "Súčet bloku" : "Dokopy"}</td>
+              <td colSpan={2}>{skratka ? "Súčet bloku" : "Dokopy"}</td>
               <td>
                 {nazvy[skratka] ? (
                   <abbr title={nazvy[skratka]}>{skratka}</abbr>
@@ -192,7 +197,7 @@ export function ZapisTableFooter(props) {
                   skratka
                 )}
               </td>
-              <td colSpan="4">
+              <td colSpan={4}>
                 {stats.spolu.count}{" "}
                 {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
                 {!jedinySemester &&
@@ -203,7 +208,7 @@ export function ZapisTableFooter(props) {
                 {!jedinySemester &&
                   ` (${stats.zima.creditsEnrolled}+${stats.leto.creditsEnrolled})`}
               </td>
-              <td colSpan="3"></td>
+              <td colSpan={3}></td>
             </tr>
             <tr key={skratka + "sm"} className={"hidden-md hidden-lg"}>
               <td>{skratka ? "Súčet bloku" : "Dokopy"}</td>
@@ -214,7 +219,7 @@ export function ZapisTableFooter(props) {
                   skratka
                 )}
               </td>
-              <td colSpan="2">
+              <td colSpan={2}>
                 {stats.spolu.count}{" "}
                 {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
                 {!jedinySemester &&
@@ -232,7 +237,7 @@ export function ZapisTableFooter(props) {
                   )}
                 </span>
               </td>
-              <td colSpan="2" className="hidden-xs">
+              <td colSpan={2} className="hidden-xs">
                 {stats.spolu.creditsEnrolled}
                 {!jedinySemester &&
                   ` (${stats.zima.creditsEnrolled}+${stats.leto.creditsEnrolled})`}
@@ -292,18 +297,16 @@ export function ZapisTable(props) {
 
       if (odobral) {
         for (const predmet of odoberanePredmety) {
-          RequestCache[
-            "pocet_prihlasenych_je_stary" + predmet.predmet_key
-          ] = true;
+          RequestCache["pocet_prihlasenych_je_stary" + predmet.predmet_key] =
+            true;
         }
         setChanges((changes) => _.pickBy(changes, (value) => value === true));
       }
 
       if (pridal) {
         for (const predmet of pridavanePredmety) {
-          RequestCache[
-            "pocet_prihlasenych_je_stary" + predmet.predmet_key
-          ] = true;
+          RequestCache["pocet_prihlasenych_je_stary" + predmet.predmet_key] =
+            true;
         }
         setChanges((changes) => _.pickBy(changes, (value) => value === false));
       }
@@ -698,7 +701,7 @@ export function ZapisZPonukyPageContent() {
     } else if (!cache.loadedAll) {
       outerMessage = <Loading requests={cache.missing} />;
     } else {
-      var predmety = {};
+      predmety = {};
       for (const predmet of ponukanePredmety) {
         predmety[predmet.predmet_key] = { moje: false, ...predmet };
       }

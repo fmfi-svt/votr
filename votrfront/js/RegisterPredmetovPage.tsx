@@ -5,8 +5,9 @@ import { classForSemester, humanizeBoolean } from "./humanizeAISData";
 import { FormItem, PageLayout, PageTitle } from "./layout";
 import { Link, navigate, QueryContext } from "./router";
 import { sortAs, sortTable } from "./sorting";
+import { Columns } from "./types";
 
-export var RegisterPredmetovColumns = [
+export var RegisterPredmetovColumns: Columns = [
   ["Názov predmetu", "nazov"],
   ["Skratka predmetu", "skratka"],
   ["Fakulta", "fakulta"],

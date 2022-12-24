@@ -60,7 +60,7 @@ Votr.ajaxError = null;
 
 export var logs = [];
 
-export var RequestCache = {};
+export var RequestCache: any = {};
 
 RequestCache.pending = {};
 
@@ -104,7 +104,7 @@ CacheRequester.prototype.get = function (...request) {
   }
 };
 
-export function Loading({ requests }) {
+export function Loading({ requests }: { requests?: any[][] }) {
   useEffect(() => {
     if (requests) {
       for (const request of requests) RequestCache.sendRequest(request);

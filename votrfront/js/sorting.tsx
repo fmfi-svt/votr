@@ -3,7 +3,7 @@ import _ from "lodash";
 import { navigate, QueryContext } from "./router";
 import { LocalSettings } from "./LocalSettings";
 
-export var sortAs = {};
+export var sortAs: any = {};
 
 sortAs.personName = function (text) {
   var words = text.replace(/,/g, "").split(" ");
@@ -36,7 +36,7 @@ sortAs.interval = function (text) {
   return sortAs.date(text.substring(index + 3));
 };
 
-export function sortTable(items, columns, query, queryKey, fullTable) {
+export function sortTable(items, columns, query, queryKey, fullTable?) {
   if (columns[0][0]) {
     columns = columns.map(
       ([label, prop, process, preferDesc, hiddenClass]) => ({
@@ -165,7 +165,8 @@ export function SortableTable(props) {
         key={item.originalIndex}
         onClick={(event) => {
           // Don't toggle the row if we just clicked some link or input in the row.
-          if (!event.target.closest("a, input, button") && !fullTable) {
+          var target = event.target as Element;
+          if (!target.closest("a, input, button") && !fullTable) {
             toggleInfo(item.originalIndex);
           }
         }}

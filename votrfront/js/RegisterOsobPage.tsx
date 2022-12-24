@@ -4,8 +4,9 @@ import { currentAcademicYear } from "./coursesStats";
 import { FormItem, PageLayout, PageTitle } from "./layout";
 import { navigate, QueryContext } from "./router";
 import { sortAs, sortTable } from "./sorting";
+import { Columns } from "./types";
 
-export var RegisterOsobColumns = [
+export var RegisterOsobColumns: Columns = [
   ["Plné meno", "plne_meno", sortAs.personName],
   ["E-mail", "email"],
 ];
