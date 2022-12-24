@@ -1,0 +1,41 @@
+{
+  "compilerOptions": {
+    "sourceMap": true,
+
+    // es2018 roughly corresponds to current feature checks in prologue.js.
+    "target": "es2018",
+
+    // es2020 adds import() and import.meta. es2022 adds top-level await.
+    // Wasn't needed yet.
+    "module": "es2015",
+
+    "moduleResolution": "node",
+
+    "esModuleInterop": true,
+
+    "jsx": "react",
+
+    // Needed to fix `yarn tsc --noEmit` complaining about conflicting
+    // definitions of AbortSignal in @types/node/globals.d.ts versus
+    // typescript/lib/lib.dom.d.ts. Something indirectly depends on @types/node
+    // and TypeScript tries to use all installed @types/* by default.
+    "types": [
+      "bootstrap",
+      "file-saver",
+      "jquery",
+      "lodash",
+      "prop-types",
+      "react",
+      "react-big-calendar",
+      "react-dom"
+    ],
+
+    // outDir is ignored by webpack ts-loader and by `yarn tsc --noEmit`.
+    // Nothing reads this directory or expects it to exist. It's just for
+    // convenience so you can run `yarn tsc` and look at the output.
+    "outDir": "./tsc_build",
+
+    "allowJs": true
+  },
+  "include": ["votrfront/js"]
+}

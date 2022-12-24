@@ -104,6 +104,9 @@ module.exports = function (env, args) {
       new CleanMapFilesPlugin(),
       new webpack.ContextReplacementPlugin(/moment[/\\]locale$/, /sk/),
     ],
+    resolve: {
+      extensions: [".ts", ".tsx", ".js"],
+    },
     module: {
       rules: [
         {
@@ -112,9 +115,9 @@ module.exports = function (env, args) {
           parser: { amd: false },
         },
         {
-          test: /\.js$/,
+          test: /\.[tj]sx?$/,
           exclude: /node_modules/,
-          loader: "babel-loader",
+          loader: "ts-loader",
         },
         {
           test: /node_modules\/bootstrap-sass\//,
