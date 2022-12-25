@@ -36,7 +36,6 @@
       "file-saver",
       "jquery",
       "lodash",
-      "prop-types",
       "react",
       "react-big-calendar",
       "react-dom"

@@ -1,4 +1,3 @@
-import PropTypes from "prop-types";
 import React, { useContext, useEffect, useRef } from "react";
 import _ from "lodash";
 import $ from "jquery";
@@ -346,42 +345,29 @@ export function ModalBase({
   );
 }
 
-ModalBase.propTypes = {
-  component: PropTypes.func,
-  onClose: PropTypes.func.isRequired,
-};
-
-export function Modal(props: {
-  closeButton: boolean;
+export function Modal({
+  closeButton = true,
+  title,
+  children,
+}: {
+  closeButton?: boolean;
   title: React.ReactNode;
-  footer?: React.ReactNode;
-  children?: React.ReactNode;
+  children: React.ReactNode;
 }) {
   return (
     <div className="modal-content">
       <div className="modal-header">
-        {props.closeButton && (
+        {closeButton && (
           <button type="button" className="close" data-dismiss="modal">
             <span aria-hidden="true">&times;</span>
             <span className="sr-only">Close</span>
           </button>
         )}
-        <h4 className="modal-title">{props.title}</h4>
+        <h4 className="modal-title">{title}</h4>
       </div>
       <div className="modal-body">
-        <ErrorBoundary>{props.children}</ErrorBoundary>
+        <ErrorBoundary>{children}</ErrorBoundary>
       </div>
-      {props.footer}
     </div>
   );
 }
-
-Modal.propTypes = {
-  closeButton: PropTypes.bool.isRequired,
-  title: PropTypes.node.isRequired,
-  footer: PropTypes.node,
-};
-
-Modal.defaultProps = {
-  closeButton: true,
-};

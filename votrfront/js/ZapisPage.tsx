@@ -1,4 +1,3 @@
-import PropTypes from "prop-types";
 import React, { useContext, useState } from "react";
 import _ from "lodash";
 import { ZapisnyListSelector } from "./ZapisnyListSelector";
@@ -262,11 +261,6 @@ export function ZapisTableFooter(props: {
   );
 }
 
-ZapisTableFooter.propTypes = {
-  predmety: PropTypes.object.isRequired,
-  moje: PropTypes.object.isRequired,
-};
-
 export function ZapisTable(props: {
   predmety: Record<string, ZapisPredmet & { moje: boolean }> | undefined;
   odoberPredmety: (
@@ -464,16 +458,6 @@ export function ZapisTable(props: {
     </form>
   );
 }
-
-ZapisTable.propTypes = {
-  predmety: PropTypes.object,
-  akademickyRok: PropTypes.string,
-  message: PropTypes.node,
-  columns: PropTypes.array.isRequired,
-  showFooter: PropTypes.bool,
-  odoberPredmety: PropTypes.func.isRequired,
-  pridajPredmety: PropTypes.func.isRequired,
-};
 
 export function ZapisVlastnostiTable() {
   var { zapisnyListKey } = useContext(QueryContext);

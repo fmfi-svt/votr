@@ -1,4 +1,3 @@
-import PropTypes from "prop-types";
 import React, { useEffect, useMemo, useState } from "react";
 import _ from "lodash";
 import $ from "jquery";
@@ -128,7 +127,3 @@ export function FakeLink(
 
   return <a {...props} onKeyUp={handleKeyUp} tabIndex={0} role="button" />;
 }
-
-FakeLink.propTypes = {
-  onClick: PropTypes.func.isRequired,
-};
