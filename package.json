@@ -13,6 +13,7 @@
     "@types/react-big-calendar": "^0.38.3",
     "@types/react-dom": "^18.0.10",
     "bootstrap-sass": "^3.4.3",
+    "classnames": "^2.3.2",
     "css-loader": "^6.7.1",
     "file-saver": "^2.0.5",
     "imports-loader": "^4.0.1",

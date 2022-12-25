@@ -3,6 +3,7 @@ import _ from "lodash";
 import { navigate, QueryContext } from "./router";
 import { LocalSettings } from "./LocalSettings";
 import { Columns } from "./types";
+import classNames from "classnames";
 
 export var sortAs = {
   personName(text: string) {
@@ -93,15 +94,12 @@ export function sortTable<T>(
             key={index}
             data-index={index}
             onClick={handleClick}
-            className={
-              (fullTable ? "" : hiddenClass.join(" ")) +
-              " sort " +
-              (order[0] == "a" + index
-                ? "asc"
-                : order[0] == "d" + index
-                ? "desc"
-                : "")
-            }
+            className={classNames(
+              !fullTable && hiddenClass,
+              "sort",
+              order[0] == "a" + index && "asc",
+              order[0] == "d" + index && "desc"
+            )}
           >
             {shortLabel ? shortLabel : label}
           </th>
@@ -156,9 +154,10 @@ export function SortableTable<T>({
     fullTable
   );
 
-  const className =
-    "table table-condensed table-bordered table-striped table-hover" +
-    (withButtons ? " with-buttons-table" : "");
+  const className = classNames(
+    "table table-condensed table-bordered table-striped table-hover",
+    withButtons && "with-buttons-table"
+  );
 
   const notExpandable = columns.reduce(
     (acc, col) =>
@@ -208,11 +207,13 @@ export function SortableTable<T>({
             >
               {expansionMark && !fullTable && (
                 <span
-                  className={`${notExpandable.join(" ")} expand-arrow ${
+                  className={classNames(
+                    notExpandable,
+                    "expand-arrow",
                     open[item.originalIndex]
                       ? "arrow-expanded"
                       : "arrow-collapsed"
-                  }`}
+                  )}
                 />
               )}
               {cell ? cell(item, query) : (item as any)[prop]}
@@ -224,15 +225,16 @@ export function SortableTable<T>({
 
     if (!fullTable) {
       rows.push(
-        <tr key={`${item.originalIndex}-striped-hack`} className={"hidden"} />
+        <tr key={`${item.originalIndex}-striped-hack`} className="hidden" />
       );
 
       rows.push(
         <tr
           key={`${item.originalIndex}-info`}
-          className={`${notExpandable.join(" ")} ${
-            open[item.originalIndex] ? "" : "hidden"
-          }`}
+          className={classNames(
+            notExpandable,
+            !open[item.originalIndex] && "hidden"
+          )}
         >
           {expandedContentOffset > 0 && <td colSpan={expandedContentOffset} />}
           <td colSpan={columns.length - expandedContentOffset}>
@@ -260,10 +262,10 @@ export function SortableTable<T>({
 
   return (
     <div>
-      <div className={`btn-toolbar section ${notExpandable.join(" ")}`}>
+      <div className={classNames("btn-toolbar", "section", notExpandable)}>
         <button
           type="button"
-          className={"btn btn-default" + (fullTable ? " active" : "")}
+          className={classNames("btn", "btn-default", fullTable && "active")}
           onClick={() => {
             LocalSettings.set("fullTable", String(!fullTable));
           }}

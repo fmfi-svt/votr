@@ -14,6 +14,7 @@ import { FormItem, PageLayout, PageTitle } from "./layout";
 import { Link, navigate, QueryContext } from "./router";
 import { sortAs, SortableTable } from "./sorting";
 import { Columns, ComboBoxOption, ZapisCast, ZapisPredmet } from "./types";
+import classNames from "classnames";
 
 const typVyucbyColumn = {
   label: <abbr title="Typ výučby">Typ</abbr>,
@@ -128,7 +129,7 @@ function ZapisLink(props: {
 }) {
   return (
     <Link
-      className={"btn btn-default" + (props.active ? " active" : "")}
+      className={classNames("btn", "btn-default", props.active && "active")}
       href={props.href}
     >
       {props.label}
@@ -221,7 +222,7 @@ export function ZapisTableFooter(props: {
               </td>
               <td colSpan={3}></td>
             </tr>
-            <tr key={skratka + "sm"} className={"hidden-md hidden-lg"}>
+            <tr key={skratka + "sm"} className="hidden-md hidden-lg">
               <td>{skratka ? "Súčet bloku" : "Dokopy"}</td>
               <td>
                 {nazvy[skratka] ? (

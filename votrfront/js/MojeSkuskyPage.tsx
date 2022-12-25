@@ -14,8 +14,13 @@ import { sortAs, SortableTable } from "./sorting";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
 import { Termin } from "./types";
+import classNames from "classnames";
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
+
+function somPrihlaseny(termin: Termin) {
+  return !!termin.datum_prihlasenia && !termin.datum_odhlasenia;
+}
 
 const MojeSkuskyColumns = [
   {
@@ -24,19 +29,15 @@ const MojeSkuskyColumns = [
         <span className="hidden-xs hidden-sm">Moje</span>?
       </React.Fragment>
     ),
-    process: (termin: Termin) =>
-      !termin.datum_prihlasenia || termin.datum_odhlasenia ? "N" : "A",
-    cell: (termin: Termin) =>
-      !termin.datum_prihlasenia || termin.datum_odhlasenia
-        ? "\u2718"
-        : "\u2714",
-    colProps: (termin: Termin) =>
-      !termin.datum_prihlasenia || termin.datum_odhlasenia
-        ? {
-            title: "Nie ste prihlásení",
-            className: "text-center text-negative",
-          }
-        : { title: "Ste prihlásení", className: "text-center text-positive" },
+    process: (termin: Termin) => (somPrihlaseny(termin) ? "A" : "N"),
+    cell: (termin: Termin) => (somPrihlaseny(termin) ? "\u2714" : "\u2718"),
+    colProps: (termin: Termin) => ({
+      title: somPrihlaseny(termin) ? "Ste prihlásení" : "Nie ste prihlásení",
+      className: classNames(
+        "text-center",
+        somPrihlaseny(termin) ? "text-positive" : "text-negative"
+      ),
+    }),
   },
   {
     label: "Predmet",
@@ -142,10 +143,8 @@ function convertToICAL(terminy: Termin[]) {
 
   // VEVENTs
   for (var termin of terminy) {
-    if (!termin.datum_prihlasenia || termin.datum_odhlasenia) {
-      // nie je prihlaseny
-      continue;
-    }
+    if (!somPrihlaseny(termin)) continue;
+
     lines.push("BEGIN:VEVENT");
 
     lines.push("SUMMARY:" + termin.nazov_predmetu);
@@ -202,7 +201,7 @@ function MojeSkuskyMenuLink(props: {
 }) {
   return (
     <Link
-      className={"btn btn-default" + (props.active ? " active" : "")}
+      className={classNames("btn", "btn-default", props.active && "active")}
       href={props.href}
     >
       {props.label}
@@ -250,7 +249,7 @@ function convertToEvents(terminy: Termin[]): CalendarEvent[] {
       title: `${termin.nazov_predmetu} (${termin.cas}${miestnostStr})`,
       start: moment(cas, "DD.MM.YYYY HH:mm").toDate(),
       end: moment(cas, "DD.MM.YYYY HH:mm").add(3, "hours").toDate(),
-      prihlaseny: !!(termin.datum_prihlasenia && !termin.datum_odhlasenia),
+      prihlaseny: somPrihlaseny(termin),
     };
   });
 }
@@ -366,7 +365,7 @@ export function MojeSkuskyPageContent() {
 export function SkuskyRegisterButton({ termin }: { termin: Termin }) {
   var [pressed, setPressed] = useState(false);
 
-  var isSigninButton = !termin.datum_prihlasenia || termin.datum_odhlasenia;
+  var isSigninButton = !somPrihlaseny(termin);
   var appearDisabled =
     (isSigninButton && termin.moznost_prihlasit !== "A") || pressed;
 
@@ -398,25 +397,18 @@ export function SkuskyRegisterButton({ termin }: { termin: Termin }) {
   var today = new Date().toJSON().replace(/-/g, "").substring(0, 8);
   if (today > sortAs.date(termin.datum)) return null;
 
-  var buttonClass =
-    "btn btn-xs " +
-    (isSigninButton ? "btn-success" : "btn-danger") +
-    (appearDisabled ? " appear-disabled" : "");
-  var buttonText = pressed ? (
-    <Loading />
-  ) : isSigninButton ? (
-    "Prihlásiť"
-  ) : (
-    "Odhlásiť"
-  );
-
   return (
     <button
       type="button"
       onClick={pressed ? undefined : handleClick}
-      className={buttonClass}
+      className={classNames(
+        "btn",
+        "btn-xs",
+        isSigninButton ? "btn-success" : "btn-danger",
+        appearDisabled && "appear-disabled"
+      )}
     >
-      {buttonText}
+      {pressed ? <Loading /> : isSigninButton ? "Prihlásiť" : "Odhlásiť"}
     </button>
   );
 }
