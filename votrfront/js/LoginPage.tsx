@@ -4,7 +4,7 @@ import { AboutModal } from "./About";
 import { Modal, ModalBase } from "./layout";
 import { FakeLink } from "./router";
 
-var TYPE_NAMES = {
+var TYPE_NAMES: Record<string, string> = {
   "cosignproxy": "Cosign (automatické)",
   "cosignpassword": "Cosign (meno a heslo)",
   "cosigncookie": "Cosign (manuálne cookie)",
@@ -12,27 +12,27 @@ var TYPE_NAMES = {
   "demo": "Demo",
 };
 
-export function LoginForm({ onOpenError }) {
+export function LoginForm({ onOpenError }: { onOpenError: () => void }) {
   var [state, setState] = useState({
     server: Votr.settings.server || 0,
     type: Votr.settings.type,
   });
 
-  function handleServerChange(event) {
-    var server = event.target.value;
-    var newTypes = Votr.settings.servers[server].login_types;
+  function handleServerChange(event: React.ChangeEvent<HTMLSelectElement>) {
+    var server = Number(event.target.value);
+    var newTypes = Votr.settings.servers![server].login_types;
     setState((old) => ({
       server,
       type: _.includes(newTypes, old.type) ? old.type : null,
     }));
   }
 
-  function handleTypeChange(event) {
+  function handleTypeChange(event: React.ChangeEvent<HTMLSelectElement>) {
     var type = event.target.value;
     setState((old) => ({ server: old.server, type }));
   }
 
-  var serverConfig = Votr.settings.servers[state.server];
+  var serverConfig = Votr.settings.servers![state.server];
   var currentType = state.type || serverConfig.login_types[0];
 
   return (
@@ -47,7 +47,7 @@ export function LoginForm({ onOpenError }) {
           <p>
             {"Technické detaily: "}
             <code className="login-error">
-              {_.last(Votr.settings.error.trim("\n").split("\n"))}
+              {_.last(Votr.settings.error.trim().split("\n"))}
             </code>{" "}
             <FakeLink onClick={onOpenError}>Viac detailov...</FakeLink>
           </p>
@@ -64,7 +64,7 @@ export function LoginForm({ onOpenError }) {
 
       <input type="hidden" name="destination" value={location.search} />
 
-      {Votr.settings.servers.length > 1 ? (
+      {Votr.settings.servers!.length > 1 ? (
         <p>
           <label>
             {"Server: "}
@@ -73,7 +73,7 @@ export function LoginForm({ onOpenError }) {
               value={state.server}
               onChange={handleServerChange}
             >
-              {Votr.settings.servers.map((server, index) => (
+              {Votr.settings.servers!.map((server, index) => (
                 <option key={index} value={index}>
                   {server.title}
                 </option>
@@ -157,7 +157,7 @@ export function LoginErrorModal() {
 }
 
 export function LoginPage() {
-  var [modal, setModal] = useState(null);
+  var [modal, setModal] = useState<React.ComponentType | null>(null);
 
   return (
     <React.Fragment>

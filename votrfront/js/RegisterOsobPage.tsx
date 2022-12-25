@@ -4,7 +4,7 @@ import { currentAcademicYear } from "./coursesStats";
 import { FormItem, PageLayout, PageTitle } from "./layout";
 import { navigate, QueryContext } from "./router";
 import { sortAs, sortTable } from "./sorting";
-import { Columns } from "./types";
+import { Columns, ComboBoxOption } from "./types";
 
 export var RegisterOsobColumns: Columns = [
   ["Plné meno", "plne_meno", sortAs.personName],
@@ -36,26 +36,32 @@ export function RegisterOsobForm() {
     absolventiRocnik: query.absolventiRocnik,
   }));
 
-  function handleFieldChange(event) {
+  function handleFieldChange(
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) {
     var name = event.target.name;
     var value = event.target.value;
     setState((old) => ({ ...old, [name]: value }));
   }
 
-  function handleCheckBoxChange(event) {
+  function handleCheckBoxChange(event: React.ChangeEvent<HTMLInputElement>) {
     var name = event.target.name;
     var value = String(event.target.checked);
     setState((old) => ({ ...old, [name]: value }));
   }
 
-  function handleSubmit(event) {
+  function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     navigate({ action: "registerOsob", ...state });
   }
 
   var cache = new CacheRequester();
 
-  function renderTextbox(label, name, focus = false) {
+  function renderTextbox(
+    label: string,
+    name: keyof typeof state,
+    focus: boolean = false
+  ) {
     return (
       <FormItem label={label}>
         <input
@@ -70,7 +76,11 @@ export function RegisterOsobForm() {
     );
   }
 
-  function renderSelect(label, name, items) {
+  function renderSelect(
+    label: string,
+    name: keyof typeof state,
+    items: ComboBoxOption[] | null
+  ) {
     return (
       <FormItem label={label}>
         {items ? (
@@ -93,7 +103,7 @@ export function RegisterOsobForm() {
     );
   }
 
-  function renderCheckbox(label, name) {
+  function renderCheckbox(label: string, name: keyof typeof state) {
     return (
       <label>
         <input
@@ -150,7 +160,7 @@ export function RegisterOsobForm() {
   );
 }
 
-export function RegisterOsobResultTable(props) {
+export function RegisterOsobResultTable() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
 

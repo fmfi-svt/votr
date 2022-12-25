@@ -11,14 +11,12 @@ import {
 import {
   classForSemester,
   humanizeNazovPriemeru,
-  humanizeTerminHodnotenia,
-  humanizeTypVyucby,
   plural,
 } from "./humanizeAISData";
 import { PageLayout, PageTitle } from "./layout";
 import { Link, QueryContext } from "./router";
 import { sortAs, SortableTable } from "./sorting";
-import { Columns } from "./types";
+import { Columns, Priemer } from "./types";
 
 export var MojeHodnoteniaColumns: Columns = [
   {
@@ -42,7 +40,7 @@ export var MojePriemeryColumns: Columns = [
   {
     label: "Názov priemeru",
     prop: "nazov",
-    cell: (priemer, query) => humanizeNazovPriemeru(priemer.nazov),
+    cell: (priemer: Priemer) => humanizeNazovPriemeru(priemer.nazov),
   },
   { label: "Akademický rok", prop: "akademicky_rok" },
   {
@@ -97,7 +95,7 @@ export function MojeHodnoteniaHodnoteniaTable() {
 
   var stats = coursesStats(hodnotenia);
 
-  var footer = (fullTable) => (
+  var footer = (fullTable: boolean) => (
     <tr>
       <td className={fullTable ? "" : "hidden-xs hidden-sm"} colSpan={2} />
       <td colSpan={2}>
@@ -106,7 +104,7 @@ export function MojeHodnoteniaHodnoteniaTable() {
       </td>
       <td>{renderCredits(stats.spolu)}</td>
       <td className={fullTable ? "" : "hidden-xs"} />
-      <td>{renderWeightedStudyAverage(hodnotenia)}</td>
+      <td>{renderWeightedStudyAverage(hodnotenia!)}</td>
       <td className={fullTable ? "" : "hidden-xs hidden-sm"} />
       <td className={fullTable ? "" : "hidden-xs hidden-sm"} />
     </tr>
@@ -129,15 +127,16 @@ export function MojeHodnoteniaPriemeryTable() {
   var cache = new CacheRequester();
   var { studiumKey } = query;
 
-  var priemery, message;
-  var zapisneListy: any[] = cache.get("get_zapisne_listy", studiumKey);
+  var priemery: Priemer[] | undefined;
+  var message: string | null | undefined;
+  var zapisneListy = cache.get("get_zapisne_listy", studiumKey);
 
   if (zapisneListy && zapisneListy.length == 0) {
     priemery = [];
   } else if (zapisneListy) {
     var zapisnyListKey = _.maxBy(zapisneListy, (zapisnyList) =>
       sortAs.date(zapisnyList.datum_zapisu)
-    ).zapisny_list_key;
+    )!.zapisny_list_key;
     [priemery, message] = cache.get("get_priemery", zapisnyListKey) || [];
   }
 

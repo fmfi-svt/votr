@@ -1,20 +1,23 @@
 export {};
 
-Votr.setDebug = function (enabled) {
+Votr.setDebug = function (enabled: unknown) {
   document.cookie = enabled ? "votr_debug=true" : "votr_debug=";
   location.reload();
 };
 
 if (
+  // @ts-expect-error TS2774
   history.pushState &&
   window.Set &&
   window.Map &&
+  // @ts-expect-error TS2774
   Array.prototype.includes &&
+  // @ts-expect-error TS2774
   Object.values
 ) {
   Votr.prologueCheck = true;
 } else {
-  document.getElementById("votr").innerHTML = `
+  document.getElementById("votr")!.innerHTML = `
     <div class="central-box">
     <h1>Votr</h1>
     <p>Votr ponúka študentom jednoduchší a pohodlnejší spôsob, ako robiť najčastejšie činnosti zo systému AIS.</p>
@@ -30,5 +33,5 @@ if (
     </ul>
     </div>
   `;
-  if (window.ga) ga("send", "pageview");
+  if (window.ga) window.ga("send", "pageview");
 }

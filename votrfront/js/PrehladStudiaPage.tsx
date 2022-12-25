@@ -1,10 +1,15 @@
 import React, { useContext } from "react";
-import { CacheRequester, Loading, sendRpc, RequestCache } from "./ajax";
+import {
+  CacheRequester,
+  Loading,
+  sendRpc,
+  invalidateRequestCache,
+} from "./ajax";
 import { PageLayout, PageTitle } from "./layout";
 import { QueryContext } from "./router";
 import { sortAs, sortTable } from "./sorting";
 import { currentAcademicYear } from "./coursesStats";
-import { Columns } from "./types";
+import { Columns, Studium, ZapisnyList } from "./types";
 
 // TODO: Pridat kadejake sumarne informacie, aby to vyzeralo ako dashboard.
 // TODO: Ked to raz bude rychle, pouzit to ako "home page" pri prazdnom action.
@@ -29,7 +34,11 @@ export var PrehladZapisnyListColumns: Columns = [
 ];
 PrehladZapisnyListColumns.defaultOrder = "d0d3";
 
-export function PrehladStudiaObdobie(props) {
+export function PrehladStudiaObdobie(props: {
+  rpc: "get_semester_obdobie" | "get_skuskove_obdobie";
+  semester: "Z" | "L";
+  label: string;
+}) {
   var cache = new CacheRequester();
   var result = cache.get(props.rpc, props.semester);
   return (
@@ -83,9 +92,8 @@ export function PrehladStudiaObdobia() {
   );
 }
 
-export function PridatZapisnyListButton(props) {
+export function PridatZapisnyListButton({ studium }: { studium: Studium }) {
   var rok = currentAcademicYear();
-  var studium = props.studium;
 
   if (studium.koniec !== "") {
     // Ak studium uz skoncilo, neukazeme nic.
@@ -112,7 +120,7 @@ export function PridatZapisnyListButton(props) {
           if (message !== null) {
             alert(message);
           } else {
-            RequestCache.invalidate("get_zapisne_listy");
+            invalidateRequestCache("get_zapisne_listy");
           }
         }
       );
@@ -124,7 +132,7 @@ export function PridatZapisnyListButton(props) {
       type="button"
       className="btn btn-xs btn-success"
       disabled={uzExistuje}
-      onClick={uzExistuje ? null : handleClick}
+      onClick={uzExistuje ? undefined : handleClick}
     >
       Vytvoriť
     </button>
@@ -141,7 +149,8 @@ export function PrehladStudiaStudia() {
     return <Loading requests={cache.missing} />;
   }
 
-  var [studia, header] = sortTable(
+  var header;
+  [studia, header] = sortTable(
     studia,
     PrehladStudiumColumns,
     query,
@@ -191,7 +200,7 @@ export function PrehladStudiaZapisneListy() {
     return <Loading requests={cache.missing} />;
   }
 
-  var zapisneListy: any = [];
+  var zapisneListy: ZapisnyList[] = [];
 
   for (const studium of studia) {
     var mojeZapisneListy = cache.get("get_zapisne_listy", studium.studium_key);

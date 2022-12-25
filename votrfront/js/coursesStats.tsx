@@ -1,15 +1,27 @@
 import React from "react";
+import { Hodnotenie } from "./types";
 
-var ZNAMKY = { "A": 1, "B": 1.5, "C": 2, "D": 2.5, "E": 3, "F": 4 };
+var ZNAMKY: Record<string, number> = {
+  "A": 1,
+  "B": 1.5,
+  "C": 2,
+  "D": 2.5,
+  "E": 3,
+  "F": 4,
+};
 
-export function coursesStats(hodnotenia) {
+export function coursesStats(hodnotenia: Hodnotenie[]) {
   var result = {
     zima: { count: 0, creditsEnrolled: 0, creditsObtained: 0 },
     leto: { count: 0, creditsEnrolled: 0, creditsObtained: 0 },
     spolu: { count: 0, creditsEnrolled: 0, creditsObtained: 0 },
   };
 
-  function add(type, credits, obtained) {
+  function add(
+    type: "zima" | "leto" | "spolu",
+    credits: number,
+    obtained: boolean
+  ) {
     result[type].count++;
     result[type].creditsEnrolled += credits;
     result[type].creditsObtained += obtained ? credits : 0;
@@ -17,7 +29,7 @@ export function coursesStats(hodnotenia) {
 
   for (const row of hodnotenia) {
     var credits = parseInt(row.kredit);
-    var obtained = row.hodn_znamka && row.hodn_znamka[0] !== "F";
+    var obtained = !!row.hodn_znamka && row.hodn_znamka[0] !== "F";
     add("spolu", credits, obtained);
     if (row.semester == "Z") add("zima", credits, obtained);
     if (row.semester == "L") add("leto", credits, obtained);
@@ -26,7 +38,7 @@ export function coursesStats(hodnotenia) {
   return result;
 }
 
-export function weightedStudyAverage(hodnotenia) {
+export function weightedStudyAverage(hodnotenia: Hodnotenie[]) {
   var weightedSum = 0;
   var creditsSum = 0;
 
@@ -42,7 +54,7 @@ export function weightedStudyAverage(hodnotenia) {
   return weightedSum / creditsSum;
 }
 
-export function renderWeightedStudyAverage(hodnotenia) {
+export function renderWeightedStudyAverage(hodnotenia: Hodnotenie[]) {
   var average = weightedStudyAverage(hodnotenia);
   if (average === null) return null;
   return (
@@ -52,7 +64,13 @@ export function renderWeightedStudyAverage(hodnotenia) {
   );
 }
 
-export function renderCredits({ creditsObtained, creditsEnrolled }) {
+export function renderCredits({
+  creditsObtained,
+  creditsEnrolled,
+}: {
+  creditsObtained: number;
+  creditsEnrolled: number;
+}) {
   return creditsObtained && creditsObtained != creditsEnrolled
     ? `${creditsObtained}/${creditsEnrolled}`
     : `${creditsEnrolled}`;

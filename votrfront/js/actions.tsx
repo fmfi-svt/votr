@@ -24,7 +24,7 @@ export function makeNotFoundPage() {
   );
 }
 
-export var actions = {
+export var actions: Record<string, () => React.ReactNode> = {
   index: makeIndexPage,
   priebezneHodnotenia: makePriebezneHodnoteniaPage,
   mojeHodnotenia: makeMojeHodnoteniaPage,
@@ -37,7 +37,7 @@ export var actions = {
   zapisZPonuky: makeZapisZPonukyPage,
 };
 
-export var modalActions = {
+export var modalActions: Record<string, React.ComponentType> = {
   about: AboutModal,
   detailPredmetu: DetailPredmetuModal,
   zoznamPrihlasenychNaTermin: ZoznamPrihlasenychNaTerminModal,

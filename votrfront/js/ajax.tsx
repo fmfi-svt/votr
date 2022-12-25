@@ -1,10 +1,28 @@
 import React, { useEffect } from "react";
 import _ from "lodash";
+import { Rpcs } from "./types";
 
-export function sendRpc(name, args, callback) {
+interface RpcLogPayload {
+  log: string;
+  message: string;
+  time: number;
+}
+interface RpcErrorPayload {
+  error: string;
+}
+interface RpcResultPayload {
+  result: {};
+}
+type RpcPayload = RpcLogPayload | RpcErrorPayload | RpcResultPayload;
+
+export function sendRpc<N extends keyof Rpcs>(
+  name: N,
+  args: Parameters<Rpcs[N]>,
+  callback: (result: ReturnType<Rpcs[N]>) => void
+) {
   var HEADER_LENGTH = 10;
   var processed = 0;
-  var result = undefined;
+  var result: {} | undefined = undefined;
   var finished = false;
 
   function update() {
@@ -16,11 +34,11 @@ export function sendRpc(name, args, callback) {
       var length = parseInt(header, HEADER_LENGTH);
       if (waiting < HEADER_LENGTH + length) break;
       var payload = xhr.responseText.substr(processed + HEADER_LENGTH, length);
-      var data = JSON.parse(payload);
+      var data = JSON.parse(payload) as RpcPayload;
       console.log("RECEIVED", data);
-      if (data.log !== undefined) logs.push(data);
-      if (data.result !== undefined) result = data.result;
-      if (data.error !== undefined) return fail(data.error);
+      if ("log" in data) logs.push(data);
+      if ("result" in data) result = data.result;
+      if ("error" in data) return fail(data.error);
       processed += HEADER_LENGTH + length;
     }
     if (xhr.readyState == 4) {
@@ -30,13 +48,13 @@ export function sendRpc(name, args, callback) {
       }
       finished = true;
       if (callback) {
-        callback(result);
+        callback(result as ReturnType<Rpcs[N]>);
       }
     }
     Votr.updateRoot();
   }
 
-  function fail(e) {
+  function fail(e: unknown) {
     if (finished) return;
     finished = true;
     console.log("FAILED!", e);
@@ -52,32 +70,37 @@ export function sendRpc(name, args, callback) {
   xhr.onerror = fail;
   xhr.open("POST", "rpc?name=" + name, true);
   xhr.setRequestHeader("Content-Type", "application/json");
-  xhr.setRequestHeader("X-CSRF-Token", Votr.settings.csrf_token);
+  xhr.setRequestHeader("X-CSRF-Token", Votr.settings.csrf_token!);
   xhr.send(JSON.stringify(args));
 }
 
 Votr.ajaxError = null;
 
-export var logs = [];
+export var logs: RpcLogPayload[] = [];
 
-export var RequestCache: any = {};
+export var RequestCache: {
+  done: Record<string, unknown>;
+  pending: Record<string, true>;
+  pocet_prihlasenych_je_stary: Record<string, true>;
+} = { done: {}, pending: {}, pocet_prihlasenych_je_stary: {} };
 
-RequestCache.pending = {};
-
-RequestCache.sendRequest = function (request) {
+function sendCachedRequest<N extends keyof Rpcs>(
+  request: [N, ...Parameters<Rpcs[N]>]
+) {
   var cacheKey = request.join("\0");
-  if (RequestCache[cacheKey]) return;
+  if (RequestCache.done[cacheKey]) return;
   if (RequestCache.pending[cacheKey]) return;
   RequestCache.pending[cacheKey] = true;
-  sendRpc(request[0], request.slice(1), function (result) {
-    RequestCache[cacheKey] = result;
+  var [name, ...args] = request;
+  sendRpc(name, args, function (result) {
+    RequestCache.done[cacheKey] = result;
   });
-};
+}
 
-RequestCache.invalidate = function (command) {
-  for (var key in RequestCache) {
+export function invalidateRequestCache(command: string) {
+  for (var key in RequestCache.done) {
     if (key.split("\0")[0] === command) {
-      delete RequestCache[key];
+      delete RequestCache.done[key];
     }
   }
 
@@ -86,35 +109,36 @@ RequestCache.invalidate = function (command) {
       delete RequestCache.pending[key];
     }
   }
-};
-
-export function CacheRequester() {
-  this.missing = [];
-  this.loadedAll = true;
 }
 
-CacheRequester.prototype.get = function (...request) {
-  var cacheKey = request.join("\0");
-  if (RequestCache[cacheKey] !== undefined) {
-    return RequestCache[cacheKey];
-  } else {
-    this.missing.push(request);
-    this.loadedAll = false;
-    return null;
+export class CacheRequester {
+  missing: Array<() => void> = [];
+  loadedAll = true;
+  get<N extends keyof Rpcs>(
+    ...request: [N, ...Parameters<Rpcs[N]>]
+  ): ReturnType<Rpcs[N]> | null {
+    var cacheKey = request.join("\0");
+    if (RequestCache.done[cacheKey] !== undefined) {
+      return RequestCache.done[cacheKey] as ReturnType<Rpcs[N]>;
+    } else {
+      this.missing.push(() => sendCachedRequest(request));
+      this.loadedAll = false;
+      return null;
+    }
   }
-};
+}
 
-export function Loading({ requests }: { requests?: any[][] }) {
+export function Loading({ requests }: { requests?: Array<() => void> }) {
   useEffect(() => {
     if (requests) {
-      for (const request of requests) RequestCache.sendRequest(request);
+      for (const requestFn of requests) requestFn();
     }
   });
 
   return <span className="loading">Načítavam...</span>;
 }
 
-export function goPost(url) {
+export function goPost(url: string) {
   var form = document.createElement("form");
   form.method = "POST";
   form.action = url;

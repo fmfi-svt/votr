@@ -6,7 +6,7 @@ import { sortAs } from "./sorting";
 
 // TODO: Reduce code duplication with ZapisnyListSelector.
 
-function getItems(cache) {
+function getItems(cache: CacheRequester) {
   var studia = cache.get("get_studia");
 
   var items = studia || [];
@@ -14,7 +14,7 @@ function getItems(cache) {
   return _.sortBy(items, (item) => sortAs.date(item.zaciatok)).reverse();
 }
 
-export function StudiumSelector(props) {
+export function StudiumSelector(props: { children: React.ReactNode }) {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
   var items = getItems(cache);

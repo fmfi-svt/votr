@@ -4,8 +4,9 @@ import { CacheRequester, Loading } from "./ajax";
 import { Link, QueryContext } from "./router";
 import { sortAs } from "./sorting";
 import { currentAcademicYear } from "./coursesStats";
+import { ZapisnyList } from "./types";
 
-function getItems(cache): [any[], boolean] {
+function getItems(cache: CacheRequester): [ZapisnyList[], boolean] {
   var studia = cache.get("get_studia");
 
   var items = [];
@@ -35,7 +36,7 @@ function getItems(cache): [any[], boolean] {
   ];
 }
 
-export function ZapisnyListSelector(props) {
+export function ZapisnyListSelector(props: { children: React.ReactNode }) {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
   var [items, buttonNovyZapisnyList] = getItems(cache);

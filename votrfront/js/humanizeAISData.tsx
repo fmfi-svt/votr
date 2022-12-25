@@ -1,5 +1,5 @@
-function humanizeWith(table) {
-  return function (value) {
+function humanizeWith(table: Record<string, string>) {
+  return function (value: string) {
     return table[value] || value;
   };
 }
@@ -26,13 +26,13 @@ export var humanizeBoolean = humanizeWith({
   "N": "nie",
 });
 
-export function classForSemester(semester) {
+export function classForSemester(semester: string) {
   if (semester == "Z") return "zima";
   if (semester == "L") return "leto";
   return undefined;
 }
 
-export function plural(count, one, few, many) {
+export function plural(count: number, one: string, few: string, many: string) {
   if (count == 1) return one;
   if (count >= 2 && count <= 4) return few;
   return many;

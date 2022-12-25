@@ -62,5 +62,5 @@ import "../css/main.scss";
     </React.StrictMode>
   );
 
-  createRoot(document.getElementById("votr")).render(root);
+  createRoot(document.getElementById("votr")!).render(root);
 })();

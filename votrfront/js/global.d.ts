@@ -1,8 +1,10 @@
+import { VotrVar } from "./types";
+
 export {};
 
 declare global {
-  var Votr: any;
-  var ga: any;
+  var Votr: VotrVar;
+  var ga: ((...args: unknown[]) => void) | undefined;
   var __webpack_require__: unknown;
 }
 

@@ -2,18 +2,24 @@ import PropTypes from "prop-types";
 import React, { useContext, useState } from "react";
 import _ from "lodash";
 import { ZapisnyListSelector } from "./ZapisnyListSelector";
-import { CacheRequester, Loading, RequestCache, sendRpc } from "./ajax";
+import {
+  CacheRequester,
+  invalidateRequestCache,
+  Loading,
+  RequestCache,
+  sendRpc,
+} from "./ajax";
 import { coursesStats } from "./coursesStats";
 import { humanizeTypVyucby, plural } from "./humanizeAISData";
 import { FormItem, PageLayout, PageTitle } from "./layout";
 import { Link, navigate, QueryContext } from "./router";
 import { sortAs, SortableTable } from "./sorting";
-import { Columns } from "./types";
+import { Columns, ComboBoxOption, ZapisCast, ZapisPredmet } from "./types";
 
 const typVyucbyColumn = {
   label: <abbr title="Typ výučby">Typ</abbr>,
   prop: "typ_vyucby",
-  cell: (predmet) => (
+  cell: (predmet: ZapisPredmet) => (
     <abbr title={humanizeTypVyucby(predmet.typ_vyucby)}>
       {predmet.typ_vyucby}
     </abbr>
@@ -45,9 +51,9 @@ const prihlaseniColumn = {
   label: "Prihlásení",
   prop: "pocet_prihlasenych",
   process: sortAs.number,
-  cell: (predmet) => (
+  cell: (predmet: ZapisPredmet) => (
     <React.Fragment>
-      {RequestCache["pocet_prihlasenych_je_stary" + predmet.predmet_key] ? (
+      {RequestCache.pocet_prihlasenych_je_stary[predmet.predmet_key] ? (
         <del>{predmet.pocet_prihlasenych}</del>
       ) : (
         predmet.pocet_prihlasenych
@@ -60,7 +66,7 @@ const prihlaseniColumn = {
 const jazykColumn = {
   label: "Jazyk",
   prop: "jazyk",
-  cell: (predmet) => predmet.jazyk.replace(/ ,/g, ", "),
+  cell: (predmet: ZapisPredmet) => predmet.jazyk.replace(/ ,/g, ", "),
   hiddenClass: ["hidden-xs", "hidden-sm"],
 };
 
@@ -68,11 +74,11 @@ export var ZapisZPlanuColumns: Columns = [
   typVyucbyColumn,
   {
     label: "Blok",
-    process: (predmet) =>
-      parseInt(predmet.blok_index || 0) * 1000 +
-      parseInt(predmet.v_bloku_index || 0),
+    process: (predmet: ZapisPredmet) =>
+      parseInt(predmet.blok_index || "0") * 1000 +
+      parseInt(predmet.v_bloku_index || "0"),
     hiddenClass: ["hidden-xs", "hidden-sm"],
-    cell: (predmet) =>
+    cell: (predmet: ZapisPredmet) =>
       predmet.blok_nazov ? (
         <abbr title={predmet.blok_nazov}>{predmet.blok_skratka}</abbr>
       ) : (
@@ -116,7 +122,11 @@ export var ZapisVlastnostiColumns = [
   { label: "Poznámka", prop: "poznamka" },
 ];
 
-function ZapisLink(props) {
+function ZapisLink(props: {
+  active: boolean;
+  href: Record<string, string>;
+  label: string;
+}) {
   return (
     <Link
       className={"btn btn-default" + (props.active ? " active" : "")}
@@ -156,16 +166,18 @@ export function ZapisMenu() {
 }
 
 export function ZapisTableFooter(props: {
-  predmety: Record<string, any>;
+  predmety: Record<string, ZapisPredmet>;
   moje: Record<string, boolean>;
   fullTable: boolean;
 }) {
-  var bloky = {},
-    nazvy = {},
-    semestre = {};
+  var bloky: Record<string, ZapisPredmet[]> = {},
+    nazvy: Record<string, string> = {},
+    semestre: Record<string, true> = {};
   for (const predmet of Object.values(props.predmety)) {
     semestre[predmet.semester] = true;
-    if (predmet.blok_skratka) nazvy[predmet.blok_skratka] = predmet.blok_nazov;
+    if (predmet.blok_skratka && predmet.blok_nazov) {
+      nazvy[predmet.blok_skratka] = predmet.blok_nazov;
+    }
   }
 
   for (const skratka of _.sortBy(_.keys(nazvy))) bloky[skratka] = [];
@@ -182,12 +194,12 @@ export function ZapisTableFooter(props: {
   return (
     <React.Fragment>
       {_.map(bloky, (blok, skratka) => {
-        var stats = coursesStats(blok);
+        var stats = coursesStats(blok as any);
         return (
           <React.Fragment key={skratka}>
             <tr
               key={skratka}
-              className={props.fullTable ? null : "hidden-xs hidden-sm"}
+              className={props.fullTable ? undefined : "hidden-xs hidden-sm"}
             >
               <td colSpan={2}>{skratka ? "Súčet bloku" : "Dokopy"}</td>
               <td>
@@ -255,16 +267,30 @@ ZapisTableFooter.propTypes = {
   moje: PropTypes.object.isRequired,
 };
 
-export function ZapisTable(props) {
+export function ZapisTable(props: {
+  predmety: Record<string, ZapisPredmet & { moje: boolean }> | undefined;
+  odoberPredmety: (
+    predmety: ZapisPredmet[],
+    callback: (message: string | null) => void
+  ) => void;
+  pridajPredmety: (
+    predmety: ZapisPredmet[],
+    callback: (message: string | null) => void
+  ) => void;
+  akademickyRok: string | null | undefined;
+  columns: Columns;
+  showFooter?: boolean;
+  message: string | null | undefined;
+}) {
   var query = useContext(QueryContext);
   var [saving, setSaving] = useState(false);
-  var [changes, setChanges] = useState({});
+  var [changes, setChanges] = useState<Record<string, boolean | undefined>>({});
 
-  var predmety = props.predmety;
+  const predmety = props.predmety;
 
-  function handleChange(event) {
+  function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     var predmetKey = event.target.name;
-    var predmet = predmety[predmetKey];
+    var predmet = predmety![predmetKey];
 
     // prettier-ignore
     var want =
@@ -274,13 +300,13 @@ export function ZapisTable(props) {
     setChanges((changes) => ({ ...changes, [predmetKey]: want }));
   }
 
-  function handleSave(event) {
+  function handleSave(event: React.FormEvent) {
     event.preventDefault();
 
     if (saving) return;
 
-    var odoberanePredmety = [],
-      pridavanePredmety = [];
+    var odoberanePredmety: ZapisPredmet[] = [],
+      pridavanePredmety: ZapisPredmet[] = [];
     for (var predmet_key in predmety) {
       if (changes[predmet_key] === false && predmety[predmet_key].moje) {
         odoberanePredmety.push(predmety[predmet_key]);
@@ -292,31 +318,29 @@ export function ZapisTable(props) {
 
     setSaving(true);
 
-    var koniec = (odobral, pridal) => {
+    var koniec = (odobral: boolean, pridal: boolean) => {
       setSaving(false);
 
       if (odobral) {
         for (const predmet of odoberanePredmety) {
-          RequestCache["pocet_prihlasenych_je_stary" + predmet.predmet_key] =
-            true;
+          RequestCache.pocet_prihlasenych_je_stary[predmet.predmet_key] = true;
         }
         setChanges((changes) => _.pickBy(changes, (value) => value === true));
       }
 
       if (pridal) {
         for (const predmet of pridavanePredmety) {
-          RequestCache["pocet_prihlasenych_je_stary" + predmet.predmet_key] =
-            true;
+          RequestCache.pocet_prihlasenych_je_stary[predmet.predmet_key] = true;
         }
         setChanges((changes) => _.pickBy(changes, (value) => value === false));
       }
 
       // Aj ked skoncime neuspechom, je mozne, ze niektore predmety sa zapisali.
-      RequestCache.invalidate("get_hodnotenia");
-      RequestCache.invalidate("get_predmety");
-      RequestCache.invalidate("get_prehlad_kreditov");
-      RequestCache.invalidate("get_studenti_zapisani_na_predmet");
-      RequestCache.invalidate("zapis_get_zapisane_predmety");
+      invalidateRequestCache("get_hodnotenia");
+      invalidateRequestCache("get_predmety");
+      invalidateRequestCache("get_prehlad_kreditov");
+      invalidateRequestCache("get_studenti_zapisani_na_predmet");
+      invalidateRequestCache("zapis_get_zapisane_predmety");
     };
 
     props.odoberPredmety(odoberanePredmety, (message) => {
@@ -344,8 +368,8 @@ export function ZapisTable(props) {
     return <span />;
   }
 
-  var classes = {},
-    checked = {};
+  var classes: Record<string, string> = {},
+    checked: Record<string, boolean> = {};
   for (var predmet_key in predmety) {
     checked[predmet_key] = predmety[predmet_key].moje;
     if (changes[predmet_key] === false && predmety[predmet_key].moje) {
@@ -376,7 +400,7 @@ export function ZapisTable(props) {
     prop: "moje",
     preferDesc: true,
     colProps: () => ({ className: "text-center" }),
-    cell: (predmet, query) => (
+    cell: (predmet: ZapisPredmet) => (
       <input
         type="checkbox"
         name={predmet.predmet_key}
@@ -391,7 +415,7 @@ export function ZapisTable(props) {
     label: "Názov predmetu",
     prop: "nazov",
     expansionMark: true,
-    cell: (predmet) => {
+    cell: (predmet: ZapisPredmet & { moje: boolean }) => {
       var href = {
         ...query,
         modal: "detailPredmetu",
@@ -417,7 +441,7 @@ export function ZapisTable(props) {
     ...props.columns.slice(2),
   ];
 
-  const footer = (fullTable) =>
+  const footer = (fullTable: boolean) =>
     props.showFooter && (
       <ZapisTableFooter
         predmety={predmety}
@@ -478,8 +502,8 @@ export function ZapisVlastnostiTable() {
 
 export function ZapisZPlanuPageContent() {
   var query = useContext(QueryContext);
-  var { zapisnyListKey, cast } = query;
-  cast = cast == "SS" ? "SS" : "SC";
+  var { zapisnyListKey, cast: castRaw } = query;
+  var cast: ZapisCast = castRaw == "SS" ? "SS" : "SC";
 
   var cache = new CacheRequester();
 
@@ -492,7 +516,9 @@ export function ZapisZPlanuPageContent() {
     zapisnyListKey
   );
 
-  var outerMessage, tableMessage, predmety;
+  var outerMessage,
+    tableMessage,
+    predmety: Record<string, ZapisPredmet & { moje: boolean }> | undefined;
 
   if (zapisaneMessage || ponukaneMessage) {
     outerMessage = <p>{zapisaneMessage || ponukaneMessage}</p>;
@@ -502,19 +528,24 @@ export function ZapisZPlanuPageContent() {
     var vidnoZimne = false;
 
     predmety = {};
-    for (const predmet of ponukanePredmety) {
+    for (const predmet of ponukanePredmety!) {
       predmety[predmet.predmet_key] = { moje: false, ...predmet };
       if (predmet.semester == "Z") vidnoZimne = true;
     }
-    for (const predmet of zapisanePredmety) {
+    for (const predmet of zapisanePredmety!) {
       var predmet_key = predmet.predmet_key;
       if (!predmety[predmet_key]) {
         if (predmet.semester == "Z" && !vidnoZimne) continue;
         predmety[predmet_key] = { moje: true, ...predmet };
       } else {
         for (var property in predmet) {
-          if (predmet[property] !== null && predmet[property] !== undefined) {
-            predmety[predmet_key][property] = predmet[property];
+          if (
+            (predmet as any)[property] !== null &&
+            (predmet as any)[property] !== undefined
+          ) {
+            (predmety[predmet_key] as any)[property] = (predmet as any)[
+              property
+            ];
           }
         }
         predmety[predmet_key].moje = true;
@@ -544,10 +575,13 @@ export function ZapisZPlanuPageContent() {
     </React.Fragment>
   );
 
-  function pridajPredmety(predmety, callback) {
+  function pridajPredmety(
+    predmety: ZapisPredmet[],
+    callback: (message: string | null) => void
+  ) {
     if (!predmety.length) return callback(null);
 
-    var dvojice = predmety.map((predmet) => [
+    var dvojice: [string, string][] = predmety.map((predmet) => [
       predmet.typ_vyucby,
       predmet.skratka,
     ]);
@@ -558,7 +592,10 @@ export function ZapisZPlanuPageContent() {
     );
   }
 
-  function odoberPredmety(predmety, callback) {
+  function odoberPredmety(
+    predmety: ZapisPredmet[],
+    callback: (message: string | null) => void
+  ) {
     if (!predmety.length) return callback(null);
 
     var kluce = predmety.map((predmet) => predmet.predmet_key);
@@ -586,13 +623,15 @@ export function ZapisZPonukyForm() {
     nazovPredmetu: query.nazovPredmetu,
   });
 
-  function handleFieldChange(event) {
+  function handleFieldChange(
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) {
     var name = event.target.name;
     var value = event.target.value;
     setState((old) => ({ ...old, [name]: value }));
   }
 
-  function handleSubmit(event) {
+  function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     navigate({
       action: "zapisZPonuky",
@@ -603,7 +642,11 @@ export function ZapisZPonukyForm() {
 
   var cache = new CacheRequester();
 
-  function renderTextbox(label, name, focus = false) {
+  function renderTextbox(
+    label: string,
+    name: keyof typeof state,
+    focus: boolean = false
+  ) {
     return (
       <FormItem label={label}>
         <input
@@ -618,7 +661,11 @@ export function ZapisZPonukyForm() {
     );
   }
 
-  function renderSelect(label, name, items) {
+  function renderSelect(
+    label: string,
+    name: keyof typeof state,
+    items: ComboBoxOption[]
+  ) {
     return (
       <FormItem label={label}>
         {items ? (
@@ -671,7 +718,10 @@ export function ZapisZPonukyPageContent() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
 
-  var outerMessage, tableMessage, predmety, akademickyRok;
+  var outerMessage,
+    tableMessage,
+    predmety: Record<string, ZapisPredmet & { moje: boolean }> | undefined,
+    akademickyRok;
 
   if (
     query.fakulta ||
@@ -702,10 +752,10 @@ export function ZapisZPonukyPageContent() {
       outerMessage = <Loading requests={cache.missing} />;
     } else {
       predmety = {};
-      for (const predmet of ponukanePredmety) {
+      for (const predmet of ponukanePredmety!) {
         predmety[predmet.predmet_key] = { moje: false, ...predmet };
       }
-      for (const predmet of zapisanePredmety) {
+      for (const predmet of zapisanePredmety!) {
         if (predmety[predmet.predmet_key]) {
           predmety[predmet.predmet_key].moje = true;
         }
@@ -735,7 +785,10 @@ export function ZapisZPonukyPageContent() {
     </React.Fragment>
   );
 
-  function pridajPredmety(predmety, callback) {
+  function pridajPredmety(
+    predmety: ZapisPredmet[],
+    callback: (message: string | null) => void
+  ) {
     if (!predmety.length) return callback(null);
 
     var skratky = predmety.map((predmet) => predmet.skratka);
@@ -753,7 +806,10 @@ export function ZapisZPonukyPageContent() {
     );
   }
 
-  function odoberPredmety(predmety, callback) {
+  function odoberPredmety(
+    predmety: ZapisPredmet[],
+    callback: (message: string | null) => void
+  ) {
     if (!predmety.length) return callback(null);
 
     var kluce = predmety.map((predmet) => predmet.predmet_key);

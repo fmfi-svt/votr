@@ -1,14 +1,19 @@
-import PropTypes from "prop-types";
 import React, { useContext, useState } from "react";
 import _ from "lodash";
 import { saveAs } from "file-saver";
 import { ZapisnyListSelector } from "./ZapisnyListSelector";
-import { CacheRequester, Loading, RequestCache, sendRpc } from "./ajax";
+import {
+  CacheRequester,
+  invalidateRequestCache,
+  Loading,
+  sendRpc,
+} from "./ajax";
 import { PageLayout, PageTitle } from "./layout";
 import { Link, QueryContext } from "./router";
 import { sortAs, SortableTable } from "./sorting";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
+import { Termin } from "./types";
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
 
@@ -19,13 +24,13 @@ const MojeSkuskyColumns = [
         <span className="hidden-xs hidden-sm">Moje</span>?
       </React.Fragment>
     ),
-    process: (termin) =>
+    process: (termin: Termin) =>
       !termin.datum_prihlasenia || termin.datum_odhlasenia ? "N" : "A",
-    cell: (termin) =>
+    cell: (termin: Termin) =>
       !termin.datum_prihlasenia || termin.datum_odhlasenia
         ? "\u2718"
         : "\u2714",
-    colProps: (termin) =>
+    colProps: (termin: Termin) =>
       !termin.datum_prihlasenia || termin.datum_odhlasenia
         ? {
             title: "Nie ste prihlásení",
@@ -36,7 +41,7 @@ const MojeSkuskyColumns = [
   {
     label: "Predmet",
     prop: "nazov_predmetu",
-    cell: (termin, query) => (
+    cell: (termin: Termin, query: Record<string, string>) => (
       <Link
         href={{
           ...query,
@@ -52,8 +57,8 @@ const MojeSkuskyColumns = [
   },
   {
     label: "Dátum",
-    process: (termin) => sortAs.date(`${termin.datum} ${termin.cas}`),
-    cell: (termin, query) => `${termin.datum} ${termin.cas}`,
+    process: (termin: Termin) => sortAs.date(`${termin.datum} ${termin.cas}`),
+    cell: (termin: Termin) => `${termin.datum} ${termin.cas}`,
   },
   { label: "Miestnosť", prop: "miestnost", hiddenClass: ["hidden-xs"] },
   {
@@ -67,7 +72,7 @@ const MojeSkuskyColumns = [
     prop: "pocet_prihlasenych",
     process: sortAs.number,
     hiddenClass: ["hidden-xs"],
-    cell: (termin, query) => (
+    cell: (termin: Termin, query: Record<string, string>) => (
       <Link
         href={{
           ...query,
@@ -101,9 +106,9 @@ const MojeSkuskyColumns = [
   },
   {
     label: "Známka",
-    process: (termin) =>
+    process: (termin: Termin) =>
       termin.hodnotenie_terminu || termin.hodnotenie_predmetu,
-    cell: (termin) => (
+    cell: (termin: Termin) => (
       <React.Fragment>
         {termin.hodnotenie_terminu
           ? termin.hodnotenie_terminu
@@ -116,7 +121,7 @@ const MojeSkuskyColumns = [
   },
 ];
 
-function convertToICAL(terminy) {
+function convertToICAL(terminy: Termin[]) {
   // standard: https://tools.ietf.org/html/rfc5545
   // verificator: http://severinghaus.org/projects/icv/
 
@@ -190,7 +195,11 @@ function convertToICAL(terminy) {
   return lines.map((l) => l.replace(/\n/g, "\\n")).join("\r\n");
 }
 
-function MojeSkuskyMenuLink(props) {
+function MojeSkuskyMenuLink(props: {
+  active: boolean;
+  href: Record<string, string>;
+  label: React.ReactNode;
+}) {
   return (
     <Link
       className={"btn btn-default" + (props.active ? " active" : "")}
@@ -210,13 +219,13 @@ export function MojeSkuskyMenu() {
         <div className="btn-group">
           <MojeSkuskyMenuLink
             label="Zoznam"
-            href={{ action: "mojeSkusky", kalendar: 0, zapisnyListKey }}
-            active={kalendar != 1}
+            href={{ action: "mojeSkusky", kalendar: "0", zapisnyListKey }}
+            active={kalendar != "1"}
           />
           <MojeSkuskyMenuLink
             label="Kalendár"
-            href={{ action: "mojeSkusky", kalendar: 1, zapisnyListKey }}
-            active={kalendar == 1}
+            href={{ action: "mojeSkusky", kalendar: "1", zapisnyListKey }}
+            active={kalendar == "1"}
           />
         </div>
       </div>
@@ -232,7 +241,7 @@ interface CalendarEvent {
   prihlaseny: boolean;
 }
 
-function convertToEvents(terminy): CalendarEvent[] {
+function convertToEvents(terminy: Termin[]): CalendarEvent[] {
   return terminy.map((termin, i) => {
     var miestnostStr = termin.miestnost ? ", " + termin.miestnost : "";
     var cas = termin.datum + " " + termin.cas;
@@ -241,7 +250,7 @@ function convertToEvents(terminy): CalendarEvent[] {
       title: `${termin.nazov_predmetu} (${termin.cas}${miestnostStr})`,
       start: moment(cas, "DD.MM.YYYY HH:mm").toDate(),
       end: moment(cas, "DD.MM.YYYY HH:mm").add(3, "hours").toDate(),
-      prihlaseny: termin.datum_prihlasenia && !termin.datum_odhlasenia,
+      prihlaseny: !!(termin.datum_prihlasenia && !termin.datum_odhlasenia),
     };
   });
 }
@@ -250,7 +259,7 @@ function defaultDate(eventList: CalendarEvent[]) {
   var today = new Date();
 
   if (eventList.length) {
-    var lastExamDate = _.maxBy(eventList, "start").start;
+    var lastExamDate = _.maxBy(eventList, "start")!.start;
     if (lastExamDate < today) return lastExamDate;
   }
 
@@ -316,7 +325,7 @@ export function MojeSkuskyPageContent() {
     return <Loading requests={cache.missing} />;
   }
 
-  var terminMap = {};
+  var terminMap: Record<string, Termin> = {};
   for (const termin of terminyVypisane) terminMap[termin.termin_key] = termin;
   for (const termin of terminyPrihlasene) terminMap[termin.termin_key] = termin;
   var terminy = _.values(terminMap);
@@ -326,14 +335,14 @@ export function MojeSkuskyPageContent() {
     : "Zatiaľ nie sú vypísané žiadne termíny.";
 
   function handleClickICal() {
-    var icalText = convertToICAL(terminyPrihlasene);
+    var icalText = convertToICAL(terminyPrihlasene!);
     var blob = new Blob([icalText], { type: "text/calendar;charset=utf-8" });
     saveAs(blob, "MojeTerminy.ics", true);
   }
 
   return (
     <React.Fragment>
-      {kalendar == 1 ? (
+      {kalendar == "1" ? (
         <KalendarUdalosti eventList={convertToEvents(terminy)} />
       ) : (
         <SortableTable
@@ -354,7 +363,7 @@ export function MojeSkuskyPageContent() {
   );
 }
 
-export function SkuskyRegisterButton({ termin }) {
+export function SkuskyRegisterButton({ termin }: { termin: Termin }) {
   var [pressed, setPressed] = useState(false);
 
   var isSigninButton = !termin.datum_prihlasenia || termin.datum_odhlasenia;
@@ -362,18 +371,22 @@ export function SkuskyRegisterButton({ termin }) {
     (isSigninButton && termin.moznost_prihlasit !== "A") || pressed;
 
   function handleClick() {
-    var command = isSigninButton ? "prihlas_na_termin" : "odhlas_z_terminu";
-
-    sendRpc(command, [termin.termin_key], (message) => {
+    function callback(message: string | null) {
       if (message) {
         setPressed(false);
         alert(message);
       } else {
-        RequestCache.invalidate("get_prihlasene_terminy");
-        RequestCache.invalidate("get_vypisane_terminy");
-        RequestCache.invalidate("get_prihlaseni_studenti");
+        invalidateRequestCache("get_prihlasene_terminy");
+        invalidateRequestCache("get_vypisane_terminy");
+        invalidateRequestCache("get_prihlaseni_studenti");
       }
-    });
+    }
+
+    if (isSigninButton) {
+      sendRpc("prihlas_na_termin", [termin.termin_key], callback);
+    } else {
+      sendRpc("odhlas_z_terminu", [termin.termin_key], callback);
+    }
 
     setPressed(true);
   }
@@ -400,7 +413,7 @@ export function SkuskyRegisterButton({ termin }) {
   return (
     <button
       type="button"
-      onClick={pressed ? null : handleClick}
+      onClick={pressed ? undefined : handleClick}
       className={buttonClass}
     >
       {buttonText}

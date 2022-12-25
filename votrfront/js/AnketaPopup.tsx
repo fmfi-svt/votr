@@ -7,7 +7,7 @@ export function AnketaPopup() {
 
   if (!season) return null;
 
-  if (Date.now() > Votr.settings.anketa_end_msec) return null;
+  if (Date.now() > Votr.settings.anketa_end_msec!) return null;
 
   var wasClosedBefore = false;
 
@@ -35,7 +35,7 @@ export function AnketaPopup() {
   }
   if (!studia.some((s) => s.organizacna_jednotka == "FMFI")) return null;
 
-  function closePopup(until) {
+  function closePopup(until: number) {
     LocalSettings.set("anketapopup", JSON.stringify([season, until]));
   }
 

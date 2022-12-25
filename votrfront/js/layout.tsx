@@ -19,9 +19,9 @@ export class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { error: unknown; open: boolean }
 > {
-  state = { error: undefined, open: false };
+  state: { error: unknown; open: boolean } = { error: undefined, open: false };
 
-  componentDidCatch(error, errorInfo) {
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     setTimeout(function () {
       console.error("ErrorBoundary caught error:", [error, errorInfo]);
       var body = {
@@ -36,7 +36,7 @@ export class ErrorBoundary extends React.Component<
     }, 0);
   }
 
-  static getDerivedStateFromError(error) {
+  static getDerivedStateFromError(error: unknown) {
     return { error: error };
   }
 
@@ -46,8 +46,10 @@ export class ErrorBoundary extends React.Component<
 
   render() {
     if (this.state.error) {
-      var error = this.state.error.stack;
-      var details = String((error && error.stack) || error);
+      var error = this.state.error;
+      var details = String(
+        (typeof error == "object" && "stack" in error && error.stack) || error
+      );
       var firstLine = details.trim().split("\n")[0];
       return (
         <div className="alert alert-danger">
@@ -98,7 +100,7 @@ export class ErrorBoundary extends React.Component<
   }
 }
 
-export function PageLayout(props) {
+export function PageLayout(props: { children: React.ReactNode }) {
   return (
     <React.Fragment>
       <PageNavbar />
@@ -167,27 +169,31 @@ export function LogStatus() {
   return <p className="navbar-text">{message}</p>;
 }
 
-export function PageTitle({ children }) {
-  var titleRef = useRef(null);
+export function PageTitle({ children }: { children: React.ReactNode }) {
+  var titleRef = useRef<HTMLHeadingElement | null>(null);
 
   useEffect(() => {
-    document.title = titleRef.current.textContent;
+    document.title = titleRef.current!.textContent!;
   });
 
   return <h1 ref={titleRef}>{children}</h1>;
 }
 
-function MenuItem(props) {
+function MenuItem(props: {
+  active?: boolean;
+  href: Record<string, string | undefined>;
+  label: React.ReactNode;
+}) {
   var query = useContext(QueryContext);
   var isActive = props.active || props.href.action == query.action;
   return (
-    <li className={isActive ? "active" : null}>
+    <li className={isActive ? "active" : undefined}>
       <Link href={props.href}>{props.label}</Link>
     </li>
   );
 }
 
-function DisabledItem(props) {
+function DisabledItem(props: { label: React.ReactNode }) {
   // return <li className="disabled"><a>{props.label}</a></li>;
   return null;
 }
@@ -260,7 +266,10 @@ export function MainMenu() {
   );
 }
 
-export function FormItem(props) {
+export function FormItem(props: {
+  label?: React.ReactNode;
+  children: React.ReactNode;
+}) {
   if (props.label) {
     return (
       <label className="form-item">
@@ -277,14 +286,21 @@ export function FormItem(props) {
   }
 }
 
-export function ModalBase({ onClose, component }) {
-  var modalRef = useRef(null);
+export function ModalBase({
+  onClose,
+  component,
+}: {
+  onClose: () => void;
+  component: React.ComponentType | undefined | null;
+}) {
+  var modalRef = useRef<HTMLDivElement | null>(null);
 
-  var open = Boolean(component);
+  var C = component;
+  const open = !!C;
 
   // This is so dumb.
   // TODO: "useEffectEvent" might simplify this in a future React version.
-  var closeHandlerRef = useRef(null);
+  var closeHandlerRef = useRef<((e: JQuery.Event) => void) | null>(null);
   useEffect(() => {
     closeHandlerRef.current = (e) => {
       if (open) {
@@ -295,10 +311,10 @@ export function ModalBase({ onClose, component }) {
   }, [onClose, open]);
 
   useEffect(() => {
-    var $node = $(modalRef.current);
+    var $node = $(modalRef.current!);
     $node.modal();
-    var handler = (e) => {
-      closeHandlerRef.current(e);
+    var handler = (e: JQuery.Event) => {
+      closeHandlerRef.current!(e);
     };
     $node.on("hide.bs.modal", handler);
     return () => {
@@ -307,11 +323,9 @@ export function ModalBase({ onClose, component }) {
   }, []);
 
   useEffect(() => {
-    var $node = $(modalRef.current);
-    $node.modal(open ? "show" : "hide");
+    var $node = $(modalRef.current!);
+    $node.modal(open ? ("show" as const) : ("hide" as const));
   }, [open]);
-
-  var C = component;
 
   return (
     <div
@@ -322,7 +336,7 @@ export function ModalBase({ onClose, component }) {
       aria-hidden="true"
     >
       <div className="modal-dialog modal-lg">
-        {open && (
+        {!!C && (
           <ErrorBoundary>
             <C />
           </ErrorBoundary>

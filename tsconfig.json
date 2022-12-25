@@ -11,7 +11,19 @@
 
     "moduleResolution": "node",
 
+    // These are marked "Recommended" in the tsconfig reference.
+    // Except those implied by "strict".
+    // Except "skipLibCheck", for now.
+    "exactOptionalPropertyTypes": true,
+    "strict": true,
     "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // Enable more error checking.
+    "allowUnreachableCode": false,
+    "allowUnusedLabels": false,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitReturns": true,
 
     "jsx": "react",
 
@@ -33,9 +45,7 @@
     // outDir is ignored by webpack ts-loader and by `yarn tsc --noEmit`.
     // Nothing reads this directory or expects it to exist. It's just for
     // convenience so you can run `yarn tsc` and look at the output.
-    "outDir": "./tsc_build",
-
-    "allowJs": true
+    "outDir": "./tsc_build"
   },
   "include": ["votrfront/js"]
 }

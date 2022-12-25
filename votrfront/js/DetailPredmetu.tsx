@@ -16,7 +16,11 @@ export var DetailPredmetuStudentiColumns: Columns =
   ZoznamPrihlasenychNaTerminColumns.slice();
 DetailPredmetuStudentiColumns.defaultOrder = "a0";
 
-function getZapisaniStudenti(cache, predmetKey, akademickyRok) {
+function getZapisaniStudenti(
+  cache: CacheRequester,
+  predmetKey: string,
+  akademickyRok: string
+) {
   return cache.get(
     "get_studenti_zapisani_na_predmet",
     predmetKey,
@@ -77,7 +81,8 @@ function DetailPredmetuUcitelia() {
     return <Loading requests={cache.missing} />;
   }
 
-  var [ucitelia, header] = sortTable(
+  var header;
+  [ucitelia, header] = sortTable(
     ucitelia,
     DetailPredmetuUciteliaColumns,
     query,
@@ -182,10 +187,12 @@ function DetailPredmetuTitle() {
   var [studenti, predmet] = data;
 
   if (!predmet) {
-    return "Dáta nenájdené";
+    // https://github.com/microsoft/TypeScript/issues/21699
+    return "Dáta nenájdené" as unknown as JSX.Element;
   }
 
-  return predmet.nazov;
+  // https://github.com/microsoft/TypeScript/issues/21699
+  return predmet.nazov as unknown as JSX.Element;
 }
 
 export function DetailPredmetuModal() {

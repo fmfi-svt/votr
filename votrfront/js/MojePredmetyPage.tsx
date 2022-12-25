@@ -15,7 +15,7 @@ import {
 import { PageLayout, PageTitle } from "./layout";
 import { Link, QueryContext } from "./router";
 import { sortAs, SortableTable } from "./sorting";
-import { Columns } from "./types";
+import { Columns, Hodnotenie } from "./types";
 
 export var MojePredmetyColumns: Columns = [
   {
@@ -27,7 +27,7 @@ export var MojePredmetyColumns: Columns = [
   {
     label: "Názov predmetu",
     prop: "nazov",
-    cell: (hodnotenie, query) => (
+    cell: (hodnotenie: Hodnotenie, query: Record<string, string>) => (
       <Link
         href={{
           ...query,
@@ -50,13 +50,13 @@ export var MojePredmetyColumns: Columns = [
   {
     label: "Typ výučby",
     prop: "typ_vyucby",
-    cell: (hodnotenie, query) => humanizeTypVyucby(hodnotenie.typ_vyucby),
+    cell: (hodnotenie: Hodnotenie) => humanizeTypVyucby(hodnotenie.typ_vyucby),
     hiddenClass: ["hidden-xs"],
   },
   {
     label: "Hodnotenie",
     prop: "hodn_znamka",
-    cell: (hodnotenie) =>
+    cell: (hodnotenie: Hodnotenie) =>
       (hodnotenie.hodn_znamka ? hodnotenie.hodn_znamka + " - " : "") +
       hodnotenie.hodn_znamka_popis,
   },
@@ -69,7 +69,8 @@ export var MojePredmetyColumns: Columns = [
   {
     label: "Termín hodnotenia",
     prop: "hodn_termin",
-    cell: (hodnotenie) => humanizeTerminHodnotenia(hodnotenie.hodn_termin),
+    cell: (hodnotenie: Hodnotenie) =>
+      humanizeTerminHodnotenia(hodnotenie.hodn_termin),
     hiddenClass: ["hidden-xs", "hidden-sm"],
   },
 ];
@@ -87,7 +88,7 @@ export function MojePredmetyPageContent() {
 
   var stats = coursesStats(hodnotenia);
 
-  var footer = (fullTable) => (
+  var footer = (fullTable: boolean) => (
     <tr>
       <td className={fullTable ? "" : "hidden-xs hidden-sm"} />
       <td colSpan={2}>
@@ -101,7 +102,7 @@ export function MojePredmetyPageContent() {
         {renderCredits(stats.leto)})
       </td>
       <td className={fullTable ? "" : "hidden-xs"} />
-      <td>{renderWeightedStudyAverage(hodnotenia)}</td>
+      <td>{renderWeightedStudyAverage(hodnotenia!)}</td>
       <td className={fullTable ? "" : "hidden-xs hidden-sm"} />
       <td className={fullTable ? "" : "hidden-xs hidden-sm"} />
     </tr>

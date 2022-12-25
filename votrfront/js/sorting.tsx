@@ -2,41 +2,49 @@ import React, { useContext, useState } from "react";
 import _ from "lodash";
 import { navigate, QueryContext } from "./router";
 import { LocalSettings } from "./LocalSettings";
+import { Columns } from "./types";
 
-export var sortAs: any = {};
+export var sortAs = {
+  personName(text: string) {
+    var words = text.replace(/,/g, "").split(" ");
+    words = _.filter(words, (word) => !word.match(/\.$/));
+    var last = words.pop();
+    if (last) words.unshift(last); // move last name to the beginning
+    return words.join(" ").toLowerCase();
+    // TODO: consider using latinise (see fajr).
+  },
 
-sortAs.personName = function (text) {
-  var words = text.replace(/,/g, "").split(" ");
-  words = _.filter(words, (word) => !word.match(/\.$/));
-  words.unshift(words.pop()); // last name goes to the beginning
-  return words.join(" ").toLowerCase();
-  // TODO: consider using latinise (see fajr).
+  number(text: string) {
+    return +text.replace(/,/g, ".");
+    // TODO: this won't be needed when fladgejt starts returning numbers
+  },
+
+  date(date: string) {
+    if (date.match(/^\d\d\.\d\d\.\d\d\d\d/)) {
+      return (
+        date.substring(6, 10) +
+        date.substring(3, 5) +
+        date.substring(0, 2) +
+        date.substring(10)
+      );
+    }
+    return date;
+  },
+
+  interval(text: string) {
+    var index = text.indexOf("do ");
+    if (index == -1) return "";
+    return sortAs.date(text.substring(index + 3));
+  },
 };
 
-sortAs.number = function (text) {
-  return +text.replace(/,/g, ".");
-  // TODO: this won't be needed when fladgejt starts returning numbers
-};
-
-sortAs.date = function (date) {
-  if (date.match(/^\d\d\.\d\d\.\d\d\d\d/)) {
-    return (
-      date.substring(6, 10) +
-      date.substring(3, 5) +
-      date.substring(0, 2) +
-      date.substring(10)
-    );
-  }
-  return date;
-};
-
-sortAs.interval = function (text) {
-  var index = text.indexOf("do ");
-  if (index == -1) return "";
-  return sortAs.date(text.substring(index + 3));
-};
-
-export function sortTable(items, columns, query, queryKey, fullTable?) {
+export function sortTable<T>(
+  items: T[],
+  columns: Columns,
+  query: Record<string, string>,
+  queryKey: string,
+  fullTable?: boolean
+): [T[], React.ReactNode] {
   if (columns[0][0]) {
     columns = columns.map(
       ([label, prop, process, preferDesc, hiddenClass]) => ({
@@ -53,15 +61,16 @@ export function sortTable(items, columns, query, queryKey, fullTable?) {
   var order = orderString ? orderString.split(/(?=[ad])/) : [];
   var directions = order.map((o) => (o.charAt(0) == "a" ? "asc" : "desc"));
   var iteratees = order.map((o) => {
-    var { label, prop, process, preferDesc } = columns[o.substring(1)];
-    return (item) => (process || _.identity)(prop ? item[prop] : item);
+    var { label, prop, process, preferDesc } = columns[Number(o.substring(1))];
+    return (item: T) =>
+      (process || _.identity)(prop ? (item as any)[prop] : item);
   });
 
   items = _.orderBy(items, iteratees, directions);
 
-  function handleClick(event) {
+  function handleClick(event: React.MouseEvent<HTMLElement>) {
     var index = event.currentTarget.getAttribute("data-index");
-    var { label, prop, process, preferDesc } = columns[index];
+    var { label, prop, process, preferDesc } = columns[Number(index)];
 
     var newOrder = _.without(order, "a" + index, "d" + index);
     // prettier-ignore
@@ -104,25 +113,32 @@ export function sortTable(items, columns, query, queryKey, fullTable?) {
   return [items, header];
 }
 
-export function SortableTable(props) {
-  const {
-    items,
-    columns,
-    queryKey,
-    withButtons,
-    footer,
-    message,
-    rowClassName,
-    expandedContentOffset = 0,
-  } = props;
-
+export function SortableTable<T>({
+  items,
+  columns,
+  queryKey,
+  withButtons,
+  footer,
+  message,
+  rowClassName,
+  expandedContentOffset = 0,
+}: {
+  items: T[];
+  columns: Columns;
+  queryKey: string;
+  withButtons?: boolean;
+  footer?: (fullTable: boolean) => React.ReactNode;
+  message?: string | null | undefined;
+  rowClassName?: (item: T) => string | undefined;
+  expandedContentOffset?: number;
+}) {
   var query = useContext(QueryContext);
 
-  var [open, setOpen] = useState([]);
+  var [open, setOpen] = useState<boolean[]>([]);
 
   var anyOpen = open.includes(true);
 
-  function toggleInfo(index) {
+  function toggleInfo(index: number) {
     setOpen((open) => {
       open = open.slice();
       open[index] = !open[index];
@@ -147,19 +163,19 @@ export function SortableTable(props) {
   const notExpandable = columns.reduce(
     (acc, col) =>
       acc.filter(
-        (item) => !(col.hiddenClass && col.hiddenClass.includes(item))
+        (item: string) => !(col.hiddenClass && col.hiddenClass.includes(item))
       ),
     ["hidden-xs", "hidden-sm", "hidden-md", "hidden-lg"]
   );
 
-  function revertHidden(hiddenClass) {
+  function revertHidden(hiddenClass: string[]) {
     const all = ["hidden-xs", "hidden-sm", "hidden-md", "hidden-lg"];
     return all.filter((size) => !hiddenClass.includes(size)).join(" ");
   }
 
   const rows = [];
 
-  for (const item of sortedItems) {
+  for (const item of sortedItems as (T & { originalIndex: number })[]) {
     rows.push(
       <tr
         key={item.originalIndex}
@@ -199,7 +215,7 @@ export function SortableTable(props) {
                   }`}
                 />
               )}
-              {cell ? cell(item, query) : item[prop]}
+              {cell ? cell(item, query) : (item as any)[prop]}
             </td>
           )
         )}
@@ -228,7 +244,9 @@ export function SortableTable(props) {
                     <tr key={index} className={revertHidden(col.hiddenClass)}>
                       <td>{col.label}:</td>
                       <td>
-                        {col.cell ? col.cell(item, query) : item[col.prop]}
+                        {col.cell
+                          ? col.cell(item, query)
+                          : (item as any)[col.prop]}
                       </td>
                     </tr>
                   ))}
@@ -247,7 +265,7 @@ export function SortableTable(props) {
           type="button"
           className={"btn btn-default" + (fullTable ? " active" : "")}
           onClick={() => {
-            LocalSettings.set("fullTable", !fullTable);
+            LocalSettings.set("fullTable", String(!fullTable));
           }}
         >
           Zobraziť celú tabuľku

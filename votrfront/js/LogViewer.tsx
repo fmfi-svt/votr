@@ -3,17 +3,20 @@ import _ from "lodash";
 import { LocalSettings } from "./LocalSettings";
 import { logs } from "./ajax";
 
-export function LogViewerContent(props) {
-  var [hidden, setHidden] = useState({
+export function LogViewerContent(props: {
+  closeButton: React.ReactNode;
+  modeButton: React.ReactNode;
+}) {
+  var [hidden, setHidden] = useState<Record<string, boolean>>({
     benchmark: true,
     http: true,
     table: true,
   });
 
-  var scrollRef = useRef(null);
-  var lastTimeRef = useRef(null);
+  var scrollRef = useRef<HTMLDivElement | null>(null);
+  var lastTimeRef = useRef<number | null>(null);
 
-  function handleChange(e) {
+  function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     var name = e.target.name;
     var value = !e.target.checked;
     setHidden((hidden) => ({ ...hidden, [name]: value }));
@@ -22,10 +25,10 @@ export function LogViewerContent(props) {
   useEffect(() => {
     var div = scrollRef.current;
     if (!logs.length) return;
-    var time = _.last(logs).time;
+    var time = _.last(logs)!.time;
     if (time != lastTimeRef.current) {
       lastTimeRef.current = time;
-      div.scrollTop = div.scrollHeight;
+      div!.scrollTop = div!.scrollHeight;
     }
   });
 
@@ -81,12 +84,12 @@ export function LogViewerContent(props) {
 
 function computeBenchmarks() {
   var sums: Record<string, number> = {};
-  var beginnings = {};
+  var beginnings: Record<string, number> = {};
 
-  function start(what, time) {
+  function start(what: string, time: number) {
     beginnings[what] = time;
   }
-  function end(what, time) {
+  function end(what: string, time: number) {
     if (!beginnings[what]) return;
     if (!sums[what]) sums[what] = 0;
     sums[what] += time - beginnings[what];
@@ -111,7 +114,10 @@ function computeBenchmarks() {
   return _.sortBy(_.toPairs(sums), 1).reverse();
 }
 
-export function LogViewerBenchmarkContent(props) {
+export function LogViewerBenchmarkContent(props: {
+  closeButton: React.ReactNode;
+  modeButton: React.ReactNode;
+}) {
   var benchmarks = computeBenchmarks();
 
   return (
@@ -152,7 +158,7 @@ export function LogViewer() {
   }
 
   useEffect(() => {
-    function handleKeypress(e) {
+    function handleKeypress(e: KeyboardEvent) {
       if (e.altKey && (e.key == "L" || e.key == "l" || e.code == "KeyL")) {
         // Alt+L
         toggle();

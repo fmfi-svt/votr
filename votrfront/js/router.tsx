@@ -3,7 +3,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import _ from "lodash";
 import $ from "jquery";
 
-var trackPageViewLast;
+var trackPageViewLast: string | undefined;
 
 export function trackPageView() {
   if (!window.ga) return;
@@ -15,12 +15,12 @@ export function trackPageView() {
     location.search;
   if (current == trackPageViewLast) return;
   trackPageViewLast = current;
-  ga("send", "pageview", { location: current });
+  window.ga("send", "pageview", { location: current });
 }
 
-function parseQueryString(queryString) {
+function parseQueryString(queryString: string) {
   if (!queryString) return {};
-  var result = {};
+  var result: Record<string, string> = {};
   var pairs = queryString.split("&");
   for (var i = 0; i < pairs.length; i++) {
     var index = pairs[i].indexOf("=");
@@ -34,9 +34,11 @@ function parseQueryString(queryString) {
   return result;
 }
 
-export var QueryContext = React.createContext<any>(undefined);
+export var QueryContext = React.createContext<Record<string, string>>(
+  undefined as unknown as Record<string, string>
+);
 
-export function Root({ app }) {
+export function Root({ app }: { app: React.ComponentType }) {
   var [, setState] = useState({});
 
   useEffect(() => {
@@ -73,19 +75,28 @@ export function Root({ app }) {
   );
 }
 
-export function buildUrl(href) {
+export function buildUrl(
+  href: string | Record<string, string | null | undefined>
+) {
   if (_.isString(href)) return href;
   return "?" + $.param(_.omitBy(href, _.isUndefined), true);
 }
 
-export function navigate(href) {
+export function navigate(
+  href: string | Record<string, string | null | undefined>
+) {
   Votr.didNavigate = true;
   history.pushState(null, "", Votr.settings.url_root + buildUrl(href));
   Votr.updateRoot();
 }
 
-export function Link(props) {
-  function handleClick(event) {
+export function Link(
+  props: { href: string | Record<string, string | null | undefined> } & Omit<
+    React.HTMLAttributes<HTMLAnchorElement>,
+    "href"
+  >
+) {
+  function handleClick(event: React.MouseEvent) {
     // Chrome fires onclick on middle click. Firefox only fires it on document,
     // see <http://lists.w3.org/Archives/Public/www-dom/2013JulSep/0203.html>,
     // but React adds event listeners to document so we still see a click event.
@@ -101,12 +112,14 @@ export function Link(props) {
 // Looks and acts like a link, but doesn't have a href and cannot be opened in
 // a new tab when middle-clicked or ctrl-clicked.
 export function FakeLink(
-  props: { onClick: () => void } & React.HTMLAttributes<HTMLAnchorElement>
+  props: {
+    onClick: (event: React.KeyboardEvent) => void;
+  } & React.HTMLAttributes<HTMLAnchorElement>
 ) {
   // Pressing Enter on <a href=...> emits a click event, and the HTML5 spec
   // says elements with tabindex should do that too, but they don't.
   // <http://www.w3.org/TR/WCAG20-TECHS/SCR29> suggests using a keyup event:
-  function handleKeyUp(event) {
+  function handleKeyUp(event: React.KeyboardEvent) {
     if (event.which == 13) {
       event.preventDefault();
       props.onClick(event);

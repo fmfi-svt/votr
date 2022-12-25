@@ -5,7 +5,7 @@ import { classForSemester, humanizeBoolean } from "./humanizeAISData";
 import { FormItem, PageLayout, PageTitle } from "./layout";
 import { Link, navigate, QueryContext } from "./router";
 import { sortAs, sortTable } from "./sorting";
-import { Columns } from "./types";
+import { Columns, ComboBoxOption } from "./types";
 
 export var RegisterPredmetovColumns: Columns = [
   ["Názov predmetu", "nazov"],
@@ -32,20 +32,26 @@ export function RegisterPredmetovForm() {
     akademickyRok: query.akademickyRok || currentAcademicYear(),
   }));
 
-  function handleFieldChange(event) {
+  function handleFieldChange(
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) {
     var name = event.target.name;
     var value = event.target.value;
     setState((old) => ({ ...old, [name]: value }));
   }
 
-  function handleSubmit(event) {
+  function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     navigate({ action: "registerPredmetov", ...state });
   }
 
   var cache = new CacheRequester();
 
-  function renderTextbox(label, name, focus = false) {
+  function renderTextbox(
+    label: string,
+    name: keyof typeof state,
+    focus: boolean = false
+  ) {
     return (
       <FormItem label={label}>
         <input
@@ -60,7 +66,11 @@ export function RegisterPredmetovForm() {
     );
   }
 
-  function renderSelect(label, name, items) {
+  function renderSelect(
+    label: string,
+    name: keyof typeof state,
+    items: ComboBoxOption[] | null
+  ) {
     return (
       <FormItem label={label}>
         {items ? (
@@ -107,7 +117,7 @@ export function RegisterPredmetovForm() {
   );
 }
 
-export function RegisterPredmetovResultTable(props) {
+export function RegisterPredmetovResultTable() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
 

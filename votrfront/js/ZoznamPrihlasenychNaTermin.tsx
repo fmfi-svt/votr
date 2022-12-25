@@ -24,7 +24,8 @@ function ZoznamPrihlasenychNaTerminModalContent() {
     return <Loading requests={cache.missing} />;
   }
 
-  var [studenti, header] = sortTable(
+  var header;
+  [studenti, header] = sortTable(
     studenti,
     ZoznamPrihlasenychNaTerminColumns,
     query,
