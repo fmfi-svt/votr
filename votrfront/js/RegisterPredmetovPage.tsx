@@ -198,7 +198,7 @@ export function RegisterPredmetovResultTable() {
             </tr>
           ))}
         </tbody>
-        {message && (
+        {!!message && (
           <tfoot>
             <tr>
               <td colSpan={RegisterPredmetovColumns.length}>{message}</td>

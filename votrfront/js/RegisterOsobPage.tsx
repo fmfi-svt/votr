@@ -238,14 +238,14 @@ export function RegisterOsobResultTable() {
             <tr key={index}>
               <td>{osoba.plne_meno}</td>
               <td>
-                {osoba.email && (
+                {!!osoba.email && (
                   <a href={"mailto:" + osoba.email}>{osoba.email}</a>
                 )}
               </td>
             </tr>
           ))}
         </tbody>
-        {message && (
+        {!!message && (
           <tfoot>
             <tr>
               <td colSpan={RegisterOsobColumns.length}>{message}</td>

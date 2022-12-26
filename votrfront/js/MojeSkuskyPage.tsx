@@ -353,7 +353,7 @@ export function MojeSkuskyPageContent() {
           expandedContentOffset={1}
         />
       )}
-      {terminy.length && (
+      {!!terminy.length && (
         <button type="button" onClick={handleClickICal} className="btn">
           Stiahnuť ako iCal
         </button>

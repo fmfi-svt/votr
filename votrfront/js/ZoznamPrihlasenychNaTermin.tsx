@@ -46,7 +46,7 @@ function ZoznamPrihlasenychNaTerminModalContent() {
             <td>{student.sp_skratka}</td>
             <td>{student.rocnik}</td>
             <td>
-              {student.email && (
+              {!!student.email && (
                 <a href={"mailto:" + student.email}>{student.email}</a>
               )}
             </td>
@@ -54,7 +54,7 @@ function ZoznamPrihlasenychNaTerminModalContent() {
           </tr>
         ))}
       </tbody>
-      {message && (
+      {!!message && (
         <tfoot>
           <tr>
             <td colSpan={ZoznamPrihlasenychNaTerminColumns.length}>

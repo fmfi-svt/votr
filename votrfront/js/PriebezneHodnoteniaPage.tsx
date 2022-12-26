@@ -62,7 +62,7 @@ export function PriebezneHodnoteniaPageContent() {
           </table>
         </React.Fragment>
       ))}
-      {message && <strong>{message}</strong>}
+      {!!message && <strong>{message}</strong>}
     </React.Fragment>
   );
 }

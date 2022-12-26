@@ -104,7 +104,7 @@ function DetailPredmetuUcitelia() {
           </tr>
         ))}
       </tbody>
-      {message && (
+      {!!message && (
         <tfoot>
           <tr>
             <td colSpan={DetailPredmetuUciteliaColumns.length}>{message}</td>
@@ -154,7 +154,7 @@ function DetailPredmetuZapisaniStudenti() {
             <td>{student.sp_skratka}</td>
             <td>{student.rocnik}</td>
             <td>
-              {student.email && (
+              {!!student.email && (
                 <a href={"mailto:" + student.email}>{student.email}</a>
               )}
             </td>
@@ -162,7 +162,7 @@ function DetailPredmetuZapisaniStudenti() {
           </tr>
         ))}
       </tbody>
-      {message && (
+      {!!message && (
         <tfoot>
           <tr>
             <td colSpan={DetailPredmetuStudentiColumns.length}>{message}</td>

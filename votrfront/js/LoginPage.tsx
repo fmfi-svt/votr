@@ -41,7 +41,7 @@ export function LoginForm({ onOpenError }: { onOpenError: () => void }) {
         <p>Vaše prihlásenie vypršalo. Prihláste sa znova.</p>
       )}
 
-      {Votr.settings.error && (
+      {!!Votr.settings.error && (
         <React.Fragment>
           <p>Prihlásenie sa nepodarilo.</p>
           <p>
@@ -122,7 +122,7 @@ export function LoginForm({ onOpenError }: { onOpenError: () => void }) {
       {currentType == "cosigncookie" && (
         <React.Fragment>
           {/* TODO: Detailed instructions for cosigncookie. */}
-          {serverConfig.ais_cookie && (
+          {!!serverConfig.ais_cookie && (
             <p>
               <label>
                 {"Hodnota cookie " + serverConfig.ais_cookie + ": "}
@@ -130,7 +130,7 @@ export function LoginForm({ onOpenError }: { onOpenError: () => void }) {
               </label>
             </p>
           )}
-          {serverConfig.rest_cookie && (
+          {!!serverConfig.rest_cookie && (
             <p>
               <label>
                 {"Hodnota cookie " + serverConfig.rest_cookie + ": "}

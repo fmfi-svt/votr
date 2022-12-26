@@ -311,10 +311,10 @@ export function SortableTable<T>({
       <table className={className}>
         <thead>{header}</thead>
         <tbody>{rows}</tbody>
-        {(footer || message) && (
+        {!!(footer || message) && (
           <tfoot>
-            {footer && footer(fullTable)}
-            {message && (
+            {!!footer && footer(fullTable)}
+            {!!message && (
               <tr>
                 <td colSpan={columns.length}>{message}</td>
               </tr>

@@ -179,7 +179,7 @@ export function PrehladStudiaStudia() {
           </tr>
         ))}
       </tbody>
-      {message && (
+      {!!message && (
         <tfoot>
           <tr>
             <td colSpan={PrehladStudiumColumns.length}>{message}</td>
@@ -214,7 +214,7 @@ export function PrehladStudiaZapisneListy() {
     "zapisneListySort"
   );
 
-  var showTable = zapisneListy.length || cache.loadedAll;
+  var showTable = !!zapisneListy.length || cache.loadedAll;
 
   var message = zapisneListy.length
     ? null
@@ -238,7 +238,7 @@ export function PrehladStudiaZapisneListy() {
               </tr>
             ))}
           </tbody>
-          {message && (
+          {!!message && (
             <tfoot>
               <tr>
                 <td colSpan={PrehladZapisnyListColumns.length}>{message}</td>

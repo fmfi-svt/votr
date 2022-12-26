@@ -58,7 +58,7 @@ const prihlaseniColumn = {
       ) : (
         predmet.pocet_prihlasenych
       )}
-      {predmet.maximalne_prihlasenych && "/" + predmet.maximalne_prihlasenych}
+      {!!predmet.maximalne_prihlasenych && "/" + predmet.maximalne_prihlasenych}
     </React.Fragment>
   ),
   hiddenClass: ["hidden-xs"],
