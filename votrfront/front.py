@@ -126,8 +126,7 @@ def app_response(request, **my_data):
             # based on https://csp.withgoogle.com/docs/strict-csp.html
             # object-src 'self' - they say 'none' may block Chrome's PDF reader.
             # TODO: Revisit object-src if http://crbug.com/271452 gets fixed.
-            # TODO: Remove "-Report-Only" if results look good.
-            'Content-Security-Policy-Report-Only':
+            'Content-Security-Policy':
                 "object-src 'self'; " +
                 "script-src 'nonce-%s' 'strict-dynamic' " % nonce +
                 "'unsafe-inline' https: http: 'report-sample'; " +
