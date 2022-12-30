@@ -10,6 +10,7 @@ import {
 import { coursesStats } from "./coursesStats";
 import { humanizeTypVyucby, plural } from "./humanizeAISData";
 import { FormItem, PageLayout, PageTitle } from "./layout";
+import { ScreenSize } from "./mediaQueries";
 import { Link, navigate, QueryContext, RelativeLink } from "./router";
 import { SortableTable, sortAs } from "./sorting";
 import {
@@ -171,7 +172,7 @@ function ZapisMenu() {
 function ZapisTableFooter(props: {
   predmety: Map<string, ZapisPredmet>;
   moje: Record<string, boolean>;
-  fullTable: boolean;
+  size: ScreenSize;
 }) {
   const blokMoje = new Map<string, ZapisPredmet[]>();
   const vsetkyMoje: ZapisPredmet[] = [];
@@ -200,12 +201,9 @@ function ZapisTableFooter(props: {
       {zoradene.map(([skratka, mojePredmetyVBloku]) => {
         var stats = coursesStats(mojePredmetyVBloku as any);
         var nazov = blokNazvy.get(skratka);
-        return (
-          <React.Fragment key={skratka}>
-            <tr
-              key={skratka}
-              className={props.fullTable ? undefined : "hidden-xs hidden-sm"}
-            >
+        {
+          return props.size > ScreenSize.SM ? (
+            <tr key={skratka}>
               <td colSpan={2}>{skratka ? "Súčet bloku" : "Dokopy"}</td>
               <td>{nazov ? <abbr title={nazov}>{skratka}</abbr> : skratka}</td>
               <td colSpan={4}>
@@ -221,7 +219,8 @@ function ZapisTableFooter(props: {
               </td>
               <td colSpan={3}></td>
             </tr>
-            <tr key={skratka + "sm"} className="hidden-md hidden-lg">
+          ) : (
+            <tr key={skratka}>
               <td>{skratka ? "Súčet bloku" : "Dokopy"}</td>
               <td>{nazov ? <abbr title={nazov}>{skratka}</abbr> : skratka}</td>
               <td colSpan={2}>
@@ -229,27 +228,31 @@ function ZapisTableFooter(props: {
                 {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
                 {!jedinySemester &&
                   ` (${stats.zima.count} v zime, ${stats.leto.count} v lete)`}
-                <span className="hidden-sm">
-                  {", "}
+                {props.size != ScreenSize.SM && (
+                  <React.Fragment>
+                    {", "}
+                    {stats.spolu.creditsEnrolled}
+                    {!jedinySemester &&
+                      ` (${stats.zima.creditsEnrolled}+${stats.leto.creditsEnrolled})`}{" "}
+                    {plural(
+                      stats.spolu.creditsEnrolled,
+                      "kredit",
+                      "kredity",
+                      "kreditov"
+                    )}
+                  </React.Fragment>
+                )}
+              </td>
+              {props.size == ScreenSize.SM && (
+                <td colSpan={2}>
                   {stats.spolu.creditsEnrolled}
                   {!jedinySemester &&
-                    ` (${stats.zima.creditsEnrolled}+${stats.leto.creditsEnrolled})`}{" "}
-                  {plural(
-                    stats.spolu.creditsEnrolled,
-                    "kredit",
-                    "kredity",
-                    "kreditov"
-                  )}
-                </span>
-              </td>
-              <td colSpan={2} className="hidden-xs">
-                {stats.spolu.creditsEnrolled}
-                {!jedinySemester &&
-                  ` (${stats.zima.creditsEnrolled}+${stats.leto.creditsEnrolled})`}
-              </td>
+                    ` (${stats.zima.creditsEnrolled}+${stats.leto.creditsEnrolled})`}
+                </td>
+              )}
             </tr>
-          </React.Fragment>
-        );
+          );
+        }
       })}
     </React.Fragment>
   );
@@ -428,13 +431,9 @@ function ZapisTable(props: {
     ...props.columns.slice(2),
   ];
 
-  const footer = (fullTable: boolean) =>
+  const footer = (size: ScreenSize) =>
     props.showFooter && (
-      <ZapisTableFooter
-        predmety={predmety}
-        moje={checked}
-        fullTable={fullTable}
-      />
+      <ZapisTableFooter predmety={predmety} moje={checked} size={size} />
     );
 
   return (

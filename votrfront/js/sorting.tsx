@@ -2,6 +2,7 @@ import classNames from "classnames";
 import _ from "lodash";
 import React, { useContext, useState } from "react";
 import { LocalSettings } from "./LocalSettings";
+import { ScreenSize, useScreenSize } from "./mediaQueries";
 import { navigate, QueryContext } from "./router";
 import { Columns, Query } from "./types";
 
@@ -80,7 +81,7 @@ function renderHeader(
   query: Query,
   queryKey: string,
   order: string[],
-  fullTable: boolean
+  reallyHide: boolean[]
 ): React.ReactNode {
   function handleClick(event: React.MouseEvent<HTMLElement>) {
     var index = event.currentTarget.getAttribute("data-index");
@@ -99,24 +100,21 @@ function renderHeader(
   return (
     <tr>
       {columns.map(
-        (
-          { label, shortLabel, prop, process, preferDesc, hiddenClass = [] },
-          index
-        ) => (
-          <th
-            key={index}
-            data-index={index}
-            onClick={handleClick}
-            className={classNames(
-              !fullTable && hiddenClass,
-              "sort",
-              order[0] == "a" + index && "asc",
-              order[0] == "d" + index && "desc"
-            )}
-          >
-            {shortLabel ? shortLabel : label}
-          </th>
-        )
+        ({ label, shortLabel }, index) =>
+          !reallyHide[index] && (
+            <th
+              key={index}
+              data-index={index}
+              onClick={handleClick}
+              className={classNames(
+                "sort",
+                order[0] == "a" + index && "asc",
+                order[0] == "d" + index && "desc"
+              )}
+            >
+              {shortLabel ? shortLabel : label}
+            </th>
+          )
       )}
     </tr>
   );
@@ -134,7 +132,7 @@ export function sortTable<T>(
   var sortedIndexes = sortItems(items, columns, order);
   var sortedItems = sortedIndexes.map((originalIndex) => items[originalIndex]!);
 
-  var header = renderHeader(columns, query, queryKey, order, false);
+  var header = renderHeader(columns, query, queryKey, order, []);
 
   return [sortedItems, header];
 }
@@ -153,7 +151,7 @@ export function SortableTable<T>({
   columns: Columns & { label: React.ReactNode }[];
   queryKey: string;
   withButtons?: boolean;
-  footer?: (fullTable: boolean) => React.ReactNode;
+  footer?: (chosenSize: ScreenSize) => React.ReactNode;
   message?: string | null | undefined;
   rowClassName?: (item: T) => string | undefined;
   expandedContentOffset?: number;
@@ -178,25 +176,26 @@ export function SortableTable<T>({
 
   var sortedIndexes = sortItems(items, columns, order);
 
-  var header = renderHeader(columns, query, queryKey, order, fullTable);
+  var deviceSize = useScreenSize();
+
+  var chosenSize = fullTable ? ScreenSize.LG : deviceSize;
+
+  var canHide = columns.map(
+    (column: { hiddenClass?: string[] }) =>
+      (deviceSize == ScreenSize.XS &&
+        (column.hiddenClass || []).includes("hidden-xs")) ||
+      (deviceSize == ScreenSize.SM &&
+        (column.hiddenClass || []).includes("hidden-sm"))
+  );
+  var reallyHide = canHide.map((canHideColumn) => canHideColumn && !fullTable);
+  var reallyHiddenCount = _.sum(reallyHide);
+
+  var header = renderHeader(columns, query, queryKey, order, reallyHide);
 
   const className = classNames(
     "table table-condensed table-bordered table-striped table-hover",
     withButtons && "with-buttons-table"
   );
-
-  const notExpandable = columns.reduce(
-    (acc, col) =>
-      acc.filter(
-        (item: string) => !(col.hiddenClass && col.hiddenClass.includes(item))
-      ),
-    ["hidden-xs", "hidden-sm", "hidden-md", "hidden-lg"]
-  );
-
-  function revertHidden(hiddenClass: string[]) {
-    const all = ["hidden-xs", "hidden-sm", "hidden-md", "hidden-lg"];
-    return all.filter((size) => !hiddenClass.includes(size)).join(" ");
-  }
 
   const rows = [];
 
@@ -209,75 +208,54 @@ export function SortableTable<T>({
         onClick={(event) => {
           // Don't toggle the row if we just clicked some link or input in the row.
           var target = event.target as Element;
-          if (!target.closest("a, input, button") && !fullTable) {
+          if (!target.closest("a, input, button") && reallyHiddenCount) {
             toggleInfo(originalIndex);
           }
         }}
         className={rowClassName && rowClassName(item)}
       >
         {columns.map(
-          (
-            {
-              label,
-              prop,
-              process,
-              hiddenClass = [],
-              cell,
-              colProps,
-              expansionMark,
-            },
-            index
-          ) => (
-            <td
-              key={index}
-              className={!fullTable ? hiddenClass.join(" ") : ""}
-              {...(colProps ? colProps(item) : {})}
-            >
-              {expansionMark && !fullTable && (
-                <span
-                  className={classNames(
-                    notExpandable,
-                    "expand-arrow",
-                    open[originalIndex] ? "arrow-expanded" : "arrow-collapsed"
-                  )}
-                />
-              )}
-              {cell ? cell(item, query) : (item as any)[prop]}
-            </td>
-          )
+          ({ prop, cell, colProps, expansionMark }, index) =>
+            !reallyHide[index] && (
+              <td key={index} {...(colProps ? colProps(item) : {})}>
+                {expansionMark && !!reallyHiddenCount && (
+                  <span
+                    className={classNames(
+                      "expand-arrow",
+                      open[originalIndex] ? "arrow-expanded" : "arrow-collapsed"
+                    )}
+                  />
+                )}
+                {cell ? cell(item, query) : (item as any)[prop]}
+              </td>
+            )
         )}
       </tr>
     );
 
-    if (!fullTable) {
+    if (reallyHiddenCount && open[originalIndex]) {
       rows.push(
-        <tr key={`${originalIndex}-striped-hack`} className="hidden" />
-      );
-
-      rows.push(
-        <tr
-          key={`${originalIndex}-info`}
-          className={classNames(
-            notExpandable,
-            !open[originalIndex] && "hidden"
-          )}
-        >
+        <tr key={`${originalIndex}-striped-hack`} className="hidden" />,
+        <tr key={`${originalIndex}-info`}>
           {expandedContentOffset > 0 && <td colSpan={expandedContentOffset} />}
-          <td colSpan={columns.length - expandedContentOffset}>
+          <td
+            colSpan={columns.length - reallyHiddenCount - expandedContentOffset}
+          >
             <table className="table-condensed">
               <tbody>
-                {columns
-                  .filter((col) => col.hiddenClass)
-                  .map((col, index) => (
-                    <tr key={index} className={revertHidden(col.hiddenClass)}>
-                      <td>{col.label}:</td>
-                      <td>
-                        {col.cell
-                          ? col.cell(item, query)
-                          : (item as any)[col.prop]}
-                      </td>
-                    </tr>
-                  ))}
+                {columns.map(
+                  (col, index) =>
+                    reallyHide[index] && (
+                      <tr key={index}>
+                        <td>{col.label}:</td>
+                        <td>
+                          {col.cell
+                            ? col.cell(item, query)
+                            : (item as any)[col.prop]}
+                        </td>
+                      </tr>
+                    )
+                )}
               </tbody>
             </table>
           </td>
@@ -288,35 +266,37 @@ export function SortableTable<T>({
 
   return (
     <div>
-      <div className={classNames("btn-toolbar", "section", notExpandable)}>
-        <button
-          type="button"
-          className={classNames("btn", "btn-default", fullTable && "active")}
-          onClick={() => {
-            LocalSettings.set("fullTable", String(!fullTable));
-          }}
-        >
-          Zobraziť celú tabuľku
-        </button>
-        {!fullTable && (
+      {canHide.some(Boolean) && (
+        <div className="btn-toolbar section">
           <button
             type="button"
-            className={"btn btn-default"}
-            onClick={() => setOpen(Array(items.length).fill(!anyOpen))}
+            className={classNames("btn", "btn-default", fullTable && "active")}
+            onClick={() => {
+              LocalSettings.set("fullTable", String(!fullTable));
+            }}
           >
-            {anyOpen ? "Zabaliť všetky" : "Rozbaliť všetky"}
+            Zobraziť celú tabuľku
           </button>
-        )}
-      </div>
+          {!fullTable && (
+            <button
+              type="button"
+              className="btn btn-default"
+              onClick={() => setOpen(Array(items.length).fill(!anyOpen))}
+            >
+              {anyOpen ? "Zabaliť všetky" : "Rozbaliť všetky"}
+            </button>
+          )}
+        </div>
+      )}
       <table className={className}>
         <thead>{header}</thead>
         <tbody>{rows}</tbody>
         {!!(footer || message) && (
           <tfoot>
-            {!!footer && footer(fullTable)}
+            {!!footer && footer(chosenSize)}
             {!!message && (
               <tr>
-                <td colSpan={columns.length}>{message}</td>
+                <td colSpan={columns.length - reallyHiddenCount}>{message}</td>
               </tr>
             )}
           </tfoot>

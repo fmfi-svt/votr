@@ -12,6 +12,7 @@ import {
   plural,
 } from "./humanizeAISData";
 import { PageLayout, PageTitle } from "./layout";
+import { ScreenSize } from "./mediaQueries";
 import { MojePredmetyColumns } from "./MojePredmetyPage";
 import { QueryContext } from "./router";
 import { SortableTable, sortAs } from "./sorting";
@@ -96,18 +97,18 @@ function MojeHodnoteniaHodnoteniaTable() {
 
   var stats = coursesStats(hodnotenia);
 
-  var footer = (fullTable: boolean) => (
+  var footer = (size: ScreenSize) => (
     <tr>
-      <td className={fullTable ? "" : "hidden-xs hidden-sm"} colSpan={2} />
+      {size > ScreenSize.SM && <td colSpan={2} />}
       <td colSpan={2}>
         Celkom {stats.spolu.count}{" "}
         {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
       </td>
       <td>{renderCredits(stats.spolu)}</td>
-      <td className={fullTable ? "" : "hidden-xs"} />
+      {size > ScreenSize.XS && <td />}
       <td>{renderWeightedStudyAverage(hodnotenia!)}</td>
-      <td className={fullTable ? "" : "hidden-xs hidden-sm"} />
-      <td className={fullTable ? "" : "hidden-xs hidden-sm"} />
+      {size > ScreenSize.SM && <td />}
+      {size > ScreenSize.SM && <td />}
     </tr>
   );
 
