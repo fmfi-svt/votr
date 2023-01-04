@@ -22,13 +22,13 @@ function parseQueryString(queryString: string) {
   if (!queryString) return {};
   var result: Query = {};
   var pairs = queryString.split("&");
-  for (var i = 0; i < pairs.length; i++) {
-    var index = pairs[i].indexOf("=");
+  for (const pair of pairs) {
+    var index = pair.indexOf("=");
     if (index == -1) {
-      index = pairs[i].length;
+      index = pair.length;
     }
-    var name = pairs[i].substring(0, index);
-    var value = pairs[i].substring(index + 1);
+    var name = pair.substring(0, index);
+    var value = pair.substring(index + 1);
     result[name] = decodeURIComponent(value.replace(/\+/g, " "));
   }
   return result;

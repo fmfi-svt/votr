@@ -160,7 +160,7 @@ function convertToICAL(terminy: Termin[]) {
     var dtstart = `${rok}${mesiac}${den}T${hodina}${minuty}00`;
 
     // as for there is no info about duration, we'll set it for 4 hours
-    var hodina_koniec = (parseInt(hodina) + 4).toString();
+    var hodina_koniec = (parseInt(hodina!) + 4).toString();
     // add leading zero
     if (hodina_koniec.length == 1) {
       hodina_koniec = "0" + hodina_koniec;
@@ -303,7 +303,8 @@ export function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
 export function MojeSkuskyPageContent() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
-  var { zapisnyListKey, kalendar } = query;
+  var zapisnyListKey = query.zapisnyListKey!;
+  var kalendar = query.kalendar;
 
   var vidim = cache.get("get_vidim_terminy_hodnotenia", zapisnyListKey);
 

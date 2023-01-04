@@ -19,7 +19,7 @@ export function StudiumSelector(props: { children: React.ReactNode }) {
   var cache = new CacheRequester();
   var items = getItems(cache);
 
-  if (!query.studiumKey && cache.loadedAll && items.length) {
+  if (!query.studiumKey && cache.loadedAll && items[0]) {
     var mostRecentItem = items[0];
     query = { ...query, studiumKey: mostRecentItem.studium_key };
   }

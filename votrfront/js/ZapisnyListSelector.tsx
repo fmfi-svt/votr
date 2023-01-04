@@ -41,7 +41,7 @@ export function ZapisnyListSelector(props: { children: React.ReactNode }) {
   var cache = new CacheRequester();
   var [items, buttonNovyZapisnyList] = getItems(cache);
 
-  if (!query.zapisnyListKey && cache.loadedAll && items.length) {
+  if (!query.zapisnyListKey && cache.loadedAll && items[0]) {
     var mostRecentItem = items[0];
     query = { ...query, zapisnyListKey: mostRecentItem.zapisny_list_key };
   }

@@ -85,7 +85,8 @@ MojePriemeryColumns.defaultOrder = "a0a2a1";
 export function MojeHodnoteniaHodnoteniaTable() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
-  var { studiumKey } = query;
+  var studiumKey = query.studiumKey!;
+
   var [hodnotenia, message] =
     cache.get("get_prehlad_kreditov", studiumKey) || [];
 
@@ -125,7 +126,7 @@ export function MojeHodnoteniaHodnoteniaTable() {
 export function MojeHodnoteniaPriemeryTable() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
-  var { studiumKey } = query;
+  var studiumKey = query.studiumKey!;
 
   var priemery: Priemer[] | undefined;
   var message: string | null | undefined;

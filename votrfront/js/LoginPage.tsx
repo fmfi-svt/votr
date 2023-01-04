@@ -20,7 +20,7 @@ export function LoginForm({ onOpenError }: { onOpenError: () => void }) {
 
   function handleServerChange(event: React.ChangeEvent<HTMLSelectElement>) {
     var server = Number(event.target.value);
-    var newTypes = Votr.settings.servers![server].login_types;
+    var newTypes = Votr.settings.servers![server]!.login_types;
     setState((old) => ({
       server,
       type: _.includes(newTypes, old.type) ? old.type : null,
@@ -32,7 +32,7 @@ export function LoginForm({ onOpenError }: { onOpenError: () => void }) {
     setState((old) => ({ server: old.server, type }));
   }
 
-  var serverConfig = Votr.settings.servers![state.server];
+  var serverConfig = Votr.settings.servers![state.server]!;
   var currentType = state.type || serverConfig.login_types[0];
 
   return (

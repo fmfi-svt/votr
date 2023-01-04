@@ -64,7 +64,7 @@ export function LogViewerContent(props: {
                 !hidden[entry.log] && (
                   <tr key={index}>
                     <td className="text-right">
-                      {(entry.time - logs[0].time).toFixed(3)}
+                      {(entry.time - logs[0]!.time).toFixed(3)}
                     </td>
                     <td>
                       <code>{entry.log}</code>
@@ -90,9 +90,10 @@ function computeBenchmarks() {
     beginnings[what] = time;
   }
   function end(what: string, time: number) {
-    if (!beginnings[what]) return;
+    const beginning = beginnings[what];
+    if (!beginning) return;
     if (!sums[what]) sums[what] = 0;
-    sums[what] += time - beginnings[what];
+    sums[what] += time - beginning;
     delete beginnings[what];
   }
 

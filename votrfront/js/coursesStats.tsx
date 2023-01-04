@@ -43,7 +43,7 @@ export function weightedStudyAverage(hodnotenia: Hodnotenie[]) {
   var creditsSum = 0;
 
   for (const row of hodnotenia) {
-    var value = ZNAMKY[row.hodn_znamka[0]];
+    var value = ZNAMKY[row.hodn_znamka.charAt(0)];
     if (value) {
       weightedSum += value * parseInt(row.kredit);
       creditsSum += parseInt(row.kredit);

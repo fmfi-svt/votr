@@ -132,7 +132,7 @@ export function sortTable<T>(
   columns = convertOldStyleColumns(columns);
 
   var sortedIndexes = sortItems(items, columns, order);
-  var sortedItems = sortedIndexes.map((originalIndex) => items[originalIndex]);
+  var sortedItems = sortedIndexes.map((originalIndex) => items[originalIndex]!);
 
   var header = renderHeader(columns, query, queryKey, order, false);
 
@@ -201,7 +201,7 @@ export function SortableTable<T>({
   const rows = [];
 
   for (const originalIndex of sortedIndexes) {
-    const item = items[originalIndex];
+    const item = items[originalIndex]!;
 
     rows.push(
       <tr

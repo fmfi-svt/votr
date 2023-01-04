@@ -47,7 +47,11 @@ export function App() {
   var query = useContext(QueryContext);
   var action = query.action || "index";
   var maker = actions[action] || makeNotFoundPage;
-  var modalComponent = Votr.ajaxError ? ErrorModal : modalActions[query.modal];
+  var modalComponent = Votr.ajaxError
+    ? ErrorModal
+    : query.modal
+    ? modalActions[query.modal]
+    : undefined;
 
   function handleClose() {
     if (Votr.ajaxError) return;

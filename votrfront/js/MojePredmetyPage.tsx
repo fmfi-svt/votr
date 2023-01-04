@@ -78,7 +78,8 @@ MojePredmetyColumns.defaultOrder = "d0a1";
 export function MojePredmetyPageContent() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
-  var { zapisnyListKey } = query;
+  var zapisnyListKey = query.zapisnyListKey!;
+
   var [hodnotenia, message] = cache.get("get_hodnotenia", zapisnyListKey) || [];
 
   if (!hodnotenia) {

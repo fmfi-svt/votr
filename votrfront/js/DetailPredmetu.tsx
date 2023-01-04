@@ -32,6 +32,7 @@ function DetailPredmetuInformacnyList() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
   var { modalAkademickyRok, modalPredmetKey } = query;
+  if (!modalAkademickyRok || !modalPredmetKey) return null;
 
   var data = cache.get(
     "get_informacny_list",
@@ -55,6 +56,7 @@ function DetailPredmetuUcitelia() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
   var { modalAkademickyRok, modalPredmetKey } = query;
+  if (!modalAkademickyRok || !modalPredmetKey) return null;
 
   var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 
@@ -119,6 +121,7 @@ function DetailPredmetuZapisaniStudenti() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
   var { modalAkademickyRok, modalPredmetKey } = query;
+  if (!modalAkademickyRok || !modalPredmetKey) return null;
 
   var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 
@@ -177,6 +180,9 @@ function DetailPredmetuTitle() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
   var { modalAkademickyRok, modalPredmetKey } = query;
+  if (!modalAkademickyRok || !modalPredmetKey) {
+    return <em>Pokazená URL adresa!</em>;
+  }
 
   var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 

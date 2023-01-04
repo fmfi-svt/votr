@@ -226,14 +226,14 @@ export interface Rpcs {
 
   // osoby.py
   vyhladaj_osobu(
-    meno: string,
-    priezvisko: string,
+    meno: string | undefined | null,
+    priezvisko: string | undefined | null,
     absolvent: boolean,
     student: boolean,
     zamestnanec: boolean,
     akademicky_rok: string,
-    fakulta: string,
-    studijny_program: string,
+    fakulta: string | undefined | null,
+    studijny_program: string | undefined | null,
     uchadzaci: boolean,
     prvy_rocnik: boolean,
     druhy_rocnik: boolean,

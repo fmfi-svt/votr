@@ -19,9 +19,12 @@ export class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
   { error: unknown; open: boolean }
 > {
-  state: { error: unknown; open: boolean } = { error: undefined, open: false };
+  override state: { error: unknown; open: boolean } = {
+    error: undefined,
+    open: false,
+  };
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     setTimeout(function () {
       console.error("ErrorBoundary caught error:", [error, errorInfo]);
       var body = {
@@ -44,7 +47,7 @@ export class ErrorBoundary extends React.Component<
     this.setState({ open: true });
   };
 
-  render() {
+  override render() {
     if (this.state.error) {
       var error = this.state.error;
       var details = String(

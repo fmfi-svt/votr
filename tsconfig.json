@@ -23,7 +23,14 @@
     "allowUnreachableCode": false,
     "allowUnusedLabels": false,
     "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
     "noImplicitReturns": true,
+    "noUncheckedIndexedAccess": true,
+
+    // Not using "noPropertyAccessFromIndexSignature" because it's cumbersome
+    // for properties of `query` and `Votr`.
+
+    // "noUnusedLocals", "noUnusedParameters": maybe later?
 
     "jsx": "react",
 

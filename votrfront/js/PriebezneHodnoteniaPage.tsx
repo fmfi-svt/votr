@@ -8,7 +8,8 @@ import { humanizeBoolean } from "./humanizeAISData";
 export function PriebezneHodnoteniaPageContent() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
-  var { zapisnyListKey } = query;
+  var zapisnyListKey = query.zapisnyListKey!;
+
   var [priebezneHodnotenia, message] =
     cache.get("get_priebezne_hodnotenia", zapisnyListKey) || [];
 

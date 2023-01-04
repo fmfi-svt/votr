@@ -18,7 +18,7 @@ export function ErrorModal() {
 
   var error = Votr.settings.error || Votr.ajaxError;
   var lastLine = _.last(error!.trim().split("\n"))!;
-  var type = lastLine.split(":")[0];
+  var type = lastLine.split(":")[0]!;
 
   var title = "Chyba";
   var description = "Vyskytla sa chyba a vaša požiadavka nebola spracovaná.";
