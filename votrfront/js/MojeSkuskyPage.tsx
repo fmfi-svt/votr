@@ -9,11 +9,11 @@ import {
   sendRpc,
 } from "./ajax";
 import { PageLayout, PageTitle } from "./layout";
-import { Link, QueryContext } from "./router";
+import { Link, QueryContext, RelativeLink } from "./router";
 import { sortAs, SortableTable } from "./sorting";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
-import { Href, Query, Termin } from "./types";
+import { Href, Termin } from "./types";
 import classNames from "classnames";
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
@@ -42,17 +42,16 @@ const MojeSkuskyColumns = [
   {
     label: "Predmet",
     prop: "nazov_predmetu",
-    cell: (termin: Termin, query: Query) => (
-      <Link
+    cell: (termin: Termin) => (
+      <RelativeLink
         href={{
-          ...query,
           modal: "detailPredmetu",
           modalPredmetKey: termin.predmet_key,
           modalAkademickyRok: termin.akademicky_rok,
         }}
       >
         {termin.nazov_predmetu}
-      </Link>
+      </RelativeLink>
     ),
     expansionMark: true,
   },
@@ -73,10 +72,9 @@ const MojeSkuskyColumns = [
     prop: "pocet_prihlasenych",
     process: sortAs.number,
     hiddenClass: ["hidden-xs"],
-    cell: (termin: Termin, query: Query) => (
-      <Link
+    cell: (termin: Termin) => (
+      <RelativeLink
         href={{
-          ...query,
           modal: "zoznamPrihlasenychNaTermin",
           modalTerminKey: termin.termin_key,
         }}
@@ -85,7 +83,7 @@ const MojeSkuskyColumns = [
         {termin.maximalne_prihlasenych
           ? "/" + termin.maximalne_prihlasenych
           : null}
-      </Link>
+      </RelativeLink>
     ),
   },
   {

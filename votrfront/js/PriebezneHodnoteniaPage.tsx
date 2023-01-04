@@ -2,7 +2,7 @@ import React, { useContext } from "react";
 import { ZapisnyListSelector } from "./ZapisnyListSelector";
 import { CacheRequester, Loading } from "./ajax";
 import { PageLayout, PageTitle } from "./layout";
-import { Link, QueryContext } from "./router";
+import { QueryContext, RelativeLink } from "./router";
 import { humanizeBoolean } from "./humanizeAISData";
 
 export function PriebezneHodnoteniaPageContent() {
@@ -25,16 +25,15 @@ export function PriebezneHodnoteniaPageContent() {
       {priebezneHodnotenia.map((priebHod) => (
         <React.Fragment>
           <h2>
-            <Link
+            <RelativeLink
               href={{
-                ...query,
                 modal: "detailPredmetu",
                 modalPredmetKey: priebHod.predmet_key,
                 modalAkademickyRok: priebHod.akademicky_rok,
               }}
             >
               {priebHod.nazov}
-            </Link>
+            </RelativeLink>
           </h2>
           <table className="table table-condensed table-bordered table-striped table-hover">
             <thead>

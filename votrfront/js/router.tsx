@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useContext, useEffect, useMemo, useState } from "react";
 import _ from "lodash";
 import $ from "jquery";
 import { Href, Query } from "./types";
@@ -103,6 +103,14 @@ export function Link(
   }
 
   return <a {...props} href={buildUrl(props.href)} onClick={handleClick} />;
+}
+
+export function RelativeLink({
+  href,
+  ...rest
+}: { href: Href } & Omit<React.HTMLAttributes<HTMLAnchorElement>, "href">) {
+  var query = useContext(QueryContext);
+  return <Link {...rest} href={{ ...query, ...href }} />;
 }
 
 // Looks and acts like a link, but doesn't have a href and cannot be opened in

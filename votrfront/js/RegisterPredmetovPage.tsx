@@ -3,7 +3,7 @@ import { CacheRequester, Loading } from "./ajax";
 import { currentAcademicYear } from "./coursesStats";
 import { classForSemester, humanizeBoolean } from "./humanizeAISData";
 import { FormItem, PageLayout, PageTitle } from "./layout";
-import { Link, navigate, QueryContext } from "./router";
+import { navigate, QueryContext, RelativeLink } from "./router";
 import { sortAs, sortTable } from "./sorting";
 import { Columns, ComboBoxOption } from "./types";
 
@@ -178,16 +178,15 @@ export function RegisterPredmetovResultTable() {
               className={classForSemester(predmet.semester)}
             >
               <td>
-                <Link
+                <RelativeLink
                   href={{
-                    ...query,
                     modal: "detailPredmetu",
                     modalPredmetKey: predmet.predmet_key,
                     modalAkademickyRok: query.akademickyRok,
                   }}
                 >
                   {predmet.nazov}
-                </Link>
+                </RelativeLink>
               </td>
               <td>{predmet.skratka}</td>
               <td>{predmet.fakulta}</td>

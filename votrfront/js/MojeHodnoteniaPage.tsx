@@ -14,7 +14,7 @@ import {
   plural,
 } from "./humanizeAISData";
 import { PageLayout, PageTitle } from "./layout";
-import { Link, QueryContext } from "./router";
+import { QueryContext } from "./router";
 import { sortAs, SortableTable } from "./sorting";
 import { Columns, Priemer } from "./types";
 

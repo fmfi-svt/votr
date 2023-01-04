@@ -11,7 +11,7 @@ import {
   goResetHome,
   logs,
 } from "./ajax";
-import { FakeLink, Link, QueryContext } from "./router";
+import { FakeLink, Link, QueryContext, RelativeLink } from "./router";
 import { AnketaPopup } from "./AnketaPopup";
 import { Href } from "./types";
 
@@ -122,7 +122,6 @@ export function PageLayout(props: { children: React.ReactNode }) {
 }
 
 export function PageNavbar() {
-  var query = useContext(QueryContext);
   return (
     <div className="navbar navbar-inverse navbar-static-top">
       <div className="container-fluid">
@@ -137,7 +136,7 @@ export function PageNavbar() {
         <div className="navbar-right">
           <ul className="nav navbar-nav">
             <li>
-              <Link href={{ ...query, modal: "about" }}>O aplikácii</Link>
+              <RelativeLink href={{ modal: "about" }}>O aplikácii</RelativeLink>
             </li>
             <li>
               <FakeLink onClick={goReset} title="Znovu načítať všetky dáta">

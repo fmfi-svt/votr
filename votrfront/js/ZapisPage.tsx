@@ -11,7 +11,7 @@ import {
 import { coursesStats } from "./coursesStats";
 import { humanizeTypVyucby, plural } from "./humanizeAISData";
 import { FormItem, PageLayout, PageTitle } from "./layout";
-import { Link, navigate, QueryContext } from "./router";
+import { Link, navigate, QueryContext, RelativeLink } from "./router";
 import { sortAs, SortableTable } from "./sorting";
 import {
   Columns,
@@ -279,7 +279,6 @@ export function ZapisTable(props: {
   showFooter?: boolean;
   message: string | null | undefined;
 }) {
-  var query = useContext(QueryContext);
   var [saving, setSaving] = useState(false);
   var [changes, setChanges] = useState<Record<string, boolean | undefined>>({});
 
@@ -414,12 +413,11 @@ export function ZapisTable(props: {
     expansionMark: true,
     cell: (predmet: ZapisPredmet & { moje: boolean }) => {
       var href = {
-        ...query,
         modal: "detailPredmetu",
         modalPredmetKey: predmet.predmet_key,
         modalAkademickyRok: props.akademickyRok,
       };
-      var nazov = <Link href={href}>{predmet.nazov}</Link>;
+      var nazov = <RelativeLink href={href}>{predmet.nazov}</RelativeLink>;
       if (predmet.moje) nazov = <strong>{nazov}</strong>;
       if (predmet.aktualnost) {
         nazov = (

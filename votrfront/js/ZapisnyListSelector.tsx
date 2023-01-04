@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import _ from "lodash";
 import { CacheRequester, Loading } from "./ajax";
-import { Link, QueryContext } from "./router";
+import { Link, QueryContext, RelativeLink } from "./router";
 import { sortAs } from "./sorting";
 import { currentAcademicYear } from "./coursesStats";
 import { ZapisnyList } from "./types";
@@ -57,9 +57,9 @@ export function ZapisnyListSelector(props: { children: React.ReactNode }) {
           var active = key == query.zapisnyListKey;
           return (
             <li key={key} className={active ? "active" : ""}>
-              <Link href={{ ...query, zapisnyListKey: key }}>
+              <RelativeLink href={{ zapisnyListKey: key }}>
                 {zapisnyList.akademicky_rok} {zapisnyList.sp_skratka}
-              </Link>
+              </RelativeLink>
             </li>
           );
         })}

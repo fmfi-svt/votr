@@ -1,7 +1,7 @@
 import React, { useContext } from "react";
 import _ from "lodash";
 import { CacheRequester, Loading } from "./ajax";
-import { Link, QueryContext } from "./router";
+import { QueryContext, RelativeLink } from "./router";
 import { sortAs } from "./sorting";
 
 // TODO: Reduce code duplication with ZapisnyListSelector.
@@ -35,9 +35,9 @@ export function StudiumSelector(props: { children: React.ReactNode }) {
           var active = key == query.studiumKey;
           return (
             <li key={key} className={active ? "active" : ""}>
-              <Link href={{ ...query, studiumKey: key }}>
+              <RelativeLink href={{ studiumKey: key }}>
                 {studium.sp_skratka}
-              </Link>
+              </RelativeLink>
             </li>
           );
         })}

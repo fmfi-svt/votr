@@ -13,9 +13,9 @@ import {
   plural,
 } from "./humanizeAISData";
 import { PageLayout, PageTitle } from "./layout";
-import { Link, QueryContext } from "./router";
+import { QueryContext, RelativeLink } from "./router";
 import { sortAs, SortableTable } from "./sorting";
-import { Columns, Hodnotenie, Query } from "./types";
+import { Columns, Hodnotenie } from "./types";
 
 export var MojePredmetyColumns: Columns = [
   {
@@ -27,17 +27,16 @@ export var MojePredmetyColumns: Columns = [
   {
     label: "Názov predmetu",
     prop: "nazov",
-    cell: (hodnotenie: Hodnotenie, query: Query) => (
-      <Link
+    cell: (hodnotenie: Hodnotenie) => (
+      <RelativeLink
         href={{
-          ...query,
           modal: "detailPredmetu",
           modalPredmetKey: hodnotenie.predmet_key,
           modalAkademickyRok: hodnotenie.akademicky_rok,
         }}
       >
         {hodnotenie.nazov}
-      </Link>
+      </RelativeLink>
     ),
     expansionMark: true,
   },
