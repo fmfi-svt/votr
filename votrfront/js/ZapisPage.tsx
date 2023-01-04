@@ -13,7 +13,13 @@ import { humanizeTypVyucby, plural } from "./humanizeAISData";
 import { FormItem, PageLayout, PageTitle } from "./layout";
 import { Link, navigate, QueryContext } from "./router";
 import { sortAs, SortableTable } from "./sorting";
-import { Columns, ComboBoxOption, ZapisCast, ZapisPredmet } from "./types";
+import {
+  Columns,
+  ComboBoxOption,
+  Href,
+  ZapisCast,
+  ZapisPredmet,
+} from "./types";
 import classNames from "classnames";
 
 const typVyucbyColumn = {
@@ -122,11 +128,7 @@ export var ZapisVlastnostiColumns = [
   { label: "Poznámka", prop: "poznamka" },
 ];
 
-function ZapisLink(props: {
-  active: boolean;
-  href: Record<string, string>;
-  label: string;
-}) {
+function ZapisLink(props: { active: boolean; href: Href; label: string }) {
   return (
     <Link
       className={classNames("btn", "btn-default", props.active && "active")}

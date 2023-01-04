@@ -2,7 +2,7 @@ import React, { useContext, useState } from "react";
 import _ from "lodash";
 import { navigate, QueryContext } from "./router";
 import { LocalSettings } from "./LocalSettings";
-import { Columns } from "./types";
+import { Columns, Query } from "./types";
 import classNames from "classnames";
 
 export var sortAs = {
@@ -41,7 +41,7 @@ export var sortAs = {
 
 function getOrder(
   defaultOrder: string | null | undefined,
-  query: Record<string, string>,
+  query: Query,
   queryKey: string
 ): string[] {
   var orderString = query[queryKey] || defaultOrder;
@@ -77,7 +77,7 @@ function sortItems<T>(items: T[], columns: Columns, order: string[]): number[] {
 
 function renderHeader(
   columns: Columns,
-  query: Record<string, string>,
+  query: Query,
   queryKey: string,
   order: string[],
   fullTable: boolean
@@ -125,7 +125,7 @@ function renderHeader(
 export function sortTable<T>(
   items: T[],
   columns: Columns,
-  query: Record<string, string>,
+  query: Query,
   queryKey: string
 ): [T[], React.ReactNode] {
   var order = getOrder(columns.defaultOrder, query, queryKey);

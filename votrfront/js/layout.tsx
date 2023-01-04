@@ -13,6 +13,7 @@ import {
 } from "./ajax";
 import { FakeLink, Link, QueryContext } from "./router";
 import { AnketaPopup } from "./AnketaPopup";
+import { Href } from "./types";
 
 export class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
@@ -180,7 +181,7 @@ export function PageTitle({ children }: { children: React.ReactNode }) {
 
 function MenuItem(props: {
   active?: boolean;
-  href: Record<string, string | undefined>;
+  href: Href;
   label: React.ReactNode;
 }) {
   var query = useContext(QueryContext);

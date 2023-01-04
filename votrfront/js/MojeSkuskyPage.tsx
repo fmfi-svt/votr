@@ -13,7 +13,7 @@ import { Link, QueryContext } from "./router";
 import { sortAs, SortableTable } from "./sorting";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
-import { Termin } from "./types";
+import { Href, Query, Termin } from "./types";
 import classNames from "classnames";
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
@@ -42,7 +42,7 @@ const MojeSkuskyColumns = [
   {
     label: "Predmet",
     prop: "nazov_predmetu",
-    cell: (termin: Termin, query: Record<string, string>) => (
+    cell: (termin: Termin, query: Query) => (
       <Link
         href={{
           ...query,
@@ -73,7 +73,7 @@ const MojeSkuskyColumns = [
     prop: "pocet_prihlasenych",
     process: sortAs.number,
     hiddenClass: ["hidden-xs"],
-    cell: (termin: Termin, query: Record<string, string>) => (
+    cell: (termin: Termin, query: Query) => (
       <Link
         href={{
           ...query,
@@ -196,7 +196,7 @@ function convertToICAL(terminy: Termin[]) {
 
 function MojeSkuskyMenuLink(props: {
   active: boolean;
-  href: Record<string, string>;
+  href: Href;
   label: React.ReactNode;
 }) {
   return (

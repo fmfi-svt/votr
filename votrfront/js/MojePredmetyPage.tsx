@@ -15,7 +15,7 @@ import {
 import { PageLayout, PageTitle } from "./layout";
 import { Link, QueryContext } from "./router";
 import { sortAs, SortableTable } from "./sorting";
-import { Columns, Hodnotenie } from "./types";
+import { Columns, Hodnotenie, Query } from "./types";
 
 export var MojePredmetyColumns: Columns = [
   {
@@ -27,7 +27,7 @@ export var MojePredmetyColumns: Columns = [
   {
     label: "Názov predmetu",
     prop: "nazov",
-    cell: (hodnotenie: Hodnotenie, query: Record<string, string>) => (
+    cell: (hodnotenie: Hodnotenie, query: Query) => (
       <Link
         href={{
           ...query,

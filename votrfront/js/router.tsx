@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import _ from "lodash";
 import $ from "jquery";
+import { Href, Query } from "./types";
 
 var trackPageViewLast: string | undefined;
 
@@ -19,7 +20,7 @@ export function trackPageView() {
 
 function parseQueryString(queryString: string) {
   if (!queryString) return {};
-  var result: Record<string, string> = {};
+  var result: Query = {};
   var pairs = queryString.split("&");
   for (var i = 0; i < pairs.length; i++) {
     var index = pairs[i].indexOf("=");
@@ -33,8 +34,8 @@ function parseQueryString(queryString: string) {
   return result;
 }
 
-export var QueryContext = React.createContext<Record<string, string>>(
-  undefined as unknown as Record<string, string>
+export var QueryContext = React.createContext<Query>(
+  undefined as unknown as Query
 );
 
 export function Root({ app }: { app: React.ComponentType }) {
@@ -74,23 +75,19 @@ export function Root({ app }: { app: React.ComponentType }) {
   );
 }
 
-export function buildUrl(
-  href: string | Record<string, string | null | undefined>
-) {
+export function buildUrl(href: string | Href) {
   if (_.isString(href)) return href;
   return "?" + $.param(_.omitBy(href, _.isUndefined), true);
 }
 
-export function navigate(
-  href: string | Record<string, string | null | undefined>
-) {
+export function navigate(href: string | Href) {
   Votr.didNavigate = true;
   history.pushState(null, "", Votr.settings.url_root + buildUrl(href));
   Votr.updateRoot();
 }
 
 export function Link(
-  props: { href: string | Record<string, string | null | undefined> } & Omit<
+  props: { href: string | Href } & Omit<
     React.HTMLAttributes<HTMLAnchorElement>,
     "href"
   >

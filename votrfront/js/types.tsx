@@ -24,6 +24,10 @@ export interface VotrVar {
   [key: string]: unknown;
 }
 
+export type Query = Record<string, string>;
+
+export type Href = Record<string, string | null | undefined>;
+
 // Fladgejt structures
 
 export interface Studium {
