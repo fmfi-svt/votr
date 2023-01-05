@@ -76,7 +76,7 @@ const jazykColumn = {
   hiddenClass: ["hidden-xs", "hidden-sm"],
 };
 
-export var ZapisZPlanuColumns: Columns = [
+var ZapisZPlanuColumns: Columns = [
   typVyucbyColumn,
   {
     label: "Blok",
@@ -105,7 +105,7 @@ export var ZapisZPlanuColumns: Columns = [
 ];
 ZapisZPlanuColumns.defaultOrder = "a1a2a9a3";
 
-export var ZapisZPonukyColumns: Columns = [
+var ZapisZPonukyColumns: Columns = [
   typVyucbyColumn,
   {
     label: "Blok",
@@ -121,7 +121,7 @@ export var ZapisZPonukyColumns: Columns = [
 ];
 ZapisZPonukyColumns.defaultOrder = "a3";
 
-export var ZapisVlastnostiColumns = [
+var ZapisVlastnostiColumns = [
   { label: "Skratka", prop: "skratka", expansionMark: true },
   { label: "Názov", prop: "nazov" },
   { label: "Minimálny kredit", prop: "minimalny_kredit" },
@@ -139,7 +139,7 @@ function ZapisLink(props: { active: boolean; href: Href; label: string }) {
   );
 }
 
-export function ZapisMenu() {
+function ZapisMenu() {
   var { action, cast, zapisnyListKey } = useContext(QueryContext);
   return (
     <div className="header">
@@ -167,7 +167,7 @@ export function ZapisMenu() {
   );
 }
 
-export function ZapisTableFooter(props: {
+function ZapisTableFooter(props: {
   predmety: Map<string, ZapisPredmet>;
   moje: Record<string, boolean>;
   fullTable: boolean;
@@ -254,7 +254,7 @@ export function ZapisTableFooter(props: {
   );
 }
 
-export function ZapisTable(props: {
+function ZapisTable(props: {
   predmety: Map<string, ZapisPredmet & { moje: boolean }> | undefined;
   odoberPredmety: (
     predmety: ZapisPredmet[],
@@ -451,7 +451,7 @@ export function ZapisTable(props: {
   );
 }
 
-export function ZapisVlastnostiTable() {
+function ZapisVlastnostiTable() {
   var query = useContext(QueryContext);
   var zapisnyListKey = query.zapisnyListKey!;
   var cache = new CacheRequester();
@@ -477,7 +477,7 @@ export function ZapisVlastnostiTable() {
   );
 }
 
-export function ZapisZPlanuPageContent() {
+function ZapisZPlanuPageContent() {
   var query = useContext(QueryContext);
   var zapisnyListKey = query.zapisnyListKey!;
   var cast: ZapisCast = query.cast == "SS" ? "SS" : "SC";
@@ -589,7 +589,7 @@ export function makeZapisZPlanuPage() {
   );
 }
 
-export function ZapisZPonukyForm() {
+function ZapisZPonukyForm() {
   var query = useContext(QueryContext);
   var zapisnyListKey = query.zapisnyListKey!;
 
@@ -687,7 +687,7 @@ export function ZapisZPonukyForm() {
   );
 }
 
-export function ZapisZPonukyPageContent() {
+function ZapisZPonukyPageContent() {
   var query = useContext(QueryContext);
   var zapisnyListKey = query.zapisnyListKey!;
   var cache = new CacheRequester();

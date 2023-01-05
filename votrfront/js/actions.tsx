@@ -16,7 +16,7 @@ import { ZoznamPrihlasenychNaTerminModal } from "./ZoznamPrihlasenychNaTermin";
 import { ModalBase, PageLayout } from "./layout";
 import { navigate, QueryContext } from "./router";
 
-export function makeNotFoundPage() {
+function makeNotFoundPage() {
   return (
     <PageLayout>
       <p>Action not found!</p>
@@ -24,7 +24,7 @@ export function makeNotFoundPage() {
   );
 }
 
-export var actions: Record<string, () => React.ReactNode> = {
+var actions: Record<string, () => React.ReactNode> = {
   index: makeIndexPage,
   priebezneHodnotenia: makePriebezneHodnoteniaPage,
   mojeHodnotenia: makeMojeHodnoteniaPage,
@@ -37,7 +37,7 @@ export var actions: Record<string, () => React.ReactNode> = {
   zapisZPonuky: makeZapisZPonukyPage,
 };
 
-export var modalActions: Record<string, React.ComponentType> = {
+var modalActions: Record<string, React.ComponentType> = {
   about: AboutModal,
   detailPredmetu: DetailPredmetuModal,
   zoznamPrihlasenychNaTermin: ZoznamPrihlasenychNaTerminModal,

@@ -1,9 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import _ from "lodash";
 import { LocalSettings } from "./LocalSettings";
-import { logs } from "./ajax";
+import { ajaxLogs } from "./ajax";
 
-export function LogViewerContent(props: {
+function LogViewerContent(props: {
   closeButton: React.ReactNode;
   modeButton: React.ReactNode;
 }) {
@@ -24,15 +24,15 @@ export function LogViewerContent(props: {
 
   useEffect(() => {
     var div = scrollRef.current;
-    if (!logs.length) return;
-    var time = _.last(logs)!.time;
+    if (!ajaxLogs.length) return;
+    var time = _.last(ajaxLogs)!.time;
     if (time != lastTimeRef.current) {
       lastTimeRef.current = time;
       div!.scrollTop = div!.scrollHeight;
     }
   });
 
-  var types = _.countBy(logs, "log");
+  var types = _.countBy(ajaxLogs, "log");
 
   return (
     <div className="log-viewer">
@@ -59,12 +59,12 @@ export function LogViewerContent(props: {
       <div className="scroll" ref={scrollRef}>
         <table>
           <tbody>
-            {logs.map(
+            {ajaxLogs.map(
               (entry, index) =>
                 !hidden[entry.log] && (
                   <tr key={index}>
                     <td className="text-right">
-                      {(entry.time - logs[0]!.time).toFixed(3)}
+                      {(entry.time - ajaxLogs[0]!.time).toFixed(3)}
                     </td>
                     <td>
                       <code>{entry.log}</code>
@@ -97,7 +97,7 @@ function computeBenchmarks() {
     delete beginnings[what];
   }
 
-  for (const entry of logs) {
+  for (const entry of ajaxLogs) {
     if (entry.log == "benchmark" && entry.message.substr(0, 6) == "Begin ") {
       start(entry.message.substr(6), entry.time);
     }
@@ -115,7 +115,7 @@ function computeBenchmarks() {
   return _.sortBy(_.toPairs(sums), 1).reverse();
 }
 
-export function LogViewerBenchmarkContent(props: {
+function LogViewerBenchmarkContent(props: {
   closeButton: React.ReactNode;
   modeButton: React.ReactNode;
 }) {

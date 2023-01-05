@@ -15,7 +15,7 @@ import { Columns, Studium, ZapisnyList } from "./types";
 // TODO: Ked to raz bude rychle, pouzit to ako "home page" pri prazdnom action.
 // TODO: Zvyraznit aktualne obdobia a pisat kolko casu zostava do dalsich.
 
-export var PrehladStudiumColumns: Columns = [
+var PrehladStudiumColumns: Columns = [
   ["Študijný program", "sp_popis"],
   ["Rok štúdia", "rok_studia", sortAs.number],
   ["Dĺžka v semestroch", "sp_dlzka", sortAs.number],
@@ -26,7 +26,7 @@ export var PrehladStudiumColumns: Columns = [
 ];
 PrehladStudiumColumns.defaultOrder = "d4";
 
-export var PrehladZapisnyListColumns: Columns = [
+var PrehladZapisnyListColumns: Columns = [
   ["Akademický rok", "akademicky_rok"],
   ["Študijný program", "sp_popis"],
   ["Ročník", "rocnik", sortAs.number],
@@ -34,7 +34,7 @@ export var PrehladZapisnyListColumns: Columns = [
 ];
 PrehladZapisnyListColumns.defaultOrder = "d0d3";
 
-export function PrehladStudiaObdobie(props: {
+function PrehladStudiaObdobie(props: {
   rpc: "get_semester_obdobie" | "get_skuskove_obdobie";
   semester: "Z" | "L";
   label: string;
@@ -55,7 +55,7 @@ export function PrehladStudiaObdobie(props: {
   );
 }
 
-export function PrehladStudiaObdobia() {
+function PrehladStudiaObdobia() {
   var query = useContext(QueryContext);
   // Obdobia predsalen neukazujeme, lebo AIS ma vacsinou zle informacie
   // (skuskove je umelo predlzene kvoli moznosti zapisovat znamky, apod) a
@@ -92,7 +92,7 @@ export function PrehladStudiaObdobia() {
   );
 }
 
-export function PridatZapisnyListButton({ studium }: { studium: Studium }) {
+function PridatZapisnyListButton({ studium }: { studium: Studium }) {
   var rok = currentAcademicYear();
 
   if (studium.koniec !== "") {
@@ -139,7 +139,7 @@ export function PridatZapisnyListButton({ studium }: { studium: Studium }) {
   );
 }
 
-export function PrehladStudiaStudia() {
+function PrehladStudiaStudia() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
 
@@ -190,7 +190,7 @@ export function PrehladStudiaStudia() {
   );
 }
 
-export function PrehladStudiaZapisneListy() {
+function PrehladStudiaZapisneListy() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
 

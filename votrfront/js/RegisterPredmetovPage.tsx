@@ -7,7 +7,7 @@ import { navigate, QueryContext, RelativeLink } from "./router";
 import { sortAs, sortTable } from "./sorting";
 import { Columns, ComboBoxOption } from "./types";
 
-export var RegisterPredmetovColumns: Columns = [
+var RegisterPredmetovColumns: Columns = [
   ["Názov predmetu", "nazov"],
   ["Skratka predmetu", "skratka"],
   ["Fakulta", "fakulta"],
@@ -18,7 +18,7 @@ export var RegisterPredmetovColumns: Columns = [
 ];
 RegisterPredmetovColumns.defaultOrder = "a0";
 
-export function RegisterPredmetovForm() {
+function RegisterPredmetovForm() {
   var query = useContext(QueryContext);
 
   var [state, setState] = useState(() => ({
@@ -117,7 +117,7 @@ export function RegisterPredmetovForm() {
   );
 }
 
-export function RegisterPredmetovResultTable() {
+function RegisterPredmetovResultTable() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
 

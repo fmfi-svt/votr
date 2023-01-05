@@ -18,7 +18,7 @@ import { QueryContext } from "./router";
 import { sortAs, SortableTable } from "./sorting";
 import { Columns, Priemer } from "./types";
 
-export var MojeHodnoteniaColumns: Columns = [
+var MojeHodnoteniaColumns: Columns = [
   {
     label: "Akademický rok",
     prop: "akademicky_rok",
@@ -30,7 +30,7 @@ MojeHodnoteniaColumns[1] = {
 };
 MojeHodnoteniaColumns.defaultOrder = "a0d1a2";
 
-export var MojePriemeryColumns: Columns = [
+var MojePriemeryColumns: Columns = [
   {
     label: "Dátum výpočtu priemeru",
     prop: "datum_vypoctu",
@@ -82,7 +82,7 @@ export var MojePriemeryColumns: Columns = [
 ];
 MojePriemeryColumns.defaultOrder = "a0a2a1";
 
-export function MojeHodnoteniaHodnoteniaTable() {
+function MojeHodnoteniaHodnoteniaTable() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
   var studiumKey = query.studiumKey!;
@@ -123,7 +123,7 @@ export function MojeHodnoteniaHodnoteniaTable() {
   );
 }
 
-export function MojeHodnoteniaPriemeryTable() {
+function MojeHodnoteniaPriemeryTable() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
   var studiumKey = query.studiumKey!;

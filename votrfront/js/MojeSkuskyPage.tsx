@@ -207,7 +207,7 @@ function MojeSkuskyMenuLink(props: {
   );
 }
 
-export function MojeSkuskyMenu() {
+function MojeSkuskyMenu() {
   var query = useContext(QueryContext);
   var { action, kalendar, zapisnyListKey } = query;
   return (
@@ -263,7 +263,7 @@ function defaultDate(eventList: CalendarEvent[]) {
   return today;
 }
 
-export function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
+function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
   const localizer = momentLocalizer(moment);
 
   return (
@@ -300,7 +300,7 @@ export function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
   );
 }
 
-export function MojeSkuskyPageContent() {
+function MojeSkuskyPageContent() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
   var zapisnyListKey = query.zapisnyListKey!;
@@ -361,7 +361,7 @@ export function MojeSkuskyPageContent() {
   );
 }
 
-export function SkuskyRegisterButton({ termin }: { termin: Termin }) {
+function SkuskyRegisterButton({ termin }: { termin: Termin }) {
   var [pressed, setPressed] = useState(false);
 
   var isSigninButton = !somPrihlaseny(termin);

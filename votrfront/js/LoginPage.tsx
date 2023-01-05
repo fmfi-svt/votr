@@ -12,7 +12,7 @@ var TYPE_NAMES: Record<string, string> = {
   "demo": "Demo",
 };
 
-export function LoginForm({ onOpenError }: { onOpenError: () => void }) {
+function LoginForm({ onOpenError }: { onOpenError: () => void }) {
   var [state, setState] = useState({
     server: Votr.settings.server || 0,
     type: Votr.settings.type,
@@ -148,7 +148,7 @@ export function LoginForm({ onOpenError }: { onOpenError: () => void }) {
   );
 }
 
-export function LoginErrorModal() {
+function LoginErrorModal() {
   return (
     <Modal title="Chyba pri prihlásení">
       <pre>{Votr.settings.error}</pre>

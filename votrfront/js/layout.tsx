@@ -9,7 +9,7 @@ import {
   goLogout,
   goReset,
   goResetHome,
-  logs,
+  ajaxLogs,
 } from "./ajax";
 import { FakeLink, Link, QueryContext, RelativeLink } from "./router";
 import { AnketaPopup } from "./AnketaPopup";
@@ -124,7 +124,7 @@ export function PageLayout(props: { children: React.ReactNode }) {
   );
 }
 
-export function PageNavbar() {
+function PageNavbar() {
   return (
     <div className="navbar navbar-inverse navbar-static-top">
       <div className="container-fluid">
@@ -156,8 +156,8 @@ export function PageNavbar() {
   );
 }
 
-export function LogStatus() {
-  var entry = _.last(logs);
+function LogStatus() {
+  var entry = _.last(ajaxLogs);
   var message;
   if (!entry) {
     message = "\xA0"; // nbsp
@@ -200,7 +200,7 @@ function DisabledItem(props: { label: React.ReactNode }) {
   return null;
 }
 
-export function MainMenu() {
+function MainMenu() {
   var query = useContext(QueryContext);
   var { action, studiumKey, zapisnyListKey } = query;
 

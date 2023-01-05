@@ -6,13 +6,13 @@ import { QueryContext } from "./router";
 import { sortAs, sortTable } from "./sorting";
 import { Columns } from "./types";
 
-export var DetailPredmetuUciteliaColumns: Columns = [
+var DetailPredmetuUciteliaColumns: Columns = [
   ["Meno", "plne_meno", sortAs.personName],
   ["Typ", "typ"],
 ];
 DetailPredmetuUciteliaColumns.defaultOrder = "a0";
 
-export var DetailPredmetuStudentiColumns: Columns =
+var DetailPredmetuStudentiColumns: Columns =
   ZoznamPrihlasenychNaTerminColumns.slice();
 DetailPredmetuStudentiColumns.defaultOrder = "a0";
 

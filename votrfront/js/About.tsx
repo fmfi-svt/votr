@@ -63,7 +63,7 @@ export function AboutModal() {
   );
 }
 
-export function IndexPage() {
+function IndexPage() {
   // TODO: Use PageTitle, but show different h1.
   return (
     <React.Fragment>

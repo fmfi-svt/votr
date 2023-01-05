@@ -6,13 +6,13 @@ import { navigate, QueryContext } from "./router";
 import { sortAs, sortTable } from "./sorting";
 import { Columns, ComboBoxOption } from "./types";
 
-export var RegisterOsobColumns: Columns = [
+var RegisterOsobColumns: Columns = [
   ["Plné meno", "plne_meno", sortAs.personName],
   ["E-mail", "email"],
 ];
 RegisterOsobColumns.defaultOrder = "a0";
 
-export function RegisterOsobForm() {
+function RegisterOsobForm() {
   var query = useContext(QueryContext);
 
   var [state, setState] = useState(() => ({
@@ -160,7 +160,7 @@ export function RegisterOsobForm() {
   );
 }
 
-export function RegisterOsobResultTable() {
+function RegisterOsobResultTable() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
 

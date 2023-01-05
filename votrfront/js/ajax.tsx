@@ -36,7 +36,7 @@ export function sendRpc<N extends keyof Rpcs>(
       var payload = xhr.responseText.substr(processed + HEADER_LENGTH, length);
       var data = JSON.parse(payload) as RpcPayload;
       console.log("RECEIVED", data);
-      if ("log" in data) logs.push(data);
+      if ("log" in data) ajaxLogs.push(data);
       if ("result" in data) result = data.result;
       if ("error" in data) return fail(data.error);
       processed += HEADER_LENGTH + length;
@@ -76,7 +76,7 @@ export function sendRpc<N extends keyof Rpcs>(
 
 Votr.ajaxError = null;
 
-export var logs: RpcLogPayload[] = [];
+export var ajaxLogs: RpcLogPayload[] = [];
 
 export var RequestCache: {
   done: Record<string, unknown>;
@@ -138,7 +138,7 @@ export function Loading({ requests }: { requests?: Array<() => void> }) {
   return <span className="loading">Načítavam...</span>;
 }
 
-export function goPost(url: string) {
+function goPost(url: string) {
   var form = document.createElement("form");
   form.method = "POST";
   form.action = url;
@@ -157,3 +157,10 @@ export function goReset() {
 export function goResetHome() {
   goPost("reset?destination=");
 }
+
+Votr.dev_sendRpc = sendRpc;
+Votr.dev_RequestCache = RequestCache;
+Votr.dev_invalidateRequestCache = invalidateRequestCache;
+Votr.dev_goLogout = goLogout;
+Votr.dev_goReset = goReset;
+Votr.dev_goResetHome = goResetHome;

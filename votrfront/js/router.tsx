@@ -5,7 +5,7 @@ import { Href, Query } from "./types";
 
 var trackPageViewLast: string | undefined;
 
-export function trackPageView() {
+function trackPageView() {
   if (!window.ga) return;
   var current =
     location.protocol +
@@ -75,7 +75,7 @@ export function Root({ app }: { app: React.ComponentType }) {
   );
 }
 
-export function buildUrl(href: string | Href) {
+function buildUrl(href: string | Href) {
   if (_.isString(href)) return href;
   return "?" + $.param(_.omitBy(href, _.isUndefined), true);
 }
@@ -132,3 +132,5 @@ export function FakeLink(
 
   return <a {...props} onKeyUp={handleKeyUp} tabIndex={0} role="button" />;
 }
+
+Votr.dev_navigate = navigate;

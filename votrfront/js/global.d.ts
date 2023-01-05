@@ -5,7 +5,6 @@ export {};
 declare global {
   var Votr: VotrVar;
   var ga: ((...args: unknown[]) => void) | undefined;
-  var __webpack_require__: unknown;
 }
 
 // How does this file work?

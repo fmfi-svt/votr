@@ -5,7 +5,7 @@ import { PageLayout, PageTitle } from "./layout";
 import { QueryContext, RelativeLink } from "./router";
 import { humanizeBoolean } from "./humanizeAISData";
 
-export function PriebezneHodnoteniaPageContent() {
+function PriebezneHodnoteniaPageContent() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
   var zapisnyListKey = query.zapisnyListKey!;

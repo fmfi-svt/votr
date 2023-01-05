@@ -21,7 +21,10 @@ export interface VotrVar {
   };
   updateRoot(): void;
   ajaxError: string | null;
-  [key: string]: unknown;
+  didNavigate?: boolean;
+  prologueCheck?: boolean;
+  setDebug?: unknown;
+  [key: `dev_${string}`]: unknown;
 }
 
 export type Query = Record<string, string>;

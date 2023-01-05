@@ -75,7 +75,7 @@ export var MojePredmetyColumns: Columns = [
 ];
 MojePredmetyColumns.defaultOrder = "d0a1";
 
-export function MojePredmetyPageContent() {
+function MojePredmetyPageContent() {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
   var zapisnyListKey = query.zapisnyListKey!;

@@ -33,10 +33,6 @@ import "../css/main.scss";
   );
   // TODO: Also deal with unhandledrejection.
 
-  if (typeof __webpack_require__ !== "undefined") {
-    Votr.webpackRequire = __webpack_require__;
-  }
-
   var query = Votr.settings.destination;
   if (query !== undefined && (query == "" || query.substring(0, 1) == "?")) {
     try {
