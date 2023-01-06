@@ -4,42 +4,37 @@ import { CacheRequester, Loading } from "./ajax";
 import { Link, QueryContext, RelativeLink } from "./router";
 import { sortAs } from "./sorting";
 import { currentAcademicYear } from "./coursesStats";
-import { ZapisnyList } from "./types";
 
-function getItems(cache: CacheRequester): [ZapisnyList[], boolean] {
+export function ZapisnyListSelector({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  var query = useContext(QueryContext);
+  var cache = new CacheRequester();
   var studia = cache.get("get_studia");
 
   var items = [];
 
-  var buttonNovyZapisnyList = false;
+  var showPridatButton = false;
 
   if (studia) {
     for (const studium of studia) {
       var zapisneListy = cache.get("get_zapisne_listy", studium.studium_key);
-      if (zapisneListy) items.push(...zapisneListy);
+      if (!zapisneListy) continue;
 
-      var aktualny = 0;
-      if (zapisneListy) {
-        aktualny = zapisneListy.filter(
-          (zl) => zl.akademicky_rok === currentAcademicYear()
-        ).length;
-      }
-      if (studium.koniec === "" && aktualny === 0) {
-        buttonNovyZapisnyList = true;
+      items.push(...zapisneListy);
+
+      if (
+        !studium.koniec &&
+        !zapisneListy.some((zl) => zl.akademicky_rok === currentAcademicYear())
+      ) {
+        showPridatButton = true;
       }
     }
   }
 
-  return [
-    _.sortBy(items, (item) => sortAs.date(item.datum_zapisu)).reverse(),
-    buttonNovyZapisnyList,
-  ];
-}
-
-export function ZapisnyListSelector(props: { children: React.ReactNode }) {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
-  var [items, buttonNovyZapisnyList] = getItems(cache);
+  items = _.sortBy(items, (item) => sortAs.date(item.datum_zapisu)).reverse();
 
   if (!query.zapisnyListKey && cache.loadedAll && items[0]) {
     var mostRecentItem = items[0];
@@ -63,23 +58,20 @@ export function ZapisnyListSelector(props: { children: React.ReactNode }) {
             </li>
           );
         })}
-        {cache.loadedAll ? null : (
+        {!cache.loadedAll ? (
           <li>
             <span className="text-pill">
               <Loading requests={cache.missing} />
             </span>
           </li>
-        )}
-        {buttonNovyZapisnyList && (
+        ) : showPridatButton ? (
           <li>
             <Link href={{ action: "prehladStudia" }}>Pridať...</Link>
           </li>
-        )}
+        ) : null}
       </ul>
       {query.zapisnyListKey ? (
-        <QueryContext.Provider value={query}>
-          {props.children}
-        </QueryContext.Provider>
+        <QueryContext.Provider value={query}>{children}</QueryContext.Provider>
       ) : cache.loadedAll && items.length == 0 ? (
         <p>Žiadne zápisné listy.</p>
       ) : null}

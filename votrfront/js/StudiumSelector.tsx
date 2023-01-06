@@ -6,18 +6,11 @@ import { sortAs } from "./sorting";
 
 // TODO: Reduce code duplication with ZapisnyListSelector.
 
-function getItems(cache: CacheRequester) {
-  var studia = cache.get("get_studia");
-
-  var items = studia || [];
-
-  return _.sortBy(items, (item) => sortAs.date(item.zaciatok)).reverse();
-}
-
-export function StudiumSelector(props: { children: React.ReactNode }) {
+export function StudiumSelector({ children }: { children: React.ReactNode }) {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
-  var items = getItems(cache);
+  var studia = cache.get("get_studia") || [];
+  var items = _.sortBy(studia, (item) => sortAs.date(item.zaciatok)).reverse();
 
   if (!query.studiumKey && cache.loadedAll && items[0]) {
     var mostRecentItem = items[0];
@@ -50,9 +43,7 @@ export function StudiumSelector(props: { children: React.ReactNode }) {
         )}
       </ul>
       {query.studiumKey ? (
-        <QueryContext.Provider value={query}>
-          {props.children}
-        </QueryContext.Provider>
+        <QueryContext.Provider value={query}>{children}</QueryContext.Provider>
       ) : cache.loadedAll && items.length == 0 ? (
         <p>Žiadne štúdiá.</p>
       ) : null}
