@@ -35,10 +35,18 @@ function sendRawRpc<N extends keyof Rpcs>(
       if (waiting < HEADER_LENGTH + length) break;
       var payload = xhr.responseText.substr(processed + HEADER_LENGTH, length);
       var data = JSON.parse(payload) as RpcPayload;
-      console.log("RECEIVED", data);
-      if ("log" in data) ajaxLogs.push(data);
-      if ("result" in data) result = data.result;
-      if ("error" in data) return fail(data.error);
+      if ("log" in data) {
+        console.debug("Received " + name + " log:", data.log, data.message);
+        ajaxLogs.push(data);
+      }
+      if ("result" in data) {
+        console.debug("Received " + name + " result:", data.result);
+        result = data.result;
+      }
+      if ("error" in data) {
+        console.log("Received " + name + " error:", data.error);
+        return fail(data.error);
+      }
       processed += HEADER_LENGTH + length;
     }
     if (xhr.readyState == 4) {
