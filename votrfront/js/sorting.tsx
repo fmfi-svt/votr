@@ -52,10 +52,10 @@ function getOrder(
 function convertOldStyleColumns(columns: Columns): Columns {
   if (columns[0][0]) {
     columns = columns.map(
-      ([label, prop, process, preferDesc, hiddenClass]) => ({
+      ([label, prop, sortKey, preferDesc, hiddenClass]) => ({
         label,
         prop,
-        process,
+        sortKey,
         preferDesc,
         hiddenClass,
       })
@@ -67,10 +67,10 @@ function convertOldStyleColumns(columns: Columns): Columns {
 function sortItems<T>(items: T[], columns: Columns, order: string[]): number[] {
   var directions = order.map((o) => (o.charAt(0) == "a" ? "asc" : "desc"));
   var iteratees = order.map((o) => {
-    var { label, prop, process, preferDesc } = columns[Number(o.substring(1))];
+    var { label, prop, sortKey, preferDesc } = columns[Number(o.substring(1))];
     return (originalIndex: number) => {
       var item = items[originalIndex];
-      return (process || _.identity)(prop ? (item as any)[prop] : item);
+      return (sortKey || _.identity)(prop ? (item as any)[prop] : item);
     };
   });
   return _.orderBy(_.range(items.length), iteratees, directions);
@@ -85,7 +85,7 @@ function renderHeader(
 ): React.ReactNode {
   function handleClick(event: React.MouseEvent<HTMLElement>) {
     var index = event.currentTarget.getAttribute("data-index");
-    var { label, prop, process, preferDesc } = columns[Number(index)];
+    var { label, prop, sortKey, preferDesc } = columns[Number(index)];
 
     var newOrder = _.without(order, "a" + index, "d" + index);
     // prettier-ignore
@@ -215,9 +215,9 @@ export function SortableTable<T>({
         className={rowClassName && rowClassName(item)}
       >
         {columns.map(
-          ({ prop, cell, colProps, expansionMark }, index) =>
+          ({ prop, display, cellProps, expansionMark }, index) =>
             !reallyHide[index] && (
-              <td key={index} {...(colProps ? colProps(item) : {})}>
+              <td key={index} {...(cellProps ? cellProps(item) : {})}>
                 {expansionMark && !!reallyHiddenCount && (
                   <span
                     className={classNames(
@@ -226,7 +226,7 @@ export function SortableTable<T>({
                     )}
                   />
                 )}
-                {cell ? cell(item, query) : (item as any)[prop]}
+                {display ? display(item, query) : (item as any)[prop]}
               </td>
             )
         )}
@@ -249,8 +249,8 @@ export function SortableTable<T>({
                       <tr key={index}>
                         <td>{col.label}:</td>
                         <td>
-                          {col.cell
-                            ? col.cell(item, query)
+                          {col.display
+                            ? col.display(item, query)
                             : (item as any)[col.prop]}
                         </td>
                       </tr>

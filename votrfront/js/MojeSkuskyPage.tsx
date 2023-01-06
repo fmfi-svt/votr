@@ -29,9 +29,9 @@ const MojeSkuskyColumns = [
         <span className="hidden-xs hidden-sm">Moje</span>?
       </React.Fragment>
     ),
-    process: (termin: Termin) => (somPrihlaseny(termin) ? "A" : "N"),
-    cell: (termin: Termin) => (somPrihlaseny(termin) ? "\u2714" : "\u2718"),
-    colProps: (termin: Termin) => ({
+    sortKey: (termin: Termin) => (somPrihlaseny(termin) ? "A" : "N"),
+    display: (termin: Termin) => (somPrihlaseny(termin) ? "\u2714" : "\u2718"),
+    cellProps: (termin: Termin) => ({
       title: somPrihlaseny(termin) ? "Ste prihlásení" : "Nie ste prihlásení",
       className: classNames(
         "text-center",
@@ -42,7 +42,7 @@ const MojeSkuskyColumns = [
   {
     label: "Predmet",
     prop: "nazov_predmetu",
-    cell: (termin: Termin) => (
+    display: (termin: Termin) => (
       <RelativeLink
         href={{
           modal: "detailPredmetu",
@@ -57,22 +57,22 @@ const MojeSkuskyColumns = [
   },
   {
     label: "Dátum",
-    process: (termin: Termin) => sortAs.date(`${termin.datum} ${termin.cas}`),
-    cell: (termin: Termin) => `${termin.datum} ${termin.cas}`,
+    sortKey: (termin: Termin) => sortAs.date(`${termin.datum} ${termin.cas}`),
+    display: (termin: Termin) => `${termin.datum} ${termin.cas}`,
   },
   { label: "Miestnosť", prop: "miestnost", hiddenClass: ["hidden-xs"] },
   {
     label: "Hodnotiaci",
     prop: "hodnotiaci",
-    process: sortAs.personName,
+    sortKey: sortAs.personName,
     hiddenClass: ["hidden-xs", "hidden-sm"],
   },
   {
     label: "Prihlásení",
     prop: "pocet_prihlasenych",
-    process: sortAs.number,
+    sortKey: sortAs.number,
     hiddenClass: ["hidden-xs"],
-    cell: (termin: Termin) => (
+    display: (termin: Termin) => (
       <RelativeLink
         href={{
           modal: "zoznamPrihlasenychNaTermin",
@@ -94,20 +94,20 @@ const MojeSkuskyColumns = [
   {
     label: "Prihlasovanie",
     prop: "prihlasovanie",
-    process: sortAs.interval,
+    sortKey: sortAs.interval,
     hiddenClass: ["hidden-xs", "hidden-sm"],
   },
   {
     label: "Odhlasovanie",
     prop: "odhlasovanie",
-    process: sortAs.interval,
+    sortKey: sortAs.interval,
     hiddenClass: ["hidden-xs", "hidden-sm"],
   },
   {
     label: "Známka",
-    process: (termin: Termin) =>
+    sortKey: (termin: Termin) =>
       termin.hodnotenie_terminu || termin.hodnotenie_predmetu,
-    cell: (termin: Termin) => (
+    display: (termin: Termin) => (
       <React.Fragment>
         {termin.hodnotenie_terminu
           ? termin.hodnotenie_terminu

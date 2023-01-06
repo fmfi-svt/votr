@@ -27,7 +27,7 @@ const pocetPrihlasenychJeStaryStore = new Set<string>();
 const typVyucbyColumn = {
   label: <abbr title="Typ výučby">Typ</abbr>,
   prop: "typ_vyucby",
-  cell: (predmet: ZapisPredmet) => (
+  display: (predmet: ZapisPredmet) => (
     <abbr title={humanizeTypVyucby(predmet.typ_vyucby)}>
       {predmet.typ_vyucby}
     </abbr>
@@ -52,14 +52,14 @@ const rozsahVyucbyColumn = {
 const kreditColumn = {
   label: "Kredit",
   prop: "kredit",
-  process: sortAs.number,
+  sortKey: sortAs.number,
   hiddenClass: ["hidden-xs"],
 };
 const prihlaseniColumn = {
   label: "Prihlásení",
   prop: "pocet_prihlasenych",
-  process: sortAs.number,
-  cell: (predmet: ZapisPredmet) => (
+  sortKey: sortAs.number,
+  display: (predmet: ZapisPredmet) => (
     <React.Fragment>
       {pocetPrihlasenychJeStaryStore.has(predmet.predmet_key) ? (
         <del>{predmet.pocet_prihlasenych}</del>
@@ -74,7 +74,7 @@ const prihlaseniColumn = {
 const jazykColumn = {
   label: "Jazyk",
   prop: "jazyk",
-  cell: (predmet: ZapisPredmet) => predmet.jazyk.replace(/ ,/g, ", "),
+  display: (predmet: ZapisPredmet) => predmet.jazyk.replace(/ ,/g, ", "),
   hiddenClass: ["hidden-xs", "hidden-sm"],
 };
 
@@ -82,11 +82,11 @@ var ZapisZPlanuColumns: Columns = [
   typVyucbyColumn,
   {
     label: "Blok",
-    process: (predmet: ZapisPredmet) =>
+    sortKey: (predmet: ZapisPredmet) =>
       parseInt(predmet.blok_index || "0") * 1000 +
       parseInt(predmet.v_bloku_index || "0"),
     hiddenClass: ["hidden-xs", "hidden-sm"],
-    cell: (predmet: ZapisPredmet) =>
+    display: (predmet: ZapisPredmet) =>
       predmet.blok_nazov ? (
         <abbr title={predmet.blok_nazov}>{predmet.blok_skratka}</abbr>
       ) : (
@@ -390,8 +390,8 @@ function ZapisTable(props: {
     label: "Moje?",
     prop: "moje",
     preferDesc: true,
-    colProps: () => ({ className: "text-center" }),
-    cell: (predmet: ZapisPredmet) => (
+    cellProps: () => ({ className: "text-center" }),
+    display: (predmet: ZapisPredmet) => (
       <input
         type="checkbox"
         name={predmet.predmet_key}
@@ -406,7 +406,7 @@ function ZapisTable(props: {
     label: "Názov predmetu",
     prop: "nazov",
     expansionMark: true,
-    cell: (predmet: ZapisPredmet & { moje: boolean }) => {
+    display: (predmet: ZapisPredmet & { moje: boolean }) => {
       var href = {
         modal: "detailPredmetu",
         modalPredmetKey: predmet.predmet_key,

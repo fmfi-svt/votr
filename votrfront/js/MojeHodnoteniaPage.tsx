@@ -35,13 +35,13 @@ var MojePriemeryColumns: Columns = [
   {
     label: "Dátum výpočtu priemeru",
     prop: "datum_vypoctu",
-    process: sortAs.date,
+    sortKey: sortAs.date,
     expansionMark: true,
   },
   {
     label: "Názov priemeru",
     prop: "nazov",
-    cell: (priemer: Priemer) => humanizeNazovPriemeru(priemer.nazov),
+    display: (priemer: Priemer) => humanizeNazovPriemeru(priemer.nazov),
   },
   { label: "Akademický rok", prop: "akademicky_rok" },
   {
@@ -53,31 +53,31 @@ var MojePriemeryColumns: Columns = [
   {
     label: "Získaný kredit",
     prop: "ziskany_kredit",
-    process: sortAs.number,
+    sortKey: sortAs.number,
     hiddenClass: ["hidden-xs", "hidden-sm"],
   },
   {
     label: "Celkový počet predmetov",
     prop: "predmetov",
-    process: sortAs.number,
+    sortKey: sortAs.number,
     hiddenClass: ["hidden-xs", "hidden-sm"],
   },
   {
     label: "Počet neabsolvovaných predmetov",
     prop: "neabsolvovanych",
-    process: sortAs.number,
+    sortKey: sortAs.number,
     hiddenClass: ["hidden-xs", "hidden-sm"],
   },
   {
     label: "Študijný priemer",
     prop: "studijny_priemer",
-    process: sortAs.number,
+    sortKey: sortAs.number,
     hiddenClass: ["hidden-xs"],
   },
   {
     label: "Vážený priemer",
     prop: "vazeny_priemer",
-    process: sortAs.number,
+    sortKey: sortAs.number,
     hiddenClass: ["hidden-xs"],
   },
 ];

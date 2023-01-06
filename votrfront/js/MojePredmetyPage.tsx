@@ -28,7 +28,7 @@ export var MojePredmetyColumns: Columns = [
   {
     label: "Názov predmetu",
     prop: "nazov",
-    cell: (hodnotenie: Hodnotenie) => (
+    display: (hodnotenie: Hodnotenie) => (
       <RelativeLink
         href={{
           modal: "detailPredmetu",
@@ -46,30 +46,31 @@ export var MojePredmetyColumns: Columns = [
     prop: "skratka",
     hiddenClass: ["hidden-xs", "hidden-sm"],
   },
-  { label: "Kredit", prop: "kredit", process: sortAs.number },
+  { label: "Kredit", prop: "kredit", sortKey: sortAs.number },
   {
     label: "Typ výučby",
     prop: "typ_vyucby",
-    cell: (hodnotenie: Hodnotenie) => humanizeTypVyucby(hodnotenie.typ_vyucby),
+    display: (hodnotenie: Hodnotenie) =>
+      humanizeTypVyucby(hodnotenie.typ_vyucby),
     hiddenClass: ["hidden-xs"],
   },
   {
     label: "Hodnotenie",
     prop: "hodn_znamka",
-    cell: (hodnotenie: Hodnotenie) =>
+    display: (hodnotenie: Hodnotenie) =>
       (hodnotenie.hodn_znamka ? hodnotenie.hodn_znamka + " - " : "") +
       hodnotenie.hodn_znamka_popis,
   },
   {
     label: "Dátum hodnotenia",
     prop: "hodn_datum",
-    process: sortAs.date,
+    sortKey: sortAs.date,
     hiddenClass: ["hidden-xs", "hidden-sm"],
   },
   {
     label: "Termín hodnotenia",
     prop: "hodn_termin",
-    cell: (hodnotenie: Hodnotenie) =>
+    display: (hodnotenie: Hodnotenie) =>
       humanizeTerminHodnotenia(hodnotenie.hodn_termin),
     hiddenClass: ["hidden-xs", "hidden-sm"],
   },
