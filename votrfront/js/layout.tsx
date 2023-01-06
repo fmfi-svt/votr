@@ -1,18 +1,21 @@
-import React, { useContext, useEffect, useRef } from "react";
-import _ from "lodash";
 import $ from "jquery";
+import _ from "lodash";
+import React, { useContext, useEffect, useRef } from "react";
+
 import "bootstrap-sass/assets/javascripts/bootstrap/transition"; // needed by modal.js.
+
 import "bootstrap-sass/assets/javascripts/bootstrap/modal"; // needed for $node.modal().
+
 import {
+  ajaxLogs,
   CacheRequester,
-  Loading,
   goLogout,
   goReset,
   goResetHome,
-  ajaxLogs,
+  Loading,
 } from "./ajax";
-import { FakeLink, Link, QueryContext, RelativeLink } from "./router";
 import { AnketaPopup } from "./AnketaPopup";
+import { FakeLink, Link, QueryContext, RelativeLink } from "./router";
 import { Href } from "./types";
 
 export class ErrorBoundary extends React.Component<

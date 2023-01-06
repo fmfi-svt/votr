@@ -1,10 +1,10 @@
 import React, { useContext } from "react";
-import { ZoznamPrihlasenychNaTerminColumns } from "./ZoznamPrihlasenychNaTermin";
 import { CacheRequester, Loading } from "./ajax";
 import { Modal } from "./layout";
 import { QueryContext } from "./router";
 import { sortAs, sortTable } from "./sorting";
 import { Columns } from "./types";
+import { ZoznamPrihlasenychNaTerminColumns } from "./ZoznamPrihlasenychNaTermin";
 
 var DetailPredmetuUciteliaColumns: Columns = [
   ["Meno", "plne_meno", sortAs.personName],

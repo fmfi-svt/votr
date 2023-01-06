@@ -1,9 +1,9 @@
 import React, { useContext } from "react";
-import { ZapisnyListSelector } from "./ZapisnyListSelector";
 import { CacheRequester, Loading } from "./ajax";
+import { humanizeBoolean } from "./humanizeAISData";
 import { PageLayout, PageTitle } from "./layout";
 import { QueryContext, RelativeLink } from "./router";
-import { humanizeBoolean } from "./humanizeAISData";
+import { ZapisnyListSelector } from "./ZapisnyListSelector";
 
 function PriebezneHodnoteniaPageContent() {
   var query = useContext(QueryContext);

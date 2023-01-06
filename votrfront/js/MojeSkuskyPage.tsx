@@ -1,7 +1,9 @@
-import React, { useContext, useState } from "react";
-import _ from "lodash";
+import classNames from "classnames";
 import { saveAs } from "file-saver";
-import { ZapisnyListSelector } from "./ZapisnyListSelector";
+import _ from "lodash";
+import moment from "moment";
+import React, { useContext, useState } from "react";
+import { Calendar, momentLocalizer } from "react-big-calendar";
 import {
   CacheRequester,
   invalidateRequestCache,
@@ -10,11 +12,9 @@ import {
 } from "./ajax";
 import { PageLayout, PageTitle } from "./layout";
 import { Link, QueryContext, RelativeLink } from "./router";
-import { sortAs, SortableTable } from "./sorting";
-import { Calendar, momentLocalizer } from "react-big-calendar";
-import moment from "moment";
+import { SortableTable, sortAs } from "./sorting";
 import { Href, Termin } from "./types";
-import classNames from "classnames";
+import { ZapisnyListSelector } from "./ZapisnyListSelector";
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
 

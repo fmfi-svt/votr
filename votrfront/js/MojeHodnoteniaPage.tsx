@@ -1,7 +1,5 @@
-import React, { useContext } from "react";
 import _ from "lodash";
-import { MojePredmetyColumns } from "./MojePredmetyPage";
-import { StudiumSelector } from "./StudiumSelector";
+import React, { useContext } from "react";
 import { CacheRequester, Loading } from "./ajax";
 import {
   coursesStats,
@@ -14,8 +12,10 @@ import {
   plural,
 } from "./humanizeAISData";
 import { PageLayout, PageTitle } from "./layout";
+import { MojePredmetyColumns } from "./MojePredmetyPage";
 import { QueryContext } from "./router";
-import { sortAs, SortableTable } from "./sorting";
+import { SortableTable, sortAs } from "./sorting";
+import { StudiumSelector } from "./StudiumSelector";
 import { Columns, Priemer } from "./types";
 
 var MojeHodnoteniaColumns: Columns = [

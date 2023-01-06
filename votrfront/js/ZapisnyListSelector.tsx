@@ -1,9 +1,9 @@
-import React, { useContext } from "react";
 import _ from "lodash";
+import React, { useContext } from "react";
 import { CacheRequester, Loading } from "./ajax";
+import { currentAcademicYear } from "./coursesStats";
 import { Link, QueryContext, RelativeLink } from "./router";
 import { sortAs } from "./sorting";
-import { currentAcademicYear } from "./coursesStats";
 
 export function ZapisnyListSelector({
   children,

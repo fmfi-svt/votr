@@ -1,20 +1,20 @@
-import React, { useContext } from "react";
 import _ from "lodash";
+import React, { useContext } from "react";
 import { AboutModal, makeIndexPage } from "./About";
 import { DetailPredmetuModal } from "./DetailPredmetu";
 import { ErrorModal } from "./ErrorPage";
+import { ModalBase, PageLayout } from "./layout";
 import { LogViewer } from "./LogViewer";
 import { makeMojeHodnoteniaPage } from "./MojeHodnoteniaPage";
-import { makePriebezneHodnoteniaPage } from "./PriebezneHodnoteniaPage";
 import { makeMojePredmetyPage } from "./MojePredmetyPage";
 import { makeMojeSkuskyPage } from "./MojeSkuskyPage";
 import { makePrehladStudiaPage } from "./PrehladStudiaPage";
+import { makePriebezneHodnoteniaPage } from "./PriebezneHodnoteniaPage";
 import { makeRegisterOsobPage } from "./RegisterOsobPage";
 import { makeRegisterPredmetovPage } from "./RegisterPredmetovPage";
+import { navigate, QueryContext } from "./router";
 import { makeZapisZPlanuPage, makeZapisZPonukyPage } from "./ZapisPage";
 import { ZoznamPrihlasenychNaTerminModal } from "./ZoznamPrihlasenychNaTermin";
-import { ModalBase, PageLayout } from "./layout";
-import { navigate, QueryContext } from "./router";
 
 function makeNotFoundPage() {
   return (

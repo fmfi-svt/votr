@@ -1,6 +1,6 @@
-import React, { useContext, useState } from "react";
+import classNames from "classnames";
 import _ from "lodash";
-import { ZapisnyListSelector } from "./ZapisnyListSelector";
+import React, { useContext, useState } from "react";
 import {
   CacheRequester,
   invalidateRequestCache,
@@ -11,7 +11,7 @@ import { coursesStats } from "./coursesStats";
 import { humanizeTypVyucby, plural } from "./humanizeAISData";
 import { FormItem, PageLayout, PageTitle } from "./layout";
 import { Link, navigate, QueryContext, RelativeLink } from "./router";
-import { sortAs, SortableTable } from "./sorting";
+import { SortableTable, sortAs } from "./sorting";
 import {
   Columns,
   ComboBoxOption,
@@ -19,7 +19,7 @@ import {
   ZapisCast,
   ZapisPredmet,
 } from "./types";
-import classNames from "classnames";
+import { ZapisnyListSelector } from "./ZapisnyListSelector";
 
 const pocetPrihlasenychJeStaryStore = new Set<string>();
 

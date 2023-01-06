@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
 import _ from "lodash";
-import { LocalSettings } from "./LocalSettings";
+import React, { useEffect, useRef, useState } from "react";
 import { ajaxLogs } from "./ajax";
+import { LocalSettings } from "./LocalSettings";
 
 function LogViewerContent(props: {
   closeButton: React.ReactNode;

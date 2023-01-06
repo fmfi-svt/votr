@@ -1,9 +1,9 @@
-import React, { useContext, useState } from "react";
-import _ from "lodash";
-import { navigate, QueryContext } from "./router";
-import { LocalSettings } from "./LocalSettings";
-import { Columns, Query } from "./types";
 import classNames from "classnames";
+import _ from "lodash";
+import React, { useContext, useState } from "react";
+import { LocalSettings } from "./LocalSettings";
+import { navigate, QueryContext } from "./router";
+import { Columns, Query } from "./types";
 
 export var sortAs = {
   personName(text: string) {

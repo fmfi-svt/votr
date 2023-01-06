@@ -1,14 +1,14 @@
 import React, { useContext } from "react";
 import {
   CacheRequester,
+  invalidateRequestCache,
   Loading,
   sendRpc,
-  invalidateRequestCache,
 } from "./ajax";
+import { currentAcademicYear } from "./coursesStats";
 import { PageLayout, PageTitle } from "./layout";
 import { QueryContext } from "./router";
 import { sortAs, sortTable } from "./sorting";
-import { currentAcademicYear } from "./coursesStats";
 import { Columns, Studium, ZapisnyList } from "./types";
 
 // TODO: Pridat kadejake sumarne informacie, aby to vyzeralo ako dashboard.

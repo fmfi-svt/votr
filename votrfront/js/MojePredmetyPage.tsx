@@ -1,5 +1,4 @@
 import React, { useContext } from "react";
-import { ZapisnyListSelector } from "./ZapisnyListSelector";
 import { CacheRequester, Loading } from "./ajax";
 import {
   coursesStats,
@@ -14,8 +13,9 @@ import {
 } from "./humanizeAISData";
 import { PageLayout, PageTitle } from "./layout";
 import { QueryContext, RelativeLink } from "./router";
-import { sortAs, SortableTable } from "./sorting";
+import { SortableTable, sortAs } from "./sorting";
 import { Columns, Hodnotenie } from "./types";
+import { ZapisnyListSelector } from "./ZapisnyListSelector";
 
 export var MojePredmetyColumns: Columns = [
   {

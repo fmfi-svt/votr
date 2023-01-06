@@ -1,9 +1,9 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
-import { ErrorPage } from "./ErrorPage";
-import { LoginPage } from "./LoginPage";
 import { App } from "./actions";
+import { ErrorPage } from "./ErrorPage";
 import { ErrorBoundary } from "./layout";
+import { LoginPage } from "./LoginPage";
 import { Root } from "./router";
 
 import "../css/main.scss";
