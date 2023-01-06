@@ -19,7 +19,7 @@ function getItems(cache: CacheRequester): [ZapisnyList[], boolean] {
       if (zapisneListy) items.push(...zapisneListy);
 
       var aktualny = 0;
-      if (zapisneListy !== null) {
+      if (zapisneListy) {
         aktualny = zapisneListy.filter(
           (zl) => zl.akademicky_rok === currentAcademicYear()
         ).length;

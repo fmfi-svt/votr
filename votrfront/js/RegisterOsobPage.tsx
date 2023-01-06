@@ -79,7 +79,7 @@ function RegisterOsobForm() {
   function renderSelect(
     label: string,
     name: keyof typeof state,
-    items: ComboBoxOption[] | null
+    items: ComboBoxOption[] | undefined
   ) {
     return (
       <FormItem label={label}>

@@ -5,7 +5,6 @@ import {
   CacheRequester,
   invalidateRequestCache,
   Loading,
-  RequestCache,
   sendRpc,
 } from "./ajax";
 import { coursesStats } from "./coursesStats";
@@ -21,6 +20,8 @@ import {
   ZapisPredmet,
 } from "./types";
 import classNames from "classnames";
+
+const pocetPrihlasenychJeStaryStore = new Set<string>();
 
 const typVyucbyColumn = {
   label: <abbr title="Typ výučby">Typ</abbr>,
@@ -59,7 +60,7 @@ const prihlaseniColumn = {
   process: sortAs.number,
   cell: (predmet: ZapisPredmet) => (
     <React.Fragment>
-      {RequestCache.pocet_prihlasenych_je_stary[predmet.predmet_key] ? (
+      {pocetPrihlasenychJeStaryStore.has(predmet.predmet_key) ? (
         <del>{predmet.pocet_prihlasenych}</del>
       ) : (
         predmet.pocet_prihlasenych
@@ -317,14 +318,14 @@ function ZapisTable(props: {
 
       if (odobral) {
         for (const predmet of odoberanePredmety) {
-          RequestCache.pocet_prihlasenych_je_stary[predmet.predmet_key] = true;
+          pocetPrihlasenychJeStaryStore.add(predmet.predmet_key);
         }
         setChanges((changes) => _.pickBy(changes, (value) => value === true));
       }
 
       if (pridal) {
         for (const predmet of pridavanePredmety) {
-          RequestCache.pocet_prihlasenych_je_stary[predmet.predmet_key] = true;
+          pocetPrihlasenychJeStaryStore.add(predmet.predmet_key);
         }
         setChanges((changes) => _.pickBy(changes, (value) => value === false));
       }
@@ -798,3 +799,5 @@ export function makeZapisZPonukyPage() {
     </PageLayout>
   );
 }
+
+Votr.dev_pocetPrihlasenychJeStaryStore = pocetPrihlasenychJeStaryStore;

@@ -11,18 +11,18 @@ interface RpcErrorPayload {
   error: string;
 }
 interface RpcResultPayload {
-  result: {};
+  result: {} | null;
 }
 type RpcPayload = RpcLogPayload | RpcErrorPayload | RpcResultPayload;
 
-export function sendRpc<N extends keyof Rpcs>(
+function sendRawRpc<N extends keyof Rpcs>(
   name: N,
-  args: Parameters<Rpcs[N]>,
-  callback: (result: ReturnType<Rpcs[N]>) => void
+  stringifiedArgs: string,
+  callback?: ((result: ReturnType<Rpcs[N]>) => void) | undefined
 ) {
   var HEADER_LENGTH = 10;
   var processed = 0;
-  var result: {} | undefined = undefined;
+  var result: {} | null | undefined = undefined;
   var finished = false;
 
   function update() {
@@ -71,59 +71,61 @@ export function sendRpc<N extends keyof Rpcs>(
   xhr.open("POST", "rpc?name=" + name, true);
   xhr.setRequestHeader("Content-Type", "application/json");
   xhr.setRequestHeader("X-CSRF-Token", Votr.settings.csrf_token!);
-  xhr.send(JSON.stringify(args));
+  xhr.send(stringifiedArgs);
+}
+
+export function sendRpc<N extends keyof Rpcs>(
+  name: N,
+  args: Parameters<Rpcs[N]>,
+  callback?: ((result: ReturnType<Rpcs[N]>) => void) | undefined
+) {
+  sendRawRpc(name, JSON.stringify(args), callback);
 }
 
 Votr.ajaxError = null;
 
 export var ajaxLogs: RpcLogPayload[] = [];
 
-export var RequestCache: {
-  done: Record<string, unknown>;
-  pending: Record<string, true>;
-  pocet_prihlasenych_je_stary: Record<string, true>;
-} = { done: {}, pending: {}, pocet_prihlasenych_je_stary: {} };
+type CacheEntry<N extends keyof Rpcs> = ReturnType<Rpcs[N]> | undefined;
+type CacheMap<N extends keyof Rpcs> = Record<string, CacheEntry<N>>;
+
+var RequestCache: { [N in keyof Rpcs]?: CacheMap<N> } = {};
 
 function sendCachedRequest<N extends keyof Rpcs>(
-  request: [N, ...Parameters<Rpcs[N]>]
+  name: N,
+  stringifiedArgs: string
 ) {
-  var cacheKey = request.join("\0");
-  if (RequestCache.done[cacheKey]) return;
-  if (RequestCache.pending[cacheKey]) return;
-  RequestCache.pending[cacheKey] = true;
-  var [name, ...args] = request;
-  sendRpc(name, args, function (result) {
-    RequestCache.done[cacheKey] = result;
+  const map: CacheMap<N> = RequestCache[name] || (RequestCache[name] = {});
+
+  // If pending or done, return. (In theory it could become done between the
+  // CacheRequester.get() call and the useEffect in Loading.)
+  if (stringifiedArgs in map) return;
+
+  map[stringifiedArgs] = undefined; // Set it to pending.
+  sendRawRpc(name, stringifiedArgs, (result) => {
+    map[stringifiedArgs] = result; // Set it to done.
   });
 }
 
-export function invalidateRequestCache(command: string) {
-  for (var key in RequestCache.done) {
-    if (key.split("\0")[0] === command) {
-      delete RequestCache.done[key];
-    }
-  }
-
-  for (var key in RequestCache.pending) {
-    if (key.split("\0")[0] === command) {
-      delete RequestCache.pending[key];
-    }
-  }
+export function invalidateRequestCache(command: keyof Rpcs) {
+  delete RequestCache[command];
 }
 
 export class CacheRequester {
   missing: Array<() => void> = [];
   loadedAll = true;
   get<N extends keyof Rpcs>(
-    ...request: [N, ...Parameters<Rpcs[N]>]
-  ): ReturnType<Rpcs[N]> | null {
-    var cacheKey = request.join("\0");
-    if (RequestCache.done[cacheKey] !== undefined) {
-      return RequestCache.done[cacheKey] as ReturnType<Rpcs[N]>;
+    name: N,
+    ...args: Parameters<Rpcs[N]>
+  ): ReturnType<Rpcs[N]> | undefined {
+    const stringifiedArgs = JSON.stringify(args);
+    const entry = RequestCache[name]?.[stringifiedArgs];
+    if (entry !== undefined) {
+      return entry;
     } else {
-      this.missing.push(() => sendCachedRequest(request));
+      this.missing.push(() => sendCachedRequest(name, stringifiedArgs));
       this.loadedAll = false;
-      return null;
+      return undefined;
     }
   }
 }
