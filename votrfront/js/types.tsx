@@ -11,6 +11,7 @@ export interface VotrVar {
     instance_name: string;
     anketa_season?: string;
     anketa_end_msec?: number;
+    both_js: boolean;
     servers?: VotrServer[];
     invalid_session?: boolean;
     error?: string;
@@ -23,7 +24,7 @@ export interface VotrVar {
   ajaxError: string | null;
   didNavigate?: boolean;
   prologueCheck?: boolean;
-  setDebug?: unknown;
+  setJsDev?: unknown;
   [key: `dev_${string}`]: unknown;
 }
 

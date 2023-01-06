@@ -5,6 +5,7 @@ export {};
 declare global {
   var Votr: VotrVar;
   var ga: ((...args: unknown[]) => void) | undefined;
+  var process: { env: { NODE_ENV: unknown } };
 }
 
 // How does this file work?

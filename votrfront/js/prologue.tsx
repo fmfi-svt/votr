@@ -1,7 +1,20 @@
 export {};
 
-Votr.setDebug = function (enabled: unknown) {
-  document.cookie = enabled ? "votr_debug=true" : "votr_debug=";
+if (window.console && window.console.log) {
+  window.console.log(
+    "Beží %c%s%c JavaScript build. %s",
+    "font-weight: bold",
+    process.env.NODE_ENV,
+    "",
+    Votr.settings.both_js
+      ? "Prepínateľné s: Votr.setJsDev(true alebo false)"
+      : "Nejde prepínať, nemáme yarn buildboth."
+  );
+}
+
+Votr.setJsDev = function (enabled: unknown) {
+  document.cookie =
+    Votr.settings.instance_name + "_jsdev=" + (enabled ? "true" : "");
   location.reload();
 };
 

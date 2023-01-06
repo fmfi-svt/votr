@@ -90,7 +90,7 @@ def app_response(request, **my_data):
     else:
         return Response('Timed out waiting for webpack.', status=500)
 
-    debug = request.cookies.get('votr_debug')
+    debug = request.cookies.get(instance_name + '_jsdev')
     if status == 'failed':
         return Response('Webpack build failed.', status=500)
     elif status == 'ok_dev' or (status == 'ok_both' and debug):
@@ -99,6 +99,8 @@ def app_response(request, **my_data):
         scripts = ['prologue.min.js', 'votr.min.js', 'vendors_votr.min.js']
     else:
         return Response('Unexpected webpack status.', status=500)
+
+    my_data['both_js'] = status == 'ok_both'
 
     nonce = base64.b64encode(os.urandom(18)).decode('ascii')
 
