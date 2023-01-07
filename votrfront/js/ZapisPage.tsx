@@ -403,7 +403,8 @@ function ZapisTable(props: {
     ...(props.zPlanu
       ? [
           column({
-            label: <abbr title="Odporúčaný ročník">Odp. ročník</abbr>,
+            label: "Odporúčaný ročník",
+            shortLabel: <abbr title="Odporúčaný ročník">Odp. ročník</abbr>,
             prop: "odporucany_rocnik",
             hide: underSM,
           }),
@@ -413,8 +414,7 @@ function ZapisTable(props: {
     // #9 / #10
     column({
       label: "Jazyk",
-      prop: "jazyk",
-      display: (value: string) => value.replace(/ ,/g, ", "),
+      projection: (predmet: ZapisPredmet) => predmet.jazyk.replace(/ ,/g, ", "),
       hide: underSM,
     }),
   ];

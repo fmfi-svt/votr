@@ -51,10 +51,10 @@ export const MojePredmetyColumns: Column<Hodnotenie>[] = [
   }),
   column({
     label: "Hodnotenie",
-    sortKey: (hodnotenie: Hodnotenie) => hodnotenie.hodn_znamka,
-    display: (hodnotenie: Hodnotenie) =>
-      (hodnotenie.hodn_znamka ? hodnotenie.hodn_znamka + " - " : "") +
-      hodnotenie.hodn_znamka_popis,
+    projection: (hodnotenie: Hodnotenie) =>
+      [hodnotenie.hodn_znamka, hodnotenie.hodn_znamka_popis]
+        .filter(Boolean)
+        .join(" - "),
   }),
   column({
     label: "Dátum hodnotenia",
