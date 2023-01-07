@@ -12,22 +12,22 @@ import {
   plural,
 } from "./humanizeAISData";
 import { PageLayout, PageTitle } from "./layout";
-import { ScreenSize } from "./mediaQueries";
+import { ScreenSize, underSM, underXS } from "./mediaQueries";
 import { QueryContext, RelativeLink } from "./router";
-import { SortableTable, sortAs } from "./sorting";
-import { Columns, Hodnotenie } from "./types";
+import { Column, column, SortableTable, sortAs } from "./sorting";
+import { Hodnotenie } from "./types";
 import { ZapisnyListSelector } from "./ZapisnyListSelector";
 
-export var MojePredmetyColumns: Columns = [
-  {
+export const MojePredmetyColumns: Column<Hodnotenie>[] = [
+  column({
     label: "Semester",
     shortLabel: <abbr title="Semester">Sem.</abbr>,
     prop: "semester",
     preferDesc: true,
-  },
-  {
+  }),
+  column({
     label: "Názov predmetu",
-    prop: "nazov",
+    sortKey: (hodnotenie: Hodnotenie) => hodnotenie.nazov,
     display: (hodnotenie: Hodnotenie) => (
       <RelativeLink
         href={{
@@ -40,42 +40,38 @@ export var MojePredmetyColumns: Columns = [
       </RelativeLink>
     ),
     expansionMark: true,
-  },
-  {
-    label: "Skratka predmetu",
-    prop: "skratka",
-    hiddenClass: ["hidden-xs", "hidden-sm"],
-  },
-  { label: "Kredit", prop: "kredit", sortKey: sortAs.number },
-  {
+  }),
+  column({ label: "Skratka predmetu", prop: "skratka", hide: underSM }),
+  column({ label: "Kredit", prop: "kredit", sortKey: sortAs.number }),
+  column({
     label: "Typ výučby",
     prop: "typ_vyucby",
-    display: (hodnotenie: Hodnotenie) =>
-      humanizeTypVyucby(hodnotenie.typ_vyucby),
-    hiddenClass: ["hidden-xs"],
-  },
-  {
+    display: humanizeTypVyucby,
+    hide: underXS,
+  }),
+  column({
     label: "Hodnotenie",
-    prop: "hodn_znamka",
+    sortKey: (hodnotenie: Hodnotenie) => hodnotenie.hodn_znamka,
     display: (hodnotenie: Hodnotenie) =>
       (hodnotenie.hodn_znamka ? hodnotenie.hodn_znamka + " - " : "") +
       hodnotenie.hodn_znamka_popis,
-  },
-  {
+  }),
+  column({
     label: "Dátum hodnotenia",
     prop: "hodn_datum",
     sortKey: sortAs.date,
-    hiddenClass: ["hidden-xs", "hidden-sm"],
-  },
-  {
+    hide: underSM,
+  }),
+  column({
     label: "Termín hodnotenia",
     prop: "hodn_termin",
-    display: (hodnotenie: Hodnotenie) =>
-      humanizeTerminHodnotenia(hodnotenie.hodn_termin),
-    hiddenClass: ["hidden-xs", "hidden-sm"],
-  },
+    display: humanizeTerminHodnotenia,
+    hide: underSM,
+  }),
 ];
-MojePredmetyColumns.defaultOrder = "d0a1";
+
+// Semester (descending), Nazov predmetu
+const mojePredmetyDefaultOrder = "d0a1";
 
 function MojePredmetyPageContent() {
   var query = useContext(QueryContext);
@@ -114,6 +110,7 @@ function MojePredmetyPageContent() {
     <SortableTable
       items={hodnotenia}
       columns={MojePredmetyColumns}
+      defaultOrder={mojePredmetyDefaultOrder}
       queryKey="predmetySort"
       expandedContentOffset={1}
       message={message}

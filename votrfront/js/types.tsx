@@ -356,6 +356,9 @@ export interface Rpcs {
   ): string | null;
 }
 
-export interface Columns extends Array<any> {
+export interface Columns
+  extends Array<
+    [React.ReactNode, string, ((value: string) => unknown)?, boolean?]
+  > {
   defaultOrder?: string;
 }

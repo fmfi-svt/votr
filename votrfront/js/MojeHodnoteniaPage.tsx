@@ -12,76 +12,76 @@ import {
   plural,
 } from "./humanizeAISData";
 import { PageLayout, PageTitle } from "./layout";
-import { ScreenSize } from "./mediaQueries";
+import { ScreenSize, underSM, underXS } from "./mediaQueries";
 import { MojePredmetyColumns } from "./MojePredmetyPage";
 import { QueryContext } from "./router";
-import { SortableTable, sortAs } from "./sorting";
+import { Column, column, SortableTable, sortAs } from "./sorting";
 import { StudiumSelector } from "./StudiumSelector";
-import { Columns, Priemer } from "./types";
+import { Hodnotenie, Priemer } from "./types";
 
-var MojeHodnoteniaColumns: Columns = [
-  {
-    label: "Akademický rok",
-    prop: "akademicky_rok",
-  },
-].concat(MojePredmetyColumns);
-MojeHodnoteniaColumns[1] = {
-  ...MojeHodnoteniaColumns[1],
-  hiddenClass: ["hidden-xs", "hidden-sm"],
-};
-MojeHodnoteniaColumns.defaultOrder = "a0d1a2";
+const [predmetSemesterColumn, ...predmetRemainingColumns] = MojePredmetyColumns;
+const MojeHodnoteniaColumns: Column<Hodnotenie>[] = [
+  column({ label: "Akademický rok", prop: "akademicky_rok" }),
+  { ...predmetSemesterColumn!, hide: underSM },
+  ...predmetRemainingColumns,
+];
 
-var MojePriemeryColumns: Columns = [
-  {
+// Akademicky rok, Semester (descending), Nazov predmetu
+const mojeHodnoteniaDefaultOrder = "a0d1a2";
+
+const MojePriemeryColumns: Column<Priemer>[] = [
+  column({
     label: "Dátum výpočtu priemeru",
     prop: "datum_vypoctu",
     sortKey: sortAs.date,
     expansionMark: true,
-  },
-  {
+  }),
+  column({
     label: "Názov priemeru",
     prop: "nazov",
-    display: (priemer: Priemer) => humanizeNazovPriemeru(priemer.nazov),
-  },
-  { label: "Akademický rok", prop: "akademicky_rok" },
-  {
+    display: humanizeNazovPriemeru,
+  }),
+  column({ label: "Akademický rok", prop: "akademicky_rok" }),
+  column({
     label: "Semester",
     shortLabel: <abbr title="Semester">Sem.</abbr>,
     prop: "semester",
     preferDesc: true,
-  },
-  {
+  }),
+  column({
     label: "Získaný kredit",
     prop: "ziskany_kredit",
     sortKey: sortAs.number,
-    hiddenClass: ["hidden-xs", "hidden-sm"],
-  },
-  {
+    hide: underSM,
+  }),
+  column({
     label: "Celkový počet predmetov",
     prop: "predmetov",
     sortKey: sortAs.number,
-    hiddenClass: ["hidden-xs", "hidden-sm"],
-  },
-  {
+    hide: underSM,
+  }),
+  column({
     label: "Počet neabsolvovaných predmetov",
     prop: "neabsolvovanych",
     sortKey: sortAs.number,
-    hiddenClass: ["hidden-xs", "hidden-sm"],
-  },
-  {
+    hide: underSM,
+  }),
+  column({
     label: "Študijný priemer",
     prop: "studijny_priemer",
     sortKey: sortAs.number,
-    hiddenClass: ["hidden-xs"],
-  },
-  {
+    hide: underXS,
+  }),
+  column({
     label: "Vážený priemer",
     prop: "vazeny_priemer",
     sortKey: sortAs.number,
-    hiddenClass: ["hidden-xs"],
-  },
+    hide: underXS,
+  }),
 ];
-MojePriemeryColumns.defaultOrder = "a0a2a1";
+
+// Datum vypoctu priemeru, Akademicky rok, Nazov priemeru
+const mojePriemeryDefaultOrder = "a0a2a1";
 
 function MojeHodnoteniaHodnoteniaTable() {
   var query = useContext(QueryContext);
@@ -116,6 +116,7 @@ function MojeHodnoteniaHodnoteniaTable() {
     <SortableTable
       items={hodnotenia}
       columns={MojeHodnoteniaColumns}
+      defaultOrder={mojeHodnoteniaDefaultOrder}
       queryKey="predmetySort"
       message={message}
       footer={footer}
@@ -154,6 +155,7 @@ function MojeHodnoteniaPriemeryTable() {
     <SortableTable
       items={priemery}
       columns={MojePriemeryColumns}
+      defaultOrder={mojePriemeryDefaultOrder}
       queryKey="priemerySort"
       message={message}
     />

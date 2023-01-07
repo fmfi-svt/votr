@@ -43,3 +43,7 @@ export function useScreenSize(): ScreenSize {
   if (atLeastSM) return ScreenSize.SM;
   return ScreenSize.XS;
 }
+
+export const underXS = (size: ScreenSize) => size <= ScreenSize.XS;
+export const underSM = (size: ScreenSize) => size <= ScreenSize.SM;
+export const underMD = (size: ScreenSize) => size <= ScreenSize.MD;

@@ -3,8 +3,9 @@ import { CacheRequester, Loading } from "./ajax";
 import { Modal } from "./layout";
 import { QueryContext } from "./router";
 import { sortAs, sortTable } from "./sorting";
+import { Columns } from "./types";
 
-export var ZoznamPrihlasenychNaTerminColumns = [
+export var ZoznamPrihlasenychNaTerminColumns: Columns = [
   ["Meno", "plne_meno", sortAs.personName],
   ["Študijný program", "sp_skratka"],
   ["Ročník", "rocnik", sortAs.number],

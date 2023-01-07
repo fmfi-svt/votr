@@ -11,8 +11,9 @@ import {
   sendRpc,
 } from "./ajax";
 import { PageLayout, PageTitle } from "./layout";
+import { underSM, underXS } from "./mediaQueries";
 import { Link, QueryContext, RelativeLink } from "./router";
-import { SortableTable, sortAs } from "./sorting";
+import { Column, column, SortableTable, sortAs } from "./sorting";
 import { Href, Termin } from "./types";
 import { ZapisnyListSelector } from "./ZapisnyListSelector";
 
@@ -22,26 +23,27 @@ function somPrihlaseny(termin: Termin) {
   return !!termin.datum_prihlasenia && !termin.datum_odhlasenia;
 }
 
-const MojeSkuskyColumns = [
-  {
+const MojeSkuskyColumns: Column<Termin>[] = [
+  column({
     label: (
       <React.Fragment>
         <span className="hidden-xs hidden-sm">Moje</span>?
       </React.Fragment>
     ),
-    sortKey: (termin: Termin) => (somPrihlaseny(termin) ? "A" : "N"),
-    display: (termin: Termin) => (somPrihlaseny(termin) ? "\u2714" : "\u2718"),
-    cellProps: (termin: Termin) => ({
-      title: somPrihlaseny(termin) ? "Ste prihlásení" : "Nie ste prihlásení",
+    projection: somPrihlaseny,
+    sortKey: (value: boolean) => (value ? "A" : "N"),
+    display: (value: boolean) => (value ? "\u2714" : "\u2718"),
+    cellProps: (value: boolean) => ({
+      title: value ? "Ste prihlásení" : "Nie ste prihlásení",
       className: classNames(
         "text-center",
-        somPrihlaseny(termin) ? "text-positive" : "text-negative"
+        value ? "text-positive" : "text-negative"
       ),
     }),
-  },
-  {
+  }),
+  column({
     label: "Predmet",
-    prop: "nazov_predmetu",
+    sortKey: (termin: Termin) => termin.nazov_predmetu,
     display: (termin: Termin) => (
       <RelativeLink
         href={{
@@ -54,24 +56,23 @@ const MojeSkuskyColumns = [
       </RelativeLink>
     ),
     expansionMark: true,
-  },
-  {
+  }),
+  column({
     label: "Dátum",
-    sortKey: (termin: Termin) => sortAs.date(`${termin.datum} ${termin.cas}`),
-    display: (termin: Termin) => `${termin.datum} ${termin.cas}`,
-  },
-  { label: "Miestnosť", prop: "miestnost", hiddenClass: ["hidden-xs"] },
-  {
+    projection: (termin: Termin) => `${termin.datum} ${termin.cas}`,
+    sortKey: sortAs.date,
+  }),
+  column({ label: "Miestnosť", prop: "miestnost", hide: underXS }),
+  column({
     label: "Hodnotiaci",
     prop: "hodnotiaci",
     sortKey: sortAs.personName,
-    hiddenClass: ["hidden-xs", "hidden-sm"],
-  },
-  {
+    hide: underSM,
+  }),
+  column({
     label: "Prihlásení",
-    prop: "pocet_prihlasenych",
-    sortKey: sortAs.number,
-    hiddenClass: ["hidden-xs"],
+    sortKey: (termin: Termin) => sortAs.number(termin.pocet_prihlasenych),
+    hide: underXS,
     display: (termin: Termin) => (
       <RelativeLink
         href={{
@@ -85,25 +86,21 @@ const MojeSkuskyColumns = [
           : null}
       </RelativeLink>
     ),
-  },
-  {
-    label: "Poznámka",
-    prop: "poznamka",
-    hiddenClass: ["hidden-xs", "hidden-sm"],
-  },
-  {
+  }),
+  column({ label: "Poznámka", prop: "poznamka", hide: underSM }),
+  column({
     label: "Prihlasovanie",
     prop: "prihlasovanie",
     sortKey: sortAs.interval,
-    hiddenClass: ["hidden-xs", "hidden-sm"],
-  },
-  {
+    hide: underSM,
+  }),
+  column({
     label: "Odhlasovanie",
     prop: "odhlasovanie",
     sortKey: sortAs.interval,
-    hiddenClass: ["hidden-xs", "hidden-sm"],
-  },
-  {
+    hide: underSM,
+  }),
+  column({
     label: "Známka",
     sortKey: (termin: Termin) =>
       termin.hodnotenie_terminu || termin.hodnotenie_predmetu,
@@ -117,7 +114,7 @@ const MojeSkuskyColumns = [
         <SkuskyRegisterButton termin={termin} />
       </React.Fragment>
     ),
-  },
+  }),
 ];
 
 function convertToICAL(terminy: Termin[]) {

@@ -40,6 +40,99 @@ export var sortAs = {
   },
 };
 
+export interface Column<T> {
+  label: React.ReactNode;
+  shortLabel: React.ReactNode;
+  sortKey: (item: T) => unknown;
+  display: (item: T) => React.ReactNode;
+  cellProps: (item: T) => React.TdHTMLAttributes<HTMLTableCellElement>;
+  expansionMark: boolean;
+  preferDesc: boolean;
+  hide: (size: ScreenSize) => boolean;
+}
+
+export interface ColumnDefinition<K, V, P> {
+  label: React.ReactNode;
+  shortLabel?: React.ReactNode;
+  sortKey?: (value: V) => unknown;
+  display?: (value: V) => React.ReactNode;
+  cellProps?: (value: V) => React.TdHTMLAttributes<HTMLTableCellElement>;
+  expansionMark?: boolean;
+  preferDesc?: boolean;
+  hide?: (size: ScreenSize) => boolean;
+  prop?: K;
+  projection?: (item: P) => V;
+}
+
+type InferItem<K extends string, P> = [K] extends [""] ? P : Record<K, P>;
+
+// This is stupid and I'm ashamed of it.
+export function column<
+  Def extends {},
+  K extends string = "",
+  V = string | number | null | undefined,
+  P = V,
+  Item extends InferItem<K, P> = InferItem<K, P>
+>(
+  input: Def &
+    ColumnDefinition<K, V, P> &
+    // If V doesn't extend ReactNode, `display` is required.
+    (V extends React.ReactNode ? unknown : { display: {} }) &
+    // If K != "", `prop` is required. (Just a sanity check in case K is
+    // manually provided or badly inferred.)
+    ([K] extends [""] ? unknown : { prop: K }) &
+    // If P != V, `projection` is required. (Just a sanity check in case P is
+    // manually provided or badly inferred.)
+    (P extends V
+      ? V extends P
+        ? unknown
+        : { projection: {} }
+      : { projection: {} }) &
+    // K must not be just string. We want a literal or union of literals.
+    ([string] extends [K] ? never : unknown) &
+    // Forbid unknown properties on Def.
+    Record<Exclude<keyof Def, keyof ColumnDefinition<{}, {}, {}>>, never>
+): Column<Item> {
+  const {
+    label,
+    shortLabel = input.label,
+    sortKey = (v: V) => v,
+    // This `as` should be safe because our type declaration says that if V
+    // doesn't extend React.ReactNode, `display` is required.
+    display = (v: V) => v as React.ReactNode,
+    cellProps = (): React.TdHTMLAttributes<HTMLTableCellElement> => ({}),
+    expansionMark = false,
+    preferDesc = false,
+    hide = () => false,
+    prop,
+    projection,
+  } = input;
+  function convert(item: InferItem<K, P>): V {
+    // The first `as` is mostly safe, except if `prop` exists at runtime but
+    // TypeScript doesn't know about it (e.g. because column() wasn't called
+    // with a literal object). :/
+    // The second `as` should be safe because if K != "" then `prop` would be
+    // required by our type, hence K == "", hence InferItem<K, P> == P.
+    const afterProp: P = prop ? (item as Record<K, P>)[prop] : (item as P);
+    // The true branch is mostly safe, except if `projection` exists at runtime
+    // but TypeScript doesn't know about it (e.g. because column() wasn't called
+    // with a literal object). :/
+    // The `as` in the false branch should be safe because if P != V then
+    // `projection` would be required by our type, hence P == V.
+    return projection ? projection(afterProp) : (afterProp as unknown as V);
+  }
+  return {
+    label,
+    shortLabel,
+    sortKey: (item) => sortKey(convert(item)),
+    display: (item) => display(convert(item)),
+    cellProps: (item) => cellProps(convert(item)),
+    expansionMark,
+    preferDesc,
+    hide,
+  };
+}
+
 function getOrder(
   defaultOrder: string | null | undefined,
   query: Query,
@@ -49,73 +142,69 @@ function getOrder(
   return orderString ? orderString.split(/(?=[ad])/) : [];
 }
 
-function convertOldStyleColumns(columns: Columns): Columns {
-  if (columns[0][0]) {
-    columns = columns.map(
-      ([label, prop, sortKey, preferDesc, hiddenClass]) => ({
+function convertOldStyleColumns<T>(columns: Columns): Column<T>[] {
+  return columns.map(
+    ([label, prop, sortKey, preferDesc = false]) =>
+      column({
         label,
-        prop,
-        sortKey,
+        prop: prop as "fake",
+        ...(sortKey ? { sortKey } : {}),
         preferDesc,
-        hiddenClass,
-      })
-    );
-  }
-  return columns;
+      }) satisfies Column<Record<"fake", string>> as Column<T>
+  );
 }
 
-function sortItems<T>(items: T[], columns: Columns, order: string[]): number[] {
+function sortItems<T>(
+  items: T[],
+  columns: Column<T>[],
+  order: string[]
+): number[] {
   var directions = order.map((o) => (o.charAt(0) == "a" ? "asc" : "desc"));
   var iteratees = order.map((o) => {
-    var { label, prop, sortKey, preferDesc } = columns[Number(o.substring(1))];
-    return (originalIndex: number) => {
-      var item = items[originalIndex];
-      return (sortKey || _.identity)(prop ? (item as any)[prop] : item);
-    };
+    const column = columns[Number(o.substring(1))];
+    if (!column) return () => "";
+    return (originalIndex: number) => column.sortKey(items[originalIndex]!);
   });
   return _.orderBy(_.range(items.length), iteratees, directions);
 }
 
-function renderHeader(
-  columns: Columns,
+function renderHeader<T>(
+  columns: Column<T>[],
   query: Query,
   queryKey: string,
   order: string[],
   reallyHide: boolean[]
 ): React.ReactNode {
-  function handleClick(event: React.MouseEvent<HTMLElement>) {
-    var index = event.currentTarget.getAttribute("data-index");
-    var { label, prop, sortKey, preferDesc } = columns[Number(index)];
-
-    var newOrder = _.without(order, "a" + index, "d" + index);
-    // prettier-ignore
-    newOrder.unshift((
-      order[0] == "a" + index ? "d" :
-      order[0] == "d" + index ? "a" :
-      preferDesc ? "d" : "a") + index);
-
-    navigate({ ...query, [queryKey]: newOrder.join("") });
-  }
-
   return (
     <tr>
-      {columns.map(
-        ({ label, shortLabel }, index) =>
-          !reallyHide[index] && (
-            <th
-              key={index}
-              data-index={index}
-              onClick={handleClick}
-              className={classNames(
-                "sort",
-                order[0] == "a" + index && "asc",
-                order[0] == "d" + index && "desc"
-              )}
-            >
-              {shortLabel ? shortLabel : label}
-            </th>
-          )
-      )}
+      {columns.map(({ shortLabel, preferDesc }, index) => {
+        function handleClick() {
+          var newOrder = _.without(order, "a" + index, "d" + index);
+          // prettier-ignore
+          newOrder.unshift((
+            order[0] == "a" + index ? "d" :
+            order[0] == "d" + index ? "a" :
+            preferDesc ? "d" : "a") + index);
+
+          navigate({ ...query, [queryKey]: newOrder.join("") });
+        }
+
+        if (reallyHide[index]) return null;
+
+        return (
+          <th
+            key={index}
+            onClick={handleClick}
+            className={classNames(
+              "sort",
+              order[0] == "a" + index && "asc",
+              order[0] == "d" + index && "desc"
+            )}
+          >
+            {shortLabel}
+          </th>
+        );
+      })}
     </tr>
   );
 }
@@ -127,12 +216,12 @@ export function sortTable<T>(
   queryKey: string
 ): [T[], React.ReactNode] {
   var order = getOrder(columns.defaultOrder, query, queryKey);
-  columns = convertOldStyleColumns(columns);
+  var columns2 = convertOldStyleColumns(columns);
 
-  var sortedIndexes = sortItems(items, columns, order);
+  var sortedIndexes = sortItems(items, columns2, order);
   var sortedItems = sortedIndexes.map((originalIndex) => items[originalIndex]!);
 
-  var header = renderHeader(columns, query, queryKey, order, []);
+  var header = renderHeader(columns2, query, queryKey, order, []);
 
   return [sortedItems, header];
 }
@@ -140,6 +229,7 @@ export function sortTable<T>(
 export function SortableTable<T>({
   items,
   columns,
+  defaultOrder,
   queryKey,
   withButtons,
   footer,
@@ -148,7 +238,8 @@ export function SortableTable<T>({
   expandedContentOffset = 0,
 }: {
   items: T[];
-  columns: Columns & { label: React.ReactNode }[];
+  columns: Column<T>[];
+  defaultOrder?: string;
   queryKey: string;
   withButtons?: boolean;
   footer?: (chosenSize: ScreenSize) => React.ReactNode;
@@ -172,7 +263,7 @@ export function SortableTable<T>({
 
   var fullTable = LocalSettings.get("fullTable") == "true";
 
-  var order = getOrder(columns.defaultOrder, query, queryKey);
+  var order = getOrder(defaultOrder, query, queryKey);
 
   var sortedIndexes = sortItems(items, columns, order);
 
@@ -180,13 +271,7 @@ export function SortableTable<T>({
 
   var chosenSize = fullTable ? ScreenSize.LG : deviceSize;
 
-  var canHide = columns.map(
-    (column: { hiddenClass?: string[] }) =>
-      (deviceSize == ScreenSize.XS &&
-        (column.hiddenClass || []).includes("hidden-xs")) ||
-      (deviceSize == ScreenSize.SM &&
-        (column.hiddenClass || []).includes("hidden-sm"))
-  );
+  var canHide = columns.map((column) => column.hide(deviceSize));
   var reallyHide = canHide.map((canHideColumn) => canHideColumn && !fullTable);
   var reallyHiddenCount = _.sum(reallyHide);
 
@@ -215,9 +300,9 @@ export function SortableTable<T>({
         className={rowClassName && rowClassName(item)}
       >
         {columns.map(
-          ({ prop, display, cellProps, expansionMark }, index) =>
+          ({ display, cellProps, expansionMark }, index) =>
             !reallyHide[index] && (
-              <td key={index} {...(cellProps ? cellProps(item) : {})}>
+              <td key={index} {...cellProps(item)}>
                 {expansionMark && !!reallyHiddenCount && (
                   <span
                     className={classNames(
@@ -226,7 +311,7 @@ export function SortableTable<T>({
                     )}
                   />
                 )}
-                {display ? display(item, query) : (item as any)[prop]}
+                {display(item)}
               </td>
             )
         )}
@@ -244,15 +329,11 @@ export function SortableTable<T>({
             <table className="table-condensed">
               <tbody>
                 {columns.map(
-                  (col, index) =>
+                  ({ label, display }, index) =>
                     reallyHide[index] && (
                       <tr key={index}>
-                        <td>{col.label}:</td>
-                        <td>
-                          {col.display
-                            ? col.display(item, query)
-                            : (item as any)[col.prop]}
-                        </td>
+                        <td>{label}:</td>
+                        <td>{display(item)}</td>
                       </tr>
                     )
                 )}
