@@ -13,6 +13,7 @@ import {
   goReset,
   goResetHome,
   Loading,
+  reportClientError,
 } from "./ajax";
 import { AnketaPopup } from "./AnketaPopup";
 import { FakeLink, Link, QueryContext, RelativeLink } from "./router";
@@ -30,15 +31,11 @@ export class ErrorBoundary extends React.Component<
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     setTimeout(function () {
       console.error("ErrorBoundary caught error:", [error, errorInfo]);
-      var body = {
+      reportClientError("errorboundary", {
         errorString: "" + error,
         stack: error && error.stack,
         componentStack: errorInfo.componentStack,
-      };
-      var xhr = new XMLHttpRequest();
-      xhr.open("POST", "report?type=errorboundary", true);
-      xhr.setRequestHeader("Content-Type", "application/json");
-      xhr.send(JSON.stringify(body));
+      });
     }, 0);
   }
 

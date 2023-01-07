@@ -1,6 +1,7 @@
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./actions";
+import { reportClientError } from "./ajax";
 import { ErrorPage } from "./ErrorPage";
 import { ErrorBoundary } from "./layout";
 import { LoginPage } from "./LoginPage";
@@ -15,23 +16,28 @@ import "../css/main.scss";
     "error",
     function (event) {
       var { message, filename, lineno, colno, error } = event;
-      var body = {
+      reportClientError("onerror", {
         message,
         filename,
         lineno,
         colno,
         errorString: "" + error,
         stack: error && error.stack,
-        location: location.href,
-      };
-      var xhr = new XMLHttpRequest();
-      xhr.open("POST", "report?type=onerror", true);
-      xhr.setRequestHeader("Content-Type", "application/json");
-      xhr.send(JSON.stringify(body));
+      });
     },
     false
   );
-  // TODO: Also deal with unhandledrejection.
+  window.addEventListener(
+    "unhandledrejection",
+    function (event) {
+      var error: unknown = event.reason;
+      reportClientError("unhandledrejection", {
+        errorString: "" + error,
+        stack: error && (error as { stack: unknown }).stack,
+      });
+    },
+    false
+  );
 
   var query = Votr.settings.destination;
   if (query !== undefined && (query == "" || query.substring(0, 1) == "?")) {

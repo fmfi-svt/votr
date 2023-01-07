@@ -168,6 +168,13 @@ export function goResetHome() {
   goPost("reset?destination=");
 }
 
+export function reportClientError(type: string, body: object) {
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", "report?type=" + type, true);
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.send(JSON.stringify({ location: location.href, ...body }));
+}
+
 Votr.dev_sendRpc = sendRpc;
 Votr.dev_RequestCache = RequestCache;
 Votr.dev_invalidateRequestCache = invalidateRequestCache;
