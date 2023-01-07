@@ -13,15 +13,15 @@ import {
 } from "./humanizeAISData";
 import { PageLayout, PageTitle } from "./layout";
 import { ScreenSize, underSM, underXS } from "./mediaQueries";
-import { MojePredmetyColumns } from "./MojePredmetyPage";
+import { MojePredmetyColumn, MojePredmetyColumns } from "./MojePredmetyPage";
 import { QueryContext } from "./router";
 import { Column, column, SortableTable, sortAs } from "./sorting";
 import { StudiumSelector } from "./StudiumSelector";
-import { Hodnotenie, Priemer } from "./types";
+import { Priemer } from "./types";
 
 const [predmetSemesterColumn, ...predmetRemainingColumns] = MojePredmetyColumns;
-const MojeHodnoteniaColumns: Column<Hodnotenie>[] = [
-  column({ label: "Akademický rok", prop: "akademicky_rok" }),
+const MojeHodnoteniaColumns: MojePredmetyColumn[] = [
+  column({ label: "Akademický rok", prop: "akademicky_rok", footer: () => null }),
   { ...predmetSemesterColumn!, hide: underSM },
   ...predmetRemainingColumns,
 ];

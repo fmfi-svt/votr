@@ -345,7 +345,7 @@ function MojeSkuskyPageContent() {
           columns={MojeSkuskyColumns}
           queryKey="skuskySort"
           withButtons={true}
-          message={message}
+          footers={[[message]]}
           expandedContentOffset={1}
         />
       )}

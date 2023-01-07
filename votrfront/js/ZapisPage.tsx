@@ -107,34 +107,53 @@ function ZapisTableFooter(props: {
     <React.Fragment>
       {zoradene.map(([skratka, mojePredmetyVBloku]) => {
         var stats = coursesStats(mojePredmetyVBloku as any);
+        var uvod = skratka ? "Súčet bloku" : "Dokopy";
         var nazov = blokNazvy.get(skratka);
+        var nazovNode = nazov ? <abbr title={nazov}>{skratka}</abbr> : skratka;
+        var pocet = (
+          <React.Fragment>
+            {stats.spolu.count}{" "}
+            {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
+            {!jedinySemester &&
+              ` (${stats.zima.count} v zime, ${stats.leto.count} v lete)`}
+          </React.Fragment>
+        );
+        var kredity = (
+          <React.Fragment>
+            {stats.spolu.creditsEnrolled}
+            {!jedinySemester &&
+              ` (${stats.zima.creditsEnrolled}+${stats.leto.creditsEnrolled})`}
+          </React.Fragment>
+        );
+        var footer: unknown[] = [
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+        ];
+        footer[0] = uvod;
         {
           return props.size > ScreenSize.SM ? (
             <tr key={skratka}>
-              <td colSpan={2}>{skratka ? "Súčet bloku" : "Dokopy"}</td>
-              <td>{nazov ? <abbr title={nazov}>{skratka}</abbr> : skratka}</td>
-              <td colSpan={4}>
-                {stats.spolu.count}{" "}
-                {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
-                {!jedinySemester &&
-                  ` (${stats.zima.count} v zime, ${stats.leto.count} v lete)`}
-              </td>
-              <td>
-                {stats.spolu.creditsEnrolled}
-                {!jedinySemester &&
-                  ` (${stats.zima.creditsEnrolled}+${stats.leto.creditsEnrolled})`}
-              </td>
+              <td colSpan={2}>{uvod}</td>
+              <td>{nazovNode}</td>
+              <td colSpan={4}>{pocet}</td>
+              <td>{kredity}</td>
               <td colSpan={3}></td>
             </tr>
           ) : (
             <tr key={skratka}>
-              <td>{skratka ? "Súčet bloku" : "Dokopy"}</td>
-              <td>{nazov ? <abbr title={nazov}>{skratka}</abbr> : skratka}</td>
+              <td>{uvod}</td>
+              <td>{nazovNode}</td>
               <td colSpan={2}>
-                {stats.spolu.count}{" "}
-                {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
-                {!jedinySemester &&
-                  ` (${stats.zima.count} v zime, ${stats.leto.count} v lete)`}
+                {pocet}
                 {props.size != ScreenSize.SM && (
                   <React.Fragment>
                     {", "}

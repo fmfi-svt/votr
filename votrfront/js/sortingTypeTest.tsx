@@ -24,6 +24,16 @@ function columnTypeTest() {
     custom: 123,
   });
 
+  const footer = column({ label: "", footer: "hi" });
+
+  const propAndFooter = column({
+    label: "",
+    prop: "proppy",
+    footer: 123,
+  });
+  propAndFooter satisfies Column<{ proppy: string }>;
+  propAndFooter.footer satisfies number;
+
   const displayString = column({
     label: "",
     display: (value: string) => value + value,
@@ -104,4 +114,10 @@ function columnTypeTest() {
     column({ label: "", prop: "bar" }),
   ];
   list satisfies Column<{ foo: RegExp; bar: string }>[];
+
+  const listWithFooters = [
+    column({ label: "", prop: "foo", footer: 123 }),
+    column({ label: "", prop: "bar", footer: null }),
+  ];
+  listWithFooters satisfies { footer: number | null }[];
 }

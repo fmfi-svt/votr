@@ -14,16 +14,28 @@ import {
 import { PageLayout, PageTitle } from "./layout";
 import { ScreenSize, underSM, underXS } from "./mediaQueries";
 import { QueryContext, RelativeLink } from "./router";
-import { Column, column, SortableTable, sortAs } from "./sorting";
+import { Column, column, FooterCell, SortableTable, sortAs } from "./sorting";
 import { Hodnotenie } from "./types";
 import { ZapisnyListSelector } from "./ZapisnyListSelector";
 
-export const MojePredmetyColumns: Column<Hodnotenie>[] = [
+interface FooterData {
+  pocet: FooterCell;
+  kredity: FooterCell;
+  priemer: FooterCell;
+}
+
+export interface MojePredmetyColumn extends Column<Hodnotenie> {
+  footer(f: FooterData, size: ScreenSize): FooterCell;
+}
+
+export const MojePredmetyColumns: MojePredmetyColumn[] = [
   column({
     label: "Semester",
     shortLabel: <abbr title="Semester">Sem.</abbr>,
     prop: "semester",
     preferDesc: true,
+    footer: (f: FooterData, size: ScreenSize) =>
+      size <= ScreenSize.SM ? undefined : null,
   }),
   column({
     label: "Názov predmetu",
@@ -40,14 +52,26 @@ export const MojePredmetyColumns: Column<Hodnotenie>[] = [
       </RelativeLink>
     ),
     expansionMark: true,
+    footer: (f: FooterData) => f.pocet,
   }),
-  column({ label: "Skratka predmetu", prop: "skratka", hide: underSM }),
-  column({ label: "Kredit", prop: "kredit", sortKey: sortAs.number }),
+  column({
+    label: "Skratka predmetu",
+    prop: "skratka",
+    hide: underSM,
+    footer: () => undefined,
+  }),
+  column({
+    label: "Kredit",
+    prop: "kredit",
+    sortKey: sortAs.number,
+    footer: (f: FooterData) => f.kredity,
+  }),
   column({
     label: "Typ výučby",
     prop: "typ_vyucby",
     display: humanizeTypVyucby,
     hide: underXS,
+    footer: () => null,
   }),
   column({
     label: "Hodnotenie",
@@ -55,18 +79,21 @@ export const MojePredmetyColumns: Column<Hodnotenie>[] = [
       [hodnotenie.hodn_znamka, hodnotenie.hodn_znamka_popis]
         .filter(Boolean)
         .join(" - "),
+    footer: (f: FooterData) => f.priemer,
   }),
   column({
     label: "Dátum hodnotenia",
     prop: "hodn_datum",
     sortKey: sortAs.date,
     hide: underSM,
+    footer: () => null,
   }),
   column({
     label: "Termín hodnotenia",
     prop: "hodn_termin",
     display: humanizeTerminHodnotenia,
     hide: underSM,
+    footer: () => null,
   }),
 ];
 
@@ -85,26 +112,23 @@ function MojePredmetyPageContent() {
   }
 
   var stats = coursesStats(hodnotenia);
-
-  var footer = (size: ScreenSize) => (
-    <tr>
-      {size > ScreenSize.SM && <td />}
-      <td colSpan={2}>
-        Celkom {stats.spolu.count}{" "}
-        {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
+  var footerData: FooterData = {
+    pocet:
+      `Celkom ${stats.spolu.count} ` +
+      plural(stats.spolu.count, "predmet", "predmety", "predmetov") +
+      ` (${stats.zima.count} v zime, ${stats.leto.count} v lete)`,
+    kredity: (
+      <React.Fragment>
+        {renderCredits(stats.spolu)}
         {" ("}
-        {stats.zima.count} v zime, {stats.leto.count} v lete)
-      </td>
-      <td>
-        {renderCredits(stats.spolu)} ({renderCredits(stats.zima)}&nbsp;+&nbsp;
-        {renderCredits(stats.leto)})
-      </td>
-      {size > ScreenSize.XS && <td />}
-      <td>{renderWeightedStudyAverage(hodnotenia!)}</td>
-      {size > ScreenSize.SM && <td />}
-      {size > ScreenSize.SM && <td />}
-    </tr>
-  );
+        {renderCredits(stats.zima)}
+        &nbsp;+&nbsp;
+        {renderCredits(stats.leto)}
+        {")"}
+      </React.Fragment>
+    ),
+    priemer: renderWeightedStudyAverage(hodnotenia),
+  };
 
   return (
     <SortableTable
@@ -113,8 +137,10 @@ function MojePredmetyPageContent() {
       defaultOrder={mojePredmetyDefaultOrder}
       queryKey="predmetySort"
       expandedContentOffset={1}
-      message={message}
-      footer={footer}
+      footers={(size) => [
+        MojePredmetyColumns.map((col) => col.footer(footerData, size)),
+        [message],
+      ]}
       rowClassName={(hodnotenie) => classForSemester(hodnotenie.semester)}
     />
   );

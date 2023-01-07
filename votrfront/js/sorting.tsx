@@ -60,11 +60,14 @@ export interface ColumnDefinition<K, V, P> {
   expansionMark?: boolean;
   preferDesc?: boolean;
   hide?: (size: ScreenSize) => boolean;
+  footer?: unknown;
   prop?: K;
   projection?: (item: P) => V;
 }
 
 type InferItem<K extends string, P> = [K] extends [""] ? P : Record<K, P>;
+
+type MaybeFooter<Def> = Def extends { footer: infer F } ? { footer: F } : {};
 
 // This is stupid and I'm ashamed of it.
 export function column<
@@ -92,7 +95,7 @@ export function column<
     ([string] extends [K] ? never : unknown) &
     // Forbid unknown properties on Def.
     Record<Exclude<keyof Def, keyof ColumnDefinition<{}, {}, {}>>, never>
-): Column<Item> {
+): Column<Item> & MaybeFooter<Def> {
   const {
     label,
     shortLabel = input.label,
@@ -104,6 +107,7 @@ export function column<
     expansionMark = false,
     preferDesc = false,
     hide = () => false,
+    footer,
     prop,
     projection,
   } = input;
@@ -130,6 +134,10 @@ export function column<
     expansionMark,
     preferDesc,
     hide,
+    // This `as` should be safe because if Def extends { footer: F }, then
+    // ("footer" in input) must be true and { footer } satisfies { footer: F },
+    // otherwise MaybeFooter<Def> == {} so both { footer } and {} satisfy it.
+    ...(("footer" in input ? { footer } : {}) as MaybeFooter<Def>),
   };
 }
 
@@ -226,14 +234,15 @@ export function sortTable<T>(
   return [sortedItems, header];
 }
 
+export type FooterCell = React.ReactElement | string | undefined | null;
+
 export function SortableTable<T>({
   items,
   columns,
   defaultOrder,
   queryKey,
   withButtons,
-  footer,
-  message,
+  footers,
   rowClassName,
   expandedContentOffset = 0,
 }: {
@@ -242,8 +251,7 @@ export function SortableTable<T>({
   defaultOrder?: string;
   queryKey: string;
   withButtons?: boolean;
-  footer?: (chosenSize: ScreenSize) => React.ReactNode;
-  message?: string | null | undefined;
+  footers?: FooterCell[][] | ((chosenSize: ScreenSize) => FooterCell[][]);
   rowClassName?: (item: T) => string | undefined;
   expandedContentOffset?: number;
 }) {
@@ -345,6 +353,44 @@ export function SortableTable<T>({
     }
   }
 
+  const footerRows = [];
+
+  if (footers) {
+    const footersList =
+      typeof footers == "function" ? footers(chosenSize) : footers;
+    for (const footer of footersList) {
+      let haveAny = false;
+      const cells: { content: React.ReactNode; colSpan: number }[] = [];
+      let nextColSpan = 1;
+
+      for (let index = 0; index < columns.length; index++) {
+        if (reallyHide[index]) continue;
+        const item = footer[index];
+        if (item) haveAny = true;
+        if (item !== undefined) {
+          cells.push({ content: item, colSpan: nextColSpan });
+          nextColSpan = 1;
+        } else if (cells.length != 0) {
+          cells[cells.length - 1]!.colSpan++;
+        } else {
+          nextColSpan++;
+        }
+      }
+
+      if (haveAny) {
+        footerRows.push(
+          <tr key={footerRows.length}>
+            {cells.map(({ content, colSpan }, index) => (
+              <td key={index} colSpan={colSpan == 1 ? undefined : colSpan}>
+                {content}
+              </td>
+            ))}
+          </tr>
+        );
+      }
+    }
+  }
+
   return (
     <div>
       {canHide.some(Boolean) && (
@@ -372,16 +418,7 @@ export function SortableTable<T>({
       <table className={className}>
         <thead>{header}</thead>
         <tbody>{rows}</tbody>
-        {!!(footer || message) && (
-          <tfoot>
-            {!!footer && footer(chosenSize)}
-            {!!message && (
-              <tr>
-                <td colSpan={columns.length - reallyHiddenCount}>{message}</td>
-              </tr>
-            )}
-          </tfoot>
-        )}
+        {!!footerRows.length && <tfoot>{footerRows}</tfoot>}
       </table>
     </div>
   );
