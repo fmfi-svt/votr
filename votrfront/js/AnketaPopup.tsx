@@ -1,6 +1,6 @@
 import React from "react";
 import { CacheRequester, Loading } from "./ajax";
-import { LocalSettings } from "./LocalSettings";
+import { getLocalSetting, setLocalSetting } from "./LocalSettings";
 
 export function AnketaPopup() {
   var season = Votr.settings.anketa_season;
@@ -12,7 +12,7 @@ export function AnketaPopup() {
   var wasClosedBefore = false;
 
   try {
-    var state = LocalSettings.get("anketapopup");
+    var state = getLocalSetting("anketapopup");
     if (state) {
       var [savedSeason, savedTime] = JSON.parse(state);
       if (savedSeason == season) {
@@ -36,7 +36,7 @@ export function AnketaPopup() {
   if (!studia.some((s) => s.organizacna_jednotka == "FMFI")) return null;
 
   function closePopup(until: number) {
-    LocalSettings.set("anketapopup", JSON.stringify([season, until]));
+    setLocalSetting("anketapopup", JSON.stringify([season, until]));
   }
 
   const later = 3 * 24 * 3600 * 1000;

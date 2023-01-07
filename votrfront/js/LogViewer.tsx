@@ -1,7 +1,7 @@
 import _ from "lodash";
 import React, { useEffect, useRef, useState } from "react";
 import { ajaxLogs } from "./ajax";
-import { LocalSettings } from "./LocalSettings";
+import { getLocalSetting, setLocalSetting } from "./LocalSettings";
 
 function LogViewerContent(props: {
   closeButton: React.ReactNode;
@@ -148,13 +148,13 @@ var explainedLogViewer = false;
 
 export function LogViewer() {
   function toggle() {
-    LocalSettings.set("logViewer", LocalSettings.get("logViewer") ? "" : "log");
+    setLocalSetting("logViewer", getLocalSetting("logViewer") ? "" : "log");
   }
 
   function toggleMode() {
-    LocalSettings.set(
+    setLocalSetting(
       "logViewer",
-      LocalSettings.get("logViewer") == "log" ? "benchmark" : "log"
+      getLocalSetting("logViewer") == "log" ? "benchmark" : "log"
     );
   }
 
@@ -183,7 +183,7 @@ export function LogViewer() {
     }
   }, []);
 
-  var mode = LocalSettings.get("logViewer");
+  var mode = getLocalSetting("logViewer");
 
   if (mode != "log" && mode != "benchmark") return null;
 

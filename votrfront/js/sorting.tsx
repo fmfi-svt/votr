@@ -1,7 +1,7 @@
 import classNames from "classnames";
 import _ from "lodash";
 import React, { useContext, useState } from "react";
-import { LocalSettings } from "./LocalSettings";
+import { getLocalSetting, setLocalSetting } from "./LocalSettings";
 import { ScreenSize, useScreenSize } from "./mediaQueries";
 import { navigate, QueryContext } from "./router";
 import { Columns, Query } from "./types";
@@ -261,7 +261,7 @@ export function SortableTable<T>({
     });
   }
 
-  var fullTable = LocalSettings.get("fullTable") == "true";
+  var fullTable = getLocalSetting("fullTable") == "true";
 
   var order = getOrder(defaultOrder, query, queryKey);
 
@@ -353,7 +353,7 @@ export function SortableTable<T>({
             type="button"
             className={classNames("btn", "btn-default", fullTable && "active")}
             onClick={() => {
-              LocalSettings.set("fullTable", String(!fullTable));
+              setLocalSetting("fullTable", String(!fullTable));
             }}
           >
             Zobraziť celú tabuľku
