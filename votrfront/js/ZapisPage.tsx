@@ -106,8 +106,8 @@ function ZapisTableFooter(props: {
   return (
     <React.Fragment>
       {zoradene.map(([skratka, mojePredmetyVBloku]) => {
-        var stats = coursesStats(mojePredmetyVBloku as any);
-        var nazov = blokNazvy.get(skratka);
+        const stats = coursesStats(mojePredmetyVBloku);
+        const nazov = blokNazvy.get(skratka);
         const blok = nazov ? <abbr title={nazov}>{skratka}</abbr> : skratka;
         const uvod = skratka ? "Súčet bloku" : "Dokopy";
         const uvodABlok = skratka ? (

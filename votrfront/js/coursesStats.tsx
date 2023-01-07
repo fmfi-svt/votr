@@ -1,5 +1,5 @@
 import React from "react";
-import { Hodnotenie } from "./types";
+import { Hodnotenie, ZapisPredmet } from "./types";
 
 var ZNAMKY: Record<string, number> = {
   "A": 1,
@@ -10,7 +10,7 @@ var ZNAMKY: Record<string, number> = {
   "F": 4,
 };
 
-export function coursesStats(hodnotenia: Hodnotenie[]) {
+export function coursesStats(predmety: (Hodnotenie | ZapisPredmet)[]) {
   var result = {
     zima: { count: 0, creditsEnrolled: 0, creditsObtained: 0 },
     leto: { count: 0, creditsEnrolled: 0, creditsObtained: 0 },
@@ -27,9 +27,10 @@ export function coursesStats(hodnotenia: Hodnotenie[]) {
     result[type].creditsObtained += obtained ? credits : 0;
   }
 
-  for (const row of hodnotenia) {
+  for (const row of predmety) {
     var credits = parseInt(row.kredit);
-    var obtained = !!row.hodn_znamka && row.hodn_znamka[0] !== "F";
+    var obtained =
+      "hodn_znamka" in row && !!row.hodn_znamka && row.hodn_znamka[0] !== "F";
     add("spolu", credits, obtained);
     if (row.semester == "Z") add("zima", credits, obtained);
     if (row.semester == "L") add("leto", credits, obtained);
