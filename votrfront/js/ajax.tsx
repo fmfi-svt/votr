@@ -1,4 +1,3 @@
-import _ from "lodash";
 import React, { useEffect } from "react";
 import { Rpcs } from "./types";
 
@@ -28,13 +27,45 @@ function sendRawRpc<N extends keyof Rpcs>(
   function update() {
     if (finished) return;
     while (true) {
-      var waiting = xhr.responseText.length - processed;
-      if (waiting < HEADER_LENGTH) break;
-      var header = xhr.responseText.substr(processed, HEADER_LENGTH);
-      var length = parseInt(header, HEADER_LENGTH);
-      if (waiting < HEADER_LENGTH + length) break;
-      var payload = xhr.responseText.substr(processed + HEADER_LENGTH, length);
-      var data = JSON.parse(payload) as RpcPayload;
+      if (xhr.status && xhr.status != 200) {
+        reportClientError("network", {
+          subtype: "status",
+          responseText: xhr.responseText,
+          responseURL: xhr.responseURL,
+          status: xhr.status,
+          statusText: xhr.statusText,
+        });
+        return fail(
+          "Network error: HTTP " +
+            xhr.status +
+            (xhr.statusText ? ": " + xhr.statusText : "")
+        );
+      }
+      var data: RpcPayload;
+      try {
+        var waiting = xhr.responseText.length - processed;
+        if (waiting < HEADER_LENGTH) break;
+        var header = xhr.responseText.substring(
+          processed,
+          processed + HEADER_LENGTH
+        );
+        var length = parseInt(header, 10);
+        if (isNaN(length)) throw new Error("Not a number: " + header);
+        if (waiting < HEADER_LENGTH + length) break;
+        var payload = xhr.responseText.substring(
+          processed + HEADER_LENGTH,
+          processed + HEADER_LENGTH + length
+        );
+        data = JSON.parse(payload) as RpcPayload;
+      } catch (error: unknown) {
+        reportClientError("network", {
+          subtype: "parse",
+          error: "" + error,
+          responseText: xhr.responseText,
+          responseURL: xhr.responseURL,
+        });
+        return fail("Network error: RPC parse error: " + error);
+      }
       if ("log" in data) {
         console.debug("Received " + name + " log:", data.log, data.message);
         ajaxLogs.push(data);
@@ -52,6 +83,12 @@ function sendRawRpc<N extends keyof Rpcs>(
     if (xhr.readyState == 4) {
       if (processed != xhr.responseText.length || result === undefined) {
         console.log("INCOMPLETE!");
+        reportClientError("network", {
+          subtype: "incomplete",
+          processed,
+          length: xhr.responseText.length,
+          responseURL: xhr.responseURL,
+        });
         return fail("Network error: Incomplete response");
       }
       finished = true;
@@ -62,12 +99,12 @@ function sendRawRpc<N extends keyof Rpcs>(
     Votr.updateRoot();
   }
 
-  function fail(e: unknown) {
+  function fail(e: string) {
     if (finished) return;
     finished = true;
     console.log("FAILED!", e);
     if (!Votr.ajaxError) {
-      Votr.ajaxError = _.isString(e) ? e : "Network error";
+      Votr.ajaxError = e;
       Votr.updateRoot();
     }
   }
@@ -75,7 +112,7 @@ function sendRawRpc<N extends keyof Rpcs>(
   var xhr = new XMLHttpRequest();
   xhr.onload = update;
   xhr.onprogress = update;
-  xhr.onerror = fail;
+  xhr.onerror = () => fail("Network error");
   xhr.open("POST", "rpc?name=" + name, true);
   xhr.setRequestHeader("Content-Type", "application/json");
   xhr.setRequestHeader("X-CSRF-Token", Votr.settings.csrf_token!);
