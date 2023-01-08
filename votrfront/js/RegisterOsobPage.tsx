@@ -3,14 +3,20 @@ import { CacheRequester, Loading } from "./ajax";
 import { currentAcademicYear } from "./coursesStats";
 import { FormItem, PageLayout, PageTitle } from "./layout";
 import { navigate, QueryContext } from "./router";
-import { sortAs, sortTable } from "./sorting";
-import { Columns, ComboBoxOption } from "./types";
+import { column, SortableTable, sortAs } from "./sorting";
+import { ComboBoxOption } from "./types";
 
-var RegisterOsobColumns: Columns = [
-  ["Plné meno", "plne_meno", sortAs.personName],
-  ["E-mail", "email"],
+const RegisterOsobColumns = [
+  column({ label: "Plné meno", prop: "plne_meno", sortKey: sortAs.personName }),
+  column({
+    label: "E-mail",
+    prop: "email",
+    display: (email: string) =>
+      !!email && <a href={"mailto:" + email}>{email}</a>,
+  }),
 ];
-RegisterOsobColumns.defaultOrder = "a0";
+
+const registerOsobDefaultOrder = "a0";
 
 function RegisterOsobForm() {
   var query = useContext(QueryContext);
@@ -217,13 +223,6 @@ function RegisterOsobResultTable() {
 
   var [osoby, message] = response;
 
-  var [osoby, header] = sortTable(
-    osoby,
-    RegisterOsobColumns,
-    query,
-    "osobySort"
-  );
-
   if (!message && !osoby.length) {
     message = "Podmienkam nevyhovuje žiadny záznam.";
   }
@@ -231,28 +230,13 @@ function RegisterOsobResultTable() {
   return (
     <React.Fragment>
       <h2>Výsledky</h2>
-      <table className="table table-condensed table-bordered table-striped table-hover">
-        <thead>{header}</thead>
-        <tbody>
-          {osoby.map((osoba, index) => (
-            <tr key={index}>
-              <td>{osoba.plne_meno}</td>
-              <td>
-                {!!osoba.email && (
-                  <a href={"mailto:" + osoba.email}>{osoba.email}</a>
-                )}
-              </td>
-            </tr>
-          ))}
-        </tbody>
-        {!!message && (
-          <tfoot>
-            <tr>
-              <td colSpan={RegisterOsobColumns.length}>{message}</td>
-            </tr>
-          </tfoot>
-        )}
-      </table>
+      <SortableTable
+        items={osoby}
+        columns={RegisterOsobColumns}
+        defaultOrder={registerOsobDefaultOrder}
+        queryKey="osobySort"
+        message={message}
+      />
     </React.Fragment>
   );
 }

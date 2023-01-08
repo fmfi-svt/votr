@@ -2,15 +2,23 @@ import React, { useContext } from "react";
 import { CacheRequester, Loading } from "./ajax";
 import { Modal } from "./layout";
 import { QueryContext } from "./router";
-import { sortAs, sortTable } from "./sorting";
-import { Columns } from "./types";
+import { column, SortableTable, sortAs } from "./sorting";
 
-export var ZoznamPrihlasenychNaTerminColumns: Columns = [
-  ["Meno", "plne_meno", sortAs.personName],
-  ["Študijný program", "sp_skratka"],
-  ["Ročník", "rocnik", sortAs.number],
-  ["E-mail", "email"],
-  ["Dátum prihlásenia", "datum_prihlasenia", sortAs.date],
+export const PrihlasenyStudentColumns = [
+  column({ label: "Meno", prop: "plne_meno", sortKey: sortAs.personName }),
+  column({ label: "Študijný program", prop: "sp_skratka" }),
+  column({ label: "Ročník", prop: "rocnik", sortKey: sortAs.number }),
+  column({
+    label: "E-mail",
+    prop: "email",
+    display: (email: string) =>
+      !!email && <a href={"mailto:" + email}>{email}</a>,
+  }),
+  column({
+    label: "Dátum prihlásenia",
+    prop: "datum_prihlasenia",
+    sortKey: sortAs.date,
+  }),
 ];
 
 function ZoznamPrihlasenychNaTerminModalContent() {
@@ -25,46 +33,17 @@ function ZoznamPrihlasenychNaTerminModalContent() {
     return <Loading requests={cache.missing} />;
   }
 
-  var header;
-  [studenti, header] = sortTable(
-    studenti,
-    ZoznamPrihlasenychNaTerminColumns,
-    query,
-    "modalStudentiSort"
-  );
-
   var message = studenti.length
     ? null
     : "Na termín nie sú prihlásení žiadni študenti.";
 
   return (
-    <table className="table table-condensed table-bordered table-striped table-hover">
-      <thead>{header}</thead>
-      <tbody>
-        {studenti.map((student, index) => (
-          <tr key={index}>
-            <td>{student.plne_meno}</td>
-            <td>{student.sp_skratka}</td>
-            <td>{student.rocnik}</td>
-            <td>
-              {!!student.email && (
-                <a href={"mailto:" + student.email}>{student.email}</a>
-              )}
-            </td>
-            <td>{student.datum_prihlasenia}</td>
-          </tr>
-        ))}
-      </tbody>
-      {!!message && (
-        <tfoot>
-          <tr>
-            <td colSpan={ZoznamPrihlasenychNaTerminColumns.length}>
-              {message}
-            </td>
-          </tr>
-        </tfoot>
-      )}
-    </table>
+    <SortableTable
+      items={studenti}
+      columns={PrihlasenyStudentColumns}
+      queryKey="modalStudentiSort"
+      message={message}
+    />
   );
 }
 

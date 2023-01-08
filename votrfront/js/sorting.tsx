@@ -4,7 +4,7 @@ import React, { useContext, useState } from "react";
 import { getLocalSetting, setLocalSetting } from "./LocalSettings";
 import { ScreenSize, useScreenSize } from "./mediaQueries";
 import { navigate, QueryContext } from "./router";
-import { Columns, Query } from "./types";
+import { Query } from "./types";
 
 export var sortAs = {
   personName(text: string) {
@@ -142,18 +142,6 @@ function getOrder(
   return orderString ? orderString.split(/(?=[ad])/) : [];
 }
 
-function convertOldStyleColumns<T>(columns: Columns): Column<T>[] {
-  return columns.map(
-    ([label, prop, sortKey, preferDesc = false]) =>
-      column({
-        label,
-        prop: prop as "fake",
-        ...(sortKey ? { sortKey } : {}),
-        preferDesc,
-      }) satisfies Column<Record<"fake", string>> as Column<T>
-  );
-}
-
 function sortItems<T>(
   items: T[],
   columns: Column<T>[],
@@ -207,23 +195,6 @@ function renderHeader<T>(
       })}
     </tr>
   );
-}
-
-export function sortTable<T>(
-  items: T[],
-  columns: Columns,
-  query: Query,
-  queryKey: string
-): [T[], React.ReactNode] {
-  var order = getOrder(columns.defaultOrder, query, queryKey);
-  var columns2 = convertOldStyleColumns(columns);
-
-  var sortedIndexes = sortItems(items, columns2, order);
-  var sortedItems = sortedIndexes.map((originalIndex) => items[originalIndex]!);
-
-  var header = renderHeader(columns2, query, queryKey, order, []);
-
-  return [sortedItems, header];
 }
 
 export function SortableTable<T>({

@@ -355,10 +355,3 @@ export interface Rpcs {
     predmet_key_list: string[]
   ): string | null;
 }
-
-export interface Columns
-  extends Array<
-    [React.ReactNode, string, ((value: string) => unknown)?, boolean?]
-  > {
-  defaultOrder?: string;
-}

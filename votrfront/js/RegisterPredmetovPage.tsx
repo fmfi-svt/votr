@@ -4,19 +4,39 @@ import { currentAcademicYear } from "./coursesStats";
 import { classForSemester, humanizeBoolean } from "./humanizeAISData";
 import { FormItem, PageLayout, PageTitle } from "./layout";
 import { navigate, QueryContext, RelativeLink } from "./router";
-import { sortAs, sortTable } from "./sorting";
-import { Columns, ComboBoxOption } from "./types";
+import { column, SortableTable, sortAs } from "./sorting";
+import { ComboBoxOption, RegPredmet } from "./types";
 
-var RegisterPredmetovColumns: Columns = [
-  ["Názov predmetu", "nazov"],
-  ["Skratka predmetu", "skratka"],
-  ["Fakulta", "fakulta"],
-  [<abbr title="Semester">Sem.</abbr>, "semester"],
-  ["Rozsah výučby", "rozsah_vyucby"],
-  ["Počet kreditov", "kredit", sortAs.number],
-  ["Konanie", "konanie"],
+function DetailPredmetuLink({ predmet }: { predmet: RegPredmet }) {
+  const query = useContext(QueryContext);
+  return (
+    <RelativeLink
+      href={{
+        modal: "detailPredmetu",
+        modalPredmetKey: predmet.predmet_key,
+        modalAkademickyRok: query.akademickyRok,
+      }}
+    >
+      {predmet.nazov}
+    </RelativeLink>
+  );
+}
+
+const RegisterPredmetovColumns = [
+  column({
+    label: "Názov predmetu",
+    sortKey: (predmet: RegPredmet) => predmet.nazov,
+    display: (predmet: RegPredmet) => <DetailPredmetuLink predmet={predmet} />,
+  }),
+  column({ label: "Skratka predmetu", prop: "skratka" }),
+  column({ label: "Fakulta", prop: "fakulta" }),
+  column({ label: <abbr title="Semester">Sem.</abbr>, prop: "semester" }),
+  column({ label: "Rozsah výučby", prop: "rozsah_vyucby" }),
+  column({ label: "Počet kreditov", prop: "kredit", sortKey: sortAs.number }),
+  column({ label: "Konanie", prop: "konanie", display: humanizeBoolean }),
 ];
-RegisterPredmetovColumns.defaultOrder = "a0";
+
+const registerPredmetovDefaultOrder = "a0";
 
 function RegisterPredmetovForm() {
   var query = useContext(QueryContext);
@@ -155,13 +175,6 @@ function RegisterPredmetovResultTable() {
 
   var [rows, message] = response;
 
-  var [rows, header] = sortTable(
-    rows,
-    RegisterPredmetovColumns,
-    query,
-    "predmetSort"
-  );
-
   if (!message && !rows.length) {
     message = "Podmienkam nevyhovuje žiadny záznam.";
   }
@@ -169,42 +182,14 @@ function RegisterPredmetovResultTable() {
   return (
     <React.Fragment>
       <h2>Výsledky</h2>
-      <table className="table table-condensed table-bordered table-striped table-hover">
-        <thead>{header}</thead>
-        <tbody>
-          {rows.map((predmet) => (
-            <tr
-              key={predmet.predmet_key}
-              className={classForSemester(predmet.semester)}
-            >
-              <td>
-                <RelativeLink
-                  href={{
-                    modal: "detailPredmetu",
-                    modalPredmetKey: predmet.predmet_key,
-                    modalAkademickyRok: query.akademickyRok,
-                  }}
-                >
-                  {predmet.nazov}
-                </RelativeLink>
-              </td>
-              <td>{predmet.skratka}</td>
-              <td>{predmet.fakulta}</td>
-              <td>{predmet.semester}</td>
-              <td>{predmet.rozsah_vyucby}</td>
-              <td>{predmet.kredit}</td>
-              <td>{humanizeBoolean(predmet.konanie)}</td>
-            </tr>
-          ))}
-        </tbody>
-        {!!message && (
-          <tfoot>
-            <tr>
-              <td colSpan={RegisterPredmetovColumns.length}>{message}</td>
-            </tr>
-          </tfoot>
-        )}
-      </table>
+      <SortableTable
+        items={rows}
+        columns={RegisterPredmetovColumns}
+        defaultOrder={registerPredmetovDefaultOrder}
+        queryKey="predmetSort"
+        message={message}
+        rowClassName={(predmet) => classForSemester(predmet.semester)}
+      />
     </React.Fragment>
   );
 }

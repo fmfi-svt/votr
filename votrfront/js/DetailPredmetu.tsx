@@ -2,19 +2,19 @@ import React, { useContext } from "react";
 import { CacheRequester, Loading } from "./ajax";
 import { Modal } from "./layout";
 import { QueryContext } from "./router";
-import { sortAs, sortTable } from "./sorting";
-import { Columns } from "./types";
-import { ZoznamPrihlasenychNaTerminColumns } from "./ZoznamPrihlasenychNaTermin";
+import { column, SortableTable, sortAs } from "./sorting";
+import { PrihlasenyStudentColumns } from "./ZoznamPrihlasenychNaTermin";
 
-var DetailPredmetuUciteliaColumns: Columns = [
-  ["Meno", "plne_meno", sortAs.personName],
-  ["Typ", "typ"],
+const RegUcitelPredmetuColumns = [
+  column({ label: "Meno", prop: "plne_meno", sortKey: sortAs.personName }),
+  column({ label: "Typ", prop: "typ" }),
 ];
-DetailPredmetuUciteliaColumns.defaultOrder = "a0";
 
-var DetailPredmetuStudentiColumns: Columns =
-  ZoznamPrihlasenychNaTerminColumns.slice();
-DetailPredmetuStudentiColumns.defaultOrder = "a0";
+// Meno
+const detailPredmetuUciteliaDefaultOrder = "a0";
+
+// Meno
+const detailPredmetuStudentiDefaultOrder = "a0";
 
 function getZapisaniStudenti(
   cache: CacheRequester,
@@ -83,37 +83,18 @@ function DetailPredmetuUcitelia() {
     return <Loading requests={cache.missing} />;
   }
 
-  var header;
-  [ucitelia, header] = sortTable(
-    ucitelia,
-    DetailPredmetuUciteliaColumns,
-    query,
-    "modalUciteliaSort"
-  );
-
   var message = ucitelia.length
     ? null
     : "Predmet nemá v AISe žiadnych učiteľov.";
 
   return (
-    <table className="table table-condensed table-bordered table-striped table-hover">
-      <thead>{header}</thead>
-      <tbody>
-        {ucitelia.map((ucitel, index) => (
-          <tr key={index}>
-            <td>{ucitel.plne_meno}</td>
-            <td>{ucitel.typ}</td>
-          </tr>
-        ))}
-      </tbody>
-      {!!message && (
-        <tfoot>
-          <tr>
-            <td colSpan={DetailPredmetuUciteliaColumns.length}>{message}</td>
-          </tr>
-        </tfoot>
-      )}
-    </table>
+    <SortableTable
+      items={ucitelia}
+      columns={RegUcitelPredmetuColumns}
+      defaultOrder={detailPredmetuUciteliaDefaultOrder}
+      queryKey="modalUciteliaSort"
+      message={message}
+    />
   );
 }
 
@@ -136,43 +117,18 @@ function DetailPredmetuZapisaniStudenti() {
     return "Dáta pre predmet neboli nájdené." as unknown as JSX.Element;
   }
 
-  var [studenti, header] = sortTable(
-    studenti,
-    DetailPredmetuStudentiColumns,
-    query,
-    "modalStudentiSort"
-  );
-
   var message = studenti.length
     ? null
     : "Predmet nemá v AISe žiadnych zapísaných študentov.";
 
   return (
-    <table className="table table-condensed table-bordered table-striped table-hover">
-      <thead>{header}</thead>
-      <tbody>
-        {studenti.map((student, index) => (
-          <tr key={index}>
-            <td>{student.plne_meno}</td>
-            <td>{student.sp_skratka}</td>
-            <td>{student.rocnik}</td>
-            <td>
-              {!!student.email && (
-                <a href={"mailto:" + student.email}>{student.email}</a>
-              )}
-            </td>
-            <td>{student.datum_prihlasenia}</td>
-          </tr>
-        ))}
-      </tbody>
-      {!!message && (
-        <tfoot>
-          <tr>
-            <td colSpan={DetailPredmetuStudentiColumns.length}>{message}</td>
-          </tr>
-        </tfoot>
-      )}
-    </table>
+    <SortableTable
+      items={studenti}
+      columns={PrihlasenyStudentColumns}
+      defaultOrder={detailPredmetuStudentiDefaultOrder}
+      queryKey="modalStudentiSort"
+      message={message}
+    />
   );
 }
 

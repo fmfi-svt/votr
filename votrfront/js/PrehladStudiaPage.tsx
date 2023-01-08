@@ -8,31 +8,55 @@ import {
 import { currentAcademicYear } from "./coursesStats";
 import { PageLayout, PageTitle } from "./layout";
 import { QueryContext } from "./router";
-import { sortAs, sortTable } from "./sorting";
-import { Columns, Studium, ZapisnyList } from "./types";
+import { column, SortableTable, sortAs } from "./sorting";
+import { Studium, ZapisnyList } from "./types";
 
 // TODO: Pridat kadejake sumarne informacie, aby to vyzeralo ako dashboard.
 // TODO: Ked to raz bude rychle, pouzit to ako "home page" pri prazdnom action.
 // TODO: Zvyraznit aktualne obdobia a pisat kolko casu zostava do dalsich.
 
-var PrehladStudiumColumns: Columns = [
-  ["Študijný program", "sp_popis"],
-  ["Rok štúdia", "rok_studia", sortAs.number],
-  ["Dĺžka v semestroch", "sp_dlzka", sortAs.number],
-  ["Začiatok štúdia", "zaciatok", sortAs.date],
-  ["Koniec štúdia", "koniec", sortAs.date],
-  ["Doplňujúce údaje", "sp_doplnujuce_udaje"],
-  ["Zápisný list", "zapisny_list"],
+const PrehladStudiumColumns = [
+  column({
+    label: "Študijný program",
+    projection: (item: Studium) => `${item.sp_popis} (${item.sp_skratka})`,
+  }),
+  column({ label: "Rok štúdia", prop: "rok_studia", sortKey: sortAs.number }),
+  column({
+    label: "Dĺžka v semestroch",
+    prop: "sp_dlzka",
+    sortKey: sortAs.number,
+  }),
+  column({ label: "Začiatok štúdia", prop: "zaciatok", sortKey: sortAs.date }),
+  column({ label: "Koniec štúdia", prop: "koniec", sortKey: sortAs.date }),
+  column({
+    label: "Doplňujúce údaje",
+    projection: (item: Studium) =>
+      item.sp_doplnujuce_udaje.replace(/^\((.*)\)$/, "$1"),
+  }),
+  column({
+    label: "Zápisný list",
+    sortKey: () => "",
+    display: (studium: Studium) => (
+      <PridatZapisnyListButton studium={studium} />
+    ),
+  }),
 ];
-PrehladStudiumColumns.defaultOrder = "d4";
 
-var PrehladZapisnyListColumns: Columns = [
-  ["Akademický rok", "akademicky_rok"],
-  ["Študijný program", "sp_popis"],
-  ["Ročník", "rocnik", sortAs.number],
-  ["Dátum zápisu", "datum_zapisu", sortAs.date],
+// Koniec studia
+const PrehladStudiumDefaultOrder = "d4";
+
+const PrehladZapisnyListColumns = [
+  column({ label: "Akademický rok", prop: "akademicky_rok" }),
+  column({
+    label: "Študijný program",
+    projection: (item: ZapisnyList) => `${item.sp_popis} (${item.sp_skratka})`,
+  }),
+  column({ label: "Ročník", prop: "rocnik", sortKey: sortAs.number }),
+  column({ label: "Dátum zápisu", prop: "datum_zapisu", sortKey: sortAs.date }),
 ];
-PrehladZapisnyListColumns.defaultOrder = "d0d3";
+
+// Akademicky rok (descending), Datum zapisu
+const PrehladZapisnyListDefaultOrder = "d0d3";
 
 function PrehladStudiaObdobie(props: {
   rpc: "get_semester_obdobie" | "get_skuskove_obdobie";
@@ -149,44 +173,16 @@ function PrehladStudiaStudia() {
     return <Loading requests={cache.missing} />;
   }
 
-  var header;
-  [studia, header] = sortTable(
-    studia,
-    PrehladStudiumColumns,
-    query,
-    "studiaSort"
-  );
-
   var message = studia.length ? null : "V AISe nemáte žiadne štúdiá.";
 
   return (
-    <table className="table table-condensed table-bordered table-striped table-hover">
-      <thead>{header}</thead>
-      <tbody>
-        {studia.map((studium) => (
-          <tr key={studium.studium_key}>
-            <td>
-              {studium.sp_popis} ({studium.sp_skratka})
-            </td>
-            <td>{studium.rok_studia}</td>
-            <td>{studium.sp_dlzka}</td>
-            <td>{studium.zaciatok}</td>
-            <td>{studium.koniec}</td>
-            <td>{studium.sp_doplnujuce_udaje.replace(/^\((.*)\)$/, "$1")}</td>
-            <td>
-              <PridatZapisnyListButton studium={studium} />
-            </td>
-          </tr>
-        ))}
-      </tbody>
-      {!!message && (
-        <tfoot>
-          <tr>
-            <td colSpan={PrehladStudiumColumns.length}>{message}</td>
-          </tr>
-        </tfoot>
-      )}
-    </table>
+    <SortableTable
+      items={studia}
+      columns={PrehladStudiumColumns}
+      defaultOrder={PrehladStudiumDefaultOrder}
+      queryKey="studiaSort"
+      message={message}
+    />
   );
 }
 
@@ -207,13 +203,6 @@ function PrehladStudiaZapisneListy() {
     if (mojeZapisneListy) zapisneListy.push(...mojeZapisneListy);
   }
 
-  var [zapisneListy, header] = sortTable(
-    zapisneListy,
-    PrehladZapisnyListColumns,
-    query,
-    "zapisneListySort"
-  );
-
   var showTable = !!zapisneListy.length || cache.loadedAll;
 
   var message = zapisneListy.length
@@ -224,28 +213,13 @@ function PrehladStudiaZapisneListy() {
     <React.Fragment>
       {!cache.loadedAll && <Loading requests={cache.missing} />}
       {showTable && (
-        <table className="table table-condensed table-bordered table-striped table-hover">
-          <thead>{header}</thead>
-          <tbody>
-            {zapisneListy.map((zapisnyList) => (
-              <tr key={zapisnyList.zapisny_list_key}>
-                <td>{zapisnyList.akademicky_rok}</td>
-                <td>
-                  {zapisnyList.sp_popis} ({zapisnyList.sp_skratka})
-                </td>
-                <td>{zapisnyList.rocnik}</td>
-                <td>{zapisnyList.datum_zapisu}</td>
-              </tr>
-            ))}
-          </tbody>
-          {!!message && (
-            <tfoot>
-              <tr>
-                <td colSpan={PrehladZapisnyListColumns.length}>{message}</td>
-              </tr>
-            </tfoot>
-          )}
-        </table>
+        <SortableTable
+          items={zapisneListy}
+          columns={PrehladZapisnyListColumns}
+          defaultOrder={PrehladZapisnyListDefaultOrder}
+          queryKey="zapisneListySort"
+          message={message}
+        />
       )}
     </React.Fragment>
   );
