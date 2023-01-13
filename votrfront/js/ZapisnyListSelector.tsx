@@ -47,12 +47,14 @@ export function ZapisnyListSelector({
         <li>
           <span className="text-pill">Zápisný list:</span>
         </li>
-        {items.map((zapisnyList) => {
-          var key = zapisnyList.zapisny_list_key;
-          var active = key == query.zapisnyListKey;
+        {items.map((zapisnyList, index) => {
+          // An item's `index` might change over time as more get_zapisne_listy
+          // responses arrive, but that should be harmless here.
+          var zapisnyListKey = zapisnyList.zapisny_list_key;
+          var active = zapisnyListKey == query.zapisnyListKey;
           return (
-            <li key={key} className={active ? "active" : ""}>
-              <RelativeLink href={{ zapisnyListKey: key }}>
+            <li key={index} className={active ? "active" : ""}>
+              <RelativeLink href={{ zapisnyListKey }}>
                 {zapisnyList.akademicky_rok} {zapisnyList.sp_skratka}
               </RelativeLink>
             </li>

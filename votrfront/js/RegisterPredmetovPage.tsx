@@ -112,8 +112,8 @@ function RegisterPredmetovForm() {
             value={state[name]}
             onChange={handleFieldChange}
           >
-            {items.map((item) => (
-              <option key={item.id} value={item.id}>
+            {items.map((item, index) => (
+              <option key={index} value={item.id}>
                 {item.title}
               </option>
             ))}

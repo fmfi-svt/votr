@@ -23,12 +23,12 @@ export function StudiumSelector({ children }: { children: React.ReactNode }) {
         <li>
           <span className="text-pill">Štúdium:</span>
         </li>
-        {items.map((studium) => {
-          var key = studium.studium_key;
-          var active = key == query.studiumKey;
+        {items.map((studium, index) => {
+          var studiumKey = studium.studium_key;
+          var active = studiumKey == query.studiumKey;
           return (
-            <li key={key} className={active ? "active" : ""}>
-              <RelativeLink href={{ studiumKey: key }}>
+            <li key={index} className={active ? "active" : ""}>
+              <RelativeLink href={{ studiumKey }}>
                 {studium.sp_skratka}
               </RelativeLink>
             </li>
