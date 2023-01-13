@@ -23,8 +23,8 @@ function PriebezneHodnoteniaPageContent() {
 
   return (
     <React.Fragment>
-      {priebezneHodnotenia.map((priebHod) => (
-        <React.Fragment>
+      {priebezneHodnotenia.map((priebHod, index) => (
+        <React.Fragment key={index}>
           <h2>
             <RelativeLink
               href={{
@@ -47,8 +47,8 @@ function PriebezneHodnoteniaPageContent() {
               </tr>
             </thead>
             <tbody>
-              {priebHod.zaznamy.map((zaznam) => (
-                <tr>
+              {priebHod.zaznamy.map((zaznam, zaznamIndex) => (
+                <tr key={zaznamIndex}>
                   <td>{zaznam.dovod}</td>
                   <td>
                     {zaznam.poc_bodov} / {zaznam.maximum}
