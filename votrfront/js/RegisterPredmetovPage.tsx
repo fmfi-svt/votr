@@ -3,6 +3,7 @@ import { CacheRequester, Loading } from "./ajax";
 import { currentAcademicYear } from "./coursesStats";
 import { classForSemester, humanizeBoolean } from "./humanizeAISData";
 import { FormItem, PageLayout, PageTitle } from "./layout";
+import { underSM, underXS } from "./mediaQueries";
 import { navigate, QueryContext, RelativeLink } from "./router";
 import { column, SortableTable, sortAs } from "./sorting";
 import { ComboBoxOption, RegPredmet } from "./types";
@@ -27,13 +28,24 @@ const RegisterPredmetovColumns = [
     label: "Názov predmetu",
     sortKey: (predmet: RegPredmet) => predmet.nazov,
     display: (predmet: RegPredmet) => <DetailPredmetuLink predmet={predmet} />,
+    expansionMark: true,
   }),
   column({ label: "Skratka predmetu", prop: "skratka" }),
-  column({ label: "Fakulta", prop: "fakulta" }),
+  column({ label: "Fakulta", prop: "fakulta", hide: underSM }),
   column({ label: <abbr title="Semester">Sem.</abbr>, prop: "semester" }),
-  column({ label: "Rozsah výučby", prop: "rozsah_vyucby" }),
-  column({ label: "Počet kreditov", prop: "kredit", sortKey: sortAs.number }),
-  column({ label: "Konanie", prop: "konanie", display: humanizeBoolean }),
+  column({ label: "Rozsah výučby", prop: "rozsah_vyucby", hide: underXS }),
+  column({
+    label: "Počet kreditov",
+    prop: "kredit",
+    sortKey: sortAs.number,
+    hide: underXS,
+  }),
+  column({
+    label: "Konanie",
+    prop: "konanie",
+    display: humanizeBoolean,
+    hide: underXS,
+  }),
 ];
 
 const registerPredmetovDefaultOrder = "a0";

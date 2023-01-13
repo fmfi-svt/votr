@@ -1,23 +1,35 @@
 import React, { useContext } from "react";
 import { CacheRequester, Loading } from "./ajax";
 import { Modal } from "./layout";
+import { underSM, underXS } from "./mediaQueries";
 import { QueryContext } from "./router";
 import { column, SortableTable, sortAs } from "./sorting";
 
 export const PrihlasenyStudentColumns = [
-  column({ label: "Meno", prop: "plne_meno", sortKey: sortAs.personName }),
-  column({ label: "Študijný program", prop: "sp_skratka" }),
+  column({
+    label: "Meno",
+    prop: "plne_meno",
+    sortKey: sortAs.personName,
+    expansionMark: true,
+  }),
+  column({
+    label: "Študijný program",
+    shortLabel: <abbr title="Študijný program">ŠP</abbr>,
+    prop: "sp_skratka",
+  }),
   column({ label: "Ročník", prop: "rocnik", sortKey: sortAs.number }),
   column({
     label: "E-mail",
     prop: "email",
     display: (email: string) =>
       !!email && <a href={"mailto:" + email}>{email}</a>,
+    hide: underXS,
   }),
   column({
     label: "Dátum prihlásenia",
     prop: "datum_prihlasenia",
     sortKey: sortAs.date,
+    hide: underSM,
   }),
 ];
 

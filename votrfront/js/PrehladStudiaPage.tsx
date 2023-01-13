@@ -7,6 +7,7 @@ import {
 } from "./ajax";
 import { currentAcademicYear } from "./coursesStats";
 import { PageLayout, PageTitle } from "./layout";
+import { underSM, underXS } from "./mediaQueries";
 import { QueryContext } from "./router";
 import { column, SortableTable, sortAs } from "./sorting";
 import { Studium, ZapisnyList } from "./types";
@@ -19,12 +20,19 @@ const PrehladStudiumColumns = [
   column({
     label: "Študijný program",
     projection: (item: Studium) => `${item.sp_popis} (${item.sp_skratka})`,
+    expansionMark: true,
   }),
-  column({ label: "Rok štúdia", prop: "rok_studia", sortKey: sortAs.number }),
+  column({
+    label: "Rok štúdia",
+    prop: "rok_studia",
+    sortKey: sortAs.number,
+    hide: underXS,
+  }),
   column({
     label: "Dĺžka v semestroch",
     prop: "sp_dlzka",
     sortKey: sortAs.number,
+    hide: underXS,
   }),
   column({ label: "Začiatok štúdia", prop: "zaciatok", sortKey: sortAs.date }),
   column({ label: "Koniec štúdia", prop: "koniec", sortKey: sortAs.date }),
@@ -32,6 +40,7 @@ const PrehladStudiumColumns = [
     label: "Doplňujúce údaje",
     projection: (item: Studium) =>
       item.sp_doplnujuce_udaje.replace(/^\((.*)\)$/, "$1"),
+    hide: underSM,
   }),
   column({
     label: "Zápisný list",
@@ -46,13 +55,22 @@ const PrehladStudiumColumns = [
 const PrehladStudiumDefaultOrder = "d4";
 
 const PrehladZapisnyListColumns = [
-  column({ label: "Akademický rok", prop: "akademicky_rok" }),
+  column({
+    label: "Akademický rok",
+    prop: "akademicky_rok",
+    expansionMark: true,
+  }),
   column({
     label: "Študijný program",
     projection: (item: ZapisnyList) => `${item.sp_popis} (${item.sp_skratka})`,
   }),
   column({ label: "Ročník", prop: "rocnik", sortKey: sortAs.number }),
-  column({ label: "Dátum zápisu", prop: "datum_zapisu", sortKey: sortAs.date }),
+  column({
+    label: "Dátum zápisu",
+    prop: "datum_zapisu",
+    sortKey: sortAs.date,
+    hide: underXS,
+  }),
 ];
 
 // Akademicky rok (descending), Datum zapisu
