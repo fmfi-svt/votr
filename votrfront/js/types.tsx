@@ -122,7 +122,6 @@ export interface Hodnotenie {
   hodn_znamka_popis: string;
   zapisny_list_key: string;
   predmet_key: string;
-  hodn_key: string;
 }
 
 export interface PriebezneHodnotenie {

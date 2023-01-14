@@ -36,9 +36,8 @@ ZapisVlastnost = namedtuple('ZapisVlastnost', [
 Hodnotenie = keyed_namedtuple('Hodnotenie', [
     'akademicky_rok', 'skratka', 'nazov', 'typ_vyucby', 'semester', 'kredit',
     'hodn_znamka', 'hodn_termin', 'hodn_datum', 'hodn_znamka_popis',
-    'zapisny_list_key', 'predmet_key', 'hodn_key'],
-    predmet_key=['skratka'],
-    hodn_key=['zapisny_list_key', 'skratka'])
+    'zapisny_list_key', 'predmet_key'],
+    predmet_key=['skratka'])
 
 PriebezneHodnotenie = namedtuple('PriebezneHodnotenie', [
     'dovod', 'poc_bodov', 'maximum', 'zaevidoval', 'zapocitavat', 'minimum'])
