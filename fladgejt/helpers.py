@@ -1,6 +1,13 @@
 
 from collections import namedtuple
 from base64 import urlsafe_b64encode, urlsafe_b64decode
+from binascii import crc32
+
+
+# We should change this whenever key definitions change. Effect: decode_key will
+# throw when called with an incompatible key. (Otherwise we would probably just
+# throw when we attempt to unpack the returned tuple right afterwards.)
+_KEY_VERSION = '2'
 
 
 class CantOpenApplication(Exception):
@@ -122,6 +129,14 @@ def keyed_namedtuple(typename, field_names, **key_fields):
     return result_class
 
 
+def _key_checksum(data):
+    # This checksum is not necessary for integrity. It's a developer aid to make
+    # it easier to tell keys apart at a glance. (The raw base64 values tend to
+    # look too similar.)
+    binary = crc32(data.encode('ascii')).to_bytes(4, 'big')
+    return _KEY_VERSION + urlsafe_b64encode(binary)[0:5].decode('ascii')
+
+
 def encode_key(tuple):
     '''Reversibly encode a tuple of strings into a single string.
 
@@ -138,14 +153,18 @@ def encode_key(tuple):
     Returns:
         A string ``s`` such that ``decode_key(s)`` produces the original tuple.
     '''
-    result = []
+    parts = []
     for part in tuple:
         part = part.encode('utf8')
         part = urlsafe_b64encode(part)
         part = part.rstrip(b'=')
         part = part.decode('ascii')
-        result.append(part)
-    return '.'.join(result)
+        parts.append(part)
+    content = '.'.join(parts)
+    return _key_checksum(content) + '~' + content
+
+
+class InvalidKeyError(Exception): pass
 
 
 def decode_key(string):
@@ -158,11 +177,19 @@ def decode_key(string):
     Returns:
         The tuple of strings that was originally given to :func:`encode_key`.
     '''
-    result = []
-    for part in string.split('.'):
-        part = part.encode('ascii')
-        part += b'=' * (-len(part) % 4)
-        part = urlsafe_b64decode(part)
-        part = part.decode('utf8')
-        result.append(part)
-    return tuple(result)
+    try:
+        if not string.startswith(_KEY_VERSION):
+            raise ValueError("Need version " + _KEY_VERSION)
+        checksum, content = string.split('~')
+        if checksum != _key_checksum(content):
+            raise ValueError("Bad checksum")
+        result = []
+        for part in content.split('.'):
+            part = part.encode('ascii')
+            part += b'=' * (-len(part) % 4)
+            part = urlsafe_b64decode(part)
+            part = part.decode('utf8')
+            result.append(part)
+        return tuple(result)
+    except Exception as e:
+        raise InvalidKeyError(string) from e
