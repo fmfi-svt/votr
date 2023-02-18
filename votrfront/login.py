@@ -125,7 +125,7 @@ def start_login(request, destination, params):
 
 def login(request):
     params = request.values.to_dict()
-    return start_login(request, params.pop('destination'), params)
+    return start_login(request, params.pop('destination', ''), params)
 
 
 def reset(request):

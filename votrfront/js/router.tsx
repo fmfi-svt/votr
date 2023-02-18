@@ -75,7 +75,7 @@ export function Root({ app }: { app: React.ComponentType }) {
   );
 }
 
-function buildUrl(href: string | Href) {
+export function buildUrl(href: string | Href) {
   if (_.isString(href)) return href;
   return "?" + $.param(_.omitBy(href, _.isUndefined), true);
 }

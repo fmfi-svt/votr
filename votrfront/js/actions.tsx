@@ -25,7 +25,6 @@ function makeNotFoundPage() {
 }
 
 var actions: Record<string, () => React.ReactNode> = {
-  index: makeIndexPage,
   priebezneHodnotenia: makePriebezneHodnoteniaPage,
   mojeHodnotenia: makeMojeHodnoteniaPage,
   mojePredmety: makeMojePredmetyPage,
@@ -37,6 +36,20 @@ var actions: Record<string, () => React.ReactNode> = {
   zapisZPonuky: makeZapisZPonukyPage,
 };
 
+// TODO: Reduce code duplication of page titles.
+// TODO: Set document.title immediately even if a ...Selector is loading.
+export const actionTitles: Record<string, string> = {
+  priebezneHodnotenia: "Priebežné hodnotenia",
+  mojeHodnotenia: "Moje hodnotenia",
+  mojePredmety: "Moje predmety",
+  mojeSkusky: "Moje skúšky",
+  prehladStudia: "Prehľad štúdia",
+  registerOsob: "Register osôb",
+  registerPredmetov: "Register predmetov",
+  zapisZPlanu: "Zápis predmetov",
+  zapisZPonuky: "Zápis predmetov",
+};
+
 var modalActions: Record<string, React.ComponentType> = {
   about: AboutModal,
   detailPredmetu: DetailPredmetuModal,
@@ -45,8 +58,8 @@ var modalActions: Record<string, React.ComponentType> = {
 
 export function App() {
   var query = useContext(QueryContext);
-  var action = query.action || "index";
-  var maker = actions[action] || makeNotFoundPage;
+  var action = query.action;
+  var maker = action ? actions[action] || makeNotFoundPage : makeIndexPage;
   var modalComponent = Votr.ajaxError
     ? ErrorModal
     : query.modal
