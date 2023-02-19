@@ -9,6 +9,7 @@ export interface VotrVar {
   settings: {
     url_root: string;
     instance_name: string;
+    feedback_link?: string;
     anketa_season?: string;
     anketa_end_msec?: number;
     both_js: boolean;

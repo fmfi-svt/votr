@@ -264,6 +264,18 @@ function MainMenu() {
       />
       <DisabledItem label="Register miestností" />
       <DisabledItem label="Register študijných programov" />
+      {!!Votr.settings.feedback_link && (
+        <>
+          <li>
+            <hr />
+          </li>
+          <li>
+            <a href={Votr.settings.feedback_link} target="_blank">
+              Poslať feedback
+            </a>
+          </li>
+        </>
+      )}
     </ul>
   );
 }
