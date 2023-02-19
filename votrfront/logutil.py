@@ -207,15 +207,41 @@ def cli_tag(app, *args):
     _connect(app).commit()
 
 
-def cli_view(app, sessid):
+def cli_view(app, *args):
+    color = False
+    sessid = None
+
+    it = iter(args)
+    for arg in it:
+        if arg == '-c' or arg == '--color':
+            color = True
+        elif arg.startswith('-'):
+            raise ValueError('Unknown option: %r' % arg)
+        elif sessid is not None:
+            raise ValueError('Too many arguments')
+        else:
+            sessid = arg
+
+    if not sessid:
+        raise ValueError('No sessid or filename given')
+
     filename = locate(app, sessid)
 
     with wrap_pager() as out:
         with open_log(filename) as f:
             for line in f:
                 timestamp, type, message, data = json.loads(line)
-                print("-" * 80, file=out)
-                print("{"+type+"}", message, file=out)
+                tm = time.localtime(timestamp)
+                separator = "~" * 80
+                typestr = "<"+type+">"
+                when = '[%4d-%02d-%02d %02d:%02d:%02d = %.7f]' % (
+                    tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, timestamp)                
+                if color:
+                    print("\033[1;31m%s\033[0m" % separator, file=out)
+                    print("\033[33m%s\033[0m \033[32m%s\033[0m \033[1;36m%s\033[0m" % (when, typestr, message), file=out)
+                else:
+                    print(separator, file=out)
+                    print(when, typestr, message, file=out)
                 print(data, file=out)
 
 
@@ -354,6 +380,7 @@ cli.help = (
     '  $0 log tag +TAGNAME1 -TAGNAME2 SESSID1:LINENO1 SESSID2:LINENO2 ...\n'
     '  $0 log view SESSID\n'
     '  $0 log view FILENAME\n'
+    '    -c, --color           print colored output\n'
     '  $0 log path SESSID1 SESSID2 ...\n'
     '  $0 log list PATTERN ...\n'
     '    -n, --not PATTERN     do not select lines matching PATTERN\n'
