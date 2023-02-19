@@ -78,8 +78,11 @@ def finish_login(request, destination, params):
             client = create_client(server, fladgejt_params, logger=logger)
             csrf_token = generate_key()
             session = dict(
-                csrf_token=csrf_token, credentials=save_credentials(params),
-                client=client)
+                last_announcement=request.app.settings.announcement_html,
+                csrf_token=csrf_token,
+                credentials=save_credentials(params),
+                client=client,
+            )
             sessions.create(request, sessid, session)
         except Exception as e:
             error = traceback.format_exc()

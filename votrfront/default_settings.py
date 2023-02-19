@@ -20,6 +20,8 @@ anketa_end_ymd = (0, 0, 0)
 
 feedback_link = ''
 
+announcement_html = ''
+
 servers = [
     dict(
         title='ais2.uniba.sk + REST',

@@ -2,7 +2,7 @@ import _ from "lodash";
 import React, { useContext, useState } from "react";
 import { AboutModal } from "./About";
 import { actionTitles } from "./actions";
-import { Modal, ModalBase } from "./layout";
+import { Announcement, Modal, ModalBase } from "./layout";
 import { getLocalSetting, setLocalSetting } from "./LocalSettings";
 import { buildUrl, FakeLink, QueryContext } from "./router";
 
@@ -208,6 +208,7 @@ export function LoginPage() {
             na skúšky, prezrite si vaše hodnotenia a skontrolujte si počet
             kreditov bez zbytočného klikania.
           </p>
+          <Announcement />
           <hr />
           <LoginForm onOpenError={() => setModal(() => LoginErrorModal)} />
         </div>

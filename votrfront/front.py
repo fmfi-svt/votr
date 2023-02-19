@@ -69,6 +69,7 @@ def app_response(request, **my_data):
 
     my_data['url_root'] = url_root
     my_data['instance_name'] = instance_name
+    my_data['announcement_html'] = request.app.settings.announcement_html
     my_data['feedback_link'] = request.app.settings.feedback_link
 
     if request.app.settings.anketa_season and request.app.settings.anketa_end_ymd:

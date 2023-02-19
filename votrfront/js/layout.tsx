@@ -103,6 +103,18 @@ export class ErrorBoundary extends React.Component<
   }
 }
 
+export function Announcement() {
+  const announcement = Votr.settings.announcement_html;
+  if (!announcement) return null;
+  return (
+    <p
+      className="alert alert-warning"
+      role="alert"
+      dangerouslySetInnerHTML={{ __html: announcement }}
+    />
+  );
+}
+
 export function PageLayout(props: { children: React.ReactNode }) {
   return (
     <React.Fragment>
@@ -115,6 +127,7 @@ export function PageLayout(props: { children: React.ReactNode }) {
           <div className="container-fluid">
             <ErrorBoundary>
               <AnketaPopup />
+              <Announcement />
               {props.children}
             </ErrorBoundary>
           </div>

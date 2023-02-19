@@ -38,6 +38,11 @@ def rpc_handle_sessions(request, send_json):
         if request.headers.get('X-CSRF-Token') != session['csrf_token']:
             raise ValueError('Bad X-CSRF-Token value')
 
+        current = request.app.settings.announcement_html
+        if current != session.get('last_announcement', None):
+            send_json({ 'announcement_html': current })
+            session['last_announcement'] = current
+
         def send_log(timestamp, type, message, data):
             send_json({ 'log': type, 'message': message, 'time': timestamp })
 
