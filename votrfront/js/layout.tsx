@@ -153,7 +153,7 @@ function PageNavbar() {
     <div className="navbar navbar-inverse navbar-static-top">
       <div className="container-fluid">
         <div className="navbar-header">
-          <Link className="navbar-brand" href={{}}>
+          <Link className="navbar-brand" href="?">
             {Votr.settings.instance_title}
           </Link>
         </div>

@@ -1,10 +1,11 @@
-import { noop } from "lodash-es";
-import React, { useState } from "react";
+import { isEmpty, noop } from "lodash-es";
+import React, { useContext, useState } from "react";
 import { goLogout, goReset, goResetHome } from "./ajax";
 import { Modal, ModalBase } from "./layout";
-import { FakeLink } from "./router";
+import { FakeLink, QueryContext } from "./router";
 
 export function ErrorModal() {
+  const query = useContext(QueryContext);
   const [open, setOpen] = useState(false);
 
   function handleIgnore() {
@@ -51,8 +52,7 @@ export function ErrorModal() {
   // Some errors are caused by a malformed URL, so resetting won't help. If
   // we haven't navigated since the last full reload (the user has probably
   // reset just now), we redirect to the front page instead.
-  const goHome =
-    !Votr.didNavigate && !Votr.settings.error && location.search.substring(1);
+  const goHome = !Votr.didNavigate && !Votr.settings.error && !isEmpty(query);
 
   return (
     <Modal title={title} closeButton={false}>

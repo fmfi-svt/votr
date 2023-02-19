@@ -2,6 +2,15 @@ import { pickBy } from "lodash-es";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Href, Query } from "./types";
 
+// We should change this whenever URLs change incompatibly, e.g. if fladgejt key
+// definitions change. Effect: Votr will ignore all query parameters except
+// "action" if the version doesn't match.
+//
+// See also the server-side _KEY_VERSION.
+const URL_VERSION = "2";
+
+const URL_VERSION_KEY = "u";
+
 let trackPageViewLast: string | undefined;
 
 function trackPageView() {
@@ -48,10 +57,14 @@ export function Root({ app }: { app: React.ComponentType }) {
 
   const queryString = location.search;
 
-  const query = useMemo(
-    () => Object.fromEntries(new URLSearchParams(queryString)),
-    [queryString]
-  );
+  const query = useMemo(() => {
+    const result = Object.fromEntries(new URLSearchParams(queryString));
+    if (result[URL_VERSION_KEY] === URL_VERSION) {
+      return pickBy(result, (value, key) => key !== URL_VERSION_KEY);
+    } else {
+      return pickBy(result, (value, key) => key === "action");
+    }
+  }, [queryString]);
 
   const C = app;
   return (
@@ -72,7 +85,9 @@ export function buildUrl(href: string | Href) {
   if (typeof href == "string") return href;
   // omitBy(isUndefined) works too but lodash TypeScript typings don't handle
   // type guards on omitBy, only on pickBy.
-  return "?" + String(new URLSearchParams(pickBy(href, isNotNullOrUndefined)));
+  const filteredHref = pickBy(href, isNotNullOrUndefined);
+  const finalHref = { [URL_VERSION_KEY]: URL_VERSION, ...filteredHref };
+  return "?" + String(new URLSearchParams(finalHref));
 }
 
 export function navigate(href: string | Href) {

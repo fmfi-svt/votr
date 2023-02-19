@@ -7,6 +7,9 @@ from binascii import crc32
 # We should change this whenever key definitions change. Effect: decode_key will
 # throw when called with an incompatible key. (Otherwise we would probably just
 # throw when we attempt to unpack the returned tuple right afterwards.)
+#
+# The client-side URL_VERSION is arguably more important, because that's what
+# makes sure we don't call RPCs with incompatible keys in the first place.
 _KEY_VERSION = '2'
 
 
