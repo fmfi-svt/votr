@@ -8,7 +8,7 @@ dist
 *~
 .*
 !.git*
-/*env
+/*env*/
 var
 docs/_build
 *.ipynb
@@ -16,10 +16,3 @@ docs/_build
 !default_settings.py
 gunicorn.conf.py
 *.log
-
-# TODO: Remove later.
-/sessions
-/logs
-/logdb
-/oldlogs
-/logarchive
