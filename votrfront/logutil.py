@@ -320,13 +320,13 @@ def cli_list(app, *args):
     if match_from is None:
         match_from = 00000000
     else:
-        query += " AND timestamp > unixepoch(?, '-2 days')"
+        query += " AND timestamp > cast(strftime('%s', ?, '-2 days') as number)"
         params.append('%04d-%02d-%02d' % (match_from // 10000, match_from // 100 % 100, match_from % 100))
 
     if match_to is None:
         match_to = 99999999
     else:
-        query += " AND timestamp < unixepoch(?, '+2 days')"
+        query += " AND timestamp < cast(strftime('%s', ?, '+2 days') as number)"
         params.append('%04d-%02d-%02d' % (match_to // 10000, match_to // 100 % 100, match_to % 100))
 
     # Patterns are regexps which can match anywhere in the formatted line.
