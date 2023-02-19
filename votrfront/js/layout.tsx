@@ -103,6 +103,18 @@ export class ErrorBoundary extends React.Component<
   }
 }
 
+export function Announcement() {
+  const announcement = Votr.settings.announcement_html;
+  if (!announcement) return null;
+  return (
+    <p
+      className="alert alert-warning"
+      role="alert"
+      dangerouslySetInnerHTML={{ __html: announcement }}
+    />
+  );
+}
+
 export function PageLayout(props: { children: React.ReactNode }) {
   return (
     <React.Fragment>
@@ -115,6 +127,7 @@ export function PageLayout(props: { children: React.ReactNode }) {
           <div className="container-fluid">
             <ErrorBoundary>
               <AnketaPopup />
+              <Announcement />
               {props.children}
             </ErrorBoundary>
           </div>
@@ -264,6 +277,18 @@ function MainMenu() {
       />
       <DisabledItem label="Register miestností" />
       <DisabledItem label="Register študijných programov" />
+      {!!Votr.settings.feedback_link && (
+        <>
+          <li>
+            <hr />
+          </li>
+          <li>
+            <a href={Votr.settings.feedback_link} target="_blank">
+              Poslať feedback
+            </a>
+          </li>
+        </>
+      )}
     </ul>
   );
 }

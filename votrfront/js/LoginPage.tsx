@@ -1,8 +1,10 @@
 import _ from "lodash";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import { AboutModal } from "./About";
-import { Modal, ModalBase } from "./layout";
-import { FakeLink } from "./router";
+import { actionTitles } from "./actions";
+import { Announcement, Modal, ModalBase } from "./layout";
+import { getLocalSetting, setLocalSetting } from "./LocalSettings";
+import { buildUrl, FakeLink, QueryContext } from "./router";
 
 var TYPE_NAMES: Record<string, string> = {
   "cosignproxy": "Cosign (automatické)",
@@ -11,6 +13,34 @@ var TYPE_NAMES: Record<string, string> = {
   "plainpassword": "Meno a heslo",
   "demo": "Demo",
 };
+
+function DestinationCheckbox() {
+  var query = useContext(QueryContext);
+  var { action, modal } = query;
+  var actionTitle = action && actionTitles[action];
+
+  // Don't show the checkbox if the query string is empty or it only contains
+  // foreign params (?fbclid=...).
+  if (!action && !modal) return null;
+
+  return (
+    <p>
+      <label>
+        <input
+          type="checkbox"
+          name="destination"
+          value={buildUrl(query)}
+          checked={getLocalSetting("useDestination") == "true"}
+          onChange={(event) => {
+            setLocalSetting("useDestination", String(event.target.checked));
+          }}
+        />{" "}
+        Začať tam kde predtým {actionTitle ? "(" + actionTitle + ") " : null}
+        podľa uloženej webovej adresy
+      </label>
+    </p>
+  );
+}
 
 function LoginForm({ onOpenError }: { onOpenError: () => void }) {
   var [state, setState] = useState({
@@ -62,7 +92,7 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
         </React.Fragment>
       )}
 
-      <input type="hidden" name="destination" value={location.search} />
+      <DestinationCheckbox />
 
       {Votr.settings.servers!.length > 1 ? (
         <p>
@@ -178,6 +208,7 @@ export function LoginPage() {
             na skúšky, prezrite si vaše hodnotenia a skontrolujte si počet
             kreditov bez zbytočného klikania.
           </p>
+          <Announcement />
           <hr />
           <LoginForm onOpenError={() => setModal(() => LoginErrorModal)} />
         </div>

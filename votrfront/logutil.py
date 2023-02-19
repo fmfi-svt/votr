@@ -1,7 +1,6 @@
 
 import contextlib
 import gzip
-import io
 import json
 import lzma
 import os
@@ -52,26 +51,31 @@ def classify(line):
 
 
 class Line:
-    def __init__(self, sessid, lineno, tags, content):
+    def __init__(self, sessid, lineno, tags, content, timestamp):
         self.sessid = sessid
         self.lineno = lineno
         self.tags = tags
         self.content = content
-        self.timestamp, self.type, self.message, self.data = json.loads(content)
+        self.timestamp = timestamp
 
 
 def _connect(app):
     if not hasattr(app, 'logutil_conn'):
         app.logutil_conn = sqlite3.connect(app.var_path('logdb/logdb.sqlite'))
         c = app.logutil_conn.cursor()
-        c.execute('''CREATE TABLE IF NOT EXISTS lines (
-            sessid TEXT,
-            lineno INTEGER,
-            tags TEXT,
-            content TEXT,
-            PRIMARY KEY (sessid, lineno)
-        )
-        ''')
+        # sub(\s+) is just to look nicer when you print ".schema".
+        c.execute(re.sub(r'\s+', ' ', '''
+            CREATE TABLE IF NOT EXISTS lines (
+                sessid TEXT,
+                lineno INTEGER,
+                tags TEXT,
+                content TEXT,
+                timestamp INTEGER GENERATED ALWAYS AS (JSON_EXTRACT(content, '$[0]')) STORED,
+                PRIMARY KEY (sessid, lineno)
+            )
+        '''))
+        c.execute('CREATE INDEX IF NOT EXISTS lines_tags ON lines (tags)')
+        c.execute('CREATE INDEX IF NOT EXISTS lines_timestamp ON lines (timestamp)')
     return app.logutil_conn
 
 
@@ -131,7 +135,7 @@ def process_logfiles(app, files):
                         if re.search(BASE_PATTERN, line):
                             try:
                                 c.execute(
-                                    'INSERT INTO lines VALUES (?, ?, ?, ?)',
+                                    'INSERT INTO lines (sessid, lineno, tags, content) VALUES (?, ?, ?, ?)',
                                     (sessid, lineno, 'new', line.strip()))
                             except sqlite3.IntegrityError:
                                 pass   # row already present
@@ -141,8 +145,8 @@ def process_logfiles(app, files):
                 errors.append((filename, sys.exc_info()))
 
     c.execute("SELECT * FROM lines WHERE tags = 'new'")
-    for sessid, lineno, tags, content in c:
-        line = Line(sessid, lineno, tags, content)
+    for sessid, lineno, tags, content, timestamp in c:
+        line = Line(sessid, lineno, tags, content, timestamp)
         new_tags = classify(line).split()
         if new_tags:
             set_tags(app, sessid, lineno, new_tags, ['new'])
@@ -161,10 +165,14 @@ def process_logfiles(app, files):
 @contextlib.contextmanager
 def wrap_pager():
     if os.isatty(0) and os.isatty(1):
-        buf = io.StringIO()
-        yield buf
-        sp = subprocess.Popen(PAGER, stdin=subprocess.PIPE)
-        sp.communicate(buf.getvalue().encode('utf8'))
+        sp = subprocess.Popen(PAGER, stdin=subprocess.PIPE, encoding='utf8')
+        try:
+            yield sp.stdin
+        except BrokenPipeError:
+            print('Broken pipe', file=sys.stderr)
+        sp.stdin.close()
+        if sp.wait() != 0:
+            raise OSError("Pager return code %s" % sp.returncode)
     else:
         yield sys.stdout
 
@@ -199,15 +207,41 @@ def cli_tag(app, *args):
     _connect(app).commit()
 
 
-def cli_view(app, sessid):
+def cli_view(app, *args):
+    color = False
+    sessid = None
+
+    it = iter(args)
+    for arg in it:
+        if arg == '-c' or arg == '--color':
+            color = True
+        elif arg.startswith('-'):
+            raise ValueError('Unknown option: %r' % arg)
+        elif sessid is not None:
+            raise ValueError('Too many arguments')
+        else:
+            sessid = arg
+
+    if not sessid:
+        raise ValueError('No sessid or filename given')
+
     filename = locate(app, sessid)
 
     with wrap_pager() as out:
         with open_log(filename) as f:
             for line in f:
                 timestamp, type, message, data = json.loads(line)
-                print("-" * 80, file=out)
-                print("{"+type+"}", message, file=out)
+                tm = time.localtime(timestamp)
+                separator = "~" * 80
+                typestr = "<"+type+">"
+                when = '[%4d-%02d-%02d %02d:%02d:%02d = %.7f]' % (
+                    tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, timestamp)                
+                if color:
+                    print("\033[1;31m%s\033[0m" % separator, file=out)
+                    print("\033[33m%s\033[0m \033[32m%s\033[0m \033[1;36m%s\033[0m" % (when, typestr, message), file=out)
+                else:
+                    print(separator, file=out)
+                    print(when, typestr, message, file=out)
                 print(data, file=out)
 
 
@@ -255,8 +289,8 @@ def format_files(app, line):
 def cli_list(app, *args):
     match = []
     match_not = []
-    match_from = 00000000
-    match_to = 99999999
+    match_from = None
+    match_to = None
     formatter = format_plain
 
     it = iter(args)
@@ -280,25 +314,46 @@ def cli_list(app, *args):
         else:
             match.append(arg)
 
-    lines = []
+    query = 'SELECT * FROM lines WHERE 1'
+    params = []
+
+    if match_from is None:
+        match_from = 00000000
+    else:
+        query += " AND timestamp > unixepoch(?, '-2 days')"
+        params.append('%04d-%02d-%02d' % (match_from // 10000, match_from // 100 % 100, match_from % 100))
+
+    if match_to is None:
+        match_to = 99999999
+    else:
+        query += " AND timestamp < unixepoch(?, '+2 days')"
+        params.append('%04d-%02d-%02d' % (match_to // 10000, match_to // 100 % 100, match_to % 100))
+
+    # Patterns are regexps which can match anywhere in the formatted line.
+    # But simple patterns like '%foo' also have to match the tags column, to
+    # keep things fast. Wrap it in '()' if you really want whole line regexp.
+    for pattern in match:
+        if re.match(r'^T\w+$'.replace('T', re.escape(TAG_PREFIX)), pattern):
+            query += ' AND tags LIKE ?'
+            params.append('%' + pattern[1:] + '%')
+
+    query += ' ORDER BY timestamp'
+
     c = _connect(app).cursor()
-    c.execute('SELECT * FROM lines')
-    for sessid, lineno, tags, content in c:
-        line = Line(sessid, lineno, tags, content)
-        plain = format_plain(app, line)
-        tm = time.localtime(line.timestamp)
-        date = int('%d%02d%02d' % (tm.tm_year, tm.tm_mon, tm.tm_mday))
-
-        if (all(re.search(pattern, plain) for pattern in match) and
-            all(not re.search(pattern, plain) for pattern in match_not) and
-            match_from <= date <= match_to):
-            lines.append(line)
-
-    lines.sort(key=lambda l: l.timestamp)
-
+    c.execute(query, params)
     with wrap_pager() as out:
-        for line in lines:
-            print(formatter(app, line), file=out)
+        for sessid, lineno, tags, content, timestamp in c:
+            line = Line(sessid, lineno, tags, content, timestamp)
+            plain = format_plain(app, line)
+            tm = time.localtime(line.timestamp)
+            date = int('%d%02d%02d' % (tm.tm_year, tm.tm_mon, tm.tm_mday))
+
+            if (
+                all(re.search(pattern, plain) for pattern in match) and
+                all(not re.search(pattern, plain) for pattern in match_not) and
+                match_from <= date <= match_to
+            ):
+                print(formatter(app, line), file=out)
 
 
 def cli_process(app, *files):
@@ -325,6 +380,7 @@ cli.help = (
     '  $0 log tag +TAGNAME1 -TAGNAME2 SESSID1:LINENO1 SESSID2:LINENO2 ...\n'
     '  $0 log view SESSID\n'
     '  $0 log view FILENAME\n'
+    '    -c, --color           print colored output\n'
     '  $0 log path SESSID1 SESSID2 ...\n'
     '  $0 log list PATTERN ...\n'
     '    -n, --not PATTERN     do not select lines matching PATTERN\n'

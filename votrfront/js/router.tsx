@@ -75,7 +75,7 @@ export function Root({ app }: { app: React.ComponentType }) {
   );
 }
 
-function buildUrl(href: string | Href) {
+export function buildUrl(href: string | Href) {
   if (_.isString(href)) return href;
   return "?" + $.param(_.omitBy(href, _.isUndefined), true);
 }
@@ -88,7 +88,7 @@ export function navigate(href: string | Href) {
 
 export function Link(
   props: { href: string | Href } & Omit<
-    React.HTMLAttributes<HTMLAnchorElement>,
+    React.AnchorHTMLAttributes<HTMLAnchorElement>,
     "href"
   >
 ) {

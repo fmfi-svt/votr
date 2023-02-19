@@ -1,6 +1,9 @@
 import React, { useEffect } from "react";
 import { Rpcs } from "./types";
 
+interface RpcAnnouncementPayload {
+  announcement_html: string;
+}
 interface RpcLogPayload {
   log: string;
   message: string;
@@ -12,7 +15,11 @@ interface RpcErrorPayload {
 interface RpcResultPayload {
   result: {} | null;
 }
-type RpcPayload = RpcLogPayload | RpcErrorPayload | RpcResultPayload;
+type RpcPayload =
+  | RpcAnnouncementPayload
+  | RpcLogPayload
+  | RpcErrorPayload
+  | RpcResultPayload;
 
 function sendRawRpc<N extends keyof Rpcs>(
   name: N,
@@ -65,6 +72,10 @@ function sendRawRpc<N extends keyof Rpcs>(
           responseURL: xhr.responseURL,
         });
         return fail("Network error: RPC parse error: " + error);
+      }
+      if ("announcement_html" in data) {
+        console.debug("Received new announcement:", data.announcement_html);
+        Votr.settings.announcement_html = data.announcement_html;
       }
       if ("log" in data) {
         console.debug("Received " + name + " log:", data.log, data.message);
