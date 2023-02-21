@@ -8,11 +8,12 @@ from .predmety import WebuiPredmetyMixin
 from .studium import WebuiStudiumMixin
 from .terminy import WebuiTerminyMixin
 from .zapis import WebuiZapisMixin
+from .test_fladgejt import WebuiTestFladgejtMixin
 
 
 class WebuiClient(WebuiCommonUIMixin, WebuiHodnoteniaMixin, WebuiObdobiaMixin,
                   WebuiOsobyMixin, WebuiPredmetyMixin, WebuiStudiumMixin,
-                  WebuiTerminyMixin, WebuiZapisMixin):
+                  WebuiTerminyMixin, WebuiZapisMixin, WebuiTestFladgejtMixin):
     def __init__(self, context):
         self.context = context
 
