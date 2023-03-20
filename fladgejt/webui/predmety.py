@@ -3,7 +3,7 @@ import base64
 
 from aisikl.app import Application, assert_ops
 from fladgejt.webui.pool import pooled_app
-from fladgejt.helpers import find_option, find_row, decode_key
+from fladgejt.helpers import find_row, decode_key
 from fladgejt.structures import RegUcitelPredmetu, PrihlasenyStudent, RegPredmet
 
 
@@ -65,15 +65,15 @@ class WebuiPredmetyMixin:
                        stredisko=None, skratka_sp=None):
         message = []
 
-        app.d.fakultaUniverzitaComboBox.select(find_option(app.d.fakultaUniverzitaComboBox.options, id=(fakulta or '')))
+        app.d.fakultaUniverzitaComboBox.select_by_id(fakulta or '')
 
-        app.d.semesterComboBox.select(find_option(app.d.semesterComboBox.options, id=(semester or '')))
+        app.d.semesterComboBox.select_by_id(semester or '')
 
-        app.d.stupenPredmetuComboBox.select(find_option(app.d.stupenPredmetuComboBox.options, id=(stupen_predmetu or '')))
+        app.d.stupenPredmetuComboBox.select_by_id(stupen_predmetu or '')
 
-        app.d.typPredmetuComboBox.select(find_option(app.d.typPredmetuComboBox.options, id=(typ_predmetu or '')))
+        app.d.typPredmetuComboBox.select_by_id(typ_predmetu or '')
 
-        app.d.zobrazitLenComboBox.select(find_option(app.d.zobrazitLenComboBox.options, id=(zobrazit_len or '')))
+        app.d.zobrazitLenComboBox.select_by_id(zobrazit_len or '')
 
         app.d.skratkaPredmetuTextField.write(skratka_predmetu or '')
 
@@ -95,8 +95,7 @@ class WebuiPredmetyMixin:
         if app.d.vyucujuciTextField.value:
             app.d.odobratVyucujucehoButton.click()
 
-        app.d.akRokComboBox.select(
-            find_option(app.d.akRokComboBox.options, id=akademicky_rok))
+        app.d.akRokComboBox.select_by_id(akademicky_rok)
 
         return ' '.join(message) or None
 
@@ -187,31 +186,23 @@ class WebuiPredmetyMixin:
         app = self._open_nastenka_predmetu()
 
         fakulta = fakulty.split(',')[0]
-        fakulta_index = find_option(app.d.fakultaComboBox.options, id=fakulta)
-        if app.d.fakultaComboBox.selected_index != fakulta_index:
-            app.d.fakultaComboBox.select(fakulta_index)
+        if app.d.fakultaComboBox.select_by_id(fakulta, unless_selected=True):
             app.d.potvrditOrgJednotkuButton.click()
 
         # automaticky nacitavanie ucitelov do tabulky
         app.d.nacitavatAutomatickyCheckBox.set_to(True)
 
-        akademicky_rok_index = find_option(app.d.rokComboBox.options, title=akademicky_rok)
-        if app.d.rokComboBox.selected_index != akademicky_rok_index:
-            app.d.rokComboBox.select(akademicky_rok_index)
+        app.d.rokComboBox.select_by_title(akademicky_rok, unless_selected=True)
 
         app.d.skratkaTextField.write(skratka_predmetu)
 
         # nastavime zobrazenie vsetkych predmetov, nie len tych co
         # mame zapisane.
-        zobrazit_index = find_option(app.d.zobrazitComboBox.options, id="VSETKY")
-        if app.d.zobrazitComboBox.selected_index != zobrazit_index:
-            app.d.zobrazitComboBox.select(zobrazit_index)
+        app.d.zobrazitComboBox.select_by_id("VSETKY", unless_selected=True)
 
         mozne_semestre = [semester] if semester else ["Z", "L"]
         for semester in mozne_semestre:
-            semester_index = find_option(app.d.semesterComboBox.options, id=semester)
-            if app.d.semesterComboBox.selected_index != semester_index:
-                app.d.semesterComboBox.select(semester_index)
+            app.d.semesterComboBox.select_by_id(semester, unless_selected=True)
 
             app.d.nacitatPredmetyButton.click()
 

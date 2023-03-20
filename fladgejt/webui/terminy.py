@@ -1,15 +1,13 @@
 
 from aisikl.app import assert_ops
 from fladgejt.helpers import (
-    CantOpenApplication, find_row, find_option, encode_key, decode_key)
+    CantOpenApplication, find_row, encode_key, decode_key)
 from fladgejt.structures import Predmet, Termin, PrihlasenyStudent
 
 
 class WebuiTerminyMixin:
     def __vyber_oba_semestre(self, app):
-        index = find_option(app.d.semesterComboBox.options, title='')
-        if app.d.semesterComboBox.selected_index != index:
-            app.d.semesterComboBox.select(index)
+        if app.d.semesterComboBox.select_by_title('', unless_selected=True):
             app.d.filterAction.execute()
 
     def get_vidim_terminy_hodnotenia(self, zapisny_list_key):

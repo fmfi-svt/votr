@@ -2,7 +2,6 @@
 
 from aisikl.app import Application, assert_ops
 from fladgejt.webui.pool import pooled_app
-from fladgejt.helpers import find_option
 from fladgejt.structures import RegOsoba
 
 
@@ -51,8 +50,7 @@ class WebuiOsobyMixin:
         app.d.priezviskoTextField.write(priezvisko or '')
 
         if absolvent or student or zamestnanec:
-            app.d.akademickyRokComboBox.select(find_option(
-                app.d.akademickyRokComboBox.options, title=akademicky_rok))
+            app.d.akademickyRokComboBox.select_by_title(akademicky_rok)
 
             with app.collect_operations() as ops:
                 app.d.odstranitFakultuButton.click()

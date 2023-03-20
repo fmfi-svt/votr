@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
 from aisikl.app import Application, assert_ops, DEFAULT_IGNORED_MESSAGES
-from aisikl.exceptions import AISBehaviorError
+from aisikl.exceptions import AISBehaviorError, NotFoundError
 from fladgejt.helpers import (
-    CantOpenApplication, find_row, find_option, encode_key, decode_key)
+    CantOpenApplication, find_row, encode_key, decode_key)
 from fladgejt.structures import Studium, ZapisnyList, Hodnotenie
 from fladgejt.webui.pool import pooled_app
 
@@ -272,20 +272,18 @@ class WebuiStudiumMixin:
 
         # V combo boxe vyberieme rok studia.
         if rok_studia is not None:
-            app.d.rocnikComboBox.select(find_option(app.d.rocnikComboBox.options, id=str(rok_studia)))
+            app.d.rocnikComboBox.select_by_id(str(rok_studia))
 
         # Ak je nastaveny akademicky rok, vyberieme ho v combo boxe.
         if akademicky_rok is not None:
             try:
-                option = find_option(app.d.rokComboBox.options, id=akademicky_rok)
+                app.d.rokComboBox.select_by_id(akademicky_rok)
             # Snazime sa vytvorit zapisny list na akademicky rok, ktory nie je na vyber v comboBoxe
-            except KeyError:
+            except NotFoundError:
                 with app.collect_operations() as ops:
                     app.d.click_close_button()
                 app.awaited_close_dialog(ops)
                 return "Na tento akademický rok sa nedá vytvoriť zápisný list."
-
-            app.d.rokComboBox.select(option)
 
         # Stlacime tlacidlo "OK".
         with app.collect_operations() as ops:

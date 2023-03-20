@@ -1,7 +1,6 @@
 
 from aisikl.app import assert_ops
-from fladgejt.helpers import (
-    CantOpenApplication, find_row, find_option, decode_key)
+from fladgejt.helpers import CantOpenApplication, find_row, decode_key
 from fladgejt.structures import ZapisPredmet, ZapisVlastnost
 
 
@@ -104,13 +103,11 @@ class WebuiZapisMixin:
                 self._show_all_columns(app, app.d.predmetyTable)
 
             # Zrusime filter podla odporucaneho rocniku.
-            index = find_option(app.d.rocnikComboBox.options, title='')
-            app.d.rocnikComboBox.select(index)
+            app.d.rocnikComboBox.select_by_title('')
 
             # Ak sa da, zrusime filter podla typu vyucby.
             if app.d.typComboBox.is_really_enabled():
-                index = find_option(app.d.typComboBox.options, title='')
-                app.d.typComboBox.select(index)
+                app.d.typComboBox.select_by_title('')
 
             # Nacitame vsetky predmety.
             app.d.zobrazitPredmetyButton.click()
@@ -181,8 +178,7 @@ class WebuiZapisMixin:
 
             if not found_all:
                 # Ak nevidime, zrusime filter podla odporucaneho rocniku.
-                index = find_option(app.d.rocnikComboBox.options, title='')
-                app.d.rocnikComboBox.select(index)
+                app.d.rocnikComboBox.select_by_title('')
 
                 # Nacitame vsetky predmety.
                 app.d.zobrazitPredmetyButton.click()
@@ -256,7 +252,7 @@ class WebuiZapisMixin:
             (not stredisko or not app.d.strediskoTextTextField.value)):
             return None
 
-        app.d.fakultaComboBox.select(find_option(app.d.fakultaComboBox.options, id=(fakulta or '')))
+        app.d.fakultaComboBox.select_by_id(fakulta or '')
 
         app.d.predmetSkratkaTextField.write(filter_skratka or '')
 

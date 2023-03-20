@@ -34,3 +34,12 @@ class RESTServerError(AisiklError):
 
 class LoggedOutError(AisiklError):
     '''Request couldn't be completed because we are no longer logged in.'''
+
+
+class NotFoundError(AisiklError):
+    '''The searched item (e.g. table row, combo box option) was not found.'''
+
+
+class AmbiguousItemError(AisiklError):
+    '''There were multiple matching items (e.g. table rows, combo box options),
+    but we expected only one, so we don't know what's the right one to pick.'''

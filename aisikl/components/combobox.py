@@ -1,7 +1,8 @@
 
 from collections import namedtuple
-from .control import Control
+from aisikl.components.control import Control
 from aisikl.events import selection_event
+from aisikl.exceptions import AmbiguousItemError, NotFoundError
 
 
 Option = namedtuple('Option', ['title', 'id', 'tool_tip_text'])
@@ -35,6 +36,27 @@ class ComboBox(Control):
             self.options[index].title, self.id))
         self.selected_index = index
         self._fire_event()
+
+    def _select_by_attr(self, name, value, unless_selected):
+        matches = [i for i, option in enumerate(self.options) if getattr(option, name) == value]
+        if not matches:
+            raise NotFoundError("Combo box option with {} = {!r} not found".format(name, value))
+        if len(matches) > 1:
+            raise AmbiguousItemError("Multiple combo box options have {} = {!r}".format(name, value))
+
+        if unless_selected and self.selected_index == matches[0]:
+            return False
+        else:
+            self.select(matches[0])
+            return True
+
+    def select_by_id(self, id, *, unless_selected=False):
+        # I'm not sure if unless_selected=False is the best default, but that's
+        # how the code worked before I added this helper function...
+        return self._select_by_attr('id', id, unless_selected)
+
+    def select_by_title(self, title, *, unless_selected=False):
+        return self._select_by_attr('title', title, unless_selected)
 
     def _fire_event(self):
         self.dialog.component_changes(self, False)

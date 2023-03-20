@@ -52,26 +52,6 @@ def find_row_insensitive(objects, **conditions):
     raise KeyError("Object not found: {!r}".format(conditions))
 
 
-def find_option(objects, **conditions):
-    '''Searches the list of objects for one that matches all given conditions.
-
-    ``obj.foo == bar`` must be true for all ``foo=bar`` keyword arguments for
-    ``obj`` to match. The index of the first matching object is returned. This
-    is useful for combo box options and similar objects.
-
-    :param objects: List of objects.
-    :param \*\*conditions: The conditions that the object must match.
-    Returns:
-        The index of the first object that had all the given keys and values.
-    Raises:
-        KeyError: Raised if no such object is found.
-    '''
-    for index, obj in enumerate(objects):
-        if all(getattr(obj, key) == value for key, value in conditions.items()):
-            return index
-    raise KeyError("Object not found: {!r}".format(conditions))
-
-
 _keyed_namedtuple_template = '''
 def __new__(_cls, {args_none}):
     {keys}
