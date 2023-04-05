@@ -1,9 +1,49 @@
 from aisikl.app import assert_ops
-from aisikl.exceptions import AISBehaviorError
-from fladgejt.helpers import find_row_insensitive
+from aisikl.exceptions import AISBehaviorError, AmbiguousItemError, NotFoundError
+
+
+def _normal_eq(a, b):
+    return a == b
+
+def _insensitive_eq(a, b):
+    return a.casefold() == b.casefold()
 
 
 class WebuiCommonUIMixin:
+    def _find_row(self, rows, case_insensitive=False, allow_ambiguous=False, **conditions):
+        '''Searches the list of rows for one that matches all given
+        conditions. Returns the index of the matching row.
+
+        :param rows: List of table rows.
+        :param case_insensitive: Ignore letter case in string comparisons.
+        :param allow_ambiguous: Allow multiple matching rows and just return
+            the first one. If False (default), multiple matching rows will
+            raise an error.
+        :param \*\*conditions: Key-value pairs which must exist in the row. If
+            conditions contains an item ``'foo': 'bar'``, that means we're
+            looking for rows that have ``row['foo'] == 'bar'``.
+        Returns:
+            The index of the row that matches all conditions.
+        Raises:
+            KeyNotFoundError: Raised if no such row is found.
+            AmbiguousKeyError: Raised if allow_ambigous is False and multiple
+                matching rows were found.
+        '''
+        eq = _insensitive_eq if case_insensitive else _normal_eq
+        found = [
+            index
+            for index, row in enumerate(rows)
+            if all(eq(row[key], value) for key, value in conditions.items())
+        ]
+        if not found:
+            raise NotFoundError("Row not found: {!r}".format(conditions))
+        if len(found) > 1:
+            if allow_ambiguous:
+                self.context.log('ambiguous', "{} rows match".format(len(found)), conditions)
+            else:
+                raise AmbiguousItemError("{} rows match {!r}".format(len(found), conditions))
+        return found[0]
+
     def _select_ciselnik(self, app, text, select_button, compare_column):
         # Ciselnik typu SSSC001
         if text is not None:
@@ -26,8 +66,8 @@ class WebuiCommonUIMixin:
 
                 app.awaited_open_dialog(ops)
                 try:
-                    index = find_row_insensitive(app.d.table.all_rows(), **{compare_column: text})
-                except KeyError:
+                    index = self._find_row(app.d.table.all_rows(), case_insensitive=True, **{compare_column: text})
+                except NotFoundError:
                     with app.collect_operations() as ops:
                         app.d.closeButton.click()
 

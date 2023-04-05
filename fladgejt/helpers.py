@@ -43,15 +43,6 @@ def find_row(objects, **conditions):
     raise KeyError("Object not found: {!r}".format(conditions))
 
 
-def find_row_insensitive(objects, **conditions):
-    '''Same as :func:`find_row` but case insensitive.'''
-    for index, obj in enumerate(objects):
-        if all(obj[key].lower() == value.lower()
-               for key, value in conditions.items()):
-            return index
-    raise KeyError("Object not found: {!r}".format(conditions))
-
-
 _keyed_namedtuple_template = '''
 def __new__(_cls, {args_none}):
     {keys}
