@@ -154,25 +154,29 @@ function ZapisTableFooter(props: {
   );
 }
 
-function ZapisTable(props: {
+function ZapisTable({
+  predmety,
+  odoberPredmety,
+  pridajPredmety,
+  akademickyRok,
+  zPlanu,
+  tableMessage,
+}: {
   predmety: Map<string, MojZapisPredmet> | undefined;
   odoberPredmety: (
     predmety: ZapisPredmet[],
-    callback: (message: string | null) => void
+    callback: (mutationMessage: string | null) => void
   ) => void;
   pridajPredmety: (
     predmety: ZapisPredmet[],
-    callback: (message: string | null) => void
+    callback: (mutationMessage: string | null) => void
   ) => void;
   akademickyRok: string | undefined;
   zPlanu: boolean;
-  message: string | null | undefined;
+  tableMessage: string | null | undefined;
 }) {
   var [saving, setSaving] = useState(false);
   var [changes, setChanges] = useState<Record<string, boolean | undefined>>({});
-
-  const predmety = props.predmety;
-  const akademickyRok = props.akademickyRok;
 
   // Chceme, aby sa pre ZapisTable zachoval state aj vtedy, ked tabulku
   // nevidno, lebo sme prave zapisali predmety a obnovujeme zoznam predmetov.
@@ -237,14 +241,14 @@ function ZapisTable(props: {
       invalidateRequestCache("zapis_get_zapisane_predmety");
     };
 
-    props.odoberPredmety(odoberanePredmety, (message) => {
-      if (message) {
-        alert(message);
+    odoberPredmety(odoberanePredmety, (mutationMessage) => {
+      if (mutationMessage) {
+        alert(mutationMessage);
         koniec(false, false);
       } else {
-        props.pridajPredmety(pridavanePredmety, (message) => {
-          if (message) {
-            alert(message);
+        pridajPredmety(pridavanePredmety, (mutationMessage) => {
+          if (mutationMessage) {
+            alert(mutationMessage);
             koniec(true, false);
           } else {
             koniec(true, true);
@@ -308,7 +312,7 @@ function ZapisTable(props: {
     }),
 
     // #2
-    props.zPlanu
+    zPlanu
       ? column({
           label: "Blok",
           sortKey: (predmet: ZapisPredmet) =>
@@ -390,7 +394,7 @@ function ZapisTable(props: {
     }),
 
     // #9?
-    ...(props.zPlanu
+    ...(zPlanu
       ? [
           column({
             label: "Odporúčaný ročník",
@@ -410,10 +414,10 @@ function ZapisTable(props: {
   ];
 
   // Z planu: Typ, Blok, Odporucany rocnik, Nazov. Z ponuky: Nazov.
-  const defaultOrder = props.zPlanu ? "a1a2a9a3" : "a3";
+  const defaultOrder = zPlanu ? "a1a2a9a3" : "a3";
 
   const footer = (size: ScreenSize) =>
-    props.zPlanu && (
+    zPlanu && (
       <ZapisTableFooter predmety={predmety} moje={checked} size={size} />
     );
 
@@ -426,7 +430,7 @@ function ZapisTable(props: {
         defaultOrder={defaultOrder}
         queryKey="predmetySort"
         footer={footer}
-        message={props.message}
+        message={tableMessage}
       />
       {saveButton}
     </form>
@@ -521,7 +525,7 @@ function ZapisZPlanuPageContent() {
       {outerMessage}
       <ZapisTable
         predmety={predmety}
-        message={tableMessage}
+        tableMessage={tableMessage}
         akademickyRok={akademickyRok}
         odoberPredmety={odoberPredmety}
         pridajPredmety={pridajPredmety}
@@ -534,7 +538,7 @@ function ZapisZPlanuPageContent() {
 
   function pridajPredmety(
     predmety: ZapisPredmet[],
-    callback: (message: string | null) => void
+    callback: (mutationMessage: string | null) => void
   ) {
     if (!predmety.length) return callback(null);
 
@@ -551,7 +555,7 @@ function ZapisZPlanuPageContent() {
 
   function odoberPredmety(
     predmety: ZapisPredmet[],
-    callback: (message: string | null) => void
+    callback: (mutationMessage: string | null) => void
   ) {
     if (!predmety.length) return callback(null);
 
@@ -729,7 +733,7 @@ function ZapisZPonukyPageContent() {
       {predmety && <h2>Výsledky</h2>}
       <ZapisTable
         predmety={predmety}
-        message={tableMessage}
+        tableMessage={tableMessage}
         akademickyRok={akademickyRok}
         odoberPredmety={odoberPredmety}
         pridajPredmety={pridajPredmety}
@@ -740,7 +744,7 @@ function ZapisZPonukyPageContent() {
 
   function pridajPredmety(
     predmety: ZapisPredmet[],
-    callback: (message: string | null) => void
+    callback: (mutationMessage: string | null) => void
   ) {
     if (!predmety.length) return callback(null);
 
@@ -761,7 +765,7 @@ function ZapisZPonukyPageContent() {
 
   function odoberPredmety(
     predmety: ZapisPredmet[],
-    callback: (message: string | null) => void
+    callback: (mutationMessage: string | null) => void
   ) {
     if (!predmety.length) return callback(null);
 
