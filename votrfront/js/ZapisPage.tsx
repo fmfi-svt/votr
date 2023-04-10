@@ -164,7 +164,7 @@ function ZapisTable(props: {
     predmety: ZapisPredmet[],
     callback: (message: string | null) => void
   ) => void;
-  akademickyRok: string | null | undefined;
+  akademickyRok: string | undefined;
   zPlanu: boolean;
   message: string | null | undefined;
 }) {
@@ -172,12 +172,13 @@ function ZapisTable(props: {
   var [changes, setChanges] = useState<Record<string, boolean | undefined>>({});
 
   const predmety = props.predmety;
+  const akademickyRok = props.akademickyRok;
 
   // Chceme, aby sa pre ZapisTable zachoval state aj vtedy, ked tabulku
   // nevidno, lebo sme prave zapisali predmety a obnovujeme zoznam predmetov.
   // Takze komponent ZapisTable sa bude renderovat vzdy, aby nikdy nezanikol
   // a neprisiel o state. Niekedy proste dostane predmety == undefined.
-  if (!predmety || !props.akademickyRok) {
+  if (!predmety || !akademickyRok) {
     return <span />;
   }
 
@@ -332,7 +333,7 @@ function ZapisTable(props: {
         var href = {
           modal: "detailPredmetu",
           modalPredmetKey: predmet.predmet_key,
-          modalAkademickyRok: props.akademickyRok,
+          modalAkademickyRok: akademickyRok,
         };
         var nazov = <RelativeLink href={href}>{predmet.nazov}</RelativeLink>;
         if (predmet.moje) nazov = <strong>{nazov}</strong>;

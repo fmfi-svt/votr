@@ -32,7 +32,7 @@ export interface VotrVar {
 
 export type Query = Record<string, string>;
 
-export type Href = Record<string, string | null | undefined>;
+export type Href = Record<string, string | undefined>;
 
 // Fladgejt structures
 
