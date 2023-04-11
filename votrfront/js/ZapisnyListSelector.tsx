@@ -1,4 +1,4 @@
-import _ from "lodash";
+import { sortBy } from "lodash-es";
 import React, { useContext } from "react";
 import { CacheRequester, Loading } from "./ajax";
 import { currentAcademicYear } from "./coursesStats";
@@ -34,7 +34,7 @@ export function ZapisnyListSelector({
     }
   }
 
-  items = _.sortBy(items, (item) => sortAs.date(item.datum_zapisu)).reverse();
+  items = sortBy(items, (item) => sortAs.date(item.datum_zapisu)).reverse();
 
   if (!query.zapisnyListKey && cache.loadedAll && items[0]) {
     var mostRecentItem = items[0];

@@ -1,4 +1,3 @@
-import _ from "lodash";
 import React, { useContext, useState } from "react";
 import { AboutModal } from "./About";
 import { actionTitles } from "./actions";
@@ -53,7 +52,7 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
     var newTypes = Votr.settings.servers![server]!.login_types;
     setState((old) => ({
       server,
-      type: _.includes(newTypes, old.type) ? old.type : null,
+      type: old.type && newTypes.includes(old.type) ? old.type : null,
     }));
   }
 
@@ -77,7 +76,7 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
           <p>
             {"Technické detaily: "}
             <code className="login-error">
-              {_.last(Votr.settings.error.trim().split("\n"))}
+              {Votr.settings.error.trim().replace(/.*\n/s, "")}
             </code>{" "}
             <FakeLink onClick={onOpenError}>Viac detailov...</FakeLink>
           </p>

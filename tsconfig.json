@@ -42,7 +42,7 @@
       "bootstrap",
       "file-saver",
       "jquery",
-      "lodash",
+      "lodash-es",
       "react",
       "react-big-calendar",
       "react-dom"

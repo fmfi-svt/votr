@@ -1,4 +1,4 @@
-import _ from "lodash";
+import { sortBy } from "lodash-es";
 import React, { useContext } from "react";
 import { CacheRequester, Loading } from "./ajax";
 import { QueryContext, RelativeLink } from "./router";
@@ -10,7 +10,7 @@ export function StudiumSelector({ children }: { children: React.ReactNode }) {
   var query = useContext(QueryContext);
   var cache = new CacheRequester();
   var studia = cache.get("get_studia") || [];
-  var items = _.sortBy(studia, (item) => sortAs.date(item.zaciatok)).reverse();
+  var items = sortBy(studia, (item) => sortAs.date(item.zaciatok)).reverse();
 
   if (!query.studiumKey && cache.loadedAll && items[0]) {
     var mostRecentItem = items[0];

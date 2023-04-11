@@ -1,6 +1,6 @@
 import classNames from "classnames";
 import { saveAs } from "file-saver";
-import _ from "lodash";
+import { maxBy } from "lodash-es";
 import moment from "moment";
 import React, { useContext, useState } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
@@ -253,7 +253,7 @@ function defaultDate(eventList: CalendarEvent[]) {
   var today = new Date();
 
   if (eventList.length) {
-    var lastExamDate = _.maxBy(eventList, "start")!.start;
+    var lastExamDate = maxBy(eventList, "start")!.start;
     if (lastExamDate < today) return lastExamDate;
   }
 
@@ -323,7 +323,7 @@ function MojeSkuskyPageContent() {
   var terminMap: Record<string, Termin> = {};
   for (const termin of terminyVypisane) terminMap[termin.termin_key] = termin;
   for (const termin of terminyPrihlasene) terminMap[termin.termin_key] = termin;
-  var terminy = _.values(terminMap);
+  var terminy = Object.values(terminMap);
 
   var message = terminy.length
     ? null

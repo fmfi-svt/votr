@@ -1,5 +1,5 @@
 import $ from "jquery";
-import _ from "lodash";
+import { last } from "lodash-es";
 import React, { useContext, useEffect, useRef } from "react";
 
 import "bootstrap-sass/assets/javascripts/bootstrap/transition"; // needed by modal.js.
@@ -170,7 +170,7 @@ function PageNavbar() {
 }
 
 function LogStatus() {
-  var entry = _.last(ajaxLogs);
+  var entry = last(ajaxLogs);
   var message;
   if (!entry) {
     message = "\xA0"; // nbsp

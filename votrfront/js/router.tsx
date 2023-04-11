@@ -1,5 +1,5 @@
 import $ from "jquery";
-import _ from "lodash";
+import { isUndefined, omitBy } from "lodash-es";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Href, Query } from "./types";
 
@@ -76,8 +76,8 @@ export function Root({ app }: { app: React.ComponentType }) {
 }
 
 export function buildUrl(href: string | Href) {
-  if (_.isString(href)) return href;
-  return "?" + $.param(_.omitBy(href, _.isUndefined), true);
+  if (typeof href == "string") return href;
+  return "?" + $.param(omitBy(href, isUndefined), true);
 }
 
 export function navigate(href: string | Href) {

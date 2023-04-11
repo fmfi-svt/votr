@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import _ from "lodash";
+import { isEmpty, pickBy, sortBy } from "lodash-es";
 import React, { useContext, useState } from "react";
 import {
   CacheRequester,
@@ -98,7 +98,7 @@ function ZapisTableFooter(props: {
     if (props.moje[predmet_key]) vsetkyMoje.push(predmet);
   }
 
-  const zoradene = _.sortBy(Array.from(blokMoje.entries()), 0);
+  const zoradene = sortBy(Array.from(blokMoje.entries()), 0);
   zoradene.push(["", vsetkyMoje]);
 
   const jedinySemester = semestre.size <= 1;
@@ -223,14 +223,14 @@ function ZapisTable({
         for (const predmet of odoberanePredmety) {
           pocetPrihlasenychJeStaryStore.add(predmet.predmet_key);
         }
-        setChanges((changes) => _.pickBy(changes, (value) => value === true));
+        setChanges((changes) => pickBy(changes, (value) => value === true));
       }
 
       if (pridal) {
         for (const predmet of pridavanePredmety) {
           pocetPrihlasenychJeStaryStore.add(predmet.predmet_key);
         }
-        setChanges((changes) => _.pickBy(changes, (value) => value === false));
+        setChanges((changes) => pickBy(changes, (value) => value === false));
       }
 
       // Aj ked skoncime neuspechom, je mozne, ze niektore predmety sa zapisali.
@@ -278,7 +278,7 @@ function ZapisTable({
       <button
         type="submit"
         className="btn btn-primary"
-        disabled={_.isEmpty(classes)}
+        disabled={isEmpty(classes)}
       >
         {saving ? <Loading /> : "Uložiť zmeny"}
       </button>

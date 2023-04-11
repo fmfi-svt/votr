@@ -1,4 +1,3 @@
-import _ from "lodash";
 import React, { useState } from "react";
 import { goLogout, goReset, goResetHome } from "./ajax";
 import { Modal, ModalBase } from "./layout";
@@ -17,7 +16,7 @@ export function ErrorModal() {
   }
 
   var error = Votr.settings.error || Votr.ajaxError;
-  var lastLine = _.last(error!.trim().split("\n"))!;
+  var lastLine = error!.trim().replace(/.*\n/s, "");
   var type = lastLine.split(":")[0]!;
 
   var title = "Chyba";
@@ -116,5 +115,5 @@ export function ErrorModal() {
 }
 
 export function ErrorPage() {
-  return <ModalBase component={ErrorModal} onClose={_.noop} />;
+  return <ModalBase component={ErrorModal} onClose={() => {}} />;
 }

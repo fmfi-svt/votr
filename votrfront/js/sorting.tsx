@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import _ from "lodash";
+import { orderBy, range, sum, without } from "lodash-es";
 import React, { useContext, useState } from "react";
 import { getLocalSetting, setLocalSetting } from "./LocalSettings";
 import { ScreenSize, useScreenSize } from "./mediaQueries";
@@ -9,7 +9,7 @@ import { Query } from "./types";
 export var sortAs = {
   personName(text: string) {
     var words = text.replace(/,/g, "").split(" ");
-    words = _.filter(words, (word) => !word.match(/\.$/));
+    words = words.filter((word) => !word.match(/\.$/));
     var last = words.pop();
     if (last) words.unshift(last); // move last name to the beginning
     return words.join(" ").toLowerCase();
@@ -153,7 +153,7 @@ function sortItems<T>(
     if (!column) return () => "";
     return (originalIndex: number) => column.sortKey(items[originalIndex]!);
   });
-  return _.orderBy(_.range(items.length), iteratees, directions);
+  return orderBy(range(items.length), iteratees, directions);
 }
 
 function renderHeader<T>(
@@ -167,7 +167,7 @@ function renderHeader<T>(
     <tr>
       {columns.map(({ shortLabel, preferDesc }, index) => {
         function handleClick() {
-          var newOrder = _.without(order, "a" + index, "d" + index);
+          var newOrder = without(order, "a" + index, "d" + index);
           // prettier-ignore
           newOrder.unshift((
             order[0] == "a" + index ? "d" :
@@ -244,7 +244,7 @@ export function SortableTable<T>({
 
   var canHide = columns.map((column) => column.hide(deviceSize));
   var reallyHide = canHide.map((canHideColumn) => canHideColumn && !fullTable);
-  var reallyHiddenCount = _.sum(reallyHide);
+  var reallyHiddenCount = sum(reallyHide);
 
   var header = renderHeader(columns, query, queryKey, order, reallyHide);
 

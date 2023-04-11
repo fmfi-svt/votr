@@ -1,4 +1,4 @@
-import _ from "lodash";
+import { omitBy } from "lodash-es";
 import React, { useContext } from "react";
 import { AboutModal, makeIndexPage } from "./About";
 import { DetailPredmetuModal } from "./DetailPredmetu";
@@ -68,7 +68,7 @@ export function App() {
 
   function handleClose() {
     if (Votr.ajaxError) return;
-    navigate(_.omitBy(query, (value, key) => key.substring(0, 5) == "modal"));
+    navigate(omitBy(query, (value, key) => key.substring(0, 5) == "modal"));
   }
 
   return (

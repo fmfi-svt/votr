@@ -1,4 +1,4 @@
-import _ from "lodash";
+import { maxBy } from "lodash-es";
 import React, { useContext } from "react";
 import { CacheRequester, Loading } from "./ajax";
 import {
@@ -137,7 +137,7 @@ function MojeHodnoteniaPriemeryTable() {
   if (zapisneListy && zapisneListy.length == 0) {
     priemery = [];
   } else if (zapisneListy) {
-    var zapisnyListKey = _.maxBy(zapisneListy, (zapisnyList) =>
+    var zapisnyListKey = maxBy(zapisneListy, (zapisnyList) =>
       sortAs.date(zapisnyList.datum_zapisu)
     )!.zapisny_list_key;
     [priemery, message] = cache.get("get_priemery", zapisnyListKey) || [];

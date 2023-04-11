@@ -1,4 +1,4 @@
-import _ from "lodash";
+import { countBy, last, sortBy } from "lodash-es";
 import React, { useEffect, useRef, useState } from "react";
 import { ajaxLogs } from "./ajax";
 import { getLocalSetting, setLocalSetting } from "./LocalSettings";
@@ -23,16 +23,16 @@ function LogViewerContent(props: {
   }
 
   useEffect(() => {
-    var div = scrollRef.current;
-    if (!ajaxLogs.length) return;
-    var time = _.last(ajaxLogs)!.time;
-    if (time != lastTimeRef.current) {
-      lastTimeRef.current = time;
-      div!.scrollTop = div!.scrollHeight;
+    var div = scrollRef.current!;
+    var lastEntry = last(ajaxLogs);
+    if (!lastEntry) return;
+    if (lastTimeRef.current != lastEntry.time) {
+      lastTimeRef.current = lastEntry.time;
+      div.scrollTop = div.scrollHeight;
     }
   });
 
-  var types = _.countBy(ajaxLogs, "log");
+  var types = countBy(ajaxLogs, "log");
 
   return (
     <div className="log-viewer">
@@ -40,7 +40,7 @@ function LogViewerContent(props: {
         {props.closeButton}
         {props.modeButton}
         <ul className="list-inline">
-          {_.sortBy(_.keys(types)).map((type) => (
+          {sortBy(Object.keys(types)).map((type) => (
             <li key={type}>
               <label>
                 <input
@@ -112,7 +112,7 @@ function computeBenchmarks() {
     }
   }
 
-  return _.sortBy(_.toPairs(sums), 1).reverse();
+  return sortBy(Object.entries(sums), 1).reverse();
 }
 
 function LogViewerBenchmarkContent(props: {
