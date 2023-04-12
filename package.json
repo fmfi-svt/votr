@@ -42,6 +42,17 @@
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0"
   },
+  "resolutions": {
+    "array-includes": "file:./votrfront/overrides/array-includes",
+    "array.prototype.flatmap": "file:./votrfront/overrides/array.prototype.flatmap",
+    "array.prototype.tosorted": "file:./votrfront/overrides/array.prototype.tosorted",
+    "object.assign": "file:./votrfront/overrides/object.assign",
+    "object.entries": "file:./votrfront/overrides/object.entries",
+    "object.fromentries": "file:./votrfront/overrides/object.fromentries",
+    "object.hasown": "file:./votrfront/overrides/object.hasown",
+    "object.values": "file:./votrfront/overrides/object.values",
+    "string.prototype.matchall": "file:./votrfront/overrides/string.prototype.matchall"
+  },
   "scripts": {
     "lint": "echo Running prettier; prettier --check .; echo Running eslint; eslint .; echo Running tsc; tsc --noEmit",
     "builddev": "webpack --mode=development --progress --stats=minimal",
