@@ -285,7 +285,11 @@ function MainMenu() {
             <hr />
           </li>
           <li>
-            <a href={Votr.settings.feedback_link} target="_blank">
+            <a
+              href={Votr.settings.feedback_link}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
               Poslať feedback
             </a>
           </li>

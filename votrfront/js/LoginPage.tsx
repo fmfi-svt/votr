@@ -226,6 +226,7 @@ export function LoginPage() {
                 className="btn btn-link"
                 href="https://uniba.sk/"
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 Univerzita Komenského
               </a>
@@ -235,6 +236,7 @@ export function LoginPage() {
                 className="btn btn-link"
                 href="https://moja.uniba.sk/"
                 target="_blank"
+                rel="noopener noreferrer"
               >
                 IT služby na UK
               </a>

@@ -10,6 +10,7 @@ module.exports = {
         "plugin:@typescript-eslint/recommended",
         "plugin:@typescript-eslint/recommended-requiring-type-checking",
         "plugin:@typescript-eslint/strict",
+        "plugin:react/recommended",
         "plugin:react-hooks/recommended",
       ],
       "overrides": [],
@@ -43,6 +44,7 @@ module.exports = {
         // of them behind the other?
         "@typescript-eslint/no-non-null-assertion": "off",
       },
+      "settings": { "react": { "version": "detect" } },
     },
     {
       "files": ["*.js"],

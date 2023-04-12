@@ -23,7 +23,11 @@ export function AboutModal() {
         pripomienky, napíšte nám na{" "}
         <a href="mailto:fmfi-svt@googlegroups.com">fmfi-svt@googlegroups.com</a>{" "}
         a radi vám pomôžeme. Alebo ak chcete, môžete zavolať na{" "}
-        <a href="https://uniba.sk/cepit" target="_blank">
+        <a
+          href="https://uniba.sk/cepit"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           hotline CePIT
         </a>
         .
@@ -40,22 +44,23 @@ export function AboutModal() {
         <a
           href="https://github.com/fmfi-svt/votr/graphs/contributors"
           target="_blank"
-          rel="nofollow"
+          rel="nofollow noopener noreferrer"
         >
           a ďalší spoluautori
         </a>
         . Vývoj prebieha verejne na stránke{" "}
-        <a href={github} target="_blank">
+        <a href={github} target="_blank" rel="noopener noreferrer">
           {github}
         </a>
         . Ak sa vám Votr páči a chceli by ste sa zapojiť, napíšte nám!
       </p>
       <h4>Meno projektu</h4>
       <p>
-        Čo znamená meno "Votr"? Je to fonetický prepis anglického slova "water".
-        V tejto slovnej hračke začal už predchodca Votru, ktorý sa volal "FAJR"
-        (pretože "fajr" a "ais" sú protiklady). Keď sme sa neskôr rozhodli
-        prebudovať FAJR na novom základe, nazvali sme ho "Votr", lebo má ku AISu
+        Čo znamená meno &quot;Votr&quot;? Je to fonetický prepis anglického
+        slova &quot;water&quot;. V tejto slovnej hračke začal už predchodca
+        Votru, ktorý sa volal &quot;FAJR&quot; (pretože &quot;fajr&quot; a
+        &quot;ais&quot; sú protiklady). Keď sme sa neskôr rozhodli prebudovať
+        FAJR na novom základe, nazvali sme ho &quot;Votr&quot;, lebo má ku AISu
         bližšie a vie s ním plynule narábať. Aj mená interných súčastí Votru
         pokračujú v tejto téme.
       </p>
