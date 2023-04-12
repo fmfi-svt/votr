@@ -68,7 +68,7 @@ export function App() {
 
   function handleClose() {
     if (Votr.ajaxError) return;
-    navigate(omitBy(query, (value, key) => key.substring(0, 5) == "modal"));
+    navigate(omitBy(query, (value, key) => key.startsWith("modal")));
   }
 
   return (

@@ -41,7 +41,7 @@ import "../css/main.scss";
   );
 
   var query = Votr.settings.destination;
-  if (query !== undefined && (query == "" || query.substring(0, 1) == "?")) {
+  if (query !== undefined && (query == "" || query.startsWith("?"))) {
     try {
       history.replaceState(null, "", Votr.settings.url_root + query);
     } catch (e) {

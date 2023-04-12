@@ -83,36 +83,35 @@ function LogViewerContent(props: {
 }
 
 function computeBenchmarks() {
-  var sums: Record<string, number> = {};
-  var beginnings: Record<string, number> = {};
+  const sums = new Map<string, number>();
+  const beginnings = new Map<string, number>();
 
   function start(what: string, time: number) {
-    beginnings[what] = time;
+    beginnings.set(what, time);
   }
   function end(what: string, time: number) {
-    const beginning = beginnings[what];
-    if (!beginning) return;
-    if (!sums[what]) sums[what] = 0;
-    sums[what] += time - beginning;
-    delete beginnings[what];
+    const beginning = beginnings.get(what);
+    if (beginning === undefined) return;
+    sums.set(what, (sums.get(what) || 0) + (time - beginning));
+    beginnings.delete(what);
   }
 
   for (const entry of ajaxLogs) {
-    if (entry.log == "benchmark" && entry.message.substr(0, 6) == "Begin ") {
-      start(entry.message.substr(6), entry.time);
+    if (entry.log == "benchmark" && entry.message.startsWith("Begin ")) {
+      start(entry.message.substring(6), entry.time);
     }
-    if (entry.log == "benchmark" && entry.message.substr(0, 4) == "End ") {
-      end(entry.message.substr(4), entry.time);
+    if (entry.log == "benchmark" && entry.message.startsWith("End ")) {
+      end(entry.message.substring(4), entry.time);
     }
-    if (entry.log == "rpc" && entry.message.substr(-8) == " started") {
+    if (entry.log == "rpc" && entry.message.endsWith(" started")) {
       start("total RPC time", entry.time);
     }
-    if (entry.log == "rpc" && entry.message.substr(-9) == " finished") {
+    if (entry.log == "rpc" && entry.message.endsWith(" finished")) {
       end("total RPC time", entry.time);
     }
   }
 
-  return sortBy(Object.entries(sums), 1).reverse();
+  return sortBy(Array.from(sums.entries()), 1).reverse();
 }
 
 function LogViewerBenchmarkContent(props: {

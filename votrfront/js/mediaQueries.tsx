@@ -10,6 +10,7 @@ export function useMediaQuery(query: string): boolean {
     return [
       () => mediaQueryList.matches,
       (notify: () => void) => {
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         if (mediaQueryList.addEventListener) {
           mediaQueryList.addEventListener("change", notify);
           return () => mediaQueryList.removeEventListener("change", notify);

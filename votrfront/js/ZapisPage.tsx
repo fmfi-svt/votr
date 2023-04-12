@@ -626,22 +626,18 @@ function ZapisZPonukyForm() {
   ) {
     return (
       <FormItem label={label}>
-        {items ? (
-          <select
-            className="form-item-control"
-            name={name}
-            value={state[name]}
-            onChange={handleFieldChange}
-          >
-            {items.map((item, index) => (
-              <option key={index} value={item.id}>
-                {item.title}
-              </option>
-            ))}
-          </select>
-        ) : (
-          <Loading requests={cache.missing} />
-        )}
+        <select
+          className="form-item-control"
+          name={name}
+          value={state[name]}
+          onChange={handleFieldChange}
+        >
+          {items.map((item, index) => (
+            <option key={index} value={item.id}>
+              {item.title}
+            </option>
+          ))}
+        </select>
       </FormItem>
     );
   }

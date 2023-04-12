@@ -9,6 +9,7 @@ module.exports = {
         "eslint:recommended",
         "plugin:@typescript-eslint/recommended",
         "plugin:@typescript-eslint/recommended-requiring-type-checking",
+        "plugin:@typescript-eslint/strict",
       ],
       "overrides": [],
       "parser": "@typescript-eslint/parser",
@@ -32,6 +33,9 @@ module.exports = {
           "error",
           { "ignoreParameters": true },
         ],
+
+        // Many false positives and almost no true positives.
+        "@typescript-eslint/prefer-nullish-coalescing": "off",
 
         // What a pointless rule. Both postfix `!` and `eslint-disable-line` are
         // assertions that mean "trust me, I know what I'm doing". Why lock one

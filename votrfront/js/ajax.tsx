@@ -33,7 +33,7 @@ function sendRawRpc<N extends keyof Rpcs>(
 
   function update() {
     if (finished) return;
-    // eslint-disable-next-line no-constant-condition
+    // eslint-disable-next-line no-constant-condition, @typescript-eslint/no-unnecessary-condition
     while (true) {
       if (xhr.status && xhr.status != 200) {
         reportClientError("network", {
@@ -165,11 +165,14 @@ function sendCachedRequest<N extends keyof Rpcs>(
 }
 
 export function invalidateRequestCache(command: keyof Rpcs) {
+  /* eslint-disable-next-line @typescript-eslint/no-dynamic-delete --
+   * RequestCache is a plain object, not a Map, because TypeScript doesn't
+   * support mapped types for Map (all values must have the same type). */
   delete RequestCache[command];
 }
 
 export class CacheRequester {
-  missing: Array<() => void> = [];
+  missing: (() => void)[] = [];
   loadedAll = true;
   get<N extends keyof Rpcs>(
     name: N,
@@ -187,7 +190,7 @@ export class CacheRequester {
   }
 }
 
-export function Loading({ requests }: { requests?: Array<() => void> }) {
+export function Loading({ requests }: { requests?: (() => void)[] }) {
   useEffect(() => {
     if (requests) {
       for (const requestFn of requests) requestFn();

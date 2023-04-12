@@ -33,6 +33,7 @@ export class ErrorBoundary extends React.Component<
       console.error("ErrorBoundary caught error:", [error, errorInfo]);
       reportClientError("errorboundary", {
         errorString: String(error),
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain
         stack: error && error.stack,
         componentStack: errorInfo.componentStack,
       });

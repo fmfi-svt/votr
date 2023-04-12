@@ -30,7 +30,9 @@ export function coursesStats(predmety: (Hodnotenie | ZapisPredmet)[]) {
   for (const row of predmety) {
     var credits = parseInt(row.kredit);
     var obtained =
-      "hodn_znamka" in row && !!row.hodn_znamka && row.hodn_znamka[0] !== "F";
+      "hodn_znamka" in row &&
+      !!row.hodn_znamka &&
+      !row.hodn_znamka.startsWith("F");
     add("spolu", credits, obtained);
     if (row.semester == "Z") add("zima", credits, obtained);
     if (row.semester == "L") add("leto", credits, obtained);

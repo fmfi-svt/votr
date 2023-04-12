@@ -149,7 +149,7 @@ function sortItems<T>(
   columns: Column<T>[],
   order: string[]
 ): number[] {
-  var directions = order.map((o) => (o.charAt(0) == "a" ? "asc" : "desc"));
+  var directions = order.map((o) => (o.startsWith("a") ? "asc" : "desc"));
   var iteratees = order.map((o) => {
     const column = columns[Number(o.substring(1))];
     if (!column) return () => "";
@@ -273,7 +273,7 @@ export function SortableTable<T>({
             toggleInfo(originalIndex);
           }
         }}
-        className={rowClassName && rowClassName(item)}
+        className={rowClassName?.(item)}
       >
         {columns.map(
           ({ display, cellProps, expansionMark }, index) =>
