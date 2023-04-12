@@ -1,3 +1,4 @@
+import { noop } from "lodash-es";
 import React, { useState } from "react";
 import { goLogout, goReset, goResetHome } from "./ajax";
 import { Modal, ModalBase } from "./layout";
@@ -115,5 +116,5 @@ export function ErrorModal() {
 }
 
 export function ErrorPage() {
-  return <ModalBase component={ErrorModal} onClose={() => {}} />;
+  return <ModalBase component={ErrorModal} onClose={noop} />;
 }

@@ -32,7 +32,7 @@ export class ErrorBoundary extends React.Component<
     setTimeout(function () {
       console.error("ErrorBoundary caught error:", [error, errorInfo]);
       reportClientError("errorboundary", {
-        errorString: "" + error,
+        errorString: String(error),
         stack: error && error.stack,
         componentStack: errorInfo.componentStack,
       });
@@ -208,6 +208,7 @@ function MenuItem(props: {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function DisabledItem(props: { label: React.ReactNode }) {
   // return <li className="disabled"><a>{props.label}</a></li>;
   return null;

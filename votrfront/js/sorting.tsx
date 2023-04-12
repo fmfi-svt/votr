@@ -7,7 +7,7 @@ import { navigate, QueryContext } from "./router";
 import { Query } from "./types";
 
 export var sortAs = {
-  personName(text: string) {
+  personName: (text: string) => {
     var words = text.replace(/,/g, "").split(" ");
     words = words.filter((word) => !word.match(/\.$/));
     var last = words.pop();
@@ -16,12 +16,12 @@ export var sortAs = {
     // TODO: consider using latinise (see fajr).
   },
 
-  number(text: string) {
+  number: (text: string) => {
     return +text.replace(/,/g, ".");
     // TODO: this won't be needed when fladgejt starts returning numbers
   },
 
-  date(date: string) {
+  date: (date: string) => {
     if (date.match(/^\d\d\.\d\d\.\d\d\d\d/)) {
       return (
         date.substring(6, 10) +
@@ -33,7 +33,7 @@ export var sortAs = {
     return date;
   },
 
-  interval(text: string) {
+  interval: (text: string) => {
     var index = text.indexOf("do ");
     if (index == -1) return "";
     return sortAs.date(text.substring(index + 3));
@@ -64,11 +64,13 @@ export interface ColumnDefinition<K, V, P> {
   projection?: (item: P) => V;
 }
 
+type ColumnDefinitionKeys = keyof ColumnDefinition<unknown, unknown, unknown>;
+
 type InferItem<K extends string, P> = [K] extends [""] ? P : Record<K, P>;
 
 // This is stupid and I'm ashamed of it.
 export function column<
-  Def extends {},
+  Def extends object,
   K extends string = "",
   V = string | number | null | undefined,
   P = V,
@@ -77,7 +79,7 @@ export function column<
   input: Def &
     ColumnDefinition<K, V, P> &
     // If V doesn't extend ReactNode, `display` is required.
-    (V extends React.ReactNode ? unknown : { display: {} }) &
+    (V extends React.ReactNode ? unknown : { display: object }) &
     // If K != "", `prop` is required. (Just a sanity check in case K is
     // manually provided or badly inferred.)
     ([K] extends [""] ? unknown : { prop: K }) &
@@ -86,12 +88,12 @@ export function column<
     (P extends V
       ? V extends P
         ? unknown
-        : { projection: {} }
-      : { projection: {} }) &
+        : { projection: object }
+      : { projection: object }) &
     // K must not be just string. We want a literal or union of literals.
     ([string] extends [K] ? never : unknown) &
     // Forbid unknown properties on Def.
-    Record<Exclude<keyof Def, keyof ColumnDefinition<{}, {}, {}>>, never>
+    Record<Exclude<keyof Def, ColumnDefinitionKeys>, never>
 ): Column<Item> {
   const {
     label,
@@ -166,13 +168,16 @@ function renderHeader<T>(
   return (
     <tr>
       {columns.map(({ shortLabel, preferDesc }, index) => {
+        const strA = `a${index}`;
+        const strD = `d${index}`;
+
         function handleClick() {
-          var newOrder = without(order, "a" + index, "d" + index);
+          var newOrder = without(order, strA, strD);
           // prettier-ignore
-          newOrder.unshift((
-            order[0] == "a" + index ? "d" :
-            order[0] == "d" + index ? "a" :
-            preferDesc ? "d" : "a") + index);
+          newOrder.unshift(
+            order[0] == strA ? strD :
+            order[0] == strD ? strA :
+            preferDesc ? strD : strA);
 
           navigate({ ...query, [queryKey]: newOrder.join("") });
         }
@@ -185,8 +190,8 @@ function renderHeader<T>(
             onClick={handleClick}
             className={classNames(
               "sort",
-              order[0] == "a" + index && "asc",
-              order[0] == "d" + index && "desc"
+              order[0] == strA && "asc",
+              order[0] == strD && "desc"
             )}
           >
             {shortLabel}

@@ -140,6 +140,10 @@ function convertToICAL(terminy: Termin[]) {
   for (var termin of terminy) {
     if (!somPrihlaseny(termin)) continue;
 
+    const [den, mesiac, rok] = termin.datum.split(".");
+    const [hodina, minuty] = termin.cas.split(":");
+    if (!(den && mesiac && rok && hodina && minuty)) continue;
+
     lines.push("BEGIN:VEVENT");
 
     lines.push("SUMMARY:" + termin.nazov_predmetu);
@@ -152,12 +156,10 @@ function convertToICAL(terminy: Termin[]) {
     lines.push("DTSTAMP:" + dtstamp);
 
     // DTSTART, DTEND
-    var [den, mesiac, rok] = termin.datum.split(".");
-    var [hodina, minuty] = termin.cas.split(":");
     var dtstart = `${rok}${mesiac}${den}T${hodina}${minuty}00`;
 
     // as for there is no info about duration, we'll set it for 4 hours
-    var hodina_koniec = (parseInt(hodina!) + 4).toString();
+    var hodina_koniec = String(Number(hodina) + 4);
     // add leading zero
     if (hodina_koniec.length == 1) {
       hodina_koniec = "0" + hodina_koniec;
@@ -206,7 +208,7 @@ function MojeSkuskyMenuLink(props: {
 
 function MojeSkuskyMenu() {
   var query = useContext(QueryContext);
-  var { action, kalendar, zapisnyListKey } = query;
+  var { kalendar, zapisnyListKey } = query;
   return (
     <div className="pull-left">
       <div className="skusky-calendar-menu">
@@ -290,9 +292,7 @@ function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
           : "skusky-calendar-unregistered",
       })}
       // remove start and end times (we need only one included in title)
-      formats={{
-        eventTimeRangeFormat: ({ start, end }, culture, local) => "",
-      }}
+      formats={{ eventTimeRangeFormat: () => "" }}
     />
   );
 }

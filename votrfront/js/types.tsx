@@ -208,7 +208,7 @@ export interface RegOsoba {
 export interface ComboBoxOption {
   title: string;
   id: string;
-  tool_tip_text?: String;
+  tool_tip_text?: string;
 }
 
 export type ZapisCast = "SC" | "SS";

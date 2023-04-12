@@ -14,15 +14,17 @@ export function AnketaPopup() {
   try {
     var state = getLocalSetting("anketapopup");
     if (state) {
-      var [savedSeason, savedTime] = JSON.parse(state);
+      var [savedSeason, savedTime] = JSON.parse(state) as [string, number];
       if (savedSeason == season) {
-        wasClosedBefore = true;
         if (savedTime == -1 || Date.now() < savedTime) {
           return null;
         }
+        wasClosedBefore = true;
       }
     }
-  } catch (e) {}
+  } catch (e) {
+    // Ignore the error. Proceed with wasClosedBefore = false.
+  }
 
   var cache = new CacheRequester();
   var studia = cache.get("get_studia");

@@ -182,7 +182,6 @@ function PridatZapisnyListButton({ studium }: { studium: Studium }) {
 }
 
 function PrehladStudiaStudia() {
-  var query = useContext(QueryContext);
   var cache = new CacheRequester();
 
   var studia = cache.get("get_studia");
@@ -205,7 +204,6 @@ function PrehladStudiaStudia() {
 }
 
 function PrehladStudiaZapisneListy() {
-  var query = useContext(QueryContext);
   var cache = new CacheRequester();
 
   var studia = cache.get("get_studia");

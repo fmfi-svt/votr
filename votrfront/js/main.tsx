@@ -15,14 +15,15 @@ import "../css/main.scss";
   window.addEventListener(
     "error",
     function (event) {
-      var { message, filename, lineno, colno, error } = event;
+      var { message, filename, lineno, colno } = event;
+      var error: unknown = event.error;
       reportClientError("onerror", {
         message,
         filename,
         lineno,
         colno,
-        errorString: "" + error,
-        stack: error && error.stack,
+        errorString: String(error),
+        stack: error && (error as { stack?: unknown }).stack,
       });
     },
     false
@@ -32,8 +33,8 @@ import "../css/main.scss";
     function (event) {
       var error: unknown = event.reason;
       reportClientError("unhandledrejection", {
-        errorString: "" + error,
-        stack: error && (error as { stack: unknown }).stack,
+        errorString: String(error),
+        stack: error && (error as { stack?: unknown }).stack,
       });
     },
     false

@@ -13,7 +13,7 @@ interface RpcErrorPayload {
   error: string;
 }
 interface RpcResultPayload {
-  result: {} | null;
+  result: unknown;
 }
 type RpcPayload =
   | RpcAnnouncementPayload
@@ -28,11 +28,12 @@ function sendRawRpc<N extends keyof Rpcs>(
 ) {
   var HEADER_LENGTH = 10;
   var processed = 0;
-  var result: {} | null | undefined = undefined;
+  var result: unknown = undefined;
   var finished = false;
 
   function update() {
     if (finished) return;
+    // eslint-disable-next-line no-constant-condition
     while (true) {
       if (xhr.status && xhr.status != 200) {
         reportClientError("network", {
@@ -43,8 +44,7 @@ function sendRawRpc<N extends keyof Rpcs>(
           statusText: xhr.statusText,
         });
         return fail(
-          "Network error: HTTP " +
-            xhr.status +
+          `Network error: HTTP ${xhr.status}` +
             (xhr.statusText ? ": " + xhr.statusText : "")
         );
       }
@@ -65,13 +65,14 @@ function sendRawRpc<N extends keyof Rpcs>(
         );
         data = JSON.parse(payload) as RpcPayload;
       } catch (error: unknown) {
+        const errorString = String(error);
         reportClientError("network", {
           subtype: "parse",
-          error: "" + error,
+          error: errorString,
           responseText: xhr.responseText,
           responseURL: xhr.responseURL,
         });
-        return fail("Network error: RPC parse error: " + error);
+        return fail("Network error: RPC parse error: " + errorString);
       }
       if ("announcement_html" in data) {
         console.debug("Received new announcement:", data.announcement_html);

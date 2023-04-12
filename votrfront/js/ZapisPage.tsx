@@ -122,7 +122,7 @@ function ZapisTableFooter(props: {
             ? ""
             : ` (${stats.zima.count} v zime, ${stats.leto.count} v lete)`);
         const kredity =
-          stats.spolu.creditsEnrolled +
+          String(stats.spolu.creditsEnrolled) +
           (jedinySemester
             ? ""
             : ` (${stats.zima.creditsEnrolled}+${stats.leto.creditsEnrolled})`);
@@ -504,10 +504,10 @@ function ZapisZPlanuPageContent() {
       } else {
         for (var property in predmet) {
           if (
-            (predmet as any)[property] !== null &&
-            (predmet as any)[property] !== undefined
+            (predmet as any)[property] !== null && // eslint-disable-line
+            (predmet as any)[property] !== undefined // eslint-disable-line
           ) {
-            (existingPredmet as any)[property] = (predmet as any)[property];
+            (existingPredmet as any)[property] = (predmet as any)[property]; // eslint-disable-line
           }
         }
         existingPredmet.moje = true;

@@ -40,7 +40,7 @@ function LogViewerContent(props: {
         {props.closeButton}
         {props.modeButton}
         <ul className="list-inline">
-          {sortBy(Object.keys(types)).map((type) => (
+          {sortBy(Object.entries(types), 0).map(([type, count]) => (
             <li key={type}>
               <label>
                 <input
@@ -49,7 +49,7 @@ function LogViewerContent(props: {
                   checked={!hidden[type]}
                   onChange={handleChange}
                 />
-                {" " + type + " (" + types[type] + ")"}
+                {` ${type} (${count})`}
               </label>
             </li>
           ))}
@@ -131,7 +131,7 @@ function LogViewerBenchmarkContent(props: {
       <div className="scroll">
         <table>
           <tbody>
-            {benchmarks.map(([message, sum], index) => (
+            {benchmarks.map(([message, sum]) => (
               <tr key={message}>
                 <td className="text-right">{sum.toFixed(3)}</td>
                 <td>{message}</td>

@@ -64,6 +64,7 @@ function DetailPredmetuUcitelia() {
     return <Loading requests={cache.missing} />;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   var [studenti, predmet] = data;
 
   if (!predmet) {
@@ -146,6 +147,7 @@ function DetailPredmetuTitle() {
     return <Loading requests={cache.missing} />;
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   var [studenti, predmet] = data;
 
   if (!predmet) {
