@@ -230,8 +230,8 @@ export function SortableTable<T>({
   var anyOpen = open.includes(true);
 
   function toggleInfo(index: number) {
-    setOpen((open) => {
-      open = open.slice();
+    setOpen((oldOpen) => {
+      const open = oldOpen.slice();
       open[index] = !open[index];
       return open;
     });

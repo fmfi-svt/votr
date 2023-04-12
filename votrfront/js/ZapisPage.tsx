@@ -540,7 +540,10 @@ function ZapisZPlanuPageContent() {
     predmety: ZapisPredmet[],
     callback: (mutationMessage: string | null) => void
   ) {
-    if (!predmety.length) return callback(null);
+    if (!predmety.length) {
+      callback(null);
+      return;
+    }
 
     var dvojice: [string, string][] = predmety.map((predmet) => [
       predmet.typ_vyucby,
@@ -557,7 +560,10 @@ function ZapisZPlanuPageContent() {
     predmety: ZapisPredmet[],
     callback: (mutationMessage: string | null) => void
   ) {
-    if (!predmety.length) return callback(null);
+    if (!predmety.length) {
+      callback(null);
+      return;
+    }
 
     var kluce = predmety.map((predmet) => predmet.predmet_key);
     sendRpc("zapis_odstran_predmety", [zapisnyListKey, cast, kluce], callback);
@@ -742,7 +748,10 @@ function ZapisZPonukyPageContent() {
     predmety: ZapisPredmet[],
     callback: (mutationMessage: string | null) => void
   ) {
-    if (!predmety.length) return callback(null);
+    if (!predmety.length) {
+      callback(null);
+      return;
+    }
 
     var skratky = predmety.map((predmet) => predmet.skratka);
     sendRpc(
@@ -763,7 +772,10 @@ function ZapisZPonukyPageContent() {
     predmety: ZapisPredmet[],
     callback: (mutationMessage: string | null) => void
   ) {
-    if (!predmety.length) return callback(null);
+    if (!predmety.length) {
+      callback(null);
+      return;
+    }
 
     var kluce = predmety.map((predmet) => predmet.predmet_key);
     sendRpc("zapis_odstran_predmety", [zapisnyListKey, "SC", kluce], callback);

@@ -14,7 +14,7 @@ import "../css/main.scss";
 
   window.addEventListener(
     "error",
-    function (event) {
+    (event) => {
       var { message, filename, lineno, colno } = event;
       var error: unknown = event.error;
       reportClientError("onerror", {
@@ -30,7 +30,7 @@ import "../css/main.scss";
   );
   window.addEventListener(
     "unhandledrejection",
-    function (event) {
+    (event) => {
       var error: unknown = event.reason;
       reportClientError("unhandledrejection", {
         errorString: String(error),

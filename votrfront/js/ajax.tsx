@@ -43,12 +43,14 @@ function sendRawRpc<N extends keyof Rpcs>(
           status: xhr.status,
           statusText: xhr.statusText,
         });
-        return fail(
+        fail(
           `Network error: HTTP ${xhr.status}` +
             (xhr.statusText ? ": " + xhr.statusText : "")
         );
+        return;
       }
       var data: RpcPayload;
+      var length: number;
       try {
         var waiting = xhr.responseText.length - processed;
         if (waiting < HEADER_LENGTH) break;
@@ -56,7 +58,7 @@ function sendRawRpc<N extends keyof Rpcs>(
           processed,
           processed + HEADER_LENGTH
         );
-        var length = parseInt(header, 10);
+        length = parseInt(header, 10);
         if (isNaN(length)) throw new Error("Not a number: " + header);
         if (waiting < HEADER_LENGTH + length) break;
         var payload = xhr.responseText.substring(
@@ -72,7 +74,8 @@ function sendRawRpc<N extends keyof Rpcs>(
           responseText: xhr.responseText,
           responseURL: xhr.responseURL,
         });
-        return fail("Network error: RPC parse error: " + errorString);
+        fail("Network error: RPC parse error: " + errorString);
+        return;
       }
       if ("announcement_html" in data) {
         console.debug("Received new announcement:", data.announcement_html);
@@ -88,7 +91,8 @@ function sendRawRpc<N extends keyof Rpcs>(
       }
       if ("error" in data) {
         console.log("Received " + name + " error:", data.error);
-        return fail(data.error);
+        fail(data.error);
+        return;
       }
       processed += HEADER_LENGTH + length;
     }
@@ -101,7 +105,8 @@ function sendRawRpc<N extends keyof Rpcs>(
           length: xhr.responseText.length,
           responseURL: xhr.responseURL,
         });
-        return fail("Network error: Incomplete response");
+        fail("Network error: Incomplete response");
+        return;
       }
       finished = true;
       if (callback) {
@@ -152,7 +157,7 @@ function sendCachedRequest<N extends keyof Rpcs>(
   name: N,
   stringifiedArgs: string
 ) {
-  const map: CacheMap<N> = RequestCache[name] || (RequestCache[name] = {});
+  const map: CacheMap<N> = (RequestCache[name] ||= {});
 
   // If pending or done, return. (In theory it could become done between the
   // CacheRequester.get() call and the useEffect in Loading.)
@@ -173,7 +178,9 @@ export function invalidateRequestCache(command: keyof Rpcs) {
 
 export class CacheRequester {
   missing: (() => void)[] = [];
+
   loadedAll = true;
+
   get<N extends keyof Rpcs>(
     name: N,
     ...args: Parameters<Rpcs[N]>

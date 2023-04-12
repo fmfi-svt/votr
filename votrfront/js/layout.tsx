@@ -29,7 +29,7 @@ export class ErrorBoundary extends React.Component<
   };
 
   override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    setTimeout(function () {
+    setTimeout(() => {
       console.error("ErrorBoundary caught error:", [error, errorInfo]);
       reportClientError("errorboundary", {
         errorString: String(error),
@@ -280,7 +280,7 @@ function MainMenu() {
       <DisabledItem label="Register miestností" />
       <DisabledItem label="Register študijných programov" />
       {!!Votr.settings.feedback_link && (
-        <>
+        <React.Fragment>
           <li>
             <hr />
           </li>
@@ -293,7 +293,7 @@ function MainMenu() {
               Poslať feedback
             </a>
           </li>
-        </>
+        </React.Fragment>
       )}
     </ul>
   );
