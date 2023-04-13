@@ -1,3 +1,10 @@
+const fs = require("fs");
+
+// Read "target" from tsconfig.json. require("./tsconfig.json") and
+// JSON.parse(tsconfig) won't work because it contains comments.
+const tsconfig = fs.readFileSync(__dirname + "/tsconfig.json", "utf8");
+const tstarget = tsconfig.match(/"target": "es(\d\d\d\d)"/)[1];
+
 module.exports = {
   "extends": ["eslint:recommended"],
   // Using "overrides" here because "yarn eslint ." also runs on .eslintrc.js
@@ -10,6 +17,9 @@ module.exports = {
         "plugin:@typescript-eslint/recommended",
         "plugin:@typescript-eslint/recommended-requiring-type-checking",
         "plugin:@typescript-eslint/strict",
+        "plugin:compat/recommended",
+        "plugin:escompat/recommended",
+        "plugin:escompat/typescript-" + tstarget,
         "plugin:react/recommended",
         "plugin:react-hooks/recommended",
       ],

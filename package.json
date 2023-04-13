@@ -37,6 +37,8 @@
     "@typescript-eslint/eslint-plugin": "^5.58.0",
     "@typescript-eslint/parser": "^5.58.0",
     "eslint": "^8.38.0",
+    "eslint-plugin-compat": "^4.1.4",
+    "eslint-plugin-escompat": "^3.4.0",
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0"
   },
@@ -49,7 +51,7 @@
     "clean": "rm -rf votrfront/static",
     "distclean": "rm -rf votrfront/static node_modules"
   },
-  "browserslist": "defaults, not dead",
+  "browserslist": "defaults, supports object-values, not dead",
   "prettier": {
     "proseWrap": "always",
     "quoteProps": "preserve"
