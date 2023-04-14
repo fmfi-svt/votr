@@ -1,9 +1,9 @@
-/* eslint-disable @typescript-eslint/no-unnecessary-condition, @typescript-eslint/prefer-optional-chain */
+/* eslint-disable @typescript-eslint/no-unnecessary-condition */
 
 export {};
 
-if (window.console && window.console.log) {
-  window.console.log(
+try {
+  console.log(
     "Beží %c%s%c JavaScript build. %s",
     "font-weight: bold",
     process.env.NODE_ENV,
@@ -12,6 +12,8 @@ if (window.console && window.console.log) {
       ? "Prepínateľné s: Votr.setJsDev(true alebo false)"
       : "Nejde prepínať, nemáme yarn buildboth."
   );
+} catch (e) {
+  // Ignore errors.
 }
 
 Votr.setJsDev = function (enabled: unknown) {
@@ -20,15 +22,27 @@ Votr.setJsDev = function (enabled: unknown) {
   location.reload();
 };
 
+// Current bottleneck:
+// Object.fromEntries - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/fromEntries
+//
+// Which means:
+// Chrome 73+ (2019), Edge 79+ (2020), Firefox 63+ (2018), Opera 60+ (2019), Safari 12.1+ (2019), Safari iOS 12.2+ (2019)
+//
+// Therefore we should be able to use e.g.:
+// URLSearchParams record for init object - https://developer.mozilla.org/en-US/docs/Web/API/URLSearchParams/URLSearchParams#browser_compatibility
+// Spread in object literals - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Spread_syntax#browser_compatibility
+// Rest in objects - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment#browser_compatibility
+// Object.values - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/values
+// String padStart - https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/padStart
+// history.pushState, Map, Set, Object.values, ...
+//
+// When updating, remember to look at tsconfig.json (target) and package.json (browserslist).
+// TODO: If we get Array#at (ES2022) one day, we can use it instead of lodash _.last().
+
 if (
+  window.URLSearchParams &&
   // @ts-expect-error TS2774
-  history.pushState &&
-  window.Set &&
-  window.Map &&
-  // @ts-expect-error TS2774
-  Array.prototype.includes &&
-  // @ts-expect-error TS2774
-  Object.values
+  Object.fromEntries
 ) {
   Votr.prologueCheck = true;
 } else {

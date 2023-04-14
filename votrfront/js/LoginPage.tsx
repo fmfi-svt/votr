@@ -76,7 +76,7 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
           <p>
             {"Technické detaily: "}
             <code className="login-error">
-              {Votr.settings.error.trim().replace(/.*\n/s, "")}
+              {Votr.settings.error.trim().replace(/[\s\S]*\n/, "")}
             </code>{" "}
             <FakeLink onClick={onOpenError}>Viac detailov...</FakeLink>
           </p>

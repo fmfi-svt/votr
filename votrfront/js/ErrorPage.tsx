@@ -17,7 +17,7 @@ export function ErrorModal() {
   }
 
   var error = Votr.settings.error || Votr.ajaxError;
-  var lastLine = error!.trim().replace(/.*\n/s, "");
+  var lastLine = error!.trim().replace(/[\s\S]*\n/, "");
   var type = lastLine.split(":")[0]!;
 
   var title = "Chyba";

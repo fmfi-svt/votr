@@ -51,7 +51,7 @@
     "clean": "rm -rf votrfront/static",
     "distclean": "rm -rf votrfront/static node_modules"
   },
-  "browserslist": "defaults, supports object-values, not dead",
+  "browserslist": "defaults, since 2020, Chrome >= 73, Edge >= 79, Firefox >= 63, Opera >= 60, Safari >= 12.1, iOS >= 12.2, not OperaMini all, not dead",
   "prettier": {
     "proseWrap": "always",
     "quoteProps": "preserve"

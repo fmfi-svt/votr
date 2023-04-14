@@ -2,8 +2,8 @@
   "compilerOptions": {
     "sourceMap": true,
 
-    // es2018 roughly corresponds to current feature checks in prologue.js.
-    "target": "es2018",
+    // es2019 roughly corresponds to current feature checks in prologue.tsx.
+    "target": "es2019",
 
     // es2020 adds import() and import.meta. es2022 adds top-level await.
     // Wasn't needed yet.

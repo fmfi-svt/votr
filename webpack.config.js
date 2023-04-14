@@ -85,14 +85,8 @@ function CleanMapFilesPlugin() {
   };
 }
 
-module.exports = function (env, args) {
-  const mode = args.mode;
-
+function makeConfig(mode) {
   const config = {
-    entry: {
-      votr: "./votrfront/js/main",
-      prologue: "./votrfront/js/prologue",
-    },
     output: {
       path: outputPath,
       filename: mode == "development" ? "[name].dev.js" : "[name].min.js",
@@ -166,4 +160,18 @@ module.exports = function (env, args) {
   };
 
   return config;
+}
+
+module.exports = function (env, args) {
+  return [
+    {
+      ...makeConfig(args.mode),
+      entry: { votr: "./votrfront/js/main" },
+    },
+    {
+      ...makeConfig(args.mode),
+      entry: { prologue: "./votrfront/js/prologue" },
+      target: ["web", "es5"],
+    },
+  ];
 };
