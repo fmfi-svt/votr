@@ -159,11 +159,7 @@ function convertToICAL(terminy: Termin[]) {
     var dtstart = `${rok}${mesiac}${den}T${hodina}${minuty}00`;
 
     // as for there is no info about duration, we'll set it for 4 hours
-    var hodina_koniec = String(Number(hodina) + 4);
-    // add leading zero
-    if (hodina_koniec.length == 1) {
-      hodina_koniec = "0" + hodina_koniec;
-    }
+    var hodina_koniec = String(Number(hodina) + 4).padStart(2, "0");
     var dtend = `${rok}${mesiac}${den}T${hodina_koniec}${minuty}00`;
     lines.push("DTSTART;TZID=Europe/Bratislava:" + dtstart);
     lines.push("DTEND;TZID=Europe/Bratislava:" + dtend);

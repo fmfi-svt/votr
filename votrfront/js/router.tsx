@@ -1,5 +1,4 @@
-import $ from "jquery";
-import { isUndefined, omitBy } from "lodash-es";
+import { pickBy } from "lodash-es";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Href, Query } from "./types";
 
@@ -16,22 +15,6 @@ function trackPageView() {
   if (current == trackPageViewLast) return;
   trackPageViewLast = current;
   window.ga("send", "pageview", { location: current });
-}
-
-function parseQueryString(queryString: string) {
-  if (!queryString) return {};
-  var result: Query = {};
-  var pairs = queryString.split("&");
-  for (const pair of pairs) {
-    var index = pair.indexOf("=");
-    if (index == -1) {
-      index = pair.length;
-    }
-    var name = pair.substring(0, index);
-    var value = pair.substring(index + 1);
-    result[name] = decodeURIComponent(value.replace(/\+/g, " "));
-  }
-  return result;
 }
 
 export var QueryContext = React.createContext<Query>(
@@ -63,9 +46,12 @@ export function Root({ app }: { app: React.ComponentType }) {
     trackPageView();
   });
 
-  var queryString = location.search.substring(1);
+  var queryString = location.search;
 
-  var query = useMemo(() => parseQueryString(queryString), [queryString]);
+  var query = useMemo(
+    () => Object.fromEntries(new URLSearchParams(queryString)),
+    [queryString]
+  );
 
   var C = app;
   return (
@@ -75,9 +61,18 @@ export function Root({ app }: { app: React.ComponentType }) {
   );
 }
 
+// https://github.com/microsoft/TypeScript/issues/16069
+// https://github.com/microsoft/TypeScript/issues/38390
+// https://stackoverflow.com/questions/43010737/way-to-tell-typescript-compiler-array-prototype-filter-removes-certain-types-fro
+function isNotNullOrUndefined<T>(arg: T | null | undefined): arg is T {
+  return arg != null;
+}
+
 export function buildUrl(href: string | Href) {
   if (typeof href == "string") return href;
-  return "?" + $.param(omitBy(href, isUndefined), true);
+  // omitBy(isUndefined) works too but lodash TypeScript typings don't handle
+  // type guards on omitBy, only on pickBy.
+  return "?" + String(new URLSearchParams(pickBy(href, isNotNullOrUndefined)));
 }
 
 export function navigate(href: string | Href) {
