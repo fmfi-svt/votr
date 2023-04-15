@@ -24,7 +24,7 @@ function makeNotFoundPage() {
   );
 }
 
-var actions: Record<string, () => React.ReactNode> = {
+const actions: Record<string, () => React.ReactNode> = {
   priebezneHodnotenia: makePriebezneHodnoteniaPage,
   mojeHodnotenia: makeMojeHodnoteniaPage,
   mojePredmety: makeMojePredmetyPage,
@@ -50,17 +50,17 @@ export const actionTitles: Record<string, string> = {
   zapisZPonuky: "Zápis predmetov",
 };
 
-var modalActions: Record<string, React.ComponentType> = {
+const modalActions: Record<string, React.ComponentType> = {
   about: AboutModal,
   detailPredmetu: DetailPredmetuModal,
   zoznamPrihlasenychNaTermin: ZoznamPrihlasenychNaTerminModal,
 };
 
 export function App() {
-  var query = useContext(QueryContext);
-  var action = query.action;
-  var maker = action ? actions[action] || makeNotFoundPage : makeIndexPage;
-  var modalComponent = Votr.ajaxError
+  const query = useContext(QueryContext);
+  const action = query.action;
+  const maker = action ? actions[action] || makeNotFoundPage : makeIndexPage;
+  const modalComponent = Votr.ajaxError
     ? ErrorModal
     : query.modal
     ? modalActions[query.modal]

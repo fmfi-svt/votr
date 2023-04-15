@@ -6,11 +6,11 @@ import { QueryContext, RelativeLink } from "./router";
 import { ZapisnyListSelector } from "./ZapisnyListSelector";
 
 function PriebezneHodnoteniaPageContent() {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
-  var zapisnyListKey = query.zapisnyListKey!;
+  const query = useContext(QueryContext);
+  const cache = new CacheRequester();
+  const zapisnyListKey = query.zapisnyListKey!;
 
-  var [priebezneHodnotenia, message] =
+  let [priebezneHodnotenia, message] =
     cache.get("get_priebezne_hodnotenia", zapisnyListKey) || [];
 
   if (!priebezneHodnotenia) {

@@ -7,24 +7,24 @@ function LogViewerContent(props: {
   closeButton: React.ReactNode;
   modeButton: React.ReactNode;
 }) {
-  var [hidden, setHidden] = useState<Record<string, boolean>>({
+  const [hidden, setHidden] = useState<Record<string, boolean>>({
     benchmark: true,
     http: true,
     table: true,
   });
 
-  var scrollRef = useRef<HTMLDivElement | null>(null);
-  var lastTimeRef = useRef<number | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const lastTimeRef = useRef<number | null>(null);
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
-    var name = e.target.name;
-    var value = !e.target.checked;
+    const name = e.target.name;
+    const value = !e.target.checked;
     setHidden((hidden) => ({ ...hidden, [name]: value }));
   }
 
   useEffect(() => {
-    var div = scrollRef.current!;
-    var lastEntry = last(ajaxLogs);
+    const div = scrollRef.current!;
+    const lastEntry = last(ajaxLogs);
     if (!lastEntry) return;
     if (lastTimeRef.current != lastEntry.time) {
       lastTimeRef.current = lastEntry.time;
@@ -32,7 +32,7 @@ function LogViewerContent(props: {
     }
   });
 
-  var types = countBy(ajaxLogs, "log");
+  const types = countBy(ajaxLogs, "log");
 
   return (
     <div className="log-viewer">
@@ -118,7 +118,7 @@ function LogViewerBenchmarkContent(props: {
   closeButton: React.ReactNode;
   modeButton: React.ReactNode;
 }) {
-  var benchmarks = computeBenchmarks();
+  const benchmarks = computeBenchmarks();
 
   return (
     <div className="log-viewer">
@@ -143,7 +143,7 @@ function LogViewerBenchmarkContent(props: {
   );
 }
 
-var explainedLogViewer = false;
+let explainedLogViewer = false;
 
 export function LogViewer() {
   function toggle() {
@@ -182,23 +182,23 @@ export function LogViewer() {
     }
   }, []);
 
-  var mode = getLocalSetting("logViewer");
+  const mode = getLocalSetting("logViewer");
 
   if (mode != "log" && mode != "benchmark") return null;
 
-  var modeButton = (
+  const modeButton = (
     <button type="button" className="pull-left" onClick={toggleMode}>
       {mode}
     </button>
   );
 
-  var closeButton = (
+  const closeButton = (
     <button type="button" className="close" onClick={toggle}>
       <span aria-hidden="true">&times;</span>
       <span className="sr-only">Close</span>
     </button>
   );
 
-  var C = mode == "log" ? LogViewerContent : LogViewerBenchmarkContent;
+  const C = mode == "log" ? LogViewerContent : LogViewerBenchmarkContent;
   return <C modeButton={modeButton} closeButton={closeButton} />;
 }

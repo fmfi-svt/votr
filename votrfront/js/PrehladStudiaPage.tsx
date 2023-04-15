@@ -81,8 +81,8 @@ function PrehladStudiaObdobie(props: {
   semester: "Z" | "L";
   label: string;
 }) {
-  var cache = new CacheRequester();
-  var result = cache.get(props.rpc, props.semester);
+  const cache = new CacheRequester();
+  const result = cache.get(props.rpc, props.semester);
   return (
     <tr>
       <th>{props.label}</th>
@@ -98,7 +98,7 @@ function PrehladStudiaObdobie(props: {
 }
 
 function PrehladStudiaObdobia() {
-  var query = useContext(QueryContext);
+  const query = useContext(QueryContext);
   // Obdobia predsalen neukazujeme, lebo AIS ma vacsinou zle informacie
   // (skuskove je umelo predlzene kvoli moznosti zapisovat znamky, apod) a
   // nechceme byt matuci. Zapnut sa daju tymto schovanym query flagom.
@@ -135,23 +135,23 @@ function PrehladStudiaObdobia() {
 }
 
 function PridatZapisnyListButton({ studium }: { studium: Studium }) {
-  var rok = currentAcademicYear();
+  const rok = currentAcademicYear();
 
   if (studium.koniec !== "") {
     // Ak studium uz skoncilo, neukazeme nic.
     return null;
   }
 
-  var cache = new CacheRequester();
+  const cache = new CacheRequester();
 
-  var zapisneListy = cache.get("get_zapisne_listy", studium.studium_key);
+  const zapisneListy = cache.get("get_zapisne_listy", studium.studium_key);
 
   if (!zapisneListy) {
     return <Loading requests={cache.missing} />;
   }
 
   // Ak uz mame zapisny list na tento rok, ukazeme disabled button.
-  var uzExistuje = zapisneListy.some((zl) => zl.akademicky_rok === rok);
+  const uzExistuje = zapisneListy.some((zl) => zl.akademicky_rok === rok);
 
   function handleClick() {
     if (confirm(`Vytvoriť zápisný list pre akademický rok ${rok}?`)) {
@@ -182,15 +182,15 @@ function PridatZapisnyListButton({ studium }: { studium: Studium }) {
 }
 
 function PrehladStudiaStudia() {
-  var cache = new CacheRequester();
+  const cache = new CacheRequester();
 
-  var studia = cache.get("get_studia");
+  const studia = cache.get("get_studia");
 
   if (!studia) {
     return <Loading requests={cache.missing} />;
   }
 
-  var message = studia.length ? null : "V AISe nemáte žiadne štúdiá.";
+  const message = studia.length ? null : "V AISe nemáte žiadne štúdiá.";
 
   return (
     <SortableTable
@@ -204,24 +204,24 @@ function PrehladStudiaStudia() {
 }
 
 function PrehladStudiaZapisneListy() {
-  var cache = new CacheRequester();
+  const cache = new CacheRequester();
 
-  var studia = cache.get("get_studia");
+  const studia = cache.get("get_studia");
 
   if (!studia) {
     return <Loading requests={cache.missing} />;
   }
 
-  var zapisneListy: ZapisnyList[] = [];
+  const zapisneListy: ZapisnyList[] = [];
 
   for (const studium of studia) {
-    var mojeZapisneListy = cache.get("get_zapisne_listy", studium.studium_key);
+    const mojeZapisneListy = cache.get("get_zapisne_listy", studium.studium_key);
     if (mojeZapisneListy) zapisneListy.push(...mojeZapisneListy);
   }
 
-  var showTable = !!zapisneListy.length || cache.loadedAll;
+  const showTable = !!zapisneListy.length || cache.loadedAll;
 
-  var message = zapisneListy.length
+  const message = zapisneListy.length
     ? null
     : "V AISe nemáte žiadne zápisné listy.";
 

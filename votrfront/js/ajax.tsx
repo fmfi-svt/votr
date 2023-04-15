@@ -28,9 +28,9 @@ function sendRawRpc<N extends keyof Rpcs>(
   stringifiedArgs: string,
   callback?: ((result: ReturnType<Rpcs[N]>) => void) | undefined
 ) {
-  var processed = 0;
-  var result: unknown = undefined;
-  var finished = false;
+  let processed = 0;
+  let result: unknown = undefined;
+  let finished = false;
 
   function update() {
     if (finished) return;
@@ -53,16 +53,16 @@ function sendRawRpc<N extends keyof Rpcs>(
       var data: RpcPayload;
       var length: number;
       try {
-        var waiting = xhr.responseText.length - processed;
+        const waiting = xhr.responseText.length - processed;
         if (waiting < HEADER_LENGTH) break;
-        var header = xhr.responseText.substring(
+        const header = xhr.responseText.substring(
           processed,
           processed + HEADER_LENGTH
         );
         length = parseInt(header, 10);
         if (isNaN(length)) throw new Error("Not a number: " + header);
         if (waiting < HEADER_LENGTH + length) break;
-        var payload = xhr.responseText.substring(
+        const payload = xhr.responseText.substring(
           processed + HEADER_LENGTH,
           processed + HEADER_LENGTH + length
         );
@@ -209,7 +209,7 @@ export function Loading({ requests }: { requests?: (() => void)[] }) {
 }
 
 function goPost(url: string) {
-  var form = document.createElement("form");
+  const form = document.createElement("form");
   form.method = "POST";
   form.action = url;
   document.body.appendChild(form);
@@ -229,7 +229,7 @@ export function goResetHome() {
 }
 
 export function reportClientError(type: string, body: object) {
-  var xhr = new XMLHttpRequest();
+  const xhr = new XMLHttpRequest();
   xhr.open("POST", "report?type=" + type, true);
   xhr.setRequestHeader("Content-Type", "application/json");
   xhr.send(JSON.stringify({ location: location.href, ...body }));

@@ -34,18 +34,18 @@ export const prihlasenyStudentColumns = [
 ];
 
 function ZoznamPrihlasenychNaTerminModalContent() {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
-  var { modalTerminKey } = query;
+  const query = useContext(QueryContext);
+  const cache = new CacheRequester();
+  const { modalTerminKey } = query;
 
   if (!modalTerminKey) return null;
-  var studenti = cache.get("get_prihlaseni_studenti", modalTerminKey);
+  const studenti = cache.get("get_prihlaseni_studenti", modalTerminKey);
 
   if (!studenti) {
     return <Loading requests={cache.missing} />;
   }
 
-  var message = studenti.length
+  const message = studenti.length
     ? null
     : "Na termín nie sú prihlásení žiadni študenti.";
 

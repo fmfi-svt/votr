@@ -19,9 +19,9 @@ const registerOsobColumns = [
 const registerOsobDefaultOrder = "a0";
 
 function RegisterOsobForm() {
-  var query = useContext(QueryContext);
+  const query = useContext(QueryContext);
 
-  var [state, setState] = useState(() => ({
+  const [state, setState] = useState(() => ({
     meno: query.meno,
     priezvisko: query.priezvisko,
     absolventi: query.absolventi,
@@ -45,14 +45,14 @@ function RegisterOsobForm() {
   function handleFieldChange(
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) {
-    var name = event.target.name;
-    var value = event.target.value;
+    const name = event.target.name;
+    const value = event.target.value;
     setState((old) => ({ ...old, [name]: value }));
   }
 
   function handleCheckBoxChange(event: React.ChangeEvent<HTMLInputElement>) {
-    var name = event.target.name;
-    var value = String(event.target.checked);
+    const name = event.target.name;
+    const value = String(event.target.checked);
     setState((old) => ({ ...old, [name]: value }));
   }
 
@@ -61,7 +61,7 @@ function RegisterOsobForm() {
     navigate({ action: "registerOsob", ...state });
   }
 
-  var cache = new CacheRequester();
+  const cache = new CacheRequester();
 
   function renderTextbox(
     label: string,
@@ -123,8 +123,8 @@ function RegisterOsobForm() {
     );
   }
 
-  var akademickeRoky = cache.get("get_register_osob_akademicky_rok_options");
-  var fakulty = cache.get("get_register_osob_fakulty");
+  const akademickeRoky = cache.get("get_register_osob_akademicky_rok_options");
+  const fakulty = cache.get("get_register_osob_fakulty");
 
   return (
     <form onSubmit={handleSubmit}>
@@ -167,8 +167,8 @@ function RegisterOsobForm() {
 }
 
 function RegisterOsobResultTable() {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
+  const query = useContext(QueryContext);
+  const cache = new CacheRequester();
 
   if (
     !query.akademickyRok ||
@@ -195,7 +195,7 @@ function RegisterOsobResultTable() {
     return null;
   }
 
-  var response = cache.get(
+  const response = cache.get(
     "vyhladaj_osobu",
     query.meno,
     query.priezvisko,
@@ -221,7 +221,7 @@ function RegisterOsobResultTable() {
     return <Loading requests={cache.missing} />;
   }
 
-  var [osoby, message] = response;
+  let [osoby, message] = response;
 
   if (!message && !osoby.length) {
     message = "Podmienkam nevyhovuje žiadny záznam.";

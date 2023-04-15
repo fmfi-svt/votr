@@ -1,7 +1,7 @@
 import React from "react";
 import { Hodnotenie, ZapisPredmet } from "./types";
 
-var ZNAMKY: Record<string, number> = {
+const ZNAMKY: Record<string, number> = {
   "A": 1,
   "B": 1.5,
   "C": 2,
@@ -11,7 +11,7 @@ var ZNAMKY: Record<string, number> = {
 };
 
 export function coursesStats(predmety: (Hodnotenie | ZapisPredmet)[]) {
-  var result = {
+  const result = {
     zima: { count: 0, creditsEnrolled: 0, creditsObtained: 0 },
     leto: { count: 0, creditsEnrolled: 0, creditsObtained: 0 },
     spolu: { count: 0, creditsEnrolled: 0, creditsObtained: 0 },
@@ -28,8 +28,8 @@ export function coursesStats(predmety: (Hodnotenie | ZapisPredmet)[]) {
   }
 
   for (const row of predmety) {
-    var credits = parseInt(row.kredit);
-    var obtained =
+    const credits = parseInt(row.kredit);
+    const obtained =
       "hodn_znamka" in row &&
       !!row.hodn_znamka &&
       !row.hodn_znamka.startsWith("F");
@@ -42,11 +42,11 @@ export function coursesStats(predmety: (Hodnotenie | ZapisPredmet)[]) {
 }
 
 export function weightedStudyAverage(hodnotenia: Hodnotenie[]) {
-  var weightedSum = 0;
-  var creditsSum = 0;
+  let weightedSum = 0;
+  let creditsSum = 0;
 
   for (const row of hodnotenia) {
-    var value = ZNAMKY[row.hodn_znamka.charAt(0)];
+    const value = ZNAMKY[row.hodn_znamka.charAt(0)];
     if (value) {
       weightedSum += value * parseInt(row.kredit);
       creditsSum += parseInt(row.kredit);
@@ -58,7 +58,7 @@ export function weightedStudyAverage(hodnotenia: Hodnotenie[]) {
 }
 
 export function renderWeightedStudyAverage(hodnotenia: Hodnotenie[]) {
-  var average = weightedStudyAverage(hodnotenia);
+  const average = weightedStudyAverage(hodnotenia);
   if (average === null) return null;
   return (
     <span title="Neoficiálny vážený študijný priemer z doteraz ohodnotených predmetov">
@@ -80,10 +80,10 @@ export function renderCredits({
 }
 
 export function currentAcademicYear() {
-  var date = new Date();
+  const date = new Date();
 
-  var year = date.getFullYear();
-  var month = date.getMonth() + 1;
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
 
   if (month < 8) {
     return `${year - 1}/${year}`;

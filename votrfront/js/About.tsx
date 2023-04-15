@@ -2,7 +2,7 @@ import React from "react";
 import { Modal, PageLayout } from "./layout";
 
 export function AboutModal() {
-  var github = "https://github.com/fmfi-svt/votr";
+  const github = "https://github.com/fmfi-svt/votr";
   return (
     <Modal title="O aplikácii">
       <p>

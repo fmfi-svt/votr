@@ -3,18 +3,18 @@ import { CacheRequester, Loading } from "./ajax";
 import { getLocalSetting, setLocalSetting } from "./LocalSettings";
 
 export function AnketaPopup() {
-  var season = Votr.settings.anketa_season;
+  const season = Votr.settings.anketa_season;
 
   if (!season) return null;
 
   if (Date.now() > Votr.settings.anketa_end_msec!) return null;
 
-  var wasClosedBefore = false;
+  let wasClosedBefore = false;
 
   try {
-    var state = getLocalSetting("anketapopup");
+    const state = getLocalSetting("anketapopup");
     if (state) {
-      var [savedSeason, savedTime] = JSON.parse(state) as [string, number];
+      const [savedSeason, savedTime] = JSON.parse(state) as [string, number];
       if (savedSeason == season) {
         if (savedTime == -1 || Date.now() < savedTime) {
           return null;
@@ -26,8 +26,8 @@ export function AnketaPopup() {
     // Ignore the error. Proceed with wasClosedBefore = false.
   }
 
-  var cache = new CacheRequester();
-  var studia = cache.get("get_studia");
+  const cache = new CacheRequester();
+  const studia = cache.get("get_studia");
   if (!studia) {
     return (
       <div className="hidden">

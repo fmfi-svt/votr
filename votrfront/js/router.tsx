@@ -2,11 +2,11 @@ import { pickBy } from "lodash-es";
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { Href, Query } from "./types";
 
-var trackPageViewLast: string | undefined;
+let trackPageViewLast: string | undefined;
 
 function trackPageView() {
   if (!window.ga) return;
-  var current =
+  const current =
     location.protocol +
     "//" +
     location.hostname +
@@ -22,7 +22,7 @@ export var QueryContext = React.createContext<Query>(
 );
 
 export function Root({ app }: { app: React.ComponentType }) {
-  var [, setState] = useState({});
+  const [, setState] = useState({});
 
   useEffect(() => {
     Votr.updateRoot = () => {
@@ -46,14 +46,14 @@ export function Root({ app }: { app: React.ComponentType }) {
     trackPageView();
   });
 
-  var queryString = location.search;
+  const queryString = location.search;
 
-  var query = useMemo(
+  const query = useMemo(
     () => Object.fromEntries(new URLSearchParams(queryString)),
     [queryString]
   );
 
-  var C = app;
+  const C = app;
   return (
     <QueryContext.Provider value={query}>
       <C />
@@ -104,7 +104,7 @@ export function RelativeLink({
   href,
   ...rest
 }: { href: Href } & Omit<React.HTMLAttributes<HTMLAnchorElement>, "href">) {
-  var query = useContext(QueryContext);
+  const query = useContext(QueryContext);
   return <Link {...rest} href={{ ...query, ...href }} />;
 }
 

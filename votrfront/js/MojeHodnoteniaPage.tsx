@@ -84,20 +84,20 @@ const mojePriemeryColumns: Column<Priemer>[] = [
 const mojePriemeryDefaultOrder = "a0a2a1";
 
 function MojeHodnoteniaHodnoteniaTable() {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
-  var studiumKey = query.studiumKey!;
+  const query = useContext(QueryContext);
+  const cache = new CacheRequester();
+  const studiumKey = query.studiumKey!;
 
-  var [hodnotenia, message] =
+  const [hodnotenia, message] =
     cache.get("get_prehlad_kreditov", studiumKey) || [];
 
   if (!hodnotenia) {
     return <Loading requests={cache.missing} />;
   }
 
-  var stats = coursesStats(hodnotenia);
+  const stats = coursesStats(hodnotenia);
 
-  var footer = (size: ScreenSize) => (
+  const footer = (size: ScreenSize) => (
     <tr>
       {size > ScreenSize.SM && <td colSpan={2} />}
       <td colSpan={2}>
@@ -106,7 +106,7 @@ function MojeHodnoteniaHodnoteniaTable() {
       </td>
       <td>{renderCredits(stats.spolu)}</td>
       {size > ScreenSize.XS && <td />}
-      <td>{renderWeightedStudyAverage(hodnotenia!)}</td>
+      <td>{renderWeightedStudyAverage(hodnotenia)}</td>
       {size > ScreenSize.SM && <td />}
       {size > ScreenSize.SM && <td />}
     </tr>
@@ -126,18 +126,18 @@ function MojeHodnoteniaHodnoteniaTable() {
 }
 
 function MojeHodnoteniaPriemeryTable() {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
-  var studiumKey = query.studiumKey!;
+  const query = useContext(QueryContext);
+  const cache = new CacheRequester();
+  const studiumKey = query.studiumKey!;
 
-  var priemery: Priemer[] | undefined;
-  var message: string | null | undefined;
-  var zapisneListy = cache.get("get_zapisne_listy", studiumKey);
+  let priemery: Priemer[] | undefined;
+  let message: string | null | undefined;
+  const zapisneListy = cache.get("get_zapisne_listy", studiumKey);
 
   if (zapisneListy && zapisneListy.length == 0) {
     priemery = [];
   } else if (zapisneListy) {
-    var zapisnyListKey = maxBy(zapisneListy, (zapisnyList) =>
+    const zapisnyListKey = maxBy(zapisneListy, (zapisnyList) =>
       sortAs.date(zapisnyList.datum_zapisu)
     )!.zapisny_list_key;
     [priemery, message] = cache.get("get_priemery", zapisnyListKey) || [];

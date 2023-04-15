@@ -5,7 +5,7 @@ import { Announcement, Modal, ModalBase } from "./layout";
 import { getLocalSetting, setLocalSetting } from "./LocalSettings";
 import { buildUrl, FakeLink, QueryContext } from "./router";
 
-var TYPE_NAMES: Record<string, string> = {
+const TYPE_NAMES: Record<string, string> = {
   "cosignproxy": "Cosign (automatické)",
   "cosignpassword": "Cosign (meno a heslo)",
   "cosigncookie": "Cosign (manuálne cookie)",
@@ -14,9 +14,9 @@ var TYPE_NAMES: Record<string, string> = {
 };
 
 function DestinationCheckbox() {
-  var query = useContext(QueryContext);
-  var { action, modal } = query;
-  var actionTitle = action && actionTitles[action];
+  const query = useContext(QueryContext);
+  const { action, modal } = query;
+  const actionTitle = action && actionTitles[action];
 
   // Don't show the checkbox if the query string is empty or it only contains
   // foreign params (?fbclid=...).
@@ -42,14 +42,14 @@ function DestinationCheckbox() {
 }
 
 function LoginForm({ onOpenError }: { onOpenError: () => void }) {
-  var [state, setState] = useState({
+  const [state, setState] = useState({
     server: Votr.settings.server || 0,
     type: Votr.settings.type,
   });
 
   function handleServerChange(event: React.ChangeEvent<HTMLSelectElement>) {
-    var server = Number(event.target.value);
-    var newTypes = Votr.settings.servers![server]!.login_types;
+    const server = Number(event.target.value);
+    const newTypes = Votr.settings.servers![server]!.login_types;
     setState((old) => ({
       server,
       type: old.type && newTypes.includes(old.type) ? old.type : null,
@@ -57,12 +57,12 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
   }
 
   function handleTypeChange(event: React.ChangeEvent<HTMLSelectElement>) {
-    var type = event.target.value;
+    const type = event.target.value;
     setState((old) => ({ server: old.server, type }));
   }
 
-  var serverConfig = Votr.settings.servers![state.server]!;
-  var currentType = state.type || serverConfig.login_types[0];
+  const serverConfig = Votr.settings.servers![state.server]!;
+  const currentType = state.type || serverConfig.login_types[0];
 
   return (
     <form className="login" action="login" method="POST">
@@ -186,7 +186,7 @@ function LoginErrorModal() {
 }
 
 export function LoginPage() {
-  var [modal, setModal] = useState<React.ComponentType | null>(null);
+  const [modal, setModal] = useState<React.ComponentType | null>(null);
 
   return (
     <React.Fragment>

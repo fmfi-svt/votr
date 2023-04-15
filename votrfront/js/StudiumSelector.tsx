@@ -7,13 +7,13 @@ import { sortAs } from "./sorting";
 // TODO: Reduce code duplication with ZapisnyListSelector.
 
 export function StudiumSelector({ children }: { children: React.ReactNode }) {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
-  var studia = cache.get("get_studia") || [];
-  var items = sortBy(studia, (item) => sortAs.date(item.zaciatok)).reverse();
+  let query = useContext(QueryContext);
+  const cache = new CacheRequester();
+  const studia = cache.get("get_studia") || [];
+  const items = sortBy(studia, (item) => sortAs.date(item.zaciatok)).reverse();
 
   if (!query.studiumKey && cache.loadedAll && items[0]) {
-    var mostRecentItem = items[0];
+    const mostRecentItem = items[0];
     query = { ...query, studiumKey: mostRecentItem.studium_key };
   }
 
@@ -24,8 +24,8 @@ export function StudiumSelector({ children }: { children: React.ReactNode }) {
           <span className="text-pill">Štúdium:</span>
         </li>
         {items.map((studium, index) => {
-          var studiumKey = studium.studium_key;
-          var active = studiumKey == query.studiumKey;
+          const studiumKey = studium.studium_key;
+          const active = studiumKey == query.studiumKey;
           return (
             <li key={index} className={active ? "active" : ""}>
               <RelativeLink href={{ studiumKey }}>

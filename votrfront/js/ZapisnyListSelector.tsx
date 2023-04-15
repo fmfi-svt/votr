@@ -10,17 +10,17 @@ export function ZapisnyListSelector({
 }: {
   children: React.ReactNode;
 }) {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
-  var studia = cache.get("get_studia");
+  let query = useContext(QueryContext);
+  const cache = new CacheRequester();
+  const studia = cache.get("get_studia");
 
-  var items = [];
+  let items = [];
 
-  var showPridatButton = false;
+  let showPridatButton = false;
 
   if (studia) {
     for (const studium of studia) {
-      var zapisneListy = cache.get("get_zapisne_listy", studium.studium_key);
+      const zapisneListy = cache.get("get_zapisne_listy", studium.studium_key);
       if (!zapisneListy) continue;
 
       items.push(...zapisneListy);
@@ -37,7 +37,7 @@ export function ZapisnyListSelector({
   items = sortBy(items, (item) => sortAs.date(item.datum_zapisu)).reverse();
 
   if (!query.zapisnyListKey && cache.loadedAll && items[0]) {
-    var mostRecentItem = items[0];
+    const mostRecentItem = items[0];
     query = { ...query, zapisnyListKey: mostRecentItem.zapisny_list_key };
   }
 
@@ -50,8 +50,8 @@ export function ZapisnyListSelector({
         {items.map((zapisnyList, index) => {
           // An item's `index` might change over time as more get_zapisne_listy
           // responses arrive, but that should be harmless here.
-          var zapisnyListKey = zapisnyList.zapisny_list_key;
-          var active = zapisnyListKey == query.zapisnyListKey;
+          const zapisnyListKey = zapisnyList.zapisny_list_key;
+          const active = zapisnyListKey == query.zapisnyListKey;
           return (
             <li key={index} className={active ? "active" : ""}>
               <RelativeLink href={{ zapisnyListKey }}>

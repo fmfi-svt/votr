@@ -49,7 +49,7 @@ function ZapisLink(props: { active: boolean; href: Href; label: string }) {
 }
 
 function ZapisMenu() {
-  var { action, cast, zapisnyListKey } = useContext(QueryContext);
+  const { action, cast, zapisnyListKey } = useContext(QueryContext);
   return (
     <div className="header">
       <PageTitle>Zápis predmetov</PageTitle>
@@ -175,8 +175,8 @@ function ZapisTable({
   zPlanu: boolean;
   tableMessage: string | null | undefined;
 }) {
-  var [saving, setSaving] = useState(false);
-  var [changes, setChanges] = useState<Record<string, boolean | undefined>>({});
+  const [saving, setSaving] = useState(false);
+  const [changes, setChanges] = useState<Record<string, boolean | undefined>>({});
 
   // Chceme, aby sa pre ZapisTable zachoval state aj vtedy, ked tabulku
   // nevidno, lebo sme prave zapisali predmety a obnovujeme zoznam predmetov.
@@ -187,11 +187,11 @@ function ZapisTable({
   }
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    var predmetKey = event.target.name;
-    var predmet = predmety.get(predmetKey)!;
+    const predmetKey = event.target.name;
+    const predmet = predmety.get(predmetKey)!;
 
     // prettier-ignore
-    var want =
+    const want =
       predmet.moje && !event.target.checked ? false :
       !predmet.moje && event.target.checked ? true :
       undefined;
@@ -203,7 +203,7 @@ function ZapisTable({
 
     if (saving) return;
 
-    var odoberanePredmety: ZapisPredmet[] = [],
+    const odoberanePredmety: ZapisPredmet[] = [],
       pridavanePredmety: ZapisPredmet[] = [];
     for (const predmet of predmety.values()) {
       if (changes[predmet.predmet_key] === false && predmet.moje) {
@@ -216,7 +216,7 @@ function ZapisTable({
 
     setSaving(true);
 
-    var koniec = (odobral: boolean, pridal: boolean) => {
+    const koniec = (odobral: boolean, pridal: boolean) => {
       setSaving(false);
 
       if (odobral) {
@@ -258,7 +258,7 @@ function ZapisTable({
     });
   };
 
-  var classes: Record<string, string> = {},
+  const classes: Record<string, string> = {},
     checked: Record<string, boolean> = {};
   for (const predmet of predmety.values()) {
     const predmetKey = predmet.predmet_key;
@@ -273,7 +273,7 @@ function ZapisTable({
     }
   }
 
-  var saveButton = (
+  const saveButton = (
     <div className="section">
       <button
         type="submit"
@@ -334,12 +334,12 @@ function ZapisTable({
       sortKey: (predmet: MojZapisPredmet) => predmet.nazov,
       expansionMark: true,
       display: (predmet: MojZapisPredmet) => {
-        var href = {
+        const href = {
           modal: "detailPredmetu",
           modalPredmetKey: predmet.predmet_key,
           modalAkademickyRok: akademickyRok,
         };
-        var nazov = <RelativeLink href={href}>{predmet.nazov}</RelativeLink>;
+        let nazov = <RelativeLink href={href}>{predmet.nazov}</RelativeLink>;
         if (predmet.moje) nazov = <strong>{nazov}</strong>;
         if (predmet.aktualnost) {
           nazov = (
@@ -438,11 +438,11 @@ function ZapisTable({
 }
 
 function ZapisVlastnostiTable() {
-  var query = useContext(QueryContext);
-  var zapisnyListKey = query.zapisnyListKey!;
-  var cache = new CacheRequester();
+  const query = useContext(QueryContext);
+  const zapisnyListKey = query.zapisnyListKey!;
+  const cache = new CacheRequester();
 
-  var [vlastnosti, message] =
+  let [vlastnosti, message] =
     cache.get("zapis_get_vlastnosti_programu", zapisnyListKey) || [];
 
   if (!vlastnosti) {
@@ -464,22 +464,22 @@ function ZapisVlastnostiTable() {
 }
 
 function ZapisZPlanuPageContent() {
-  var query = useContext(QueryContext);
-  var zapisnyListKey = query.zapisnyListKey!;
-  var cast: ZapisCast = query.cast == "SS" ? "SS" : "SC";
+  const query = useContext(QueryContext);
+  const zapisnyListKey = query.zapisnyListKey!;
+  const cast: ZapisCast = query.cast == "SS" ? "SS" : "SC";
 
-  var cache = new CacheRequester();
+  const cache = new CacheRequester();
 
-  var [zapisanePredmety, zapisaneMessage] =
+  const [zapisanePredmety, zapisaneMessage] =
     cache.get("zapis_get_zapisane_predmety", zapisnyListKey, cast) || [];
-  var [ponukanePredmety, ponukaneMessage] =
+  const [ponukanePredmety, ponukaneMessage] =
     cache.get("zapis_plan_vyhladaj", zapisnyListKey, cast) || [];
-  var akademickyRok = cache.get(
+  const akademickyRok = cache.get(
     "zapisny_list_key_to_akademicky_rok",
     zapisnyListKey
   );
 
-  var outerMessage,
+  let outerMessage,
     tableMessage,
     predmety: Map<string, MojZapisPredmet> | undefined;
 
@@ -488,7 +488,7 @@ function ZapisZPlanuPageContent() {
   } else if (!cache.loadedAll) {
     outerMessage = <Loading requests={cache.missing} />;
   } else {
-    var vidnoZimne = false;
+    let vidnoZimne = false;
 
     predmety = new Map();
     for (const predmet of ponukanePredmety!) {
@@ -502,7 +502,7 @@ function ZapisZPlanuPageContent() {
         if (predmet.semester == "Z" && !vidnoZimne) continue;
         predmety.set(predmetKey, { moje: true, ...predmet });
       } else {
-        for (var property in predmet) {
+        for (const property in predmet) {
           if (
             (predmet as any)[property] !== null && // eslint-disable-line
             (predmet as any)[property] !== undefined // eslint-disable-line
@@ -545,7 +545,7 @@ function ZapisZPlanuPageContent() {
       return;
     }
 
-    var dvojice: [string, string][] = predmety.map((predmet) => [
+    const dvojice: [string, string][] = predmety.map((predmet) => [
       predmet.typ_vyucby,
       predmet.skratka,
     ]);
@@ -565,7 +565,7 @@ function ZapisZPlanuPageContent() {
       return;
     }
 
-    var kluce = predmety.map((predmet) => predmet.predmet_key);
+    const kluce = predmety.map((predmet) => predmet.predmet_key);
     sendRpc("zapis_odstran_predmety", [zapisnyListKey, cast, kluce], callback);
   }
 }
@@ -581,10 +581,10 @@ export function makeZapisZPlanuPage() {
 }
 
 function ZapisZPonukyForm() {
-  var query = useContext(QueryContext);
-  var zapisnyListKey = query.zapisnyListKey!;
+  const query = useContext(QueryContext);
+  const zapisnyListKey = query.zapisnyListKey!;
 
-  var [state, setState] = useState({
+  const [state, setState] = useState({
     fakulta: query.fakulta,
     stredisko: query.stredisko,
     skratkaPredmetu: query.skratkaPredmetu,
@@ -594,8 +594,8 @@ function ZapisZPonukyForm() {
   function handleFieldChange(
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) {
-    var name = event.target.name;
-    var value = event.target.value;
+    const name = event.target.name;
+    const value = event.target.value;
     setState((old) => ({ ...old, [name]: value }));
   }
 
@@ -604,7 +604,7 @@ function ZapisZPonukyForm() {
     navigate({ action: "zapisZPonuky", zapisnyListKey, ...state });
   }
 
-  var cache = new CacheRequester();
+  const cache = new CacheRequester();
 
   function renderTextbox(
     label: string,
@@ -648,7 +648,7 @@ function ZapisZPonukyForm() {
     );
   }
 
-  var [fakulty, message] =
+  const [fakulty, message] =
     cache.get("zapis_ponuka_options", zapisnyListKey) || [];
 
   if (!fakulty) {
@@ -675,11 +675,11 @@ function ZapisZPonukyForm() {
 }
 
 function ZapisZPonukyPageContent() {
-  var query = useContext(QueryContext);
-  var zapisnyListKey = query.zapisnyListKey!;
-  var cache = new CacheRequester();
+  const query = useContext(QueryContext);
+  const zapisnyListKey = query.zapisnyListKey!;
+  const cache = new CacheRequester();
 
-  var outerMessage,
+  let outerMessage,
     tableMessage,
     predmety: Map<string, MojZapisPredmet> | undefined,
     akademickyRok;
@@ -690,9 +690,9 @@ function ZapisZPonukyPageContent() {
     query.skratkaPredmetu ||
     query.nazovPredmetu
   ) {
-    var [zapisanePredmety, zapisaneMessage] =
+    const [zapisanePredmety, zapisaneMessage] =
       cache.get("zapis_get_zapisane_predmety", zapisnyListKey, "SC") || [];
-    var [ponukanePredmety, ponukaneMessage] =
+    const [ponukanePredmety, ponukaneMessage] =
       cache.get(
         "zapis_ponuka_vyhladaj",
         zapisnyListKey,
@@ -753,7 +753,7 @@ function ZapisZPonukyPageContent() {
       return;
     }
 
-    var skratky = predmety.map((predmet) => predmet.skratka);
+    const skratky = predmety.map((predmet) => predmet.skratka);
     sendRpc(
       "zapis_ponuka_pridaj_predmety",
       [
@@ -777,7 +777,7 @@ function ZapisZPonukyPageContent() {
       return;
     }
 
-    var kluce = predmety.map((predmet) => predmet.predmet_key);
+    const kluce = predmety.map((predmet) => predmet.predmet_key);
     sendRpc("zapis_odstran_predmety", [zapisnyListKey, "SC", kluce], callback);
   }
 }

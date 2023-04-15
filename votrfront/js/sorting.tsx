@@ -8,9 +8,9 @@ import { Query } from "./types";
 
 export var sortAs = {
   personName: (text: string) => {
-    var words = text.replace(/,/g, "").split(" ");
+    let words = text.replace(/,/g, "").split(" ");
     words = words.filter((word) => !word.match(/\.$/));
-    var last = words.pop();
+    const last = words.pop();
     if (last) words.unshift(last); // move last name to the beginning
     return words.join(" ").toLowerCase();
     // TODO: consider using latinise (see fajr).
@@ -34,7 +34,7 @@ export var sortAs = {
   },
 
   interval: (text: string) => {
-    var index = text.indexOf("do ");
+    const index = text.indexOf("do ");
     if (index == -1) return "";
     return sortAs.date(text.substring(index + 3));
   },
@@ -140,7 +140,7 @@ function getOrder(
   query: Query,
   queryKey: string
 ): string[] {
-  var orderString = query[queryKey] || defaultOrder;
+  const orderString = query[queryKey] || defaultOrder;
   return orderString ? orderString.split(/(?=[ad])/) : [];
 }
 
@@ -149,8 +149,8 @@ function sortItems<T>(
   columns: Column<T>[],
   order: string[]
 ): number[] {
-  var directions = order.map((o) => (o.startsWith("a") ? "asc" : "desc"));
-  var iteratees = order.map((o) => {
+  const directions = order.map((o) => (o.startsWith("a") ? "asc" : "desc"));
+  const iteratees = order.map((o) => {
     const column = columns[Number(o.substring(1))];
     if (!column) return () => "";
     return (originalIndex: number) => column.sortKey(items[originalIndex]!);
@@ -172,7 +172,7 @@ function renderHeader<T>(
         const strD = `d${index}`;
 
         function handleClick() {
-          var newOrder = without(order, strA, strD);
+          const newOrder = without(order, strA, strD);
           // prettier-ignore
           newOrder.unshift(
             order[0] == strA ? strD :
@@ -223,11 +223,11 @@ export function SortableTable<T>({
   rowClassName?: (item: T) => string | undefined;
   expandedContentOffset?: number;
 }) {
-  var query = useContext(QueryContext);
+  const query = useContext(QueryContext);
 
-  var [open, setOpen] = useState<boolean[]>([]);
+  const [open, setOpen] = useState<boolean[]>([]);
 
-  var anyOpen = open.includes(true);
+  const anyOpen = open.includes(true);
 
   function toggleInfo(index: number) {
     setOpen((oldOpen) => {
@@ -237,21 +237,21 @@ export function SortableTable<T>({
     });
   }
 
-  var fullTable = getLocalSetting("fullTable") == "true";
+  const fullTable = getLocalSetting("fullTable") == "true";
 
-  var order = getOrder(defaultOrder, query, queryKey);
+  const order = getOrder(defaultOrder, query, queryKey);
 
-  var sortedIndexes = sortItems(items, columns, order);
+  const sortedIndexes = sortItems(items, columns, order);
 
-  var deviceSize = useScreenSize();
+  const deviceSize = useScreenSize();
 
-  var chosenSize = fullTable ? ScreenSize.LG : deviceSize;
+  const chosenSize = fullTable ? ScreenSize.LG : deviceSize;
 
-  var canHide = columns.map((column) => column.hide(deviceSize));
-  var reallyHide = canHide.map((canHideColumn) => canHideColumn && !fullTable);
-  var reallyHiddenCount = sum(reallyHide);
+  const canHide = columns.map((column) => column.hide(deviceSize));
+  const reallyHide = canHide.map((canHideColumn) => canHideColumn && !fullTable);
+  const reallyHiddenCount = sum(reallyHide);
 
-  var header = renderHeader(columns, query, queryKey, order, reallyHide);
+  const header = renderHeader(columns, query, queryKey, order, reallyHide);
 
   const className = classNames(
     "table table-condensed table-bordered table-striped table-hover",
@@ -268,7 +268,7 @@ export function SortableTable<T>({
         key={originalIndex}
         onClick={(event) => {
           // Don't toggle the row if we just clicked some link or input in the row.
-          var target = event.target as Element;
+          const target = event.target as Element;
           if (!target.closest("a, input, button") && reallyHiddenCount) {
             toggleInfo(originalIndex);
           }

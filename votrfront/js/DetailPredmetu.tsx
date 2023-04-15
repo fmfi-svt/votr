@@ -29,12 +29,12 @@ function getZapisaniStudenti(
 }
 
 function DetailPredmetuInformacnyList() {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
-  var { modalAkademickyRok, modalPredmetKey } = query;
+  const query = useContext(QueryContext);
+  const cache = new CacheRequester();
+  const { modalAkademickyRok, modalPredmetKey } = query;
   if (!modalAkademickyRok || !modalPredmetKey) return null;
 
-  var data = cache.get(
+  const data = cache.get(
     "get_informacny_list",
     modalPredmetKey,
     modalAkademickyRok
@@ -44,7 +44,7 @@ function DetailPredmetuInformacnyList() {
     return <Loading requests={cache.missing} />;
   }
 
-  var url = "data:application/pdf;base64," + escape(data);
+  const url = "data:application/pdf;base64," + escape(data);
   return (
     <a href={url} download>
       Stiahnuť
@@ -53,26 +53,26 @@ function DetailPredmetuInformacnyList() {
 }
 
 function DetailPredmetuUcitelia() {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
-  var { modalAkademickyRok, modalPredmetKey } = query;
+  const query = useContext(QueryContext);
+  const cache = new CacheRequester();
+  const { modalAkademickyRok, modalPredmetKey } = query;
   if (!modalAkademickyRok || !modalPredmetKey) return null;
 
-  var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
+  const data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 
   if (!data) {
     return <Loading requests={cache.missing} />;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  var [studenti, predmet] = data;
+  const [studenti, predmet] = data;
 
   if (!predmet) {
     // https://github.com/microsoft/TypeScript/issues/21699
     return "Dáta pre predmet neboli nájdené." as unknown as JSX.Element;
   }
 
-  var ucitelia = cache.get(
+  const ucitelia = cache.get(
     "get_ucitelia_predmetu",
     modalPredmetKey,
     modalAkademickyRok,
@@ -84,7 +84,7 @@ function DetailPredmetuUcitelia() {
     return <Loading requests={cache.missing} />;
   }
 
-  var message = ucitelia.length
+  const message = ucitelia.length
     ? null
     : "Predmet nemá v AISe žiadnych učiteľov.";
 
@@ -100,25 +100,25 @@ function DetailPredmetuUcitelia() {
 }
 
 function DetailPredmetuZapisaniStudenti() {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
-  var { modalAkademickyRok, modalPredmetKey } = query;
+  const query = useContext(QueryContext);
+  const cache = new CacheRequester();
+  const { modalAkademickyRok, modalPredmetKey } = query;
   if (!modalAkademickyRok || !modalPredmetKey) return null;
 
-  var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
+  const data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 
   if (!data) {
     return <Loading requests={cache.missing} />;
   }
 
-  var [studenti, predmet] = data;
+  const [studenti, predmet] = data;
 
   if (!predmet) {
     // https://github.com/microsoft/TypeScript/issues/21699
     return "Dáta pre predmet neboli nájdené." as unknown as JSX.Element;
   }
 
-  var message = studenti.length
+  const message = studenti.length
     ? null
     : "Predmet nemá v AISe žiadnych zapísaných študentov.";
 
@@ -134,21 +134,21 @@ function DetailPredmetuZapisaniStudenti() {
 }
 
 function DetailPredmetuTitle() {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
-  var { modalAkademickyRok, modalPredmetKey } = query;
+  const query = useContext(QueryContext);
+  const cache = new CacheRequester();
+  const { modalAkademickyRok, modalPredmetKey } = query;
   if (!modalAkademickyRok || !modalPredmetKey) {
     return <em>Pokazená URL adresa!</em>;
   }
 
-  var data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
+  const data = getZapisaniStudenti(cache, modalPredmetKey, modalAkademickyRok);
 
   if (!data) {
     return <Loading requests={cache.missing} />;
   }
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  var [studenti, predmet] = data;
+  const [studenti, predmet] = data;
 
   if (!predmet) {
     // https://github.com/microsoft/TypeScript/issues/21699

@@ -15,8 +15,8 @@ import "../css/main.scss";
   window.addEventListener(
     "error",
     (event) => {
-      var { message, filename, lineno, colno } = event;
-      var error: unknown = event.error;
+      const { message, filename, lineno, colno } = event;
+      const error: unknown = event.error;
       reportClientError("onerror", {
         message,
         filename,
@@ -31,7 +31,7 @@ import "../css/main.scss";
   window.addEventListener(
     "unhandledrejection",
     (event) => {
-      var error: unknown = event.reason;
+      const error: unknown = event.reason;
       reportClientError("unhandledrejection", {
         errorString: String(error),
         stack: error && (error as { stack?: unknown }).stack,
@@ -40,7 +40,7 @@ import "../css/main.scss";
     false
   );
 
-  var query = Votr.settings.destination;
+  const query = Votr.settings.destination;
   if (query !== undefined && (query == "" || query.startsWith("?"))) {
     try {
       history.replaceState(null, "", Votr.settings.url_root + query);
@@ -49,7 +49,7 @@ import "../css/main.scss";
     }
   }
 
-  var root = (
+  const root = (
     <React.StrictMode>
       <ErrorBoundary>
         <Root

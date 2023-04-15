@@ -5,7 +5,7 @@ import { Modal, ModalBase } from "./layout";
 import { FakeLink } from "./router";
 
 export function ErrorModal() {
-  var [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
   function handleIgnore() {
     Votr.ajaxError = null;
@@ -16,13 +16,13 @@ export function ErrorModal() {
     setOpen(true);
   }
 
-  var error = Votr.settings.error || Votr.ajaxError;
-  var lastLine = error!.trim().replace(/[\s\S]*\n/, "");
-  var type = lastLine.split(":")[0]!;
+  const error = Votr.settings.error || Votr.ajaxError;
+  const lastLine = error!.trim().replace(/[\s\S]*\n/, "");
+  const type = lastLine.split(":")[0]!;
 
-  var title = "Chyba";
-  var description = "Vyskytla sa chyba a vaša požiadavka nebola spracovaná.";
-  var contact = true;
+  let title = "Chyba";
+  let description = "Vyskytla sa chyba a vaša požiadavka nebola spracovaná.";
+  let contact = true;
 
   if (type == "aisikl.exceptions.LoggedOutError") {
     title = "Prihlásenie vypršalo";
@@ -51,7 +51,7 @@ export function ErrorModal() {
   // Some errors are caused by a malformed URL, so resetting won't help. If
   // we haven't navigated since the last full reload (the user has probably
   // reset just now), we redirect to the front page instead.
-  var goHome =
+  const goHome =
     !Votr.didNavigate && !Votr.settings.error && location.search.substring(1);
 
   return (

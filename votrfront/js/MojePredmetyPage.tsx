@@ -74,19 +74,19 @@ export const mojePredmetyColumns: Column<Hodnotenie>[] = [
 const mojePredmetyDefaultOrder = "d0a1";
 
 function MojePredmetyPageContent() {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
-  var zapisnyListKey = query.zapisnyListKey!;
+  const query = useContext(QueryContext);
+  const cache = new CacheRequester();
+  const zapisnyListKey = query.zapisnyListKey!;
 
-  var [hodnotenia, message] = cache.get("get_hodnotenia", zapisnyListKey) || [];
+  const [hodnotenia, message] = cache.get("get_hodnotenia", zapisnyListKey) || [];
 
   if (!hodnotenia) {
     return <Loading requests={cache.missing} />;
   }
 
-  var stats = coursesStats(hodnotenia);
+  const stats = coursesStats(hodnotenia);
 
-  var footer = (size: ScreenSize) => (
+  const footer = (size: ScreenSize) => (
     <tr>
       {size > ScreenSize.SM && <td />}
       <td colSpan={2}>
@@ -100,7 +100,7 @@ function MojePredmetyPageContent() {
         {renderCredits(stats.leto)})
       </td>
       {size > ScreenSize.XS && <td />}
-      <td>{renderWeightedStudyAverage(hodnotenia!)}</td>
+      <td>{renderWeightedStudyAverage(hodnotenia)}</td>
       {size > ScreenSize.SM && <td />}
       {size > ScreenSize.SM && <td />}
     </tr>

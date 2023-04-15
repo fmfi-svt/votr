@@ -102,13 +102,6 @@ module.exports = {
         "symbol-description": "warn",
         "yoda": "warn",
 
-        // We still use var everywhere. Maybe we'll enable no-var later.
-        //
-        // It's not in eslint:recommended, but typescript-eslint enables it at
-        // https://github.com/typescript-eslint/typescript-eslint/blob/main/packages/eslint-plugin/src/configs/eslint-recommended.ts
-        // with comment: "ts transpiles let/const to var, so no need for vars any more"
-        "no-var": "off",
-
         // I slightly dislike the changes proposed by this rule. For now let's
         // at least disable it for function parameters.
         "@typescript-eslint/no-inferrable-types": [

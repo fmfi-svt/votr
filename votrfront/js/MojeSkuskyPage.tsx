@@ -122,7 +122,7 @@ function convertToICAL(terminy: Termin[]) {
   // verificator: http://severinghaus.org/projects/icv/
 
   // header
-  var lines = [
+  const lines = [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//svt.fmph.uniba.sk//NONSGML votr-2017//EN",
@@ -131,13 +131,13 @@ function convertToICAL(terminy: Termin[]) {
     "X-WR-TIMEZONE:Europe/Bratislava",
   ];
 
-  var dtstamp = new Date()
+  const dtstamp = new Date()
     .toISOString()
     .replace(/[-:]/g, "")
     .replace(/\.\d+/, "");
 
   // VEVENTs
-  for (var termin of terminy) {
+  for (const termin of terminy) {
     if (!somPrihlaseny(termin)) continue;
 
     const [den, mesiac, rok] = termin.datum.split(".");
@@ -149,18 +149,18 @@ function convertToICAL(terminy: Termin[]) {
     lines.push("SUMMARY:" + termin.nazov_predmetu);
 
     // unique identificator for each event (so we can identify copies of the same event)
-    var uid = termin.termin_key + "@votr.uniba.sk";
+    const uid = termin.termin_key + "@votr.uniba.sk";
     lines.push("UID:" + uid);
 
     // DTSTAMP is when this VEVENT was created (exported), must be YYYYMMDDTHHMMSSZ
     lines.push("DTSTAMP:" + dtstamp);
 
     // DTSTART, DTEND
-    var dtstart = `${rok}${mesiac}${den}T${hodina}${minuty}00`;
+    const dtstart = `${rok}${mesiac}${den}T${hodina}${minuty}00`;
 
     // as for there is no info about duration, we'll set it for 4 hours
-    var hodinaKoniec = String(Number(hodina) + 4).padStart(2, "0");
-    var dtend = `${rok}${mesiac}${den}T${hodinaKoniec}${minuty}00`;
+    const hodinaKoniec = String(Number(hodina) + 4).padStart(2, "0");
+    const dtend = `${rok}${mesiac}${den}T${hodinaKoniec}${minuty}00`;
     lines.push("DTSTART;TZID=Europe/Bratislava:" + dtstart);
     lines.push("DTEND;TZID=Europe/Bratislava:" + dtend);
 
@@ -171,7 +171,7 @@ function convertToICAL(terminy: Termin[]) {
 
     // DESCRIPTION
     // TODO ake vsetky informacie chceme zobrazovat v popise eventu? (zatial su take, ako vo FAJR)
-    var desc = [
+    const desc = [
       "Prihlasovanie: " + termin.prihlasovanie,
       "Odhlasovanie: " + termin.odhlasovanie,
       "Poznámka: " + termin.poznamka,
@@ -203,8 +203,8 @@ function MojeSkuskyMenuLink(props: {
 }
 
 function MojeSkuskyMenu() {
-  var query = useContext(QueryContext);
-  var { kalendar, zapisnyListKey } = query;
+  const query = useContext(QueryContext);
+  const { kalendar, zapisnyListKey } = query;
   return (
     <div className="pull-left">
       <div className="skusky-calendar-menu">
@@ -235,8 +235,8 @@ interface CalendarEvent {
 
 function convertToEvents(terminy: Termin[]): CalendarEvent[] {
   return terminy.map((termin, i) => {
-    var miestnostStr = termin.miestnost ? ", " + termin.miestnost : "";
-    var cas = termin.datum + " " + termin.cas;
+    const miestnostStr = termin.miestnost ? ", " + termin.miestnost : "";
+    const cas = termin.datum + " " + termin.cas;
     return {
       id: i,
       title: `${termin.nazov_predmetu} (${termin.cas}${miestnostStr})`,
@@ -248,10 +248,10 @@ function convertToEvents(terminy: Termin[]): CalendarEvent[] {
 }
 
 function defaultDate(eventList: CalendarEvent[]) {
-  var today = new Date();
+  const today = new Date();
 
   if (eventList.length) {
-    var lastExamDate = maxBy(eventList, "start")!.start;
+    const lastExamDate = maxBy(eventList, "start")!.start;
     if (lastExamDate < today) return lastExamDate;
   }
 
@@ -294,12 +294,12 @@ function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
 }
 
 function MojeSkuskyPageContent() {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
-  var zapisnyListKey = query.zapisnyListKey!;
-  var kalendar = query.kalendar;
+  const query = useContext(QueryContext);
+  const cache = new CacheRequester();
+  const zapisnyListKey = query.zapisnyListKey!;
+  const kalendar = query.kalendar;
 
-  var vidim = cache.get("get_vidim_terminy_hodnotenia", zapisnyListKey);
+  const vidim = cache.get("get_vidim_terminy_hodnotenia", zapisnyListKey);
 
   if (!cache.loadedAll) {
     return <Loading requests={cache.missing} />;
@@ -309,25 +309,25 @@ function MojeSkuskyPageContent() {
     return <p>Skúšky pre tento zápisný list už nie sú k dispozícii.</p>;
   }
 
-  var terminyPrihlasene = cache.get("get_prihlasene_terminy", zapisnyListKey);
-  var terminyVypisane = cache.get("get_vypisane_terminy", zapisnyListKey);
+  const terminyPrihlasene = cache.get("get_prihlasene_terminy", zapisnyListKey);
+  const terminyVypisane = cache.get("get_vypisane_terminy", zapisnyListKey);
 
   if (!terminyPrihlasene || !terminyVypisane) {
     return <Loading requests={cache.missing} />;
   }
 
-  var terminMap: Record<string, Termin> = {};
+  const terminMap: Record<string, Termin> = {};
   for (const termin of terminyVypisane) terminMap[termin.termin_key] = termin;
   for (const termin of terminyPrihlasene) terminMap[termin.termin_key] = termin;
-  var terminy = Object.values(terminMap);
+  const terminy = Object.values(terminMap);
 
-  var message = terminy.length
+  const message = terminy.length
     ? null
     : "Zatiaľ nie sú vypísané žiadne termíny.";
 
   function handleClickICal() {
-    var icalText = convertToICAL(terminyPrihlasene!);
-    var blob = new Blob([icalText], { type: "text/calendar;charset=utf-8" });
+    const icalText = convertToICAL(terminyPrihlasene!);
+    const blob = new Blob([icalText], { type: "text/calendar;charset=utf-8" });
     saveAs(blob, "MojeTerminy.ics", true);
   }
 
@@ -355,10 +355,10 @@ function MojeSkuskyPageContent() {
 }
 
 function SkuskyRegisterButton({ termin }: { termin: Termin }) {
-  var [pressed, setPressed] = useState(false);
+  const [pressed, setPressed] = useState(false);
 
-  var isSigninButton = !somPrihlaseny(termin);
-  var appearDisabled =
+  const isSigninButton = !somPrihlaseny(termin);
+  const appearDisabled =
     (isSigninButton && termin.moznost_prihlasit !== "A") || pressed;
 
   function handleClick() {
@@ -386,7 +386,7 @@ function SkuskyRegisterButton({ termin }: { termin: Termin }) {
     return null;
   }
 
-  var today = new Date().toJSON().replace(/-/g, "").substring(0, 8);
+  const today = new Date().toJSON().replace(/-/g, "").substring(0, 8);
   if (today > sortAs.date(termin.datum)) return null;
 
   return (

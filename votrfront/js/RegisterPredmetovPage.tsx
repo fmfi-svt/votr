@@ -51,9 +51,9 @@ const registerPredmetovColumns = [
 const registerPredmetovDefaultOrder = "a0";
 
 function RegisterPredmetovForm() {
-  var query = useContext(QueryContext);
+  const query = useContext(QueryContext);
 
-  var [state, setState] = useState(() => ({
+  const [state, setState] = useState(() => ({
     fakulta: query.fakulta,
     stredisko: query.stredisko,
     semester: query.semester,
@@ -67,8 +67,8 @@ function RegisterPredmetovForm() {
   function handleFieldChange(
     event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) {
-    var name = event.target.name;
-    var value = event.target.value;
+    const name = event.target.name;
+    const value = event.target.value;
     setState((old) => ({ ...old, [name]: value }));
   }
 
@@ -77,7 +77,7 @@ function RegisterPredmetovForm() {
     navigate({ action: "registerPredmetov", ...state });
   }
 
-  var cache = new CacheRequester();
+  const cache = new CacheRequester();
 
   function renderTextbox(
     label: string,
@@ -125,10 +125,10 @@ function RegisterPredmetovForm() {
     );
   }
 
-  var fakulty = cache.get("get_register_predmetov_fakulta_options");
-  var rocniky = cache.get("get_register_predmetov_akademicky_rok_options");
-  var stupne = cache.get("get_register_predmetov_stupen_options");
-  var semestre = cache.get("get_register_predmetov_semester_options");
+  const fakulty = cache.get("get_register_predmetov_fakulta_options");
+  const rocniky = cache.get("get_register_predmetov_akademicky_rok_options");
+  const stupne = cache.get("get_register_predmetov_stupen_options");
+  const semestre = cache.get("get_register_predmetov_semester_options");
 
   return (
     <form onSubmit={handleSubmit}>
@@ -150,8 +150,8 @@ function RegisterPredmetovForm() {
 }
 
 function RegisterPredmetovResultTable() {
-  var query = useContext(QueryContext);
-  var cache = new CacheRequester();
+  const query = useContext(QueryContext);
+  const cache = new CacheRequester();
 
   if (
     !query.fakulta &&
@@ -169,7 +169,7 @@ function RegisterPredmetovResultTable() {
     return null;
   }
 
-  var response = cache.get(
+  const response = cache.get(
     "vyhladaj_predmety",
     query.akademickyRok,
     query.fakulta || null,
@@ -185,7 +185,7 @@ function RegisterPredmetovResultTable() {
     return <Loading requests={cache.missing} />;
   }
 
-  var [rows, message] = response;
+  let [rows, message] = response;
 
   if (!message && !rows.length) {
     message = "Podmienkam nevyhovuje žiadny záznam.";

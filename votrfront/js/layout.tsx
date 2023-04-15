@@ -50,11 +50,11 @@ export class ErrorBoundary extends React.Component<
 
   override render() {
     if (this.state.error) {
-      var error = this.state.error;
-      var details = String(
+      const error = this.state.error;
+      const details = String(
         (typeof error == "object" && "stack" in error && error.stack) || error
       );
-      var firstLine = details.trim().split("\n")[0];
+      const firstLine = details.trim().split("\n")[0];
       return (
         <div className="alert alert-danger">
           <h3>Chyba</h3>
@@ -171,8 +171,8 @@ function PageNavbar() {
 }
 
 function LogStatus() {
-  var entry = last(ajaxLogs);
-  var message;
+  const entry = last(ajaxLogs);
+  let message;
   if (!entry) {
     message = "\xA0"; // nbsp
   } else if (entry.log == "http" && entry.message.match(/^Requesting/)) {
@@ -186,7 +186,7 @@ function LogStatus() {
 }
 
 export function PageTitle({ children }: { children: React.ReactNode }) {
-  var titleRef = useRef<HTMLHeadingElement | null>(null);
+  const titleRef = useRef<HTMLHeadingElement | null>(null);
 
   useEffect(() => {
     document.title = titleRef.current!.textContent!;
@@ -200,8 +200,8 @@ function MenuItem(props: {
   href: Href;
   label: React.ReactNode;
 }) {
-  var query = useContext(QueryContext);
-  var isActive = props.active || props.href.action == query.action;
+  const query = useContext(QueryContext);
+  const isActive = props.active || props.href.action == query.action;
   return (
     <li className={isActive ? "active" : undefined}>
       <Link href={props.href}>{props.label}</Link>
@@ -216,11 +216,11 @@ function DisabledItem(props: { label: React.ReactNode }) {
 }
 
 function MainMenu() {
-  var query = useContext(QueryContext);
-  var { action, studiumKey, zapisnyListKey } = query;
+  const query = useContext(QueryContext);
+  const { action, studiumKey, zapisnyListKey } = query;
 
-  var cache = new CacheRequester();
-  var somStudent = cache.get("get_som_student");
+  const cache = new CacheRequester();
+  const somStudent = cache.get("get_som_student");
 
   return (
     <ul className="main-menu nav nav-pills nav-stacked">
@@ -326,14 +326,14 @@ export function ModalBase({
   onClose: () => void;
   component: React.ComponentType | undefined | null;
 }) {
-  var modalRef = useRef<HTMLDivElement | null>(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
 
-  var C = component;
+  const C = component;
   const open = !!C;
 
   // This is so dumb.
   // TODO: "useEffectEvent" might simplify this in a future React version.
-  var closeHandlerRef = useRef<((e: JQuery.Event) => void) | null>(null);
+  const closeHandlerRef = useRef<((e: JQuery.Event) => void) | null>(null);
   useEffect(() => {
     closeHandlerRef.current = (e) => {
       if (open) {
@@ -344,9 +344,9 @@ export function ModalBase({
   }, [onClose, open]);
 
   useEffect(() => {
-    var $node = $(modalRef.current!);
+    const $node = $(modalRef.current!);
     $node.modal();
-    var handler = (e: JQuery.Event) => {
+    const handler = (e: JQuery.Event) => {
       closeHandlerRef.current!(e);
     };
     $node.on("hide.bs.modal", handler);
@@ -356,7 +356,7 @@ export function ModalBase({
   }, []);
 
   useEffect(() => {
-    var $node = $(modalRef.current!);
+    const $node = $(modalRef.current!);
     $node.modal(open ? ("show" as const) : ("hide" as const));
   }, [open]);
 
