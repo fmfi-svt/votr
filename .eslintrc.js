@@ -136,6 +136,6 @@ module.exports = {
       "parserOptions": { "ecmaVersion": "latest" },
     },
   ],
-  "ignorePatterns": ["*env*/**", "votrfront/static/**"],
+  "ignorePatterns": ["*.tmp*", "*env*/", "docs/_build", "static", "var"],
   "reportUnusedDisableDirectives": true,
 };
