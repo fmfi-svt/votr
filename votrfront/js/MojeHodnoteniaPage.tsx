@@ -13,14 +13,14 @@ import {
 } from "./humanizeAISData";
 import { PageLayout, PageTitle } from "./layout";
 import { ScreenSize, underSM, underXS } from "./mediaQueries";
-import { MojePredmetyColumns } from "./MojePredmetyPage";
+import { mojePredmetyColumns } from "./MojePredmetyPage";
 import { QueryContext } from "./router";
 import { Column, column, SortableTable, sortAs } from "./sorting";
 import { StudiumSelector } from "./StudiumSelector";
 import { Hodnotenie, Priemer } from "./types";
 
-const [predmetSemesterColumn, ...predmetRemainingColumns] = MojePredmetyColumns;
-const MojeHodnoteniaColumns: Column<Hodnotenie>[] = [
+const [predmetSemesterColumn, ...predmetRemainingColumns] = mojePredmetyColumns;
+const mojeHodnoteniaColumns: Column<Hodnotenie>[] = [
   column({ label: "Akademický rok", prop: "akademicky_rok" }),
   { ...predmetSemesterColumn!, hide: underSM },
   ...predmetRemainingColumns,
@@ -29,7 +29,7 @@ const MojeHodnoteniaColumns: Column<Hodnotenie>[] = [
 // Akademicky rok, Semester (descending), Nazov predmetu
 const mojeHodnoteniaDefaultOrder = "a0d1a2";
 
-const MojePriemeryColumns: Column<Priemer>[] = [
+const mojePriemeryColumns: Column<Priemer>[] = [
   column({
     label: "Dátum výpočtu priemeru",
     prop: "datum_vypoctu",
@@ -115,7 +115,7 @@ function MojeHodnoteniaHodnoteniaTable() {
   return (
     <SortableTable
       items={hodnotenia}
-      columns={MojeHodnoteniaColumns}
+      columns={mojeHodnoteniaColumns}
       defaultOrder={mojeHodnoteniaDefaultOrder}
       queryKey="predmetySort"
       message={message}
@@ -154,7 +154,7 @@ function MojeHodnoteniaPriemeryTable() {
   return (
     <SortableTable
       items={priemery}
-      columns={MojePriemeryColumns}
+      columns={mojePriemeryColumns}
       defaultOrder={mojePriemeryDefaultOrder}
       queryKey="priemerySort"
       message={message}

@@ -3,9 +3,9 @@ import { CacheRequester, Loading } from "./ajax";
 import { Modal } from "./layout";
 import { QueryContext } from "./router";
 import { column, SortableTable, sortAs } from "./sorting";
-import { PrihlasenyStudentColumns } from "./ZoznamPrihlasenychNaTermin";
+import { prihlasenyStudentColumns } from "./ZoznamPrihlasenychNaTermin";
 
-const RegUcitelPredmetuColumns = [
+const regUcitelPredmetuColumns = [
   column({ label: "Meno", prop: "plne_meno", sortKey: sortAs.personName }),
   column({ label: "Typ", prop: "typ" }),
 ];
@@ -91,7 +91,7 @@ function DetailPredmetuUcitelia() {
   return (
     <SortableTable
       items={ucitelia}
-      columns={RegUcitelPredmetuColumns}
+      columns={regUcitelPredmetuColumns}
       defaultOrder={detailPredmetuUciteliaDefaultOrder}
       queryKey="modalUciteliaSort"
       message={message}
@@ -125,7 +125,7 @@ function DetailPredmetuZapisaniStudenti() {
   return (
     <SortableTable
       items={studenti}
-      columns={PrihlasenyStudentColumns}
+      columns={prihlasenyStudentColumns}
       defaultOrder={detailPredmetuStudentiDefaultOrder}
       queryKey="modalStudentiSort"
       message={message}

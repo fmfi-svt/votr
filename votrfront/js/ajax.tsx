@@ -21,12 +21,13 @@ type RpcPayload =
   | RpcErrorPayload
   | RpcResultPayload;
 
+const HEADER_LENGTH = 10;
+
 function sendRawRpc<N extends keyof Rpcs>(
   name: N,
   stringifiedArgs: string,
   callback?: ((result: ReturnType<Rpcs[N]>) => void) | undefined
 ) {
-  var HEADER_LENGTH = 10;
   var processed = 0;
   var result: unknown = undefined;
   var finished = false;
@@ -151,13 +152,13 @@ export var ajaxLogs: RpcLogPayload[] = [];
 type CacheEntry<N extends keyof Rpcs> = ReturnType<Rpcs[N]> | undefined;
 type CacheMap<N extends keyof Rpcs> = Record<string, CacheEntry<N>>;
 
-var RequestCache: { [N in keyof Rpcs]?: CacheMap<N> } = {};
+const requestCache: { [N in keyof Rpcs]?: CacheMap<N> } = {};
 
 function sendCachedRequest<N extends keyof Rpcs>(
   name: N,
   stringifiedArgs: string
 ) {
-  const map: CacheMap<N> = (RequestCache[name] ||= {});
+  const map: CacheMap<N> = (requestCache[name] ||= {});
 
   // If pending or done, return. (In theory it could become done between the
   // CacheRequester.get() call and the useEffect in Loading.)
@@ -171,9 +172,9 @@ function sendCachedRequest<N extends keyof Rpcs>(
 
 export function invalidateRequestCache(command: keyof Rpcs) {
   /* eslint-disable-next-line @typescript-eslint/no-dynamic-delete --
-   * RequestCache is a plain object, not a Map, because TypeScript doesn't
+   * requestCache is a plain object, not a Map, because TypeScript doesn't
    * support mapped types for Map (all values must have the same type). */
-  delete RequestCache[command];
+  delete requestCache[command];
 }
 
 export class CacheRequester {
@@ -186,7 +187,7 @@ export class CacheRequester {
     ...args: Parameters<Rpcs[N]>
   ): ReturnType<Rpcs[N]> | undefined {
     const stringifiedArgs = JSON.stringify(args);
-    const entry = RequestCache[name]?.[stringifiedArgs];
+    const entry = requestCache[name]?.[stringifiedArgs];
     if (entry !== undefined) {
       return entry;
     } else {
@@ -235,7 +236,7 @@ export function reportClientError(type: string, body: object) {
 }
 
 Votr.dev_sendRpc = sendRpc;
-Votr.dev_RequestCache = RequestCache;
+Votr.dev_requestCache = requestCache;
 Votr.dev_invalidateRequestCache = invalidateRequestCache;
 Votr.dev_goLogout = goLogout;
 Votr.dev_goReset = goReset;

@@ -18,7 +18,7 @@ import { Column, column, SortableTable, sortAs } from "./sorting";
 import { Hodnotenie } from "./types";
 import { ZapisnyListSelector } from "./ZapisnyListSelector";
 
-export const MojePredmetyColumns: Column<Hodnotenie>[] = [
+export const mojePredmetyColumns: Column<Hodnotenie>[] = [
   column({
     label: "Semester",
     shortLabel: <abbr title="Semester">Sem.</abbr>,
@@ -109,7 +109,7 @@ function MojePredmetyPageContent() {
   return (
     <SortableTable
       items={hodnotenia}
-      columns={MojePredmetyColumns}
+      columns={mojePredmetyColumns}
       defaultOrder={mojePredmetyDefaultOrder}
       queryKey="predmetySort"
       expandedContentOffset={1}

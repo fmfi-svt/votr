@@ -16,7 +16,7 @@ import { Studium, ZapisnyList } from "./types";
 // TODO: Ked to raz bude rychle, pouzit to ako "home page" pri prazdnom action.
 // TODO: Zvyraznit aktualne obdobia a pisat kolko casu zostava do dalsich.
 
-const PrehladStudiumColumns = [
+const prehladStudiumColumns = [
   column({
     label: "Študijný program",
     projection: (item: Studium) => `${item.sp_popis} (${item.sp_skratka})`,
@@ -52,9 +52,9 @@ const PrehladStudiumColumns = [
 ];
 
 // Koniec studia
-const PrehladStudiumDefaultOrder = "d4";
+const prehladStudiumDefaultOrder = "d4";
 
-const PrehladZapisnyListColumns = [
+const prehladZapisnyListColumns = [
   column({
     label: "Akademický rok",
     prop: "akademicky_rok",
@@ -74,7 +74,7 @@ const PrehladZapisnyListColumns = [
 ];
 
 // Akademicky rok (descending), Datum zapisu
-const PrehladZapisnyListDefaultOrder = "d0d3";
+const prehladZapisnyListDefaultOrder = "d0d3";
 
 function PrehladStudiaObdobie(props: {
   rpc: "get_semester_obdobie" | "get_skuskove_obdobie";
@@ -195,8 +195,8 @@ function PrehladStudiaStudia() {
   return (
     <SortableTable
       items={studia}
-      columns={PrehladStudiumColumns}
-      defaultOrder={PrehladStudiumDefaultOrder}
+      columns={prehladStudiumColumns}
+      defaultOrder={prehladStudiumDefaultOrder}
       queryKey="studiaSort"
       message={message}
     />
@@ -231,8 +231,8 @@ function PrehladStudiaZapisneListy() {
       {showTable && (
         <SortableTable
           items={zapisneListy}
-          columns={PrehladZapisnyListColumns}
-          defaultOrder={PrehladZapisnyListDefaultOrder}
+          columns={prehladZapisnyListColumns}
+          defaultOrder={prehladZapisnyListDefaultOrder}
           queryKey="zapisneListySort"
           message={message}
         />

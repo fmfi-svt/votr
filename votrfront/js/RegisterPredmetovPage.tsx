@@ -23,7 +23,7 @@ function DetailPredmetuLink({ predmet }: { predmet: RegPredmet }) {
   );
 }
 
-const RegisterPredmetovColumns = [
+const registerPredmetovColumns = [
   column({
     label: "Názov predmetu",
     sortKey: (predmet: RegPredmet) => predmet.nazov,
@@ -196,7 +196,7 @@ function RegisterPredmetovResultTable() {
       <h2>Výsledky</h2>
       <SortableTable
         items={rows}
-        columns={RegisterPredmetovColumns}
+        columns={registerPredmetovColumns}
         defaultOrder={registerPredmetovDefaultOrder}
         queryKey="predmetSort"
         message={message}

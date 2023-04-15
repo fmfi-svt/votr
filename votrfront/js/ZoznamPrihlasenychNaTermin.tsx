@@ -5,7 +5,7 @@ import { underSM, underXS } from "./mediaQueries";
 import { QueryContext } from "./router";
 import { column, SortableTable, sortAs } from "./sorting";
 
-export const PrihlasenyStudentColumns = [
+export const prihlasenyStudentColumns = [
   column({
     label: "Meno",
     prop: "plne_meno",
@@ -52,7 +52,7 @@ function ZoznamPrihlasenychNaTerminModalContent() {
   return (
     <SortableTable
       items={studenti}
-      columns={PrihlasenyStudentColumns}
+      columns={prihlasenyStudentColumns}
       queryKey="modalStudentiSort"
       message={message}
     />

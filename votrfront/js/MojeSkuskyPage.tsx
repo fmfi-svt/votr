@@ -23,7 +23,7 @@ function somPrihlaseny(termin: Termin) {
   return !!termin.datum_prihlasenia && !termin.datum_odhlasenia;
 }
 
-const MojeSkuskyColumns: Column<Termin>[] = [
+const mojeSkuskyColumns: Column<Termin>[] = [
   column({
     label: (
       <React.Fragment>
@@ -159,8 +159,8 @@ function convertToICAL(terminy: Termin[]) {
     var dtstart = `${rok}${mesiac}${den}T${hodina}${minuty}00`;
 
     // as for there is no info about duration, we'll set it for 4 hours
-    var hodina_koniec = String(Number(hodina) + 4).padStart(2, "0");
-    var dtend = `${rok}${mesiac}${den}T${hodina_koniec}${minuty}00`;
+    var hodinaKoniec = String(Number(hodina) + 4).padStart(2, "0");
+    var dtend = `${rok}${mesiac}${den}T${hodinaKoniec}${minuty}00`;
     lines.push("DTSTART;TZID=Europe/Bratislava:" + dtstart);
     lines.push("DTEND;TZID=Europe/Bratislava:" + dtend);
 
@@ -338,7 +338,7 @@ function MojeSkuskyPageContent() {
       ) : (
         <SortableTable
           items={terminy}
-          columns={MojeSkuskyColumns}
+          columns={mojeSkuskyColumns}
           queryKey="skuskySort"
           withButtons={true}
           message={message}

@@ -30,7 +30,7 @@ interface MojZapisPredmet extends ZapisPredmet {
   moje: boolean;
 }
 
-const ZapisVlastnostiColumns: Column<ZapisVlastnost>[] = [
+const zapisVlastnostiColumns: Column<ZapisVlastnost>[] = [
   column({ label: "Skratka", prop: "skratka", expansionMark: true }),
   column({ label: "Názov", prop: "nazov" }),
   column({ label: "Minimálny kredit", prop: "minimalny_kredit" }),
@@ -261,15 +261,15 @@ function ZapisTable({
   var classes: Record<string, string> = {},
     checked: Record<string, boolean> = {};
   for (const predmet of predmety.values()) {
-    const predmet_key = predmet.predmet_key;
-    checked[predmet.predmet_key] = predmet.moje;
-    if (changes[predmet_key] === false && predmet.moje) {
-      classes[predmet_key] = "danger";
-      checked[predmet_key] = false;
+    const predmetKey = predmet.predmet_key;
+    checked[predmetKey] = predmet.moje;
+    if (changes[predmetKey] === false && predmet.moje) {
+      classes[predmetKey] = "danger";
+      checked[predmetKey] = false;
     }
-    if (changes[predmet_key] === true && !predmet.moje) {
-      classes[predmet_key] = "success";
-      checked[predmet_key] = true;
+    if (changes[predmetKey] === true && !predmet.moje) {
+      classes[predmetKey] = "success";
+      checked[predmetKey] = true;
     }
   }
 
@@ -456,7 +456,7 @@ function ZapisVlastnostiTable() {
   return (
     <SortableTable
       items={vlastnosti}
-      columns={ZapisVlastnostiColumns}
+      columns={zapisVlastnostiColumns}
       queryKey="vlastnostiSort"
       message={message}
     />
@@ -496,11 +496,11 @@ function ZapisZPlanuPageContent() {
       if (predmet.semester == "Z") vidnoZimne = true;
     }
     for (const predmet of zapisanePredmety!) {
-      var predmet_key = predmet.predmet_key;
-      const existingPredmet = predmety.get(predmet_key);
+      const predmetKey = predmet.predmet_key;
+      const existingPredmet = predmety.get(predmetKey);
       if (!existingPredmet) {
         if (predmet.semester == "Z" && !vidnoZimne) continue;
-        predmety.set(predmet_key, { moje: true, ...predmet });
+        predmety.set(predmetKey, { moje: true, ...predmet });
       } else {
         for (var property in predmet) {
           if (

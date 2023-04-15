@@ -6,7 +6,7 @@ import { navigate, QueryContext } from "./router";
 import { column, SortableTable, sortAs } from "./sorting";
 import { ComboBoxOption } from "./types";
 
-const RegisterOsobColumns = [
+const registerOsobColumns = [
   column({ label: "Plné meno", prop: "plne_meno", sortKey: sortAs.personName }),
   column({
     label: "E-mail",
@@ -232,7 +232,7 @@ function RegisterOsobResultTable() {
       <h2>Výsledky</h2>
       <SortableTable
         items={osoby}
-        columns={RegisterOsobColumns}
+        columns={registerOsobColumns}
         defaultOrder={registerOsobDefaultOrder}
         queryKey="osobySort"
         message={message}
