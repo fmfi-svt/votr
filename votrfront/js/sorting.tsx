@@ -6,7 +6,7 @@ import { ScreenSize, useScreenSize } from "./mediaQueries";
 import { navigate, QueryContext } from "./router";
 import { Query } from "./types";
 
-export var sortAs = {
+export const sortAs = {
   personName: (text: string) => {
     let words = text.replace(/,/g, "").split(" ");
     words = words.filter((word) => !word.match(/\.$/));
@@ -248,7 +248,9 @@ export function SortableTable<T>({
   const chosenSize = fullTable ? ScreenSize.LG : deviceSize;
 
   const canHide = columns.map((column) => column.hide(deviceSize));
-  const reallyHide = canHide.map((canHideColumn) => canHideColumn && !fullTable);
+  const reallyHide = canHide.map(
+    (canHideColumn) => canHideColumn && !fullTable
+  );
   const reallyHiddenCount = sum(reallyHide);
 
   const header = renderHeader(columns, query, queryKey, order, reallyHide);

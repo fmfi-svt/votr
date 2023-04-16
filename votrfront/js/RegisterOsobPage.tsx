@@ -221,17 +221,17 @@ function RegisterOsobResultTable() {
     return <Loading requests={cache.missing} />;
   }
 
-  let [osoby, message] = response;
+  const [rows, serverMessage] = response;
 
-  if (!message && !osoby.length) {
-    message = "Podmienkam nevyhovuje žiadny záznam.";
-  }
+  const message =
+    serverMessage ||
+    (rows.length ? null : "Podmienkam nevyhovuje žiadny záznam.");
 
   return (
     <React.Fragment>
       <h2>Výsledky</h2>
       <SortableTable
-        items={osoby}
+        items={rows}
         columns={registerOsobColumns}
         defaultOrder={registerOsobDefaultOrder}
         queryKey="osobySort"

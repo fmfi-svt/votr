@@ -215,7 +215,10 @@ function PrehladStudiaZapisneListy() {
   const zapisneListy: ZapisnyList[] = [];
 
   for (const studium of studia) {
-    const mojeZapisneListy = cache.get("get_zapisne_listy", studium.studium_key);
+    const mojeZapisneListy = cache.get(
+      "get_zapisne_listy",
+      studium.studium_key
+    );
     if (mojeZapisneListy) zapisneListy.push(...mojeZapisneListy);
   }
 

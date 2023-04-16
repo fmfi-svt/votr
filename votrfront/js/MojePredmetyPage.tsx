@@ -78,7 +78,8 @@ function MojePredmetyPageContent() {
   const cache = new CacheRequester();
   const zapisnyListKey = query.zapisnyListKey!;
 
-  const [hodnotenia, message] = cache.get("get_hodnotenia", zapisnyListKey) || [];
+  const [hodnotenia, message] =
+    cache.get("get_hodnotenia", zapisnyListKey) || [];
 
   if (!hodnotenia) {
     return <Loading requests={cache.missing} />;

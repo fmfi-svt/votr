@@ -17,7 +17,7 @@ function trackPageView() {
   window.ga("send", "pageview", { location: current });
 }
 
-export var QueryContext = React.createContext<Query>(
+export const QueryContext = React.createContext<Query>(
   undefined as unknown as Query
 );
 

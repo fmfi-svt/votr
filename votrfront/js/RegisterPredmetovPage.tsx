@@ -185,11 +185,11 @@ function RegisterPredmetovResultTable() {
     return <Loading requests={cache.missing} />;
   }
 
-  let [rows, message] = response;
+  const [rows, serverMessage] = response;
 
-  if (!message && !rows.length) {
-    message = "Podmienkam nevyhovuje žiadny záznam.";
-  }
+  const message =
+    serverMessage ||
+    (rows.length ? null : "Podmienkam nevyhovuje žiadny záznam.");
 
   return (
     <React.Fragment>

@@ -10,16 +10,18 @@ function PriebezneHodnoteniaPageContent() {
   const cache = new CacheRequester();
   const zapisnyListKey = query.zapisnyListKey!;
 
-  let [priebezneHodnotenia, message] =
+  const [priebezneHodnotenia, serverMessage] =
     cache.get("get_priebezne_hodnotenia", zapisnyListKey) || [];
 
   if (!priebezneHodnotenia) {
     return <Loading requests={cache.missing} />;
   }
 
-  if (!message && !priebezneHodnotenia.length) {
-    message = "Tento zápisný list nemá žiadne priebežné hodnotenia.";
-  }
+  const message =
+    serverMessage ||
+    (priebezneHodnotenia.length
+      ? null
+      : "Tento zápisný list nemá žiadne priebežné hodnotenia.");
 
   return (
     <React.Fragment>

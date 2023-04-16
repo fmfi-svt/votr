@@ -50,8 +50,8 @@ function sendRawRpc<N extends keyof Rpcs>(
         );
         return;
       }
-      var data: RpcPayload;
-      var length: number;
+      let data: RpcPayload;
+      let length: number;
       try {
         const waiting = xhr.responseText.length - processed;
         if (waiting < HEADER_LENGTH) break;
@@ -127,7 +127,7 @@ function sendRawRpc<N extends keyof Rpcs>(
     }
   }
 
-  var xhr = new XMLHttpRequest();
+  const xhr = new XMLHttpRequest();
   xhr.onload = update;
   xhr.onprogress = update;
   xhr.onerror = () => fail("Network error");
@@ -147,7 +147,7 @@ export function sendRpc<N extends keyof Rpcs>(
 
 Votr.ajaxError = null;
 
-export var ajaxLogs: RpcLogPayload[] = [];
+export const ajaxLogs: RpcLogPayload[] = [];
 
 type CacheEntry<N extends keyof Rpcs> = ReturnType<Rpcs[N]> | undefined;
 type CacheMap<N extends keyof Rpcs> = Record<string, CacheEntry<N>>;
@@ -235,6 +235,7 @@ export function reportClientError(type: string, body: object) {
   xhr.send(JSON.stringify({ location: location.href, ...body }));
 }
 
+Votr.dev_ajaxLogs = ajaxLogs;
 Votr.dev_sendRpc = sendRpc;
 Votr.dev_requestCache = requestCache;
 Votr.dev_invalidateRequestCache = invalidateRequestCache;

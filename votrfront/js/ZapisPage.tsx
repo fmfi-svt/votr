@@ -176,7 +176,9 @@ function ZapisTable({
   tableMessage: string | null | undefined;
 }) {
   const [saving, setSaving] = useState(false);
-  const [changes, setChanges] = useState<Record<string, boolean | undefined>>({});
+  const [changes, setChanges] = useState<Record<string, boolean | undefined>>(
+    {}
+  );
 
   // Chceme, aby sa pre ZapisTable zachoval state aj vtedy, ked tabulku
   // nevidno, lebo sme prave zapisali predmety a obnovujeme zoznam predmetov.
@@ -442,16 +444,16 @@ function ZapisVlastnostiTable() {
   const zapisnyListKey = query.zapisnyListKey!;
   const cache = new CacheRequester();
 
-  let [vlastnosti, message] =
+  const [vlastnosti, serverMessage] =
     cache.get("zapis_get_vlastnosti_programu", zapisnyListKey) || [];
 
   if (!vlastnosti) {
     return <Loading requests={cache.missing} />;
   }
 
-  if (!message && !vlastnosti.length) {
-    message = "Študijný plán nemá žiadne poznámky.";
-  }
+  const message =
+    serverMessage ||
+    (vlastnosti.length ? null : "Študijný plán nemá žiadne poznámky.");
 
   return (
     <SortableTable

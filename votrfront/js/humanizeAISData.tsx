@@ -4,24 +4,24 @@ function humanizeWith(table: Record<string, string>) {
   };
 }
 
-export var humanizeTypVyucby = humanizeWith({
+export const humanizeTypVyucby = humanizeWith({
   "A": "povinné (A)",
   "B": "povinne voliteľné (B)",
   "C": "výberové (C)",
 });
 
-export var humanizeTerminHodnotenia = humanizeWith({
+export const humanizeTerminHodnotenia = humanizeWith({
   "R - Riadny termín": "riadny",
   "1 - Prvý opravný termín": "prvý opravný",
   "2 - Druhý opravný termín": "druhý opravný",
 });
 
-export var humanizeNazovPriemeru = humanizeWith({
+export const humanizeNazovPriemeru = humanizeWith({
   "Sem ?": "Semester",
   "AkadR ?": "Akademický rok",
 });
 
-export var humanizeBoolean = humanizeWith({
+export const humanizeBoolean = humanizeWith({
   "A": "áno",
   "N": "nie",
 });

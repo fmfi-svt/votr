@@ -1,3 +1,5 @@
+/* eslint-disable no-var */
+
 import { VotrVar } from "./types";
 
 export {};
