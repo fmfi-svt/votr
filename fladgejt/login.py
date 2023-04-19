@@ -2,6 +2,7 @@
 import os
 import requests
 from aisikl.context import Context, Logger
+from fladgejt.flashback import FlashbackClient
 from fladgejt.hybrid import HybridClient
 from fladgejt.rest import RestClient
 from fladgejt.webui import WebuiClient
@@ -132,7 +133,10 @@ def create_client(server, params, *, logger=None):
     elif 'rest_url' in server:
         client = RestClient(ctx)
     else:
-        raise Exception('Demo client is not supported')
+        if params['type'] == 'flashback':
+            client = FlashbackClient(ctx, server['flashbacks_dir'], params['file'])
+        else:
+            raise Exception('Unsupported type: %r' % params['type'])
 
     # Check that login was successful.
     client.check_connection()

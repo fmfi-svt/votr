@@ -10,7 +10,7 @@ const TYPE_NAMES: Record<string, string> = {
   "cosignpassword": "Cosign (meno a heslo)",
   "cosigncookie": "Cosign (manuálne cookie)",
   "plainpassword": "Meno a heslo",
-  "demo": "Demo",
+  "flashback": "Flashback",
 };
 
 function DestinationCheckbox() {
@@ -168,6 +168,22 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
             </p>
           )}
         </React.Fragment>
+      )}
+
+      {currentType == "flashback" && (
+        <p>
+          <label>
+            {"Súbor: "}
+            <select name="file">
+              <option value=""></option>
+              {(serverConfig.flashback_files || []).map((name, index) => (
+                <option key={index} value={name}>
+                  {name}
+                </option>
+              ))}
+            </select>
+          </label>
+        </p>
       )}
 
       <button type="submit" className="btn btn-lg btn-primary center-block">

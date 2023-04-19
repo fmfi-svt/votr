@@ -83,7 +83,8 @@ servers = [
         ais_url='https://ais2.euba.sk/',
     ),
     dict(
-        title='Demo',
-        login_types=('demo',),
+        title='Flashback',
+        login_types=('flashback',),
+        flashbacks_dir='./var/flashbacks',
     ),
 ]

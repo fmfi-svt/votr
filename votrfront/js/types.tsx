@@ -3,6 +3,7 @@ export interface VotrServer {
   login_types: string[];
   ais_cookie?: string;
   rest_cookie?: string;
+  flashback_files?: string[];
 }
 
 export interface VotrVar {

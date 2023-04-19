@@ -63,6 +63,17 @@ def static_url(filename):
     return 'static/{}?v={}'.format(filename, mtime)
 
 
+def process_server(server):
+    js_server = {
+        k: server[k]
+        for k in ('title', 'login_types', 'ais_cookie', 'rest_cookie')
+        if k in server
+    }
+    if 'flashbacks_dir' in server and os.path.isdir(server['flashbacks_dir']):
+        js_server['flashback_files'] = sorted(os.listdir(server['flashbacks_dir']))
+    return js_server
+
+
 def app_response(request, **my_data):
     url_root = request.url_root
     instance_name = request.app.settings.instance_name
@@ -78,7 +89,7 @@ def app_response(request, **my_data):
         my_data['anketa_end_msec'] = int(dt.timestamp() * 1000)
 
     if 'csrf_token' not in my_data:
-        my_data['servers'] = request.app.settings.servers
+        my_data['servers'] = [process_server(s) for s in request.app.settings.servers]
 
     for i in range(30 * 10):
         try:
