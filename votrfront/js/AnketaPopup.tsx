@@ -1,13 +1,15 @@
 import React from "react";
 import { CacheRequester, Loading } from "./ajax";
 import { getLocalSetting, setLocalSetting } from "./LocalSettings";
+import { getMsecNow } from "./now";
 
 export function AnketaPopup() {
   const season = Votr.settings.anketa_season;
 
   if (!season) return null;
 
-  if (Date.now() > Votr.settings.anketa_end_msec!) return null;
+  const now = getMsecNow();
+  if (now > Votr.settings.anketa_end_msec!) return null;
 
   let wasClosedBefore = false;
 
@@ -16,7 +18,7 @@ export function AnketaPopup() {
     if (state) {
       const [savedSeason, savedTime] = JSON.parse(state) as [string, number];
       if (savedSeason == season) {
-        if (savedTime == -1 || Date.now() < savedTime) {
+        if (savedTime == -1 || now < savedTime) {
           return null;
         }
         wasClosedBefore = true;
@@ -49,7 +51,7 @@ export function AnketaPopup() {
       <button
         type="button"
         className="close"
-        onClick={() => closePopup(Date.now() + later)}
+        onClick={() => closePopup(getMsecNow() + later)}
         aria-label="Zavrieť"
       >
         <span aria-hidden="true">&times;</span>
@@ -71,7 +73,7 @@ export function AnketaPopup() {
         <button
           type="button"
           className="btn btn-default"
-          onClick={() => closePopup(Date.now() + later)}
+          onClick={() => closePopup(getMsecNow() + later)}
           title={laterText}
         >
           Neskôr

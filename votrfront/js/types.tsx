@@ -22,6 +22,7 @@ export interface VotrVar {
     server?: number;
     type?: string | null;
     destination?: string | undefined;
+    fake_time_msec?: number | null;
   };
   updateRoot(): void;
   ajaxError: string | null;

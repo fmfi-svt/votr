@@ -1,4 +1,5 @@
 import React from "react";
+import { getDateNow } from "./now";
 import { Hodnotenie, ZapisPredmet } from "./types";
 
 const ZNAMKY: Record<string, number> = {
@@ -80,7 +81,7 @@ export function renderCredits({
 }
 
 export function currentAcademicYear() {
-  const date = new Date();
+  const date = getDateNow();
 
   const year = date.getFullYear();
   const month = date.getMonth() + 1;

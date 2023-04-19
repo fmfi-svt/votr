@@ -16,3 +16,5 @@ class RestClient(RestStudiumMixin, RestTerminyMixin):
 
     def logout(self):
         pass
+
+    fake_time_msec = None

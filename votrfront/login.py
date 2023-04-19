@@ -76,6 +76,7 @@ def finish_login(request, destination, params):
             logger.log('login', 'Login started',
                 [server.get('title'), params.get('type'), destination])
             client = create_client(server, fladgejt_params, logger=logger)
+            fake_time_msec = client.fake_time_msec
             csrf_token = generate_key()
             session = dict(
                 last_announcement=request.app.settings.announcement_html,
@@ -95,8 +96,12 @@ def finish_login(request, destination, params):
 
         logger.log('login', 'Login finished')
 
-    response = app_response(request,
-        csrf_token=csrf_token, destination=destination)
+    response = app_response(
+        request,
+        csrf_token=csrf_token,
+        fake_time_msec=fake_time_msec,
+        destination=destination,
+    )
     return sessions.set_session_cookie(request, response, sessid)
 
 

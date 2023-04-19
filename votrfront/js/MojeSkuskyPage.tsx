@@ -1,6 +1,6 @@
 import classNames from "classnames";
 import { saveAs } from "file-saver";
-import { maxBy } from "lodash-es";
+import { max } from "lodash-es";
 import moment from "moment";
 import React, { useContext, useState } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
@@ -12,6 +12,7 @@ import {
 } from "./ajax";
 import { PageLayout, PageTitle } from "./layout";
 import { underSM, underXS } from "./mediaQueries";
+import { getDateNow } from "./now";
 import { Link, QueryContext, RelativeLink } from "./router";
 import { Column, column, SortableTable, sortAs } from "./sorting";
 import { Href, Termin } from "./types";
@@ -131,7 +132,7 @@ function convertToICAL(terminy: Termin[]) {
     "X-WR-TIMEZONE:Europe/Bratislava",
   ];
 
-  const dtstamp = new Date()
+  const dtstamp = getDateNow()
     .toISOString()
     .replace(/[-:]/g, "")
     .replace(/\.\d+/, "");
@@ -248,14 +249,9 @@ function convertToEvents(terminy: Termin[]): CalendarEvent[] {
 }
 
 function defaultDate(eventList: CalendarEvent[]) {
-  const today = new Date();
-
-  if (eventList.length) {
-    const lastExamDate = maxBy(eventList, "start")!.start;
-    if (lastExamDate < today) return lastExamDate;
-  }
-
-  return today;
+  const today = getDateNow();
+  const lastExamDate = max(eventList.map((event) => event.start));
+  return lastExamDate && lastExamDate < today ? lastExamDate : today;
 }
 
 function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
@@ -267,6 +263,7 @@ function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
       events={props.eventList}
       views={["month", "week", "day"]}
       defaultDate={defaultDate(props.eventList)}
+      getNow={getDateNow}
       className="skusky-calendar"
       messages={{
         allDay: "Celý deň",
@@ -386,7 +383,7 @@ function SkuskyRegisterButton({ termin }: { termin: Termin }) {
     return null;
   }
 
-  const today = new Date().toJSON().replace(/-/g, "").substring(0, 8);
+  const today = getDateNow().toJSON().replace(/-/g, "").substring(0, 8);
   if (today > sortAs.date(termin.datum)) return null;
 
   return (

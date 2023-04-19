@@ -22,11 +22,14 @@ def _load_log(filename):
     rpcs = []
     current_rpc_name = None
     current_rpc_args = None
+    fake_time_msec = None
 
     with (gzip.open(filename) if filename.endswith('.gz') else open(filename, 'rb')) as f:
         for line in f:
             line = json.loads(line)
             if line[1] == "rpc":
+                if fake_time_msec is None:
+                    fake_time_msec = int(line[0] * 1000)
                 words = line[2].split(" ")
                 if words[2] == "started":
                     current_rpc_name = words[1]
@@ -56,7 +59,7 @@ def _load_log(filename):
             if condition != None:
                 print("  - changes after %s%r" % condition, file=sys.stderr)
 
-    return grouped
+    return fake_time_msec, grouped
 
 class TimeParadoxError(Exception):
     pass
@@ -81,7 +84,7 @@ class FlashbackClient:
             raise Exception("%r does not exist" % filename)
 
         self.context = context
-        self._log = _load_log(filename)
+        self.fake_time_msec, self._rpcs = _load_log(filename)
         self._did = set()
 
     def check_connection(self):
@@ -96,7 +99,7 @@ class FlashbackClient:
 
         def rpc_method(*args):
             args = _tuplify(args)
-            found = self._log.get((name, args))
+            found = self._rpcs.get((name, args))
             if not found:
                 raise TimeParadoxError("RPC %s%r did not happen in the flashback" % (name, args))
             self._did.add((name, args))

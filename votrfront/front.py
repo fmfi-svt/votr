@@ -159,6 +159,7 @@ def app_response(request, **my_data):
 
 def front(request):
     csrf_token = None
+    fake_time_msec = None
     connection_error = None
 
     # If the user has no session cookie, just show the login form.
@@ -172,6 +173,7 @@ def front(request):
                 log('front', 'Front session check started',
                     request.full_path)
                 csrf_token = session['csrf_token']
+                fake_time_msec = session['client'].fake_time_msec
                 session['client'].check_connection()
             except Exception as e:
                 log('front',
@@ -189,11 +191,19 @@ def front(request):
 
     # If the session is real but check_connection() failed, complain.
     if connection_error:
-        return app_response(request,
-            csrf_token=csrf_token, error=connection_error)
+        return app_response(
+            request,
+            csrf_token=csrf_token,
+            fake_time_msec=fake_time_msec,
+            error=connection_error,
+        )
 
     # Otherwise, everything works and we can open the app.
-    return app_response(request, csrf_token=csrf_token)
+    return app_response(
+        request,
+        csrf_token=csrf_token,
+        fake_time_msec=fake_time_msec,
+    )
 
 
 def die(request):

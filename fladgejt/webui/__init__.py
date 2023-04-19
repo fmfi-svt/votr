@@ -21,3 +21,5 @@ class WebuiClient(WebuiCommonUIMixin, WebuiHodnoteniaMixin, WebuiObdobiaMixin,
 
     def logout(self):
         self.context.request_html(self.context.ais_logout_path)
+
+    fake_time_msec = None

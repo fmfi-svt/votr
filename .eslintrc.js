@@ -102,6 +102,19 @@ module.exports = {
         "symbol-description": "warn",
         "yoda": "warn",
 
+        "no-restricted-syntax": [
+          "error",
+          {
+            "selector":
+              "MemberExpression[object.name='Date'][property.name='now']",
+            "message": "Remember to use getMsecNow() instead of Date.now()",
+          },
+          {
+            "selector": "NewExpression[callee.name='Date'][arguments.length=0]",
+            "message": "Remember to use getDateNow() instead of new Date()",
+          },
+        ],
+
         // I slightly dislike the changes proposed by this rule. For now let's
         // at least disable it for function parameters.
         "@typescript-eslint/no-inferrable-types": [
