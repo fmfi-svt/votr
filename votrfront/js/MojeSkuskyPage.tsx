@@ -1,9 +1,10 @@
 import classNames from "classnames";
+import dayjs from "dayjs";
+import "dayjs/locale/sk";
 import { saveAs } from "file-saver";
 import { max } from "lodash-es";
-import moment from "moment";
 import React, { useContext, useState } from "react";
-import { Calendar, momentLocalizer } from "react-big-calendar";
+import { Calendar, dayjsLocalizer } from "react-big-calendar";
 import {
   CacheRequester,
   invalidateRequestCache,
@@ -17,6 +18,8 @@ import { Link, QueryContext, RelativeLink } from "./router";
 import { Column, column, SortableTable, sortAs } from "./sorting";
 import { Href, Termin } from "./types";
 import { ZapisnyListSelector } from "./ZapisnyListSelector";
+
+const localizer = dayjsLocalizer(dayjs);
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
 
@@ -237,12 +240,21 @@ interface CalendarEvent {
 function convertToEvents(terminy: Termin[]): CalendarEvent[] {
   return terminy.map((termin, i) => {
     const miestnostStr = termin.miestnost ? ", " + termin.miestnost : "";
-    const cas = termin.datum + " " + termin.cas;
+    const [den, mesiac, rok] = termin.datum.split(".");
+    const [hodina, minuty] = termin.cas.split(":");
+    const start = new Date(
+      Number(rok),
+      Number(mesiac) - 1,
+      Number(den),
+      Number(hodina),
+      Number(minuty)
+    );
+    const end = new Date(start.getTime() + 3 * 3600 * 1000);
     return {
       id: i,
       title: `${termin.nazov_predmetu} (${termin.cas}${miestnostStr})`,
-      start: moment(cas, "DD.MM.YYYY HH:mm").toDate(),
-      end: moment(cas, "DD.MM.YYYY HH:mm").add(3, "hours").toDate(),
+      start,
+      end,
       prihlaseny: somPrihlaseny(termin),
     };
   });
@@ -255,8 +267,6 @@ function defaultDate(eventList: CalendarEvent[]) {
 }
 
 function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
-  const localizer = momentLocalizer(moment);
-
   return (
     <Calendar
       localizer={localizer}

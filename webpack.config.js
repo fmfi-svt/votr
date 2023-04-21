@@ -1,6 +1,5 @@
 const fs = require("fs");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
-const webpack = require("webpack");
 
 const bootstrapPath =
   __dirname + "/node_modules/bootstrap-sass/assets/stylesheets";
@@ -96,7 +95,6 @@ function makeConfig(mode) {
       new MiniCssExtractPlugin({ filename: "style.css" }),
       new StatusFilePlugin(mode == "development" ? "dev" : "prod"),
       new CleanMapFilesPlugin(),
-      new webpack.ContextReplacementPlugin(/moment[/\\]locale$/, /sk/),
     ],
     resolve: {
       extensions: [".ts", ".tsx", ".js"],
