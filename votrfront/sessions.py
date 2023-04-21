@@ -7,15 +7,23 @@ import pickle
 from aisikl.exceptions import LoggedOutError
 
 
+def _session_cookie_name(request):
+    prefix = '__Host-' if request.app.settings.secure_session_cookie else ''
+    return prefix + request.app.settings.instance_name + '_sessid'
+
+
 def get_session_cookie(request):
-    return request.cookies.get(request.app.session_name)
+    return request.cookies.get(_session_cookie_name(request))
 
 
 def set_session_cookie(request, response, sessid):
+    secure = request.app.settings.secure_session_cookie
     if sessid:
-        response.set_cookie(request.app.session_name, sessid)
+        response.set_cookie(_session_cookie_name(request), sessid,
+            path='/', secure=secure, httponly=True, samesite='Lax')
     else:
-        response.delete_cookie(request.app.session_name)
+        response.delete_cookie(_session_cookie_name(request),
+            path='/', secure=secure, httponly=True, samesite='Lax')
     return response
 
 

@@ -15,8 +15,6 @@ class VotrApp(object):
     def __init__(self, settings):
         self.settings = settings
 
-        self.session_name = settings.instance_name + '_sessid'
-
         self.commands = {}
         for module in site_modules:
             if hasattr(module, 'commands'):
