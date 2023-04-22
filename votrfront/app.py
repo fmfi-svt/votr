@@ -1,6 +1,7 @@
 
 import os
 import sys
+from markupsafe import escape
 from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.shared_data import SharedDataMiddleware
 from werkzeug.routing import Map
@@ -52,6 +53,9 @@ class VotrApp(object):
             endpoint, values = request.url_adapter.match()
             return endpoint(request, **values)
         except HTTPException as e:
+            link = '<p><a href="%s">Back to main page</a></p>' % escape(request.url_root)
+            orig_get_body = e.get_body
+            e.get_body = lambda environ, scope: orig_get_body(environ, scope) + link
             return e
 
     @Request.application
