@@ -2,7 +2,8 @@
 import json
 import traceback
 from werkzeug.routing import Rule
-from . import sessions
+from votrfront import sessions
+from votrfront.utils import check_header
 
 
 def encode_result(thing):
@@ -65,6 +66,10 @@ def rpc_handle_exceptions(request, send_json):
 
 
 def rpc_handle_partials(request):
+    check_header(request, 'Sec-Fetch-Site', { 'same-origin' })
+    check_header(request, 'Sec-Fetch-Mode', { 'cors' })
+    check_header(request, 'Sec-Fetch-Dest', { 'empty' })
+
     def wsgi_response(environ, start_response):
         write = start_response('200 OK', [
             ('Content-Type', 'text/plain'),

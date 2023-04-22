@@ -9,8 +9,9 @@ from werkzeug.routing import Rule
 from werkzeug.utils import redirect
 from aisikl.context import Logger
 from fladgejt.login import create_client
-from . import sessions
-from .front import app_response
+from votrfront import sessions
+from votrfront.front import app_response
+from votrfront.utils import check_header
 
 
 def generate_key():
@@ -106,6 +107,9 @@ def finish_login(request, destination, params):
 
 
 def proxylogin(request):
+    check_header(request, 'Sec-Fetch-Mode', { 'navigate' })
+    check_header(request, 'Sec-Fetch-Dest', { 'document' })
+
     if request.remote_user is None:
         raise InternalServerError(
             '/proxylogin is supposed to have "CosignAllowPublicAccess Off"')
@@ -132,11 +136,18 @@ def start_login(request, destination, params):
 
 
 def login(request):
+    check_header(request, 'Sec-Fetch-Mode', { 'navigate' })
+    check_header(request, 'Sec-Fetch-Dest', { 'document' })
+
     params = request.values.to_dict()
     return start_login(request, params.pop('destination', ''), params)
 
 
 def reset(request):
+    check_header(request, 'Sec-Fetch-Site', { 'none', 'same-origin' })
+    check_header(request, 'Sec-Fetch-Mode', { 'navigate' })
+    check_header(request, 'Sec-Fetch-Dest', { 'document' })
+
     destination = request.args['destination']
     credentials = do_logout(request)
 
@@ -150,6 +161,10 @@ def reset(request):
 
 
 def logout(request):
+    check_header(request, 'Sec-Fetch-Site', { 'none', 'same-origin' })
+    check_header(request, 'Sec-Fetch-Mode', { 'navigate' })
+    check_header(request, 'Sec-Fetch-Dest', { 'document' })
+
     do_logout(request)
 
     cosign_service = request.environ.get('COSIGN_SERVICE')

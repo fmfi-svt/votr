@@ -7,7 +7,8 @@ import time
 import traceback
 from werkzeug.routing import Rule
 from werkzeug.wrappers import Response
-from . import sessions
+from votrfront import sessions
+from votrfront.utils import check_header
 
 
 template = '''
@@ -158,6 +159,9 @@ def app_response(request, **my_data):
 
 
 def front(request):
+    check_header(request, 'Sec-Fetch-Mode', { 'navigate' })
+    check_header(request, 'Sec-Fetch-Dest', { 'document' })
+
     csrf_token = None
     fake_time_msec = None
     connection_error = None
