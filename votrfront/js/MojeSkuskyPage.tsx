@@ -19,6 +19,10 @@ import { Column, column, SortableTable, sortAs } from "./sorting";
 import { Href, Termin } from "./types";
 import { ZapisnyListSelector } from "./ZapisnyListSelector";
 
+// Need to globally configure default dayjs locale so that weeks start on Monday.
+// https://github.com/jquense/react-big-calendar/issues/2395
+dayjs.locale("sk");
+
 const localizer = dayjsLocalizer(dayjs);
 
 // TODO: Oddelit Aktualne terminy hodnotenia vs Stare terminy hodnotenia
