@@ -67,26 +67,36 @@ export class ErrorBoundary extends React.Component<
             .
           </p>
           <br />
-          <ul className="list-inline">
-            <li>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={goResetHome}
-              >
-                Späť na začiatok
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className="btn btn-default"
-                onClick={goLogout}
-              >
-                Odhlásiť
-              </button>
-            </li>
-          </ul>
+          {Votr.settings.servers ? (
+            <ul className="list-inline">
+              <li>
+                <a href={Votr.settings.url_root} className="btn btn-primary">
+                  Späť na začiatok
+                </a>
+              </li>
+            </ul>
+          ) : (
+            <ul className="list-inline">
+              <li>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={goResetHome}
+                >
+                  Späť na začiatok
+                </button>
+              </li>
+              <li>
+                <button
+                  type="button"
+                  className="btn btn-default"
+                  onClick={goLogout}
+                >
+                  Odhlásiť
+                </button>
+              </li>
+            </ul>
+          )}
           <br />
           {this.state.open ? (
             <pre>{details}</pre>
