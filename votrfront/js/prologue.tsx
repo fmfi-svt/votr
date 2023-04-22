@@ -18,7 +18,7 @@ try {
 
 Votr.setJsDev = function (enabled: unknown) {
   document.cookie =
-    Votr.settings.instance_name + "_jsdev=" + (enabled ? "true" : "");
+    Votr.settings.instance_id + "_jsdev=" + (enabled ? "true" : "");
   location.reload();
 };
 

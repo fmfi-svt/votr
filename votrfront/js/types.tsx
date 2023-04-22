@@ -9,7 +9,8 @@ export interface VotrServer {
 export interface VotrVar {
   settings: {
     url_root: string;
-    instance_name: string;
+    instance_id: string;
+    instance_title: string;
     announcement_html?: string;
     feedback_link?: string;
     anketa_season?: string;

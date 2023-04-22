@@ -1,5 +1,7 @@
 
-instance_name = 'votr'
+instance_id = 'votr'
+
+instance_title = 'Votr (dev)'
 
 var_path = './var'
 

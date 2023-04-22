@@ -211,7 +211,7 @@ export function LoginPage() {
           <div className="container-fluid">
             <div className="navbar-header">
               <a href={Votr.settings.url_root} className="navbar-brand">
-                Votr
+                {Votr.settings.instance_title}
               </a>
             </div>
           </div>

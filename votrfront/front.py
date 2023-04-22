@@ -5,20 +5,21 @@ import os
 import json
 import time
 import traceback
+from markupsafe import Markup
 from werkzeug.routing import Rule
 from werkzeug.wrappers import Response
 from votrfront import sessions
 from votrfront.utils import check_header
 
 
-template = '''
+template = Markup('''
 <!DOCTYPE html>
 <html lang="sk">
 <head>
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Votr</title>
+<title>%(title)s</title>
 <link rel="stylesheet" type="text/css" href="%(css)s">
 <meta name="description" content="Votr ponúka študentom jednoduchší a \
 pohodlnejší spôsob, ako robiť najčastejšie činnosti zo systému AIS. Zapíšte \
@@ -43,9 +44,9 @@ vaše hodnotenia a skontrolujte si počet kreditov bez zbytočného klikania.</p
 %(scripts)s
 </body>
 </html>
-'''.lstrip()
+'''.lstrip())
 
-analytics_template = '''
+analytics_template = Markup('''
 <script nonce="%(nonce)s">
 (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
 (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
@@ -54,7 +55,7 @@ m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
 
 ga('create', '%(ua_code)s', 'auto');
 </script>
-'''.strip()
+'''.strip())
 
 static_path = os.path.join(os.path.dirname(__file__), 'static/')
 
@@ -77,10 +78,11 @@ def process_server(server):
 
 def app_response(request, **my_data):
     url_root = request.url_root
-    instance_name = request.app.settings.instance_name
+    instance_id = request.app.settings.instance_id
 
     my_data['url_root'] = url_root
-    my_data['instance_name'] = instance_name
+    my_data['instance_id'] = instance_id
+    my_data['instance_title'] = request.app.settings.instance_title
     my_data['announcement_html'] = request.app.settings.announcement_html
     my_data['feedback_link'] = request.app.settings.feedback_link
 
@@ -104,7 +106,7 @@ def app_response(request, **my_data):
     else:
         return Response('Timed out waiting for webpack.', status=500)
 
-    debug = request.cookies.get(instance_name + '_jsdev')
+    debug = request.cookies.get(instance_id + '_jsdev')
     if status == 'failed':
         return Response('Webpack build failed.', status=500)
     elif status == 'ok_dev' or (status == 'ok_both' and debug):
@@ -120,10 +122,11 @@ def app_response(request, **my_data):
 
     content = template % dict(
         nonce=nonce,
-        init_json=json.dumps({ 'settings': my_data }).replace('</', '<\\/'),
+        title=request.app.settings.instance_title,
+        init_json=Markup(json.dumps({ 'settings': my_data }).replace('</', '<\\/')),
         css=static_url('style.css'),
-        scripts='\n'.join(
-            '<script nonce="{}" src="{}"></script>'.format(
+        scripts=Markup('\n').join(
+            Markup('<script nonce="{}" src="{}"></script>').format(
                 nonce, static_url(script))
             for script in scripts),
         analytics=(
@@ -148,10 +151,10 @@ def app_response(request, **my_data):
                 "'unsafe-inline' https: http: 'report-sample'; " +
                 "base-uri 'none'; " +
                 "report-uri %sreport?type=csp; " % request.url_root +
-                "report-to csp_%s" % instance_name,
+                "report-to csp_%s" % instance_id,
 
             'Report-To': json.dumps({
-                'group': 'csp_%s' % instance_name,
+                'group': 'csp_%s' % instance_id,
                 'max_age': 24 * 60 * 60,
                 'endpoints': [{ 'url': '%sreport?type=csp-rt' % url_root }]
             }),

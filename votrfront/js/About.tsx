@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, PageLayout } from "./layout";
+import { Modal, PageLayout, PageTitle } from "./layout";
 
 export function AboutModal() {
   const github = "https://github.com/fmfi-svt/votr";
@@ -69,10 +69,9 @@ export function AboutModal() {
 }
 
 function IndexPage() {
-  // TODO: Use PageTitle, but show different h1.
   return (
     <React.Fragment>
-      <h1>Vitajte</h1>
+      <PageTitle forceTitle={Votr.settings.instance_title}>Vitajte</PageTitle>
       <p>
         Votr je alternatívne rozhranie pre systém AIS2. Cez menu sa dostanete k
         týmto informáciám:

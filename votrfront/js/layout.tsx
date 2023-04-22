@@ -144,7 +144,7 @@ function PageNavbar() {
       <div className="container-fluid">
         <div className="navbar-header">
           <Link className="navbar-brand" href={{}}>
-            Votr
+            {Votr.settings.instance_title}
           </Link>
         </div>
         <div className="navbar-left">
@@ -185,11 +185,17 @@ function LogStatus() {
   return <p className="navbar-text">{message}</p>;
 }
 
-export function PageTitle({ children }: { children: React.ReactNode }) {
+export function PageTitle({
+  children,
+  forceTitle,
+}: {
+  children: React.ReactNode;
+  forceTitle?: string;
+}) {
   const titleRef = useRef<HTMLHeadingElement | null>(null);
 
   useEffect(() => {
-    document.title = titleRef.current!.textContent!;
+    document.title = forceTitle ?? titleRef.current!.textContent!;
   });
 
   return <h1 ref={titleRef}>{children}</h1>;

@@ -9,7 +9,7 @@ from aisikl.exceptions import LoggedOutError
 
 def _session_cookie_name(request):
     prefix = '__Host-' if request.app.settings.secure_session_cookie else ''
-    return prefix + request.app.settings.instance_name + '_sessid'
+    return prefix + request.app.settings.instance_id + '_sessid'
 
 
 def get_session_cookie(request):
@@ -80,7 +80,7 @@ def lock(app, sessid):
     check_sessid(sessid)
     lock_path = os.path.join(
         app.settings.lock_path,
-        '{}.{}.{}'.format(app.settings.instance_name, os.getuid(), sessid))
+        '{}.{}.{}'.format(app.settings.instance_id, os.getuid(), sessid))
     while True:
         f = open(lock_path, 'ab')
         try:
