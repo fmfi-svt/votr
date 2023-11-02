@@ -33,18 +33,15 @@ def check_sessid(sessid):
             raise ValueError('Invalid sessid')
 
 
-def get_filename(request, sessid, *, logs=False):
-    check_sessid(sessid)
-    return request.app.var_path('logs' if logs else 'sessions', sessid)
-
-
 def open_log_file(request, sessid):
-    filename = get_filename(request, sessid, logs=True) + '.gz'
+    check_sessid(sessid)
+    filename = request.app.var / 'logs' / (sessid + '.gz')
     return gzip.open(filename, 'at', encoding='utf8')
 
 
 def create(request, sessid, session):
-    with open(get_filename(request, sessid), 'xb') as f:
+    check_sessid(sessid)
+    with open(request.app.var / 'sessions' / sessid, 'xb') as f:
         pickle.dump(session, f, pickle.HIGHEST_PROTOCOL)
 
     return sessid
@@ -53,8 +50,9 @@ def create(request, sessid, session):
 def delete(request, sessid=None):
     if not sessid: sessid = get_session_cookie(request)
     if not sessid: return
+    check_sessid(sessid)
     try:
-        os.unlink(get_filename(request, sessid))
+        os.unlink(request.app.var / 'sessions' / sessid)
         return True
     except FileNotFoundError:
         return False
@@ -111,10 +109,11 @@ def lock(app, sessid):
 def transaction(request, sessid=None):
     if not sessid: sessid = get_session_cookie(request)
     if not sessid: raise LoggedOutError('Session cookie not found')
+    check_sessid(sessid)
 
     with lock(request.app, sessid):
         try:
-            f = open(get_filename(request, sessid), 'r+b')
+            f = open(request.app.var / 'sessions' / sessid, 'r+b')
         except FileNotFoundError as e:
             raise LoggedOutError('Votr session does not exist') from e
 

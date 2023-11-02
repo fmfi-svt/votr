@@ -61,7 +61,7 @@ class Line:
 
 def _connect(app):
     if not hasattr(app, 'logutil_conn'):
-        app.logutil_conn = sqlite3.connect(app.var_path('logdb/logdb.sqlite'))
+        app.logutil_conn = sqlite3.connect(app.var / 'logdb/logdb.sqlite')
         c = app.logutil_conn.cursor()
         # sub(\s+) is just to look nicer when you print ".schema".
         c.execute(re.sub(r'\s+', ' ', '''
@@ -80,23 +80,27 @@ def _connect(app):
 
 
 def locate(app, sessid):
-    options = [
-        app.var_path('logs', sessid),  # legacy
-        app.var_path('logs', sessid + '.gz'),
-        app.var_path('oldlogs', sessid[0:2], sessid + '.gz'),  # legacy
-        app.var_path('oldlogs', sessid + '.xz'),
-        sessid,
-    ]
+    sessid = str(sessid)
+    if '/' in sessid:
+        options = [sessid]
+    else:
+        options = [
+            app.var / 'logs' / sessid,  # legacy
+            app.var / 'logs' / (sessid + '.gz'),
+            app.var / 'oldlogs' / sessid[0:2] / (sessid + '.gz'),  # legacy
+            app.var / 'oldlogs' / (sessid + '.xz'),
+            sessid,
+        ]
     for option in options:
         if os.path.exists(option):
-            return option
+            return str(option)
     raise ValueError('Log not found: %r' % sessid)
 
 
 def open_log(filename):
-    if filename.endswith('.gz'):
+    if str(filename).endswith('.gz'):
         return gzip.open(filename, 'rt', encoding='utf8')
-    elif filename.endswith('.xz'):
+    elif str(filename).endswith('.xz'):
         return lzma.open(filename, 'rt', encoding='utf8')
     else:
         return open(filename, encoding='utf8')

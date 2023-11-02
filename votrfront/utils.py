@@ -17,7 +17,7 @@ def check_header(request, name, allowed_values):
             'time': int(time.time()),
             'request': { k: v for k, v in request.environ.items() if isinstance(v, (int, str, bool)) },
         }
-        with open(request.app.var_path('fetchmetalog'), 'at') as f:
+        with open(request.app.var / 'fetchmetalog', 'at') as f:
             f.write(json.dumps(payload, sort_keys=True) + '\n')
 
         raise Forbidden('Unexpected %s header value' % name)

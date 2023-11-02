@@ -24,7 +24,7 @@ def report(request):
     }
 
     filename = datetime.utcnow().strftime('%Y%m')
-    with open(request.app.var_path('reportlogs', filename), 'at') as f:
+    with open(request.app.var / 'reportlogs' / filename, 'at') as f:
         f.write(json.dumps(payload, sort_keys=True) + '\n')
     return Response('OK', content_type='text/plain')
 

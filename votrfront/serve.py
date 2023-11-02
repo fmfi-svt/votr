@@ -22,21 +22,21 @@ def serve(app, *args):
         else:
             raise Exception('Unexpected argument %r' % arg)
 
-    os.makedirs(app.var_path('logs'), exist_ok=True)
-    os.makedirs(app.var_path('logdb'), exist_ok=True)
-    os.makedirs(app.var_path('oldlogs'), exist_ok=True)
-    os.makedirs(app.var_path('logarchive'), exist_ok=True)
-    os.makedirs(app.var_path('sessions'), exist_ok=True)
-    os.makedirs(app.var_path('reportlogs'), exist_ok=True)
+    os.makedirs(app.var / 'logs', exist_ok=True)
+    os.makedirs(app.var / 'logdb', exist_ok=True)
+    os.makedirs(app.var / 'oldlogs', exist_ok=True)
+    os.makedirs(app.var / 'logarchive', exist_ok=True)
+    os.makedirs(app.var / 'sessions', exist_ok=True)
+    os.makedirs(app.var / 'reportlogs', exist_ok=True)
 
     if https:
-        ssl_context = (app.var_path('ssl.crt'), app.var_path('ssl.key'))
+        ssl_context = (app.var / 'ssl.crt', app.var / 'ssl.key')
         if not os.path.exists(ssl_context[0]):
             subprocess.check_call([
                 'openssl', 'req', '-x509', '-newkey', 'rsa:4096',
                 '-keyout', 'ssl.key', '-out', 'ssl.crt',
                 '-sha256', '-days', '365', '-nodes', '-subj', '/CN=*',
-            ], cwd=app.var_path())
+            ], cwd=app.var)
     else:
         ssl_context = None
 

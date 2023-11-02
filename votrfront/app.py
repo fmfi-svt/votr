@@ -2,6 +2,7 @@
 import os
 import sys
 from markupsafe import escape
+from pathlib import Path
 from werkzeug.exceptions import HTTPException
 from werkzeug.middleware.shared_data import SharedDataMiddleware
 from werkzeug.routing import Map
@@ -16,6 +17,8 @@ class VotrApp(object):
     def __init__(self, settings):
         self.settings = settings
 
+        self.var = Path(__file__).resolve().parent.parent / settings.var_path
+
         self.commands = {}
         for module in site_modules:
             if hasattr(module, 'commands'):
@@ -26,11 +29,6 @@ class VotrApp(object):
             if hasattr(module, 'get_routes'):
                 for rulefactory in module.get_routes():
                     self.url_map.add(rulefactory)
-
-    def var_path(self, *args):
-        '''Helper for constructing paths relative to ``settings.var_path``.'''
-        return os.path.join(os.path.dirname(__file__), '..',
-                            self.settings.var_path, *args)
 
     def run_help(self, *args):
         '''Shows the usage when console.py is run with an unknown command.'''
