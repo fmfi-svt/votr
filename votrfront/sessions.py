@@ -76,9 +76,8 @@ def lock(app, sessid):
     # conditions when one thread deletes the file but another thread already has
     # it open and is trying to lock it.
     check_sessid(sessid)
-    lock_path = os.path.join(
-        app.settings.lock_path,
-        '{}.{}.{}'.format(app.settings.instance_id, os.getuid(), sessid))
+    lock_base = f'{app.settings.instance_id}.{os.getuid()}.{sessid}'
+    lock_path = app.var / 'locks' / lock_base
     while True:
         f = open(lock_path, 'ab')
         try:

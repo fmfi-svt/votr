@@ -22,6 +22,7 @@ def serve(app, *args):
         else:
             raise Exception('Unexpected argument %r' % arg)
 
+    os.makedirs(app.var / 'locks', exist_ok=True)
     os.makedirs(app.var / 'logs', exist_ok=True)
     os.makedirs(app.var / 'logdb', exist_ok=True)
     os.makedirs(app.var / 'oldlogs', exist_ok=True)
