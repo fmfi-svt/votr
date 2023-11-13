@@ -113,7 +113,7 @@ class RpcHandler:
         if self.stop_sending_json: return
 
         try:
-            payload = json.dumps(json_object).encode('ascii')
+            payload = json.dumps(json_object).encode('ascii') + b'\n'
             header = ('%010d' % len(payload)).encode('ascii')
             self.write(header + payload)
         except Exception as e:
