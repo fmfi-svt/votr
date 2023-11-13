@@ -57,7 +57,7 @@ class VotrApp(object):
             return e
 
     @Request.application
-    def wsgi_app(self, request):
+    def __call__(self, request):
         '''Main WSGI entry point.'''
         request.app = self
 
@@ -70,15 +70,13 @@ class VotrApp(object):
 
         return response
 
-    def wrap_static(self):
+    @staticmethod
+    def wrap_static(app):
         '''Adds a "/static" route for static files.
 
         This should only be used for the development server. Production servers
         should expose the /static directory directly.
         '''
-        self.wsgi_app = SharedDataMiddleware(self.wsgi_app, {
+        return SharedDataMiddleware(app, {
             '/static': os.path.join(os.path.dirname(__file__), 'static')
         })
-
-    def __call__(self, *args):
-        return self.wsgi_app(*args)
