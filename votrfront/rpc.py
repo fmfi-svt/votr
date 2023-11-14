@@ -167,8 +167,13 @@ class RpcHandler:
                 if self.request.headers.get('X-CSRF-Token') != session['csrf_token']:
                     raise ValueError('Bad X-CSRF-Token value')
 
-                name = self.request.args['name']
-                args = self.request.json
+                # 'names' is sent in the query string (not in the request body)
+                # because it's nice to see them in web server logs.
+                names = self.request.args['names'].split(',')
+                argss = self.request.json
+
+                if not isinstance(argss, list) or len(argss) != len(names):
+                    raise ValueError('argss length does not match names length')
 
                 current = self.request.app.settings.announcement_html
                 if current != session.get('last_announcement', None):
@@ -177,38 +182,39 @@ class RpcHandler:
 
                 session['client'].context.logger.send_log = self.send_log
 
-                self.stage = 'during'
+                for i, (name, args) in enumerate(zip(names, argss)):
+                    self.stage = str(i+1)
 
-                # Context.log() calls 1. log_file.write(), 2. send_log().
-                # For this first log "RPC started", 1 should be outside the
-                # `try:` block and 2 inside it. I.e. if writing to log_file
-                # fails, don't write "RPC failed". If sending "RPC started"
-                # to the client fails, log "RPC failed" to log_file.
-                self.capture_log = True
-                session['client'].context.log(
-                    'rpc', f'RPC {name} started', args)
-
-                try:
-                    self.send_json(self.captured_log)
-                    method = getattr(session['client'], name)
-                    result = encode_result(method(*args))
-                except BaseException as e:
-                    # See the file comment about catching BaseException too.
-                    self.seen_error(e)
+                    # Context.log() calls 1. log_file.write(), 2. send_log().
+                    # For this first log "RPC started", 1 should be outside the
+                    # `try:` block and 2 inside it. I.e. if writing to log_file
+                    # fails, don't write "RPC failed". If sending "RPC started"
+                    # to the client fails, log "RPC failed" to log_file.
+                    self.capture_log = True
                     session['client'].context.log(
-                        'rpc',
-                        f'RPC {name} failed with {type(e).__name__}',
-                        traceback.format_exc())
-                    e.votr_rpc_dont_log_to_wsgi_errors = True
-                    raise
+                        'rpc', f'RPC {name} started', args)
 
-                # If writing this to log_file fails, we'll end up with an
-                # unmatched "RPC started". And if this send_json fails,
-                # log_file will look like a complete success. But oh well.
-                session['client'].context.log(
-                    'rpc', f'RPC {name} finished', result)
+                    try:
+                        self.send_json(self.captured_log)
+                        method = getattr(session['client'], name)
+                        result = encode_result(method(*args))
+                    except BaseException as e:
+                        # See the file comment about catching BaseException too.
+                        self.seen_error(e)
+                        session['client'].context.log(
+                            'rpc',
+                            f'RPC {name} failed with {type(e).__name__}',
+                            traceback.format_exc())
+                        e.votr_rpc_dont_log_to_wsgi_errors = True
+                        raise
 
-                self.send_json({ 'result': result })
+                    # If writing this to log_file fails, we'll end up with an
+                    # unmatched "RPC started". And if this send_json fails,
+                    # log_file will look like a complete success. But oh well.
+                    session['client'].context.log(
+                        'rpc', f'RPC {name} finished', result)
+
+                    self.send_json({ 'result': result })
 
                 self.stage = 'late'
 

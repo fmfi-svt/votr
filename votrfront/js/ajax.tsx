@@ -23,13 +23,15 @@ type RpcPayload =
 
 const HEADER_LENGTH = 10;
 
-function sendRawRpc<N extends keyof Rpcs>(
-  name: N,
-  stringifiedArgs: string,
-  callback?: ((result: ReturnType<Rpcs[N]>) => void) | undefined
-) {
+interface RpcCall {
+  name: string;
+  stringifiedArgs: string;
+  callback: (result: unknown) => void;
+}
+
+function sendRawRpcs(calls: RpcCall[]) {
   let processed = 0;
-  let result: unknown = undefined;
+  let results = 0;
   let finished = false;
 
   function update() {
@@ -37,17 +39,15 @@ function sendRawRpc<N extends keyof Rpcs>(
     // eslint-disable-next-line no-constant-condition, @typescript-eslint/no-unnecessary-condition
     while (true) {
       if (xhr.status && xhr.status != 200) {
-        reportClientError("network", {
+        const error =
+          `Network error: HTTP ${xhr.status}` +
+          (xhr.statusText ? ": " + xhr.statusText : "");
+        fail(error, {
           subtype: "status",
           responseText: xhr.responseText,
-          responseURL: xhr.responseURL,
           status: xhr.status,
           statusText: xhr.statusText,
         });
-        fail(
-          `Network error: HTTP ${xhr.status}` +
-            (xhr.statusText ? ": " + xhr.statusText : "")
-        );
         return;
       }
       let data: RpcPayload;
@@ -69,58 +69,69 @@ function sendRawRpc<N extends keyof Rpcs>(
         data = JSON.parse(payload) as RpcPayload;
       } catch (error: unknown) {
         const errorString = String(error);
-        reportClientError("network", {
+        fail("Network error: RPC parse error: " + errorString, {
           subtype: "parse",
           error: errorString,
           responseText: xhr.responseText,
-          responseURL: xhr.responseURL,
         });
-        fail("Network error: RPC parse error: " + errorString);
         return;
       }
+      const current = calls[results];
+      const logName = current?.name || calls.map((r) => r.name).join(",");
       if ("announcement_html" in data) {
         console.debug("Received new announcement:", data.announcement_html);
         Votr.settings.announcement_html = data.announcement_html;
-      }
-      if ("log" in data) {
-        console.debug("Received " + name + " log:", data.log, data.message);
+      } else if ("log" in data) {
+        console.debug("Received " + logName + " log:", data.log, data.message);
         ajaxLogs.push(data);
-      }
-      if ("result" in data) {
-        console.debug("Received " + name + " result:", data.result);
-        result = data.result;
-      }
-      if ("error" in data) {
-        console.log("Received " + name + " error:", data.error);
-        fail(data.error);
+      } else if ("result" in data) {
+        const result = data.result;
+        if (!current) {
+          fail("Network error: Too many results", { subtype: "many", result });
+          return;
+        }
+        console.debug("Received " + logName + " result:", result);
+        try {
+          current.callback(result);
+        } catch (callbackError) {
+          setTimeout(() => {
+            throw callbackError;
+          }, 0);
+        }
+        results++;
+      } else if ("error" in data) {
+        console.log("Received " + logName + " error:", data.error);
+        fail(data.error, null);
+        return;
+      } else {
+        fail("Network error: Unknown message type", { subtype: "data", data });
         return;
       }
       processed += HEADER_LENGTH + length;
     }
     if (xhr.readyState == 4) {
-      if (processed != xhr.responseText.length || result === undefined) {
-        console.log("INCOMPLETE!");
-        reportClientError("network", {
+      if (processed !== xhr.responseText.length || results !== calls.length) {
+        fail("Network error: Incomplete response", {
           subtype: "incomplete",
           processed,
+          results,
           length: xhr.responseText.length,
-          responseURL: xhr.responseURL,
         });
-        fail("Network error: Incomplete response");
         return;
       }
       finished = true;
-      if (callback) {
-        callback(result as ReturnType<Rpcs[N]>);
-      }
     }
     Votr.updateRoot();
   }
 
-  function fail(e: string) {
+  function fail(e: string, reportData: object | null) {
     if (finished) return;
     finished = true;
-    console.log("FAILED!", e);
+    console.error("FAILED!", e, reportData);
+    if (reportData) {
+      const fullData = { responseURL: xhr.responseURL, ...reportData };
+      reportClientError("network", fullData);
+    }
     if (!Votr.ajaxError) {
       Votr.ajaxError = e;
       Votr.updateRoot();
@@ -130,19 +141,27 @@ function sendRawRpc<N extends keyof Rpcs>(
   const xhr = new XMLHttpRequest();
   xhr.onload = update;
   xhr.onprogress = update;
-  xhr.onerror = () => fail("Network error");
-  xhr.open("POST", "rpc?name=" + name, true);
+  xhr.onerror = () => fail("Network error", null);
+  xhr.open("POST", "rpc?names=" + calls.map((r) => r.name).join(","), true);
   xhr.setRequestHeader("Content-Type", "application/json");
   xhr.setRequestHeader("X-CSRF-Token", Votr.settings.csrf_token!);
-  xhr.send(stringifiedArgs);
+  xhr.send("[" + calls.map((r) => r.stringifiedArgs).join(",") + "]");
 }
 
 export function sendRpc<N extends keyof Rpcs>(
   name: N,
   args: Parameters<Rpcs[N]>,
-  callback?: ((result: ReturnType<Rpcs[N]>) => void) | undefined
+  callback: (result: ReturnType<Rpcs[N]>) => void
 ) {
-  sendRawRpc(name, JSON.stringify(args), callback);
+  sendRawRpcs([
+    {
+      name,
+      stringifiedArgs: JSON.stringify(args),
+      callback: (result: unknown) => {
+        callback(result as ReturnType<Rpcs[N]>);
+      },
+    },
+  ]);
 }
 
 Votr.ajaxError = null;
@@ -154,20 +173,39 @@ type CacheMap<N extends keyof Rpcs> = Record<string, CacheEntry<N>>;
 
 const requestCache: { [N in keyof Rpcs]?: CacheMap<N> } = {};
 
+let ajaxCallsBatch: RpcCall[] | null = null;
+
 function sendCachedRequest<N extends keyof Rpcs>(
   name: N,
   stringifiedArgs: string
 ) {
   const map: CacheMap<N> = (requestCache[name] ||= {});
 
-  // If pending or done, return. (In theory it could become done between the
-  // CacheRequester.get() call and the useEffect in Loading.)
+  // If pending or done, return. E.g. if two components want the same request,
+  // first they both render, then both their effects run. Only one of them
+  // should send the request. The second effect will see it's already pending.
   if (stringifiedArgs in map) return;
 
   map[stringifiedArgs] = undefined; // Set it to pending.
-  sendRawRpc(name, stringifiedArgs, (result) => {
-    map[stringifiedArgs] = result; // Set it to done.
-  });
+
+  const callback = (result: unknown) => {
+    map[stringifiedArgs] = result as ReturnType<Rpcs[N]>; // Set it to done.
+  };
+
+  // Start a new batch if needed. All calls in the near future (other calls from
+  // this <Loading>, as well as other <Loading>s that were rendered at the same
+  // time) will be collected and sent in one HTTP request.
+  if (!ajaxCallsBatch) {
+    ajaxCallsBatch = [];
+    // A microtask would probably work too, but setTimeout is good enough.
+    setTimeout(() => {
+      const localBatch = ajaxCallsBatch;
+      ajaxCallsBatch = null;
+      if (localBatch) sendRawRpcs(localBatch);
+    }, 0);
+  }
+
+  ajaxCallsBatch.push({ name, stringifiedArgs, callback });
 }
 
 export function invalidateRequestCache(command: keyof Rpcs) {
@@ -199,6 +237,13 @@ export class CacheRequester {
 }
 
 export function Loading({ requests }: { requests?: (() => void)[] }) {
+  // In order to get good RPC batching, if multiple Loading components are
+  // mounted at the "same time" (in the same React Commit Phase), we want React
+  // to run all their useEffect hooks at the "same time" (preferably in the same
+  // microtask, or at least macrotask). As of React 18.2.0, it seems useEffect
+  // does work that way. It may or may not run in its own micro/macro(?)task
+  // after updating the DOM, but all pending useEffect hooks run together. If it
+  // breaks in a future version, let's try switching to useLayoutEffect.
   useEffect(() => {
     if (requests) {
       for (const requestFn of requests) requestFn();
