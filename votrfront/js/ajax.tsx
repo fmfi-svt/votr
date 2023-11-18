@@ -168,28 +168,27 @@ Votr.ajaxError = null;
 
 export const ajaxLogs: RpcLogPayload[] = [];
 
-type CacheEntry<N extends keyof Rpcs> = ReturnType<Rpcs[N]> | undefined;
-type CacheMap<N extends keyof Rpcs> = Record<string, CacheEntry<N>>;
-
-const requestCache: { [N in keyof Rpcs]?: CacheMap<N> } = {};
+const requestCache = new Map<keyof Rpcs, Map<string, unknown>>();
 
 let ajaxCallsBatch: RpcCall[] | null = null;
 
-function sendCachedRequest<N extends keyof Rpcs>(
-  name: N,
-  stringifiedArgs: string
-) {
-  const map: CacheMap<N> = (requestCache[name] ||= {});
+function sendCachedRequest(name: keyof Rpcs, stringifiedArgs: string) {
+  let letMap = requestCache.get(name);
+  if (!letMap) {
+    letMap = new Map<string, unknown>();
+    requestCache.set(name, letMap);
+  }
+  const map = letMap; // Eww.
 
   // If pending or done, return. E.g. if two components want the same request,
   // first they both render, then both their effects run. Only one of them
   // should send the request. The second effect will see it's already pending.
-  if (stringifiedArgs in map) return;
+  if (map.has(stringifiedArgs)) return;
 
-  map[stringifiedArgs] = undefined; // Set it to pending.
+  map.set(stringifiedArgs, undefined); // Set it to pending.
 
   const callback = (result: unknown) => {
-    map[stringifiedArgs] = result as ReturnType<Rpcs[N]>; // Set it to done.
+    map.set(stringifiedArgs, result); // Set it to done.
   };
 
   // Start a new batch if needed. All calls in the near future (other calls from
@@ -209,10 +208,7 @@ function sendCachedRequest<N extends keyof Rpcs>(
 }
 
 export function invalidateRequestCache(command: keyof Rpcs) {
-  /* eslint-disable-next-line @typescript-eslint/no-dynamic-delete --
-   * requestCache is a plain object, not a Map, because TypeScript doesn't
-   * support mapped types for Map (all values must have the same type). */
-  delete requestCache[command];
+  requestCache.delete(command);
 }
 
 export class CacheRequester {
@@ -225,9 +221,9 @@ export class CacheRequester {
     ...args: Parameters<Rpcs[N]>
   ): ReturnType<Rpcs[N]> | undefined {
     const stringifiedArgs = JSON.stringify(args);
-    const entry = requestCache[name]?.[stringifiedArgs];
+    const entry = requestCache.get(name)?.get(stringifiedArgs);
     if (entry !== undefined) {
-      return entry;
+      return entry as ReturnType<Rpcs[N]>;
     } else {
       this.missing.push(() => sendCachedRequest(name, stringifiedArgs));
       this.loadedAll = false;
