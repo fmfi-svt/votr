@@ -19,49 +19,49 @@ based on). **Fladgejt** contains the business logic for various AIS2 tasks and
 knows where to find which buttons and tables. And **Votrfront** is the web app
 that Votr's users interact with.
 
-## Installing and running Votr
+## Development setup
 
-System requirements:
+- You need Linux. (macOS or WSL1 or WSL2 might work too. Nobody tried it.)
+- _Optional step:_ Install Python 3. Note that on Debian/Ubuntu you must run
+  `sudo apt install python3-venv` because they broke off "venv" into its own
+  package. Also note that you don't need a system-wide `pip`.
+- _Optional step:_ [Install Node.js][node.js]. Make sure it's a recent version.
+  The official packages on Debian/Ubuntu are frequently very outdated, but you
+  can try [NodeSource][], or per-user installation with [nvm][].
+- _Optional step:_ [Install Yarn 1][yarn]. _Optional substep:_ Read [how to
+  install it per-user without sudo][sudo].
+- [Install Git][git].
+- Download Votr source code using Git:
+  ```shell
+  git clone https://github.com/fmfi-svt/votr.git
+  cd votr
+  ```
+- Download and set up dependencies:
+  ```shell
+  ./x install
+  ```
+  Rerun this every time you pull a new version of Votr, in case some
+  dependencies were updated.<br> _Optional step:_ Add `--python=local`,
+  `--nodejs=local` and/or `--yarn=local` if you didn't install them system-wide,
+  or if you just prefer to use an isolated local version. You may need to
+  [install curl][curl]. (Behind the scenes, this downloads Python binaries from
+  [python-build-standalone][pbs] and official Node.js binaries from nodejs.org.)
+- To start a local Votr server, open two terminals and run these commands:
+  ```shell
+  ./x serve --debug
+  ```
+  ```shell
+  ./x yarn watch
+  ```
 
-- Install Python 3.4+ and virtualenv. E.g. on Ubuntu 18.04:
-  `sudo apt install virtualenv`
-- Install [node.js 8+][1]. E.g. on Ubuntu 18.04: `sudo apt install nodejs`
-  - If your Linux distribution doesn't have node.js >= 8, or if you don't want
-    to install node.js system-wide, you can use nvm or nodeenv. [Read more.][2]
-- [Install Yarn.][3]
-
-[1]: https://nodejs.org/en/download/package-manager/
-[2]: https://github.com/fmfi-svt/votr/wiki/Installation-options
-[3]: https://yarnpkg.com/en/docs/install
-
-Download and set up Votr:
-
-```shell
-git clone https://github.com/fmfi-svt/votr.git
-cd votr
-virtualenv -p python3 venv
-```
-
-Install Votr's dependencies in `votr/venv` and `votr/node_modules`:
-
-```shell
-venv/bin/pip install -r requirements.txt
-yarn install
-```
-
-(Note: Repeat this step every time you pull a new version of Votr, in case they
-were updated.)
-
-Run Votr by starting these two commands in separate terminals: \
-(They are Votr's web server and Votr's JS/CSS build system.)
-
-```shell
-venv/bin/python console.py serve --debug
-```
-
-```shell
-yarn watch
-```
+[node.js]: https://nodejs.org/en/download/package-manager/
+[nodesource]: https://github.com/nodesource/distributions
+[nvm]: https://github.com/nvm-sh/nvm
+[yarn]: https://classic.yarnpkg.com/en/docs/install
+[sudo]: https://stackoverflow.com/a/59227497
+[git]: https://git-scm.com/download/linux
+[curl]: https://everything.curl.dev/get
+[pbs]: https://gregoryszorc.com/docs/python-build-standalone/main/
 
 ## Contributing to Votr
 
