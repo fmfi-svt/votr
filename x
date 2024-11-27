@@ -21,6 +21,9 @@ help1='Usage:
 
 # shellcheck disable=SC2016
 help2='
+  ./x upgrade-py
+    Upgrades Python dependencies to the latest versions.
+
   ./x uv COMMAND [ARGS]
     Runs uv. See https://docs.astral.sh/uv/reference/cli/
 
@@ -87,6 +90,12 @@ node | python | python3 | yarn | *.py)
 serve | cron | log)
   add_uv_path
   exec uv run "$base_dir/console.py" "$@"
+  ;;
+
+upgrade-py)
+  shift
+  add_uv_path
+  exec uv sync --upgrade "$@"
   ;;
 
 install)
