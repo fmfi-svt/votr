@@ -1,0 +1,32 @@
+[project]
+name = "votr"
+version = "0.0.0"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "beautifulsoup4>=0",
+    "lxml>=0",
+    "requests>=0",
+]
+
+[dependency-groups]
+votrfront = [
+    "markupsafe>=0",
+    "werkzeug>=0",
+]
+prod = [
+    "gunicorn[setproctitle]>=0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build]
+include = ["aisikl", "fladgejt"]
+
+[tool.uv]
+default-groups = ["votrfront"]
+
+[tool.uv.sources]
+gunicorn = { git = "https://github.com/TomiBelan/gunicorn" }

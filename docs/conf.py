@@ -267,7 +267,7 @@ texinfo_documents = [
 
 nitpicky = True
 
-autodoc_default_flags = ['members', 'private-members']
+autodoc_default_options = { 'members': True, 'private-members': True }
 
 autodoc_member_order = 'bysource'
 

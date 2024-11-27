@@ -22,9 +22,10 @@ that Votr's users interact with.
 ## Development setup
 
 - You need Linux. (macOS or WSL1 or WSL2 might work too. Nobody tried it.)
-- _Optional step:_ Install Python 3. Note that on Debian/Ubuntu you must run
-  `sudo apt install python3-venv` because they broke off "venv" into its own
-  package. Also note that you don't need a system-wide `pip`.
+- _Optional step:_ [Install uv][uv].
+- _Optional step:_ Install Python 3. Note that on Debian/Ubuntu you should
+  install it with `sudo apt install python3-venv` because they separated "venv"
+  into its own package. Also note that you don't need a system-wide `pip`.
 - _Optional step:_ [Install Node.js][node.js]. Make sure it's a recent version.
   The official packages on Debian/Ubuntu are frequently very outdated, but you
   can try [NodeSource][], or per-user installation with [nvm][].
@@ -41,7 +42,7 @@ that Votr's users interact with.
   ./x install
   ```
   Rerun this every time you pull a new version of Votr, in case some
-  dependencies were updated.<br> _Optional step:_ Add `--python=local`,
+  dependencies were updated.<br> _Optional step:_ Add `--uv=local`,
   `--nodejs=local` and/or `--yarn=local` if you didn't install them system-wide,
   or if you just prefer to use an isolated local version. You may need to
   [install curl][curl]. (Behind the scenes, this downloads Python binaries from
@@ -54,6 +55,7 @@ that Votr's users interact with.
   ./x yarn watch
   ```
 
+[uv]: https://docs.astral.sh/uv/getting-started/installation/
 [node.js]: https://nodejs.org/en/download/package-manager/
 [nodesource]: https://github.com/nodesource/distributions
 [nvm]: https://github.com/nvm-sh/nvm
@@ -75,10 +77,9 @@ on GitHub.
 
 Some documentation is on the wiki: https://github.com/fmfi-svt/votr/wiki
 
-Some documentation is in docstrings in the source code and rendered with Sphinx:
-http://svt.fmph.uniba.sk/~tomi/votrdoc/
+Some documentation is in docstrings in the source code. You could build it with
+Sphinx if you really wanted to read it in a browser.
 
 Building documentation:
 
-    pip install sphinx sphinx-rtd-theme
-    make -C docs html
+    uv run --with sphinx,sphinx-rtd-theme make -C docs html
