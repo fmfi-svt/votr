@@ -20,6 +20,6 @@ class WebuiClient(WebuiCommonUIMixin, WebuiHodnoteniaMixin, WebuiObdobiaMixin,
         check_connection(self.context)
 
     def logout(self):
-        self.context.request_html(self.context.ais_logout_path)
+        self.context.request_html('/ais/logout.do')
 
     fake_time_msec = None
