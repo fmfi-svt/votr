@@ -83,10 +83,10 @@ def _parse_form(old_url, soup):
     for elem in forms[0].find_all('input'):
         if elem.get('type') == 'hidden':
             data[elem['name']] = elem.get('value', '')
-    for elem in forms[0].find_all('input'):
+    for elem in forms[0].find_all('input') + forms[0].find_all('button'):
         if elem.get('type') == 'submit':
             if elem.get('name'):
-                data[elem['name']] = elem['value']
+                data[elem['name']] = elem.get('value', '')
             break
     return url, data
 
@@ -262,6 +262,10 @@ def _parse_cookie_string(ctx, base_url, default_name, cookie_string):
         return
 
     domain = base_url.split('/')[2].split(':')[0]
+
+    # WTF? Hack for when base_url is e.g. localhost:N. Probably needed because
+    # http/cookiejar.py implements RFC 2965 instead of RFC 6265. >:(
+    if '.' not in domain: domain += '.local'
 
     cookie_string = cookie_string.strip()
 
