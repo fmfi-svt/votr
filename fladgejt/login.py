@@ -1,5 +1,4 @@
 
-import os
 import re
 from urllib.parse import urljoin
 from aisikl.context import Context, Logger
@@ -110,7 +109,8 @@ def _send_request_chain(ctx, params, url, data):
                     f'https://{idp_host}/idp/profile/SAML2/Redirect/SSO?'):
                 raise Exception(f'Unexpected IdP request to {_redact(url)}')
             if data:
-                raise Exception(f'Unexpected IdP POST request')
+                raise Exception(
+                    f'Unexpected POST data for IdP request to {_redact(url)}')
             old_url = url
             url = f'https://{idp_host}/idp/profile/andrvotr/fabricate'
             data = {
@@ -207,15 +207,18 @@ def _create_context(server, logger):
         logger=logger)
 
 
-def _create_normal_client(ctx, server):
+def _create_normal_client(ctx, server, logout_mode):
     if 'ais_url' in server and 'rest_url' in server:
-        return HybridClient(ctx)
+        client = HybridClient(ctx)
     elif 'ais_url' in server:
-        return WebuiClient(ctx)
+        client = WebuiClient(ctx)
     elif 'rest_url' in server:
-        return RestClient(ctx)
+        client = RestClient(ctx)
     else:
         raise Exception('Neither ais_url nor rest_url is configured')
+
+    client.logout_mode = logout_mode
+    return client
 
 
 def _login_with_saml(server, params, logger):
@@ -231,9 +234,17 @@ def _login_with_saml(server, params, logger):
         # TODO: This is purely theoretical. REST API does not support SAML yet.
         _send_request_chain(ctx, params, server['rest_url'], None)
 
-    # TODO logout_type = LOGOUT_DO_AND_REDIRECT # TODO
-
-    return _create_normal_client(ctx, server)
+    logout_mode = {
+        # End the AIS session, just to be polite and free up resources. But
+        # don't end the IdP session we're a part of. That's up to the user and
+        # should happen in their browser, especially if they also signed in to
+        # other services.
+        'saml_andrvotr': WebuiClient.LOGOUT_WITHOUT_REDIRECTS,
+        # End the IdP session too, just to be polite. But don't run JavaScript
+        # on the IdP logout page, that would be too much.
+        'saml_password': WebuiClient.LOGOUT_WITH_REDIRECTS,
+    }[params['type']]
+    return _create_normal_client(ctx, server, logout_mode)
 
 
 def _login_with_plain_password(server, params, logger):
@@ -249,9 +260,7 @@ def _login_with_plain_password(server, params, logger):
     login_data = { 'login': params['username'], 'password': params['password'] }
     _send_request_chain(ctx, params, login_url, login_data)
 
-    # TODO logout_type = LOGOUT_DO_AND_REDIRECT # TODO
-
-    return _create_normal_client(ctx, server)
+    return _create_normal_client(ctx, server, WebuiClient.LOGOUT_WITH_REDIRECTS)
 
 
 def _parse_cookie_string(ctx, base_url, default_name, cookie_string):
@@ -262,10 +271,6 @@ def _parse_cookie_string(ctx, base_url, default_name, cookie_string):
         return
 
     domain = base_url.split('/')[2].split(':')[0]
-
-    # WTF? Hack for when base_url is e.g. localhost:N. Probably needed because
-    # http/cookiejar.py implements RFC 2965 instead of RFC 6265. >:(
-    if '.' not in domain: domain += '.local'
 
     cookie_string = cookie_string.strip()
 
@@ -303,9 +308,7 @@ def _login_with_cookie(server, params, logger):
         ctx, server.get('rest_url'), server.get('rest_cookie'),
         params.get('rest_cookie'))
 
-    # TODO logout_type = DONT_LOGOUT
-
-    return _create_normal_client(ctx, server)
+    return _create_normal_client(ctx, server, WebuiClient.LOGOUT_NOTHING)
 
 
 def _login_with_flashback(server, params, logger):

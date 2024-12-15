@@ -11,7 +11,11 @@ session_max_age = 60 * 60 * 24
 
 log_max_age = 60 * 60 * 25
 
-# TODO: add python3-saml config here
+root_url = None
+
+saml_metadata_extra = None
+
+andrvotr_api_key = None
 
 ua_code = None
 

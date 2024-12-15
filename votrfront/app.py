@@ -3,7 +3,7 @@ import os
 import sys
 from markupsafe import escape
 from pathlib import Path
-from werkzeug.exceptions import HTTPException
+from werkzeug.exceptions import HTTPException, MisdirectedRequest
 from werkzeug.middleware.shared_data import SharedDataMiddleware
 from werkzeug.routing import Map
 from werkzeug.wrappers import Request
@@ -18,6 +18,8 @@ class VotrApp(object):
         self.settings = settings
 
         self.var = Path(__file__).resolve().parent.parent / settings.var_path
+
+        self.saml_settings = login.build_saml_settings(settings, self.var)
 
         self.commands = {}
         for module in site_modules:
@@ -48,10 +50,13 @@ class VotrApp(object):
     def dispatch_request(self, request):
         '''Processes the HTTP request and returns a werkzeug `Response`.'''
         try:
+            if self.settings.root_url and request.root_url != self.settings.root_url:
+                raise MisdirectedRequest(f'Expected {self.settings.root_url} instead of {request.root_url}')
+
             endpoint, values = request.url_adapter.match()
             return endpoint(request, **values)
         except HTTPException as e:
-            link = '<p><a href="%s">Back to main page</a></p>' % escape(request.url_root)
+            link = '<p><a href="%s">Back to main page</a></p>' % escape(self.settings.root_url or request.root_url)
             orig_get_body = e.get_body
             e.get_body = lambda environ, scope: orig_get_body(environ, scope) + link
             return e
