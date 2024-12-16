@@ -90,8 +90,6 @@ def build_saml_auth(request):
     if isinstance(request.app.saml_settings, str):
         raise Exception(request.app.saml_settings)
 
-    print(type(request.query_string), repr(request.query_string))
-
     request_data = {
         'http_host': request.host,
 
