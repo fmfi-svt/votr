@@ -13,8 +13,6 @@ log_max_age = 60 * 60 * 25
 
 root_url = None
 
-saml_metadata_extra = None
-
 andrvotr_api_key = None
 
 ua_code = None

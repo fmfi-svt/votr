@@ -4,6 +4,7 @@ from datetime import datetime
 import hashlib
 import os
 import traceback
+import re
 from werkzeug.exceptions import InternalServerError
 from werkzeug.routing import Rule
 from werkzeug.utils import redirect
@@ -58,6 +59,18 @@ def build_saml_settings(votr_settings, var):
             # signed. I don't know why this isn't enabled by default.
             'logoutRequestSigned': True,
             'logoutResponseSigned': True,
+        },
+        'organization': {
+            'en': {
+                'name': 'Comenius University in Bratislava',
+                'displayname': 'Comenius University',
+                'url': 'http://uniba.sk/en',
+            },
+            'sk': {
+                'name': 'Univerzita Komenského v Bratislave',
+                'displayname': 'Univerzita Komenského',
+                'url': 'http://uniba.sk/',
+            },
         },
         # Probably not 'debug', because it prints to stdout and changes global
         # state with xmlsec.enable_debug_trace().
@@ -122,9 +135,18 @@ def saml_sp(request):
 
     metadata = request.app.saml_settings.get_sp_metadata()
 
-    if (extra := request.app.settings.saml_metadata_extra):
-        close_tag = b'</md:SPSSODescriptor>'
-        metadata = metadata.replace(close_tag, extra.encode() + close_tag)
+    mdui = f'''
+        <md:Extensions>
+            <mdui:UIInfo xmlns:mdui="urn:oasis:names:tc:SAML:metadata:ui">
+                <mdui:DisplayName xml:lang="en">{request.app.settings.instance_title}</mdui:DisplayName>
+                <mdui:DisplayName xml:lang="sk">{request.app.settings.instance_title}</mdui:DisplayName>
+            </mdui:UIInfo>
+        </md:Extensions>
+    '''
+    metadata = re.sub(
+        br' *<md:KeyDescriptor',
+        (lambda matchobj: mdui.encode('utf8') + matchobj.group(0)),
+        metadata, 1, re.DOTALL)
 
     if (errors := request.app.saml_settings.validate_metadata(metadata)):
         raise Exception(repr(errors))
