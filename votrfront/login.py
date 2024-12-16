@@ -274,6 +274,9 @@ def build_params_from_saml_response(request):
         raise Exception(
             'IdP did not provide the Andrvotr authority token')
 
+    andrvotr_api_key_path = request.app.var / 'saml/andrvotr_api_key'
+    andrvotr_api_key = andrvotr_api_key_path.read_text().strip()
+
     # RelayState contains the whole `destination` (Votr query string). This
     # ignores that the SAML spec says: "The value MUST NOT exceed 80 bytes in
     # length." and "The service provider SHOULD reveal as little of the request
@@ -292,7 +295,7 @@ def build_params_from_saml_response(request):
         type='saml_andrvotr',
         destination=relay_state[2],
         my_entity_id=auth.get_settings().get_sp_data()['entityId'],
-        andrvotr_api_key=request.app.settings.andrvotr_api_key,
+        andrvotr_api_key=andrvotr_api_key,
         andrvotr_authority_token=andrvotr_authority_tokens[0],
         saml_logout_kwargs=dict(
             name_id=auth.get_nameid(),

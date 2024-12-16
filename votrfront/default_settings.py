@@ -13,8 +13,6 @@ log_max_age = 60 * 60 * 25
 
 root_url = None
 
-andrvotr_api_key = None
-
 ua_code = None
 
 anketa_season = ''
