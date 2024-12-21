@@ -133,6 +133,15 @@ def saml_sp(request):
 
     metadata = request.app.saml_settings.get_sp_metadata()
 
+    # The python3-saml default <NameIDFormat> prints a warning in Shibboleth IdP
+    # logs: "Ignoring NameIDFormat metadata that includes the 'unspecified'
+    # format".
+    # Other SPs don't have any <NameIDFormat> in metadata.
+    # It can't be removed in python3-saml settings_dict. We must hack it out.
+    metadata = re.sub(br' *<md:NameIDFormat>\S*</md:NameIDFormat>\n', b'',
+        metadata)
+
+    # Add mdui:UIInfo manually. python3-saml isn't able to generate it.
     mdui = f'''
         <md:Extensions>
             <mdui:UIInfo xmlns:mdui="urn:oasis:names:tc:SAML:metadata:ui">
