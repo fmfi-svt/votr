@@ -144,7 +144,7 @@ def saml_sp(request):
     metadata = re.sub(
         br' *<md:KeyDescriptor',
         (lambda matchobj: mdui.encode('utf8') + matchobj.group(0)),
-        metadata, 1, re.DOTALL)
+        metadata, count=1, flags=re.DOTALL)
 
     if (errors := request.app.saml_settings.validate_metadata(metadata)):
         raise Exception(repr(errors))
