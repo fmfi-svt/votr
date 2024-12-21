@@ -37,7 +37,7 @@ def get_login_params():
 
     username = input('AIS username: ')
     password = getpass.getpass('AIS password: ')
-    params = dict(type='cosignpassword', username=username, password=password)
+    params = dict(type='saml_password', username=username, password=password)
 
     fd = os.open(filename, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
     with open(fd, 'w') as f:

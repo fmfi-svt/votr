@@ -3,6 +3,7 @@ from collections import namedtuple
 from contextlib import contextmanager
 import json
 import re
+from requests import HTTPError
 import time
 import urllib.parse
 from .exceptions import (
@@ -802,7 +803,31 @@ class Application:
         self.close_all_dialogs()
 
 def check_connection(context):
-    soup = context.request_html('/ais/portal/changeTab.do?tab=0')
-    username_element = soup.find(class_='user-name')
-    if not (username_element and username_element.get_text().strip()):
-        raise LoggedOutError('AIS login expired.')
+    # We used to request /ais/portal/changeTab.do?tab=0, but it switches the
+    # user to the old interface. Same with / or /ais/start.do. This should work
+    # regardless of old vs new student interface, and preserve the user's
+    # preference for next time they log in to AIS directly.
+
+    # The magic header is from https://ais2.uniba.sk/ais/apps/student/sk/main.js
+    # (search "accessToken") and from an inline script in /ais/start.do. Let's
+    # hope it's stable over time.
+    # This always returns 200 with empty body, even if logged out.
+    response = context.request_ais(
+        '/ais/rest/apps/get-access-token',
+        headers={'B5nd8BgAoX': '2llVM1Fl3M'})
+    aisauth = response.headers.get('AISAuth')
+    if not aisauth:
+        raise AISParseError('Missing AISAuth header')
+
+    # This returns empty 200 if logged in or empty 401 if logged out.
+    # Future note: If we store the aisauth value for a longer time, we should
+    # always check if a response contains a new AISAuth header.
+    try:
+        context.request_ais(
+            '/ais/rest/apps/check-session/check-light',
+            headers={'AISAuth': aisauth})
+    except HTTPError as e:
+        if e.response and e.response.status_code == 401:
+            raise LoggedOutError('AIS login expired.') from e
+        else:
+            raise e

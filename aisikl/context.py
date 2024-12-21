@@ -19,20 +19,16 @@ class Context:
     performs HTTP requests and deals with logs.
 
     Arguments:
-        cookies: A dictionary of initial cookies.
         ais_url: The AIS server to connect to, e.g. "https://ais2.uniba.sk/".
-        rest_url: The REST server to connect to
+        rest_url: The REST server to connect to.
         logger: An optional :class:`Logger` instance to use.
     '''
 
-    def __init__(self, cookies, *, ais_url=None, rest_url=None, logger=None):
+    def __init__(self, *, ais_url=None, rest_url=None, logger=None):
         self.ais_url = ais_url
         self.rest_url = rest_url
         self.logger = logger or Logger()
-
-        self.connection = requests.Session()
-        for key in cookies:
-            self.connection.cookies.set(key, cookies[key])
+        self.requests_session = requests.Session()
 
     def request_ais(self, url, *, method='GET', **kwargs):
         '''Sends a request to AIS and returns the :class:`requests.Response`.
@@ -43,12 +39,10 @@ class Context:
         :return: a :class:`requests.Response` object.
         '''
         self.log('benchmark', 'Begin AIS network request')
-        data = kwargs.get('data', None)
-        if data and 'password' in data: data = None
         self.log('http', 'Requesting {} {}'.format(
-            method, url.partition('?')[0]), [url, data])
+            method, url.partition('?')[0]), [url, kwargs.get('data', None)])
         url = urljoin(self.ais_url, url)
-        response = self.connection.request(method, url, **kwargs)
+        response = self.requests_session.request(method, url, **kwargs)
         response.raise_for_status()
         if response.headers.get('content-type', '').startswith('text'):
             self.log('http', 'Received response', response.text)
@@ -65,7 +59,9 @@ class Context:
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
         :return: a ``BeautifulSoup`` object.
         '''
-        response = self.request_ais(url, method=method, **kwargs)
+        return self.parse_html(self.request_ais(url, method=method, **kwargs))
+
+    def parse_html(self, response):
         self.log('benchmark', 'Begin HTML parsing')
         soup = BeautifulSoup(response.text, 'lxml')
         self.log('benchmark', 'End HTML parsing')
@@ -83,7 +79,7 @@ class Context:
         self.log('http', 'Requesting POST {}'.format(
             url.partition('?')[0]), [url, data])
         url = urljoin(self.rest_url, url)
-        response = self.connection.request("POST", url, data=data)
+        response = self.requests_session.request("POST", url, data=data)
         response.raise_for_status()
         self.log('http', 'Received response', response.text)
         self.log('benchmark', 'End REST network request')
@@ -149,7 +145,7 @@ except NameError:
     pass
 else:
     from urllib.parse import quote
-    from jinja2 import Markup
+    from markupsafe import Markup
     from IPython.display import display, HTML
 
     def ipython_log(self, timestamp, type, message, data):

@@ -6,10 +6,10 @@ import { getLocalSetting, setLocalSetting } from "./LocalSettings";
 import { buildUrl, FakeLink, QueryContext } from "./router";
 
 const TYPE_NAMES: Record<string, string> = {
-  "cosignproxy": "Cosign (automatické)",
-  "cosignpassword": "Cosign (meno a heslo)",
-  "cosigncookie": "Cosign (manuálne cookie)",
-  "plainpassword": "Meno a heslo",
+  "saml_andrvotr": "SAML + Andrvotr",
+  "saml_password": "SAML + meno a heslo",
+  "cookie": "Manuálne cookie",
+  "plain_password": "Meno a heslo",
   "flashback": "Flashback",
 };
 
@@ -131,7 +131,7 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
         <input type="hidden" name="type" value={currentType} />
       )}
 
-      {(currentType == "cosignpassword" || currentType == "plainpassword") && (
+      {(currentType == "saml_password" || currentType == "plain_password") && (
         <React.Fragment>
           <p>
             <label>
@@ -148,9 +148,9 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
         </React.Fragment>
       )}
 
-      {currentType == "cosigncookie" && (
+      {currentType == "cookie" && (
         <React.Fragment>
-          {/* TODO: Detailed instructions for cosigncookie. */}
+          {/* TODO: Detailed instructions for cookie. */}
           {!!serverConfig.ais_cookie && (
             <p>
               <label>
