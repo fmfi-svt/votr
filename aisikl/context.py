@@ -21,14 +21,23 @@ class Context:
     Arguments:
         ais_url: The AIS server to connect to, e.g. "https://ais2.uniba.sk/".
         rest_url: The REST server to connect to.
+        dns_overrides: A dict[str, str] of hostname replacements. When sending
+            any https request to K, the socket will connect() to V instead. The
+            SNI name and Host header will still be K.
         logger: An optional :class:`Logger` instance to use.
     '''
 
-    def __init__(self, *, ais_url=None, rest_url=None, logger=None):
+    def __init__(self, *, ais_url=None, rest_url=None, dns_overrides=None,
+                 logger=None):
         self.ais_url = ais_url
         self.rest_url = rest_url
         self.logger = logger or Logger()
         self.requests_session = requests.Session()
+        if dns_overrides:
+            for old_hostname, new_hostname in dns_overrides.items():
+                self.requests_session.mount(
+                    f'https://{old_hostname}/',
+                    _DnsOverrideAdapter(old_hostname, new_hostname))
 
     def request_ais(self, url, *, method='GET', **kwargs):
         '''Sends a request to AIS and returns the :class:`requests.Response`.
@@ -137,6 +146,44 @@ class Logger:
                 type, message, '' if data is None else json.dumps(data)),
                 file=sys.stderr)
     log.__doc__ = Context.log.__doc__
+
+
+class _DnsOverrideAdapter(requests.adapters.HTTPAdapter):
+    '''A HTTPAdapter which overrides the DNS resolution (i.e. the socket
+    connect() address) from old_hostname to new_hostname.'''
+
+    def __init__(self, old_hostname, new_hostname):
+        super().__init__()
+        self.old_hostname = old_hostname
+        self.new_hostname = new_hostname
+
+    def build_connection_pool_key_attributes(self, *args, **kwargs):
+        host_params, pool_kwargs = (
+            super().build_connection_pool_key_attributes(*args, **kwargs))
+        if host_params['host'] != self.old_hostname:
+            raise Exception(f'{host_params["host"]!r} != {self.old_hostname!r}')
+        # Modifying this field changes the connect() address, SNI, expected cert
+        # SAN, and default Host header. We only want to change the connect()
+        # address, so we must change the rest back to old_hostname.
+        host_params = { **host_params, 'host': self.new_hostname }
+        # Change SNI and expected cert SAN back to old_hostname.
+        pool_kwargs = { **pool_kwargs, 'server_hostname': self.old_hostname }
+        return host_params, pool_kwargs
+
+    def add_headers(self, request, **kwargs):
+        # Explicitly set the Host header to old_hostname. FYI: It is usually
+        # implicitly added by HTTPConnection.put_request() in http/client.py
+        # using the value of HTTPConnection.host (not by requests or urllib3).
+        if 'Host' in request.headers:
+            raise Exception('Requests with custom Host header are unsupported')
+        request.headers['Host'] = self.old_hostname
+
+    def __getstate__(self):
+        return {
+            **super().__getstate__(),
+            'old_hostname': self.old_hostname,
+            'new_hostname': self.new_hostname,
+        }
 
 
 try:

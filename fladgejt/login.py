@@ -204,7 +204,7 @@ def _send_request_chain(ctx, params, url, data):
 def _create_context(server, logger):
     return Context(
         ais_url=server.get('ais_url'), rest_url=server.get('rest_url'),
-        logger=logger)
+        dns_overrides=server.get('dns_overrides'), logger=logger)
 
 
 def _create_normal_client(ctx, server, logout_mode):
@@ -335,6 +335,7 @@ def create_client(server, params, *, logger=None):
     #   { login_types: tuple[str],
     #     ais_url?: str, ais_cookie?: str,
     #     rest_url?: str, rest_cookie?: str,
+    #     dns_overrides?: dict[str, str],
     #     flashbacks_dir?: str }
     # (usually also has { title: str } but this function does not need it)
     #
