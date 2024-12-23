@@ -6,7 +6,7 @@ import { getLocalSetting, setLocalSetting } from "./LocalSettings";
 import { buildUrl, FakeLink, QueryContext } from "./router";
 
 const TYPE_NAMES: Record<string, string> = {
-  "saml_andrvotr": "SAML + Andrvotr",
+  "saml_andrvotr": "Andrvotr (zatiaľ nefunguje)",
   "saml_password": "SAML + meno a heslo",
   "cookie": "Manuálne cookie",
   "plain_password": "Meno a heslo",
