@@ -255,7 +255,7 @@ def finish_login(request, get_params):
             response = app_response(request, **app_kwargs)
             return sessions.set_session_cookie(request, response, None)
 
-        logger.log('login', 'Login finished')
+        logger.log('login', 'Login finished', params.get('username'))
 
     response = app_response(
         request,
@@ -264,6 +264,15 @@ def finish_login(request, get_params):
         destination=destination,
     )
     return sessions.set_session_cookie(request, response, sessid)
+
+
+def _read_saml_attribute(auth, name):
+    values = auth.get_attribute(name)
+    if not values:
+        return None
+    if len(values) > 1:
+        raise Exception(f'Multiple {name} attribute values')
+    return values[0]
 
 
 def build_params_from_saml_response(request):
@@ -275,11 +284,13 @@ def build_params_from_saml_response(request):
             errors.append(error_reason)
         raise Exception(f'SAML login failed: {errors!r}')
 
-    andrvotr_authority_tokens = auth.get_attribute(
-        'tag:fmfi-svt.github.io,2024:andrvotr-authority-token')
-    if not andrvotr_authority_tokens:
+    andrvotr_authority_token = _read_saml_attribute(
+        auth, 'tag:fmfi-svt.github.io,2024:andrvotr-authority-token')
+    if not andrvotr_authority_token:
         raise Exception(
             'IdP did not provide the Andrvotr authority token')
+
+    uid = _read_saml_attribute(auth, 'urn:oid:0.9.2342.19200300.100.1.1')
 
     andrvotr_api_key_path = request.app.var / 'saml/andrvotr_api_key'
     andrvotr_api_key = andrvotr_api_key_path.read_text().strip()
@@ -294,7 +305,6 @@ def build_params_from_saml_response(request):
     if len(relay_state) != 3 or relay_state[0] != 'v':
         raise Exception(f'Wrong RelayState {relay_state!r}')
 
-    # TODO: Read the username and display it in the Votr log and access log.
     # TODO: One day: comply with SessionNotOnOrAfter (get_session_expiration).
 
     return dict(
@@ -303,7 +313,8 @@ def build_params_from_saml_response(request):
         destination=relay_state[2],
         my_entity_id=auth.get_settings().get_sp_data()['entityId'],
         andrvotr_api_key=andrvotr_api_key,
-        andrvotr_authority_token=andrvotr_authority_tokens[0],
+        andrvotr_authority_token=andrvotr_authority_token,
+        username=uid,  # Only used for logging.
         saml_logout_kwargs=dict(
             name_id=auth.get_nameid(),
             session_index=auth.get_session_index(),

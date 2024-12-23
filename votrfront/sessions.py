@@ -119,6 +119,10 @@ def transaction(request, sessid=None):
         with f:
             session = pickle.load(f)
 
+            if (credentials := session.get('credentials')):
+                if (username := credentials.get('username')):
+                    request.environ['votr.log_user'] = username
+
             yield session
 
             # Use pickle.dumps instead of pickle.dump, so that if it fails, the
