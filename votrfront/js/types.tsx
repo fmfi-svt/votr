@@ -1,7 +1,9 @@
 export interface VotrServer {
   title: string;
   login_types: string[];
+  ais_url?: string;
   ais_cookie?: string;
+  rest_url?: string;
   rest_cookie?: string;
   flashback_files?: string[];
 }

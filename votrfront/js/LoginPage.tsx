@@ -133,6 +133,21 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
 
       {(currentType == "saml_password" || currentType == "plain_password") && (
         <React.Fragment>
+          <details>
+            <summary>Bezpečnostné informácie</summary>
+            <p>Toto nie je oficiálny univerzitný prihlasovací formulár.</p>
+            <p>
+              Spravidla nie je bezpečné prezradiť vaše heslo z jednej stránky
+              druhému človeku alebo stránke. Mohol by nežiaduco konať vo vašom
+              mene, skúšať rovnaké heslo aj na iných stránkach, alebo vás
+              vymknúť z účtu.
+            </p>
+            <p>
+              Autori Votru sa zaväzujú, že vaše univerzitné heslo a účet nijako
+              nezneužijú, ale v záujme transparentnosti vás chcú upozorniť na
+              toto potenciálne riziko.
+            </p>
+          </details>
           <p>
             <label>
               {"Meno: "}
@@ -150,23 +165,57 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
 
       {currentType == "cookie" && (
         <React.Fragment>
-          {/* TODO: Detailed instructions for cookie. */}
+          <p>
+            <strong>Pokyny:</strong> Prihláste sa do AISu. Pomocou vývojárskych
+            nástrojov vytiahnite z AISu hodnotu vášho prihlasovacieho cookie a
+            skopírujte ju sem.
+          </p>
+          <ul>
+            <li>
+              Chrome: F12 &#x2192; Application &#x2192; Storage &#x2192; Cookies
+            </li>
+            <li>Firefox: F12 &#x2192; Storage &#x2192; Cookies</li>
+            <li>iOS/Android: smola :(</li>
+          </ul>
+          <p>
+            <strong>Efekt:</strong> Dáte tým Votru dočasné splnomocnenie
+            pristupovať k AISu vo vašom mene. (Platí iba krátku dobu a iba do
+            AISu.)
+          </p>
           {!!serverConfig.ais_cookie && (
             <p>
               <label>
-                {"Hodnota cookie " + serverConfig.ais_cookie + ": "}
-                <input name="ais_cookie" />
+                Hodnota cookie <code>{serverConfig.ais_cookie}</code> na{" "}
+                <a
+                  href={serverConfig.ais_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {serverConfig.ais_url}
+                </a>
+                : <input name="ais_cookie" />
               </label>
             </p>
           )}
           {!!serverConfig.rest_cookie && (
             <p>
               <label>
-                {"Hodnota cookie " + serverConfig.rest_cookie + ": "}
-                <input name="rest_cookie" />
+                Hodnota cookie <code>{serverConfig.rest_cookie}</code> na{" "}
+                <a
+                  href={serverConfig.rest_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {serverConfig.rest_url}
+                </a>
+                : <input name="rest_cookie" />
               </label>
             </p>
           )}
+          <p>
+            V prípade potreby je možné zadať aj viacero cookies (
+            <code>meno=hodnota; meno=hodnota</code>).
+          </p>
         </React.Fragment>
       )}
 

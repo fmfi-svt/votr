@@ -66,11 +66,9 @@ def static_url(filename):
 
 
 def process_server(server):
-    js_server = {
-        k: server[k]
-        for k in ('title', 'login_types', 'ais_cookie', 'rest_cookie')
-        if k in server
-    }
+    keep = ['title', 'login_types', 'ais_url', 'ais_cookie',
+            'rest_url', 'rest_cookie']
+    js_server = { k: server[k] for k in keep if k in server }
     if 'flashbacks_dir' in server and os.path.isdir(server['flashbacks_dir']):
         js_server['flashback_files'] = sorted(os.listdir(server['flashbacks_dir']))
     return js_server

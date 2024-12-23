@@ -200,9 +200,9 @@ th.sort {
   min-height: 100%;
   .login-content {
     max-width: 30em;
-    padding: 2em 15px;
+    padding: 10vh 15px 15px; /* TODO: increase to 20vh later? */
     margin: auto;
-    align-self: center; // "margin: auto" is not enough for IE11
+    flex-grow: 1;
   }
   .list-inline a {
     color: $navbar-default-link-color;
@@ -214,6 +214,19 @@ th.sort {
 
 .login-error {
   word-break: break-all;
+}
+
+details {
+  display: revert;
+  margin-bottom: 9px; /* same as p, ul */
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+summary {
+  display: revert;
+  cursor: pointer;
 }
 
 .central-box {
