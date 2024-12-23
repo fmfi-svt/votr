@@ -65,7 +65,7 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
   const currentType = state.type || serverConfig.login_types[0];
 
   return (
-    <form className="login" action="login" method="POST">
+    <form className="login" action="login" method="POST" rel="nofollow">
       {Votr.settings.invalid_session && (
         <p>Vaše prihlásenie vypršalo. Prihláste sa znova.</p>
       )}
