@@ -8,6 +8,11 @@ from fladgejt.rest import RestClient
 from fladgejt.webui import WebuiClient
 
 
+# Known and somewhat expected errors.
+class PasswordLoginError(Exception): pass
+class CookieLoginError(Exception): pass
+
+
 # Omit cookie values and query string values from logs.
 _redact_values_re = re.compile(r'=[^?&;]{10,}')
 _redact_values_sub = r'=[...]'
@@ -147,9 +152,15 @@ def _send_request_chain(ctx, params, url, data):
                 ctx.log('login', 'AIS login successful (old interface)')
                 return
 
-            # Detect successful AIS login (new interface).
+            # Detect successful AIS login (new student interface).
             if '/ais/apps/student/' in response.url and soup.find('app-root'):
-                ctx.log('login', 'AIS login successful (new interface)')
+                ctx.log('login', 'AIS login successful (new student interface)')
+                return
+
+            # Detect successful AIS login (new teacher interface).
+            # Votr functionality may be limited but at least login will work.
+            if '/ais/portal2/ucitel/' in response.url:
+                ctx.log('login', 'AIS login successful (new teacher interface)')
                 return
 
             # Handle login errors for saml_password and plain_password.
@@ -162,7 +173,11 @@ def _send_request_chain(ctx, params, url, data):
                 if error_element:
                     error_text = error_element.get_text().strip()
                     if error_text:
-                        raise Exception(f'Login error: {error_text}')
+                        if params['type'].endswith('_password'):
+                            raise PasswordLoginError(error_text)
+                        else:
+                            raise Exception(
+                                f'Login error with {type}: {error_text}')
 
             # Handle "fake redirects" - HTML pages with JavaScript code that
             # instantly submits a POST form.
@@ -281,7 +296,7 @@ def _parse_cookie_string(ctx, base_url, default_name, cookie_string):
         pair = pair.strip()
         if not pair: continue
         if '=' not in pair:
-            raise ValueError(
+            raise CookieLoginError(
                 'Expected either a single cookie value or a list of '
                 '";"-separated key=value elements, but an element does not '
                 'contain "="')
@@ -357,6 +372,12 @@ def create_client(server, params, *, logger=None):
     client = handler(server, params, logger)
 
     # Check that login was successful.
-    client.check_connection()
+    try:
+        client.check_connection()
+    except Exception as e:
+        if params['type'] == 'cookie':
+            raise CookieLoginError('Cookie value did not work') from e
+        else:
+            raise Exception(f'check_connection failed immediately: {e}') from e
 
     return client

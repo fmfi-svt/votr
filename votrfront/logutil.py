@@ -41,6 +41,10 @@ def classify(line):
         return 'HTTPError'
     if "failed with LoggedOutError" in line.content:
         return 'LoggedOutError'
+    if "Login failed with PasswordLoginError" in line.content:
+        return 'KnownLoginError'
+    if "Login failed with CookieLoginError" in line.content:
+        return 'KnownLoginError'
     if ("zapis_plan_vyhladaj" in line.content and
             "AIS did not return all table rows" in line.content):
         return 'open issue121'

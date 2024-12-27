@@ -29,14 +29,16 @@ export function AnketaPopup() {
   }
 
   const cache = new CacheRequester();
-  const studia = cache.get("get_studia");
-  if (!studia) {
+  const somStudent = cache.get("get_som_student");
+  const studia = somStudent ? cache.get("get_studia") : undefined;
+  if (!cache.loadedAll) {
     return (
       <div className="hidden">
         <Loading requests={cache.missing} />
       </div>
     );
   }
+  if (!studia) return null;
   if (!studia.some((s) => s.organizacna_jednotka == "FMFI")) return null;
 
   function closePopup(until: number) {
