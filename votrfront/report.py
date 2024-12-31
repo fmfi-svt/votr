@@ -19,7 +19,7 @@ def report(request):
         'body': body,
         'type': type,
         'ua': request.user_agent.string,
-        'sessid': sessions.get_session_cookie(request),
+        'sessid': sessions.get_sessid_from_cookie(request),
         'time': int(time.time()),
     }
 

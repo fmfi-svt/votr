@@ -167,8 +167,9 @@ def front(request):
     fake_time_msec = None
     connection_error = None
 
-    # If the user has no session cookie, just show the login form.
-    if not sessions.get_session_cookie(request):
+    # If the user has no session cookie, or it does not contain a sessid, just
+    # show the login form.
+    if not sessions.get_sessid_from_cookie(request):
         return app_response(request)
 
     try:

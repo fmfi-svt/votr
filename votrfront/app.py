@@ -3,10 +3,11 @@ import os
 import sys
 from markupsafe import escape
 from pathlib import Path
+from urllib.parse import parse_qs, urlencode
 from werkzeug.exceptions import HTTPException, MisdirectedRequest
 from werkzeug.middleware.shared_data import SharedDataMiddleware
 from werkzeug.routing import Map
-from werkzeug.wrappers import Request
+from werkzeug.wrappers import Request, Response
 
 from . import login, front, rpc, serve, cron, logutil, report
 site_modules = [login, front, rpc, serve, cron, logutil, report]
@@ -71,7 +72,32 @@ class VotrApp(object):
 
         request.url_adapter = self.url_map.bind_to_environ(request.environ)
 
+        cookie_prefix = '__Host-' if request.is_secure else ''
+        cookie_name = f'{cookie_prefix}{self.settings.instance_id}_csession'
+        cookie_str = request.cookies.get(cookie_name)
+        try:
+            cookie_dict = parse_qs(cookie_str or '', keep_blank_values=True)
+            cookie_dict = { k: v[0] for k, v in cookie_dict.items() }
+        except Exception:
+            cookie_dict = {}
+        cookie_dict_copy = cookie_dict.copy()
+        request.votr_cookie_value = cookie_dict
+
         response = self.dispatch_request(request)
+
+        if (request.votr_cookie_value is not cookie_dict or
+            request.votr_cookie_value != cookie_dict_copy
+        ):
+            if not isinstance(response, Response):
+                raise Exception('response is not a werkzeug.wrappers.Response')
+            if request.votr_cookie_value:
+                response.set_cookie(
+                    cookie_name, urlencode(request.votr_cookie_value), path='/',
+                    secure=request.is_secure, httponly=True, samesite='Lax')
+            else:
+                response.delete_cookie(
+                    cookie_name, path='/',
+                    secure=request.is_secure, httponly=True, samesite='Lax')
 
         return response
 

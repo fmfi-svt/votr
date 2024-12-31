@@ -207,6 +207,8 @@ def do_logout(request):
     except Exception:
         pass
 
+    request.votr_cookie_value = {}
+
     return credentials
 
 
@@ -252,18 +254,17 @@ def finish_login(request, get_params):
                 app_kwargs['server'] = params['server']
                 if 'type' in params and params['type'] in server['login_types']:
                     app_kwargs['type'] = params['type']
-            response = app_response(request, **app_kwargs)
-            return sessions.set_session_cookie(request, response, None)
+            return app_response(request, **app_kwargs)
 
         logger.log('login', 'Login finished', params.get('username'))
 
-    response = app_response(
+    request.votr_cookie_value = dict(sessid=sessid)
+    return app_response(
         request,
         csrf_token=csrf_token,
         fake_time_msec=fake_time_msec,
         destination=destination,
     )
-    return sessions.set_session_cookie(request, response, sessid)
 
 
 def _read_saml_attribute(auth, name):
@@ -276,8 +277,16 @@ def _read_saml_attribute(auth, name):
 
 
 def build_params_from_saml_response(request):
+    login_request_id = request.votr_cookie_value_saml_acs['login_request_id']
+    server = request.votr_cookie_value_saml_acs['server']
+    destination = request.votr_cookie_value_saml_acs['destination']
+
+    # Remembering request_id in a cookie protects against "login CSRF". In this
+    # attack, the attacker forces a victim to log in to the attacker's account,
+    # possibly without the victim noticing. On some sites this can be a real
+    # issue, but on Votr it wouldn't be very serious anyway.
     auth = build_saml_auth(request)
-    auth.process_response()
+    auth.process_response(request_id=login_request_id)
 
     if (errors := auth.get_errors()):
         if (error_reason := auth.get_last_error_reason()):
@@ -295,22 +304,12 @@ def build_params_from_saml_response(request):
     andrvotr_api_key_path = request.app.var / 'saml/andrvotr_api_key'
     andrvotr_api_key = andrvotr_api_key_path.read_text().strip()
 
-    # RelayState contains the whole `destination` (Votr query string). This
-    # ignores that the SAML spec says: "The value MUST NOT exceed 80 bytes in
-    # length." and "The service provider SHOULD reveal as little of the request
-    # as possible in the RelayState value [...]."
-    # TODO: Maybe one day, find a way to use short opaque RelayState.
-    relay_state = request.form['RelayState']
-    relay_state = relay_state.split('.', 2)
-    if len(relay_state) != 3 or relay_state[0] != 'v':
-        raise Exception(f'Wrong RelayState {relay_state!r}')
-
     # TODO: One day: comply with SessionNotOnOrAfter (get_session_expiration).
 
     return dict(
-        server=relay_state[1],
+        server=server,
         type='saml_andrvotr',
-        destination=relay_state[2],
+        destination=destination,
         my_entity_id=auth.get_settings().get_sp_data()['entityId'],
         andrvotr_api_key=andrvotr_api_key,
         andrvotr_authority_token=andrvotr_authority_token,
@@ -329,6 +328,9 @@ def saml_acs(request):
     check_header(request, 'Sec-Fetch-Mode', { 'navigate' })
     check_header(request, 'Sec-Fetch-Dest', { 'document' })
 
+    # do_logout() overwrites it. Stash the original value.
+    request.votr_cookie_value_saml_acs = request.votr_cookie_value
+
     # Do all SAML response processing inside finish_login() and use its error
     # handling. If it throws for any reason, we want to write the exception to
     # Votr logs and show the login form again.
@@ -337,14 +339,22 @@ def saml_acs(request):
 
 def start_login(request, params):
     if params['type'] == 'saml_andrvotr':
+        do_logout(request)
+
         auth = build_saml_auth(request)
-        relay_state = 'v.{server}.{destination}'.format(**params)
-        return redirect(auth.login(relay_state))
+        redirect_url = auth.login('')
+        request.votr_cookie_value = dict(
+            login_request_id=auth.get_last_request_id(),
+            server=params['server'],
+            destination=params['destination'],
+        )
+        return redirect(redirect_url)
 
     return finish_login(request, lambda request: params)
 
 
 def login(request):
+    check_header(request, 'Sec-Fetch-Site', { 'none', 'same-origin' })
     check_header(request, 'Sec-Fetch-Mode', { 'navigate' })
     check_header(request, 'Sec-Fetch-Dest', { 'document' })
 
@@ -363,8 +373,6 @@ def reset(request):
     if not credentials:
         return app_response(request, invalid_session=True,
                             destination=destination)
-
-    # TODO: We should enforce removing the session cookie.
 
     params = { **credentials, 'destination': destination }
     return start_login(request, params)
@@ -385,10 +393,9 @@ def saml_logout(request):
         do_logout(request)
 
         if url:
-            response = redirect(url)
+            return redirect(url)
         else:
-            response = app_response(request, destination='')
-        return sessions.set_session_cookie(request, response, None)
+            return app_response(request, destination='')
     except Exception as e:
         request.environ['wsgi.errors'].write(
             f'/saml_logout error:\n{traceback.format_exc()}')
@@ -416,8 +423,7 @@ def logout(request):
                 # As a low effort compromise, ignore SAML, redirect to our root,
                 # and delete at least our own session.
 
-    response = redirect(redirect_url)
-    return sessions.set_session_cookie(request, response, None)
+    return redirect(redirect_url)
 
 
 def get_routes():

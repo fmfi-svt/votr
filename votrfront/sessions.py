@@ -1,30 +1,17 @@
 
 import contextlib
 import fcntl
+from functools import wraps
 import gzip
 import os
 import pickle
+from urllib.parse import parse_qs, urlencode
+from werkzeug.wrappers import Response
 from aisikl.exceptions import LoggedOutError
 
 
-def _session_cookie_name(request):
-    prefix = '__Host-' if request.app.settings.secure_session_cookie else ''
-    return prefix + request.app.settings.instance_id + '_sessid'
-
-
-def get_session_cookie(request):
-    return request.cookies.get(_session_cookie_name(request))
-
-
-def set_session_cookie(request, response, sessid):
-    secure = request.app.settings.secure_session_cookie
-    if sessid:
-        response.set_cookie(_session_cookie_name(request), sessid,
-            path='/', secure=secure, httponly=True, samesite='Lax')
-    else:
-        response.delete_cookie(_session_cookie_name(request),
-            path='/', secure=secure, httponly=True, samesite='Lax')
-    return response
+def get_sessid_from_cookie(request):
+    return request.votr_cookie_value.get('sessid')
 
 
 def check_sessid(sessid):
@@ -48,7 +35,7 @@ def create(request, sessid, session):
 
 
 def delete(request, sessid=None):
-    if not sessid: sessid = get_session_cookie(request)
+    if not sessid: sessid = get_sessid_from_cookie(request)
     if not sessid: return
     check_sessid(sessid)
     try:
@@ -106,7 +93,7 @@ def lock(app, sessid):
 
 @contextlib.contextmanager
 def transaction(request, sessid=None):
-    if not sessid: sessid = get_session_cookie(request)
+    if not sessid: sessid = get_sessid_from_cookie(request)
     if not sessid: raise LoggedOutError('Session cookie not found')
     check_sessid(sessid)
 
@@ -136,7 +123,7 @@ def transaction(request, sessid=None):
 
 @contextlib.contextmanager
 def logged_transaction(request, sessid=None):
-    if not sessid: sessid = get_session_cookie(request)
+    if not sessid: sessid = get_sessid_from_cookie(request)
 
     with transaction(request, sessid) as session:
         with open_log_file(request, sessid) as log_file:

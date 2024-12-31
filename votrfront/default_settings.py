@@ -5,8 +5,6 @@ instance_title = 'Votr (dev)'
 
 var_path = './var'
 
-secure_session_cookie = False
-
 session_max_age = 60 * 60 * 24
 
 log_max_age = 60 * 60 * 25
