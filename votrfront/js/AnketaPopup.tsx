@@ -24,7 +24,7 @@ export function AnketaPopup() {
         wasClosedBefore = true;
       }
     }
-  } catch (e) {
+  } catch {
     // Ignore the error. Proceed with wasClosedBefore = false.
   }
 

@@ -52,6 +52,7 @@ export class ErrorBoundary extends React.Component<
     if (this.state.error) {
       const error = this.state.error;
       const details = String(
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
         (typeof error == "object" && "stack" in error && error.stack) || error
       );
       const firstLine = details.trim().split("\n")[0];
@@ -109,6 +110,8 @@ export class ErrorBoundary extends React.Component<
         </div>
       );
     } else {
+      // False positive?
+      // eslint-disable-next-line react/prop-types
       return this.props.children;
     }
   }

@@ -12,6 +12,8 @@ try {
       ? "Prepínateľné s: Votr.setJsDev(true alebo false)"
       : "Nejde prepínať, nemáme yarn buildboth."
   );
+  // Don't omit `(e)` because the prologue should work in old browsers.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
 } catch (e) {
   // Ignore errors.
 }
@@ -41,7 +43,7 @@ Votr.setJsDev = function (enabled: unknown) {
 
 if (
   window.URLSearchParams &&
-  // @ts-expect-error TS2774
+  // @ts-expect-error: TS2774 because we're doing feature detection
   Object.fromEntries
 ) {
   Votr.prologueCheck = true;

@@ -14,9 +14,8 @@ module.exports = {
       "files": ["**/*.ts", "**/*.tsx"],
       "extends": [
         "eslint:recommended",
-        "plugin:@typescript-eslint/recommended",
-        "plugin:@typescript-eslint/recommended-requiring-type-checking",
-        "plugin:@typescript-eslint/strict",
+        "plugin:@typescript-eslint/strict-type-checked",
+        "plugin:@typescript-eslint/stylistic-type-checked",
         "plugin:compat/recommended",
         "plugin:escompat/recommended",
         "plugin:escompat/typescript-" + tstarget,
@@ -28,7 +27,7 @@ module.exports = {
       "parserOptions": {
         "ecmaVersion": "latest",
         "sourceType": "module",
-        "project": true,
+        "projectService": true,
         "tsconfigRootDir": __dirname,
       },
       "rules": {
@@ -40,11 +39,9 @@ module.exports = {
         // them if they cause trouble later.
         "@typescript-eslint/default-param-last": "warn",
         "@typescript-eslint/no-dupe-class-members": "warn",
-        "@typescript-eslint/no-duplicate-type-constituents": "warn",
         "@typescript-eslint/no-invalid-this": "warn",
         "@typescript-eslint/no-loop-func": "warn",
         "@typescript-eslint/no-redeclare": "warn",
-        "@typescript-eslint/no-redundant-type-constituents": "warn",
         "@typescript-eslint/no-unused-expressions": "warn",
         "@typescript-eslint/require-array-sort-compare": "warn",
         "accessor-pairs": "warn",
@@ -121,6 +118,23 @@ module.exports = {
           "error",
           { "ignoreParameters": true },
         ],
+
+        // Too annoying with default options.
+        "@typescript-eslint/no-confusing-void-expression": [
+          "error",
+          { "ignoreArrowShorthand": true },
+        ],
+
+        // Too annoying with default options. The docs warn that you should use
+        // toFixed() or toPrecision() with floats, but Votr only uses integers.
+        "@typescript-eslint/restrict-template-expressions": [
+          "error",
+          { "allowNumber": true },
+        ],
+
+        // TODO: Maybe enable later.
+        "@typescript-eslint/no-deprecated": "off",
+        "@typescript-eslint/prefer-regexp-exec": "off",
 
         // Many false positives and almost no true positives.
         "@typescript-eslint/prefer-nullish-coalescing": "off",
