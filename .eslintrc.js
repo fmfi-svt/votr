@@ -19,7 +19,7 @@ module.exports = {
         "plugin:compat/recommended",
         "plugin:escompat/recommended",
         "plugin:escompat/typescript-" + tstarget,
-        "plugin:react/recommended",
+        "plugin:@eslint-react/recommended-type-checked-legacy",
         "plugin:react-hooks/recommended",
       ],
       "overrides": [],
@@ -33,10 +33,16 @@ module.exports = {
       "rules": {
         // Good rules.
         "curly": ["warn", "multi-line"],
-        "react/button-has-type": "error",
 
         // Nice to have. Not too valuable, but not too bothersome. We can remove
         // them if they cause trouble later.
+        "@eslint-react/naming-convention/component-name": "warn",
+        "@eslint-react/naming-convention/use-state": "warn",
+        "@eslint-react/no-children-prop": "warn",
+        "@eslint-react/no-missing-component-display-name": "warn",
+        "@eslint-react/no-unused-class-component-members": "warn",
+        "@eslint-react/hooks-extra/no-unnecessary-use-callback": "warn",
+        "@eslint-react/hooks-extra/no-unnecessary-use-memo": "warn",
         "@typescript-eslint/default-param-last": "warn",
         "@typescript-eslint/no-dupe-class-members": "warn",
         "@typescript-eslint/no-invalid-this": "warn",
@@ -90,12 +96,6 @@ module.exports = {
         "prefer-numeric-literals": "warn",
         "prefer-object-spread": "warn",
         "prefer-promise-reject-errors": "warn",
-        "react/function-component-definition": "warn",
-        "react/jsx-fragments": ["warn", "element"],
-        "react/jsx-no-constructed-context-values": "warn",
-        "react/jsx-no-useless-fragment": "warn",
-        "react/jsx-pascal-case": "warn",
-        "react/no-namespace": "warn",
         "symbol-description": "warn",
         "yoda": "warn",
 
@@ -144,11 +144,13 @@ module.exports = {
         // of them behind the other?
         "@typescript-eslint/no-non-null-assertion": "off",
 
+        // Good idea per se, but Votr often has a good reason to do it.
+        "@eslint-react/no-array-index-key": "off",
+
         // I don't think "no-shadow" is useful enough to enable permanently, but
         // you can occasionally try it with:
         //   yarn eslint . --rule '{"@typescript-eslint/no-shadow":"warn"}'
       },
-      "settings": { "react": { "version": "detect" } },
     },
     {
       "files": ["*.js"],

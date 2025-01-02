@@ -110,8 +110,6 @@ export class ErrorBoundary extends React.Component<
         </div>
       );
     } else {
-      // False positive?
-      // eslint-disable-next-line react/prop-types
       return this.props.children;
     }
   }
@@ -124,6 +122,7 @@ export function Announcement() {
     <p
       className="alert alert-warning"
       role="alert"
+      // eslint-disable-next-line @eslint-react/dom/no-dangerously-set-innerhtml
       dangerouslySetInnerHTML={{ __html: announcement }}
     />
   );
