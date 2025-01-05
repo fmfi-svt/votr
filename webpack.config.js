@@ -12,8 +12,13 @@ function importerWhichRewritesBootstrapNormalizeScss(url, prev, done) {
   }
 
   var originalPath = bootstrapPath + "/bootstrap/_normalize.scss";
-  fs.readFile(originalPath, "utf8", (err, data) => {
-    if (err) return done(err);
+  fs.readFile(originalPath, "utf8", (err, originalData) => {
+    if (err) {
+      done(err);
+      return;
+    }
+
+    let data = originalData;
 
     function remove(what) {
       if (!data.includes(what)) throw Error(`"${what}" not found`);
@@ -42,8 +47,11 @@ const outputPath = __dirname + "/votrfront/static";
 function StatusFilePlugin(mode) {
   this.apply = function (compiler) {
     function writeStatus(content, callback) {
-      fs.mkdir(outputPath, function (err) {
-        if (err && err.code != "EEXIST") return callback(err);
+      fs.mkdir(outputPath, (err) => {
+        if (err && err.code != "EEXIST") {
+          callback(err);
+          return;
+        }
         fs.writeFile(outputPath + "/status", content + "\n", "utf8", callback);
       });
     }
@@ -68,7 +76,7 @@ function CleanMapFilesPlugin() {
   this.apply = function (compiler) {
     compiler.hooks.afterEmit.tapAsync(
       "CleanMapFilesPlugin",
-      function (compilation, callback) {
+      (compilation, callback) => {
         for (const file of fs.readdirSync(outputPath)) {
           if (
             file.match(/\.map$/) &&

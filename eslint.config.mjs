@@ -1,36 +1,42 @@
-const fs = require("fs");
+// @ts-check
+
+import eslintReact from "@eslint-react/eslint-plugin";
+import eslintJs from "@eslint/js";
+import compat from "eslint-plugin-compat";
+import escompat from "eslint-plugin-escompat";
+import hooks from "eslint-plugin-react-hooks";
+import globals from "globals";
+import { readFileSync } from "node:fs";
+import tseslint from "typescript-eslint";
 
 // Read "target" from tsconfig.json. require("./tsconfig.json") and
 // JSON.parse(tsconfig) won't work because it contains comments.
-const tsconfig = fs.readFileSync(__dirname + "/tsconfig.json", "utf8");
+const tsconfig = readFileSync(import.meta.dirname + "/tsconfig.json", "utf8");
 const tstarget = tsconfig.match(/"target": "es(\d\d\d\d)"/)[1];
 
-module.exports = {
-  "extends": ["eslint:recommended"],
-  // Using "overrides" here because "yarn eslint ." also runs on .eslintrc.js
-  // and webpack.config.js, but typescript-eslint complained about them. Sigh.
-  "overrides": [
-    {
-      "files": ["**/*.ts", "**/*.tsx"],
-      "extends": [
-        "eslint:recommended",
-        "plugin:@typescript-eslint/strict-type-checked",
-        "plugin:@typescript-eslint/stylistic-type-checked",
-        "plugin:compat/recommended",
-        "plugin:escompat/recommended",
-        "plugin:escompat/typescript-" + tstarget,
-        "plugin:@eslint-react/recommended-type-checked-legacy",
-        "plugin:react-hooks/recommended",
-      ],
-      "overrides": [],
-      "parser": "@typescript-eslint/parser",
-      "parserOptions": {
-        "ecmaVersion": "latest",
-        "sourceType": "module",
-        "projectService": true,
-        "tsconfigRootDir": __dirname,
+export default tseslint.config(
+  eslintJs.configs.recommended,
+  tseslint.configs.strictTypeChecked,
+  tseslint.configs.stylisticTypeChecked,
+  compat.configs["flat/recommended"],
+  escompat.configs["flat/recommended"],
+  escompat.configs["flat/typescript-" + tstarget],
+  eslintReact.configs["recommended-type-checked"],
+  {
+    // https://github.com/facebook/react/issues/28313
+    plugins: { "react-hooks": hooks },
+    rules: hooks.configs.recommended.rules,
+  },
+  {
+    languageOptions: {
+      parserOptions: {
+        projectService: true,
+        tsconfigRootDir: import.meta.dirname,
       },
-      "rules": {
+    },
+  },
+  {
+    rules: {
         // Good rules.
         "curly": ["warn", "multi-line"],
 
@@ -150,14 +156,24 @@ module.exports = {
         // I don't think "no-shadow" is useful enough to enable permanently, but
         // you can occasionally try it with:
         //   yarn eslint . --rule '{"@typescript-eslint/no-shadow":"warn"}'
-      },
     },
-    {
-      "files": ["*.js"],
-      "env": { "node": true },
-      "parserOptions": { "ecmaVersion": "latest" },
-    },
-  ],
-  "ignorePatterns": ["*.tmp*", "*env*/", "docs/_build", "static", "var"],
-  "reportUnusedDisableDirectives": true,
-};
+  },
+  {
+    files: ["eslint.config.mjs", "webpack.config.js"],
+    extends: [
+      tseslint.configs.disableTypeChecked,
+      eslintReact.configs["disable-type-checked"],
+    ],
+    rules: { "@typescript-eslint/no-require-imports": "off" },
+    languageOptions: { globals: globals.node },
+  },
+  {
+    ignores: [
+      "**/*.tmp*",
+      "**/*env*/",
+      "**/docs/_build",
+      "**/static",
+      "**/var",
+    ],
+  }
+);

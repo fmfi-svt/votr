@@ -36,7 +36,7 @@ function sendRawRpcs(calls: RpcCall[]) {
 
   function update() {
     if (finished) return;
-    // eslint-disable-next-line no-constant-condition, @typescript-eslint/no-unnecessary-condition
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     while (true) {
       if (xhr.status && xhr.status != 200) {
         const error =
