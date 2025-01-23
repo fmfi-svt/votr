@@ -10,7 +10,7 @@ try {
     "",
     Votr.settings.both_js
       ? "Prepínateľné s: Votr.setJsDev(true alebo false)"
-      : "Nejde prepínať, nemáme yarn buildboth."
+      : "Nejde prepínať, nemáme 'buildboth'."
   );
   // Don't omit `(e)` because the prologue should work in old browsers.
   // eslint-disable-next-line @typescript-eslint/no-unused-vars

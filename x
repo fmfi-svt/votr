@@ -14,7 +14,6 @@ help1='Usage:
     Options:
       --uv={local|system}      use system-wide uv or download it locally
       --nodejs={local|system}  use system-wide Node.js or download it locally
-      --yarn={local|system}    use system-wide Yarn or download it locally
       --clean                  reinstall everything from scratch
       --prod                   install also prod dependencies
 '
@@ -33,11 +32,14 @@ help2='
     Runs PROGRAM with ".venv/bin" added to its $PATH.
 
   ./x console.py [ARGS]   (or any other *.py file)
-  ./x node [ARGS]
   ./x python [ARGS]
   ./x python3 [ARGS]
-  ./x yarn [ARGS]
+  ./x node [ARGS]
+  ./x corepack [ARGS]
     Alias for "./x uv run ...".
+
+  ./x pnpm [ARGS]
+    Runs a pnpm command. Implemented as "./x uv run corepack pnpm ...".
 '
 
 normal=$'\e[0m'
@@ -82,9 +84,14 @@ run)
   exec uv "$@"
   ;;
 
-node | python | python3 | yarn | *.py)
+node | python | python3 | corepack | *.py)
   add_uv_path
   exec uv run "$@"
+  ;;
+
+pnpm)
+  add_uv_path
+  exec uv run corepack "$@"
   ;;
 
 serve | cron | log)
@@ -102,15 +109,12 @@ install)
   # Detect which options were used last time, if any.
   olduv=system
   oldnodejs=system
-  oldyarn=system
   [[ -e "$base_dir/.x_local_uv_env/uv" ]] && olduv=local
   [[ -e "$base_dir/.venv/bin/node" ]] && oldnodejs=local
-  [[ -e "$base_dir/.venv/bin/yarn" ]] && oldyarn=local
 
   # Parse arguments.
   uv=$olduv
   nodejs=$oldnodejs
-  yarn=$oldyarn
   clean=
   uvsyncopts=
   shift
@@ -118,7 +122,6 @@ install)
     case "$arg" in
     --uv=system | --uv=local) uv=${arg#*=} ;;
     --nodejs=system | --nodejs=local) nodejs=${arg#*=} ;;
-    --yarn=system | --yarn=local) yarn=${arg#*=} ;;
     --clean) clean=y ;;
     --prod) uvsyncopts+=' --group prod' ;;
     *)
@@ -136,7 +139,7 @@ install)
 
   if [[ "$clean" == y ]]; then
     log_and_run "Deleting the previous installation. " "rm -rf .x_local_uv_env .venv node_modules"
-  elif [[ -d .venv ]] && [[ "$uv" != "$olduv" || "$nodejs" != "$oldnodejs" || "$yarn" != "$oldyarn" ]]; then
+  elif [[ -d .venv ]] && [[ "$uv" != "$olduv" || "$nodejs" != "$oldnodejs" ]]; then
     log_and_run "Deleting .venv because options have changed. " "rm -rf .venv"
   fi
 
@@ -174,20 +177,11 @@ install)
     log_and_run "Uninstalling nodeenv. " "uv sync$uvsyncopts"
   fi
 
-  if [[ $yarn == system ]]; then
-    log "Using system yarn."
-    yarn --version
-  elif [[ -e .venv/bin/yarn ]]; then
-    log "./.venv/bin/yarn already exists. Reusing it."
-  else
-    log_and_run "Installing local yarn. " "uv run npm install yarn -g --prefix .venv"
-  fi
-
   if [[ -d node_modules ]]; then
     log "./node_modules already exists. Reusing it."
   fi
 
-  log_and_run "Installing JavaScript dependencies to './node_modules'. " "uv run yarn install"
+  log_and_run "Installing JavaScript dependencies to './node_modules'. " "uv run corepack pnpm install"
 
   log "Success!"
   ;;

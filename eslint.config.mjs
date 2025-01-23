@@ -155,7 +155,7 @@ export default tseslint.config(
 
       // I don't think "no-shadow" is useful enough to enable permanently, but
       // you can occasionally try it with:
-      //   yarn eslint . --rule '{"@typescript-eslint/no-shadow":"warn"}'
+      //   ./x pnpm eslint . --rule '{"@typescript-eslint/no-shadow":"warn"}'
     },
   },
   {

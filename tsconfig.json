@@ -34,24 +34,10 @@
 
     "jsx": "react",
 
-    // Needed to fix `yarn tsc --noEmit` complaining about conflicting
-    // definitions of AbortSignal in @types/node/globals.d.ts versus
-    // typescript/lib/lib.dom.d.ts. Something indirectly depends on @types/node
-    // and TypeScript tries to use all installed @types/* by default.
-    "types": [
-      "bootstrap",
-      "file-saver",
-      "jquery",
-      "lodash-es",
-      "react",
-      "react-big-calendar",
-      "react-dom"
-    ],
-
-    // outDir is ignored by webpack ts-loader and by `yarn tsc --noEmit`.
+    // outDir is ignored by webpack ts-loader and by `tsc --noEmit`.
     // Nothing reads this directory or expects it to exist. It's just for
-    // convenience so you can run `yarn tsc` and look at the output.
-    "outDir": "./tsc_build"
+    // convenience so you can run `pnpm tsc` and look at the output.
+    "outDir": "./tsc_output.tmp"
   },
   "include": ["votrfront/js"]
 }
