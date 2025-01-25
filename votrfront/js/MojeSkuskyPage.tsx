@@ -45,7 +45,7 @@ const mojeSkuskyColumns: Column<Termin>[] = [
       title: value ? "Ste prihlásení" : "Nie ste prihlásení",
       className: classNames(
         "text-center",
-        value ? "text-positive" : "text-negative"
+        value ? "text-positive" : "text-negative",
       ),
     }),
   }),
@@ -89,9 +89,9 @@ const mojeSkuskyColumns: Column<Termin>[] = [
         }}
       >
         {termin.pocet_prihlasenych}
-        {termin.maximalne_prihlasenych
-          ? "/" + termin.maximalne_prihlasenych
-          : null}
+        {termin.maximalne_prihlasenych ?
+          "/" + termin.maximalne_prihlasenych
+        : null}
       </RelativeLink>
     ),
   }),
@@ -114,11 +114,11 @@ const mojeSkuskyColumns: Column<Termin>[] = [
       termin.hodnotenie_terminu || termin.hodnotenie_predmetu,
     display: (termin: Termin) => (
       <React.Fragment>
-        {termin.hodnotenie_terminu
-          ? termin.hodnotenie_terminu
-          : termin.hodnotenie_predmetu
-          ? termin.hodnotenie_predmetu + " (nepriradená k termínu)"
-          : null}
+        {termin.hodnotenie_terminu ?
+          termin.hodnotenie_terminu
+        : termin.hodnotenie_predmetu ?
+          termin.hodnotenie_predmetu + " (nepriradená k termínu)"
+        : null}
         <SkuskyRegisterButton termin={termin} />
       </React.Fragment>
     ),
@@ -251,7 +251,7 @@ function convertToEvents(terminy: Termin[]): CalendarEvent[] {
       Number(mesiac) - 1,
       Number(den),
       Number(hodina),
-      Number(minuty)
+      Number(minuty),
     );
     const end = new Date(start.getTime() + 3 * 3600 * 1000);
     return {
@@ -294,8 +294,9 @@ function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
       }}
       culture={"sk"}
       eventPropGetter={(event) => ({
-        className: event.prihlaseny
-          ? "skusky-calendar-registered"
+        className:
+          event.prihlaseny ?
+            "skusky-calendar-registered"
           : "skusky-calendar-unregistered",
       })}
       // remove start and end times (we need only one included in title)
@@ -332,9 +333,8 @@ function MojeSkuskyPageContent() {
   for (const termin of terminyPrihlasene) terminMap[termin.termin_key] = termin;
   const terminy = Object.values(terminMap);
 
-  const message = terminy.length
-    ? null
-    : "Zatiaľ nie sú vypísané žiadne termíny.";
+  const message =
+    terminy.length ? null : "Zatiaľ nie sú vypísané žiadne termíny.";
 
   function handleClickICal() {
     const icalText = convertToICAL(terminyPrihlasene!);
@@ -344,10 +344,9 @@ function MojeSkuskyPageContent() {
 
   return (
     <React.Fragment>
-      {kalendar == "1" ? (
+      {kalendar == "1" ?
         <KalendarUdalosti eventList={convertToEvents(terminy)} />
-      ) : (
-        <SortableTable
+      : <SortableTable
           items={terminy}
           columns={mojeSkuskyColumns}
           queryKey="skuskySort"
@@ -355,7 +354,7 @@ function MojeSkuskyPageContent() {
           message={message}
           expandedContentOffset={1}
         />
-      )}
+      }
       {!!terminy.length && (
         <button type="button" onClick={handleClickICal} className="btn">
           Stiahnuť ako iCal
@@ -408,10 +407,14 @@ function SkuskyRegisterButton({ termin }: { termin: Termin }) {
         "btn",
         "btn-xs",
         isSigninButton ? "btn-success" : "btn-danger",
-        appearDisabled && "appear-disabled"
+        appearDisabled && "appear-disabled",
       )}
     >
-      {pressed ? <Loading /> : isSigninButton ? "Prihlásiť" : "Odhlásiť"}
+      {pressed ?
+        <Loading />
+      : isSigninButton ?
+        "Prihlásiť"
+      : "Odhlásiť"}
     </button>
   );
 }

@@ -87,7 +87,7 @@ function CleanMapFilesPlugin() {
           }
         }
         callback();
-      }
+      },
     );
   };
 }

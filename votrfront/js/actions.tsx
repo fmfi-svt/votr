@@ -60,10 +60,9 @@ export function App() {
   const query = useContext(QueryContext);
   const action = query.action;
   const maker = action ? actions[action] || makeNotFoundPage : makeIndexPage;
-  const modalComponent = Votr.ajaxError
-    ? ErrorModal
-    : query.modal
-    ? modalActions[query.modal]
+  const modalComponent =
+    Votr.ajaxError ? ErrorModal
+    : query.modal ? modalActions[query.modal]
     : undefined;
 
   function handleClose() {

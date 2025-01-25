@@ -53,7 +53,7 @@ export class ErrorBoundary extends React.Component<
       const error = this.state.error;
       const details = String(
         // eslint-disable-next-line @typescript-eslint/no-base-to-string
-        (typeof error == "object" && "stack" in error && error.stack) || error
+        (typeof error == "object" && "stack" in error && error.stack) || error,
       );
       const firstLine = details.trim().split("\n")[0];
       return (
@@ -68,7 +68,7 @@ export class ErrorBoundary extends React.Component<
             .
           </p>
           <br />
-          {Votr.settings.servers ? (
+          {Votr.settings.servers ?
             <ul className="list-inline">
               <li>
                 <a href={Votr.settings.url_root} className="btn btn-primary">
@@ -76,8 +76,7 @@ export class ErrorBoundary extends React.Component<
                 </a>
               </li>
             </ul>
-          ) : (
-            <ul className="list-inline">
+          : <ul className="list-inline">
               <li>
                 <button
                   type="button"
@@ -97,16 +96,15 @@ export class ErrorBoundary extends React.Component<
                 </button>
               </li>
             </ul>
-          )}
+          }
           <br />
-          {this.state.open ? (
+          {this.state.open ?
             <pre>{details}</pre>
-          ) : (
-            <p className="text-muted">
+          : <p className="text-muted">
               Technické detaily: <code>{firstLine}</code>{" "}
               <FakeLink onClick={this.handleDetails}>Viac detailov...</FakeLink>
             </p>
-          )}
+          }
         </div>
       );
     } else {

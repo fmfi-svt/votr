@@ -18,7 +18,7 @@ function trackPageView() {
 }
 
 export const QueryContext = React.createContext<Query>(
-  undefined as unknown as Query
+  undefined as unknown as Query,
 );
 
 export function Root({ app }: { app: React.ComponentType }) {
@@ -50,7 +50,7 @@ export function Root({ app }: { app: React.ComponentType }) {
 
   const query = useMemo(
     () => Object.fromEntries(new URLSearchParams(queryString)),
-    [queryString]
+    [queryString],
   );
 
   const C = app;
@@ -85,7 +85,7 @@ export function Link(
   props: { href: string | Href } & Omit<
     React.AnchorHTMLAttributes<HTMLAnchorElement>,
     "href"
-  >
+  >,
 ) {
   function handleClick(event: React.MouseEvent) {
     // Chrome fires onclick on middle click. Firefox only fires it on document,
@@ -113,7 +113,7 @@ export function RelativeLink({
 export function FakeLink(
   props: {
     onClick: (event: React.KeyboardEvent) => void;
-  } & React.HTMLAttributes<HTMLAnchorElement>
+  } & React.HTMLAttributes<HTMLAnchorElement>,
 ) {
   // Pressing Enter on <a href=...> emits a click event, and the HTML5 spec
   // says elements with tabindex should do that too, but they don't.

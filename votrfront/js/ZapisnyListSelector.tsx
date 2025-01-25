@@ -60,23 +60,23 @@ export function ZapisnyListSelector({
             </li>
           );
         })}
-        {!cache.loadedAll ? (
+        {!cache.loadedAll ?
           <li>
             <span className="text-pill">
               <Loading requests={cache.missing} />
             </span>
           </li>
-        ) : showPridatButton ? (
+        : showPridatButton ?
           <li>
             <Link href={{ action: "prehladStudia" }}>Pridať...</Link>
           </li>
-        ) : null}
+        : null}
       </ul>
-      {query.zapisnyListKey ? (
+      {query.zapisnyListKey ?
         <QueryContext.Provider value={query}>{children}</QueryContext.Provider>
-      ) : cache.loadedAll && items.length == 0 ? (
+      : cache.loadedAll && items.length == 0 ?
         <p>Žiadne zápisné listy.</p>
-      ) : null}
+      : null}
     </React.Fragment>
   );
 }

@@ -19,9 +19,9 @@ function PriebezneHodnoteniaPageContent() {
 
   const message =
     serverMessage ||
-    (priebezneHodnotenia.length
-      ? null
-      : "Tento zápisný list nemá žiadne priebežné hodnotenia.");
+    (priebezneHodnotenia.length ? null : (
+      "Tento zápisný list nemá žiadne priebežné hodnotenia."
+    ));
 
   return (
     <React.Fragment>

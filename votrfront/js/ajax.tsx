@@ -57,14 +57,14 @@ function sendRawRpcs(calls: RpcCall[]) {
         if (waiting < HEADER_LENGTH) break;
         const header = xhr.responseText.substring(
           processed,
-          processed + HEADER_LENGTH
+          processed + HEADER_LENGTH,
         );
         length = parseInt(header, 10);
         if (isNaN(length)) throw new Error("Not a number: " + header);
         if (waiting < HEADER_LENGTH + length) break;
         const payload = xhr.responseText.substring(
           processed + HEADER_LENGTH,
-          processed + HEADER_LENGTH + length
+          processed + HEADER_LENGTH + length,
         );
         data = JSON.parse(payload) as RpcPayload;
       } catch (error: unknown) {
@@ -151,7 +151,7 @@ function sendRawRpcs(calls: RpcCall[]) {
 export function sendRpc<N extends keyof Rpcs>(
   name: N,
   args: Parameters<Rpcs[N]>,
-  callback: (result: ReturnType<Rpcs[N]>) => void
+  callback: (result: ReturnType<Rpcs[N]>) => void,
 ) {
   sendRawRpcs([
     {

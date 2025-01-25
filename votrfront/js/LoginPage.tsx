@@ -93,7 +93,7 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
 
       <DestinationCheckbox />
 
-      {Votr.settings.servers!.length > 1 ? (
+      {Votr.settings.servers!.length > 1 ?
         <p>
           <label>
             {"Server: "}
@@ -110,11 +110,9 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
             </select>
           </label>
         </p>
-      ) : (
-        <input type="hidden" name="server" value="0" />
-      )}
+      : <input type="hidden" name="server" value="0" />}
 
-      {serverConfig.login_types.length > 1 ? (
+      {serverConfig.login_types.length > 1 ?
         <p>
           <label>
             {"Typ prihlásenia: "}
@@ -127,9 +125,7 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
             </select>
           </label>
         </p>
-      ) : (
-        <input type="hidden" name="type" value={currentType} />
-      )}
+      : <input type="hidden" name="type" value={currentType} />}
 
       {(currentType == "saml_password" || currentType == "plain_password") && (
         <React.Fragment>

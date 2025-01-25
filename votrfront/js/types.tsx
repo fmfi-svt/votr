@@ -221,13 +221,13 @@ export type ZapisCast = "SC" | "SS";
 export interface Rpcs {
   // hodnotenia.py
   get_hodnotenia(
-    zapisny_list_key: string
+    zapisny_list_key: string,
   ): [items: Hodnotenie[], message: string | null];
   get_priemery(
-    zapisny_list_key: string
+    zapisny_list_key: string,
   ): [items: Priemer[], message: string | null];
   get_priebezne_hodnotenia(
-    zapisny_list_key: string
+    zapisny_list_key: string,
   ): [items: PriebezneHodnoteniaPredmetu[], message: string | null];
 
   // obdobia.py
@@ -253,7 +253,7 @@ export interface Rpcs {
     siesty_rocnik: boolean,
     siedmy_rocnik: boolean,
     osmy_rocnik: boolean,
-    absolventi: boolean
+    absolventi: boolean,
   ): [items: RegOsoba[], message: string | null];
   get_register_osob_akademicky_rok_options(): ComboBoxOption[];
   get_register_osob_fakulty(): ComboBoxOption[];
@@ -261,17 +261,17 @@ export interface Rpcs {
   // predmety.py
   get_informacny_list(
     kod_predmetu: string,
-    akademicky_rok: string
+    akademicky_rok: string,
   ): string | null;
   get_studenti_zapisani_na_predmet(
     predmet_key: string,
-    akademicky_rok: string
+    akademicky_rok: string,
   ): [studenti: PrihlasenyStudent[], predmet: RegPredmet | null];
   get_ucitelia_predmetu(
     predmet_key: string,
     akademicky_rok: string,
     semester: string,
-    fakulty: string
+    fakulty: string,
   ): RegUcitelPredmetu[];
   vyhladaj_predmety(
     akademicky_rok: string,
@@ -281,7 +281,7 @@ export interface Rpcs {
     skratka_predmetu: string | null,
     nazov_predmetu: string | null,
     semester: string | null,
-    stupen: string | null
+    stupen: string | null,
   ): [items: RegPredmet[], message: string | null];
   get_register_predmetov_fakulta_options(): ComboBoxOption[];
   get_register_predmetov_akademicky_rok_options(): ComboBoxOption[];
@@ -294,16 +294,16 @@ export interface Rpcs {
   get_zapisne_listy(studium_key: string): ZapisnyList[];
   zapisny_list_key_to_akademicky_rok(zapisny_list_key: string): string;
   get_prehlad_kreditov(
-    studium_key: string
+    studium_key: string,
   ): [items: Hodnotenie[], message: string | null];
   get_akademicke_roky_noveho_zapisneho_listu(
-    studium_key: string
+    studium_key: string,
   ): ComboBoxOption[];
   get_roky_studia_noveho_zapisneho_listu(studium_key: string): ComboBoxOption[];
   create_zapisny_list(
     studium_key: string,
     akademicky_rok: string,
-    rok_studia: string | null
+    rok_studia: string | null,
   ): string | null;
   delete_zapisny_list(zapisny_list_key: string): null;
 
@@ -314,7 +314,7 @@ export interface Rpcs {
   get_vypisane_terminy(zapisny_list_key: string): Termin[];
   get_vypisane_terminy_predmetu(
     zapisny_list_key: string,
-    predmet_key: string
+    predmet_key: string,
   ): Termin[];
   get_prihlaseni_studenti(termin_key: string): PrihlasenyStudent[];
   prihlas_na_termin(termin_key: string): string | null;
@@ -323,26 +323,26 @@ export interface Rpcs {
   // zapis.py
   zapis_get_zapisane_predmety(
     zapisny_list_key: string,
-    cast: ZapisCast
+    cast: ZapisCast,
   ): [items: ZapisPredmet[], message: string | null];
   zapis_get_vlastnosti_programu(
-    zapisny_list_key: string
+    zapisny_list_key: string,
   ): [items: ZapisVlastnost[], message: string | null];
   zapis_plan_vyhladaj(
     zapisny_list_key: string,
-    cast: ZapisCast
+    cast: ZapisCast,
   ): [items: ZapisPredmet[], message: string | null];
   zapis_plan_pridaj_predmety(
     zapisny_list_key: string,
     cast: ZapisCast,
-    dvojice_typ_vyucby_skratka: [string, string][]
+    dvojice_typ_vyucby_skratka: [string, string][],
   ): string | null;
   zapis_ponuka_vyhladaj(
     zapisny_list_key: string,
     fakulta: string | null,
     stredisko: string | null,
     filter_skratka: string | null,
-    filter_nazov: string | null
+    filter_nazov: string | null,
   ): [items: ZapisPredmet[], message: string | null];
   zapis_ponuka_pridaj_predmety(
     zapisny_list_key: string,
@@ -350,14 +350,14 @@ export interface Rpcs {
     stredisko: string | null,
     filter_skratka: string | null,
     filter_nazov: string | null,
-    zvolene_skratky: string[]
+    zvolene_skratky: string[],
   ): string | null;
   zapis_ponuka_options(
-    zapisny_list_key: string
+    zapisny_list_key: string,
   ): [items: ComboBoxOption[], message: string | null];
   zapis_odstran_predmety(
     zapisny_list_key: string,
     cast: ZapisCast,
-    predmet_key_list: string[]
+    predmet_key_list: string[],
   ): string | null;
 }

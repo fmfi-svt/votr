@@ -1,5 +1,1 @@
-*.tmp*
-*env*/
-docs/_build
-static
-var
+pnpm-lock.yaml

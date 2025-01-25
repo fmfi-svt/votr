@@ -45,9 +45,8 @@ function ZoznamPrihlasenychNaTerminModalContent() {
     return <Loading requests={cache.missing} />;
   }
 
-  const message = studenti.length
-    ? null
-    : "Na termín nie sú prihlásení žiadni študenti.";
+  const message =
+    studenti.length ? null : "Na termín nie sú prihlásení žiadni študenti.";
 
   return (
     <SortableTable

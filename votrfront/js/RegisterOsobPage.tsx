@@ -43,7 +43,7 @@ function RegisterOsobForm() {
   }));
 
   function handleFieldChange(
-    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) {
     const name = event.target.name;
     const value = event.target.value;
@@ -66,7 +66,7 @@ function RegisterOsobForm() {
   function renderTextbox(
     label: string,
     name: keyof typeof state,
-    focus: boolean = false
+    focus: boolean = false,
   ) {
     return (
       <FormItem label={label}>
@@ -85,11 +85,11 @@ function RegisterOsobForm() {
   function renderSelect(
     label: string,
     name: keyof typeof state,
-    items: ComboBoxOption[] | undefined
+    items: ComboBoxOption[] | undefined,
   ) {
     return (
       <FormItem label={label}>
-        {items ? (
+        {items ?
           <select
             className="form-item-control"
             name={name}
@@ -102,9 +102,7 @@ function RegisterOsobForm() {
               </option>
             ))}
           </select>
-        ) : (
-          <Loading requests={cache.missing} />
-        )}
+        : <Loading requests={cache.missing} />}
       </FormItem>
     );
   }
@@ -214,7 +212,7 @@ function RegisterOsobResultTable() {
     query.siestyRocnik == "true",
     query.siedmyRocnik == "true",
     query.osmyRocnik == "true",
-    query.absolventiRocnik == "true"
+    query.absolventiRocnik == "true",
   );
 
   if (!response) {

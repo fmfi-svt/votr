@@ -110,44 +110,41 @@ function ZapisTableFooter(props: {
         const nazov = blokNazvy.get(skratka);
         const blok = nazov ? <abbr title={nazov}>{skratka}</abbr> : skratka;
         const uvod = skratka ? "Súčet bloku" : "Dokopy";
-        const uvodABlok = skratka ? (
-          <React.Fragment>Σ {blok}</React.Fragment>
-        ) : (
-          "Dokopy"
-        );
+        const uvodABlok =
+          skratka ? <React.Fragment>Σ {blok}</React.Fragment> : "Dokopy";
         const pocet =
           `${stats.spolu.count} ` +
           plural(stats.spolu.count, "predmet", "predmety", "predmetov") +
-          (jedinySemester
-            ? ""
-            : ` (${stats.zima.count} v zime, ${stats.leto.count} v lete)`);
+          (jedinySemester ? "" : (
+            ` (${stats.zima.count} v zime, ${stats.leto.count} v lete)`
+          ));
         const kredity =
           String(stats.spolu.creditsEnrolled) +
-          (jedinySemester
-            ? ""
-            : ` (${stats.zima.creditsEnrolled}+${stats.leto.creditsEnrolled})`);
+          (jedinySemester ? "" : (
+            ` (${stats.zima.creditsEnrolled}+${stats.leto.creditsEnrolled})`
+          ));
         const pocetAKredity = `${pocet}, ${kredity} kreditov`;
-        return props.size == ScreenSize.XS ? (
-          <tr key={skratka}>
-            <td colSpan={2}>{uvodABlok}</td>
-            <td colSpan={2}>{pocetAKredity}</td>
-          </tr>
-        ) : props.size == ScreenSize.SM ? (
-          <tr key={skratka}>
-            <td colSpan={2}>{uvodABlok}</td>
-            <td colSpan={2}>{pocet}</td>
-            <td colSpan={2}>{kredity}</td>
-          </tr>
-        ) : (
-          <tr key={skratka}>
-            <td colSpan={2}>{uvod}</td>
-            <td>{blok}</td>
-            <td colSpan={4}>{pocet}</td>
-            <td>{kredity}</td>
-            <td></td>
-            <td></td>
-            <td></td>
-          </tr>
+        return (
+          props.size == ScreenSize.XS ?
+            <tr key={skratka}>
+              <td colSpan={2}>{uvodABlok}</td>
+              <td colSpan={2}>{pocetAKredity}</td>
+            </tr>
+          : props.size == ScreenSize.SM ?
+            <tr key={skratka}>
+              <td colSpan={2}>{uvodABlok}</td>
+              <td colSpan={2}>{pocet}</td>
+              <td colSpan={2}>{kredity}</td>
+            </tr>
+          : <tr key={skratka}>
+              <td colSpan={2}>{uvod}</td>
+              <td>{blok}</td>
+              <td colSpan={4}>{pocet}</td>
+              <td>{kredity}</td>
+              <td></td>
+              <td></td>
+              <td></td>
+            </tr>
         );
       })}
     </React.Fragment>
@@ -165,11 +162,11 @@ function ZapisTable({
   predmety: Map<string, MojZapisPredmet> | undefined;
   odoberPredmety: (
     predmety: ZapisPredmet[],
-    callback: (mutationMessage: string | null) => void
+    callback: (mutationMessage: string | null) => void,
   ) => void;
   pridajPredmety: (
     predmety: ZapisPredmet[],
-    callback: (mutationMessage: string | null) => void
+    callback: (mutationMessage: string | null) => void,
   ) => void;
   akademickyRok: string | undefined;
   zPlanu: boolean;
@@ -177,7 +174,7 @@ function ZapisTable({
 }) {
   const [saving, setSaving] = useState(false);
   const [changes, setChanges] = useState<Record<string, boolean | undefined>>(
-    {}
+    {},
   );
 
   // Chceme, aby sa pre ZapisTable zachoval state aj vtedy, ked tabulku
@@ -192,11 +189,10 @@ function ZapisTable({
     const predmetKey = event.target.name;
     const predmet = predmety.get(predmetKey)!;
 
-    // prettier-ignore
     const want =
-      predmet.moje && !event.target.checked ? false :
-      !predmet.moje && event.target.checked ? true :
-      undefined;
+      predmet.moje && !event.target.checked ? false
+      : !predmet.moje && event.target.checked ? true
+      : undefined;
     setChanges((changes) => ({ ...changes, [predmetKey]: want }));
   };
 
@@ -282,7 +278,9 @@ function ZapisTable({
         className="btn btn-primary"
         disabled={isEmpty(classes)}
       >
-        {saving ? <Loading /> : "Uložiť zmeny"}
+        {saving ?
+          <Loading />
+        : "Uložiť zmeny"}
       </button>
     </div>
   );
@@ -314,21 +312,19 @@ function ZapisTable({
     }),
 
     // #2
-    zPlanu
-      ? column({
-          label: "Blok",
-          sortKey: (predmet: ZapisPredmet) =>
-            parseInt(predmet.blok_index || "0") * 1000 +
-            parseInt(predmet.v_bloku_index || "0"),
-          hide: underSM,
-          display: (predmet: ZapisPredmet) =>
-            predmet.blok_nazov ? (
-              <abbr title={predmet.blok_nazov}>{predmet.blok_skratka}</abbr>
-            ) : (
-              predmet.blok_skratka
-            ),
-        })
-      : column({ label: "Blok", prop: "blok_skratka", hide: underSM }),
+    zPlanu ?
+      column({
+        label: "Blok",
+        sortKey: (predmet: ZapisPredmet) =>
+          parseInt(predmet.blok_index || "0") * 1000 +
+          parseInt(predmet.v_bloku_index || "0"),
+        hide: underSM,
+        display: (predmet: ZapisPredmet) =>
+          predmet.blok_nazov ?
+            <abbr title={predmet.blok_nazov}>{predmet.blok_skratka}</abbr>
+          : predmet.blok_skratka,
+      })
+    : column({ label: "Blok", prop: "blok_skratka", hide: underSM }),
 
     // #3
     column({
@@ -383,11 +379,9 @@ function ZapisTable({
         sortAs.number(predmet.pocet_prihlasenych || "0"),
       display: (predmet: ZapisPredmet) => (
         <React.Fragment>
-          {pocetPrihlasenychJeStaryStore.has(predmet.predmet_key) ? (
+          {pocetPrihlasenychJeStaryStore.has(predmet.predmet_key) ?
             <del>{predmet.pocet_prihlasenych}</del>
-          ) : (
-            predmet.pocet_prihlasenych
-          )}
+          : predmet.pocet_prihlasenych}
           {!!predmet.maximalne_prihlasenych &&
             "/" + predmet.maximalne_prihlasenych}
         </React.Fragment>
@@ -396,16 +390,16 @@ function ZapisTable({
     }),
 
     // #9?
-    ...(zPlanu
-      ? [
-          column({
-            label: "Odporúčaný ročník",
-            shortLabel: <abbr title="Odporúčaný ročník">Odp. ročník</abbr>,
-            prop: "odporucany_rocnik",
-            hide: underSM,
-          }),
-        ]
-      : []),
+    ...(zPlanu ?
+      [
+        column({
+          label: "Odporúčaný ročník",
+          shortLabel: <abbr title="Odporúčaný ročník">Odp. ročník</abbr>,
+          prop: "odporucany_rocnik",
+          hide: underSM,
+        }),
+      ]
+    : []),
 
     // #9 / #10
     column({
@@ -478,7 +472,7 @@ function ZapisZPlanuPageContent() {
     cache.get("zapis_plan_vyhladaj", zapisnyListKey, cast) || [];
   const akademickyRok = cache.get(
     "zapisny_list_key_to_akademicky_rok",
-    zapisnyListKey
+    zapisnyListKey,
   );
 
   let outerMessage,
@@ -540,7 +534,7 @@ function ZapisZPlanuPageContent() {
 
   function pridajPredmety(
     predmety: ZapisPredmet[],
-    callback: (mutationMessage: string | null) => void
+    callback: (mutationMessage: string | null) => void,
   ) {
     if (!predmety.length) {
       callback(null);
@@ -554,13 +548,13 @@ function ZapisZPlanuPageContent() {
     sendRpc(
       "zapis_plan_pridaj_predmety",
       [zapisnyListKey, cast, dvojice],
-      callback
+      callback,
     );
   }
 
   function odoberPredmety(
     predmety: ZapisPredmet[],
-    callback: (mutationMessage: string | null) => void
+    callback: (mutationMessage: string | null) => void,
   ) {
     if (!predmety.length) {
       callback(null);
@@ -594,7 +588,7 @@ function ZapisZPonukyForm() {
   });
 
   function handleFieldChange(
-    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) {
     const name = event.target.name;
     const value = event.target.value;
@@ -611,7 +605,7 @@ function ZapisZPonukyForm() {
   function renderTextbox(
     label: string,
     name: keyof typeof state,
-    focus: boolean = false
+    focus: boolean = false,
   ) {
     return (
       <FormItem label={label}>
@@ -630,7 +624,7 @@ function ZapisZPonukyForm() {
   function renderSelect(
     label: string,
     name: keyof typeof state,
-    items: ComboBoxOption[]
+    items: ComboBoxOption[],
   ) {
     return (
       <FormItem label={label}>
@@ -701,11 +695,11 @@ function ZapisZPonukyPageContent() {
         query.fakulta || null,
         query.stredisko || null,
         query.skratkaPredmetu || null,
-        query.nazovPredmetu || null
+        query.nazovPredmetu || null,
       ) || [];
     akademickyRok = cache.get(
       "zapisny_list_key_to_akademicky_rok",
-      zapisnyListKey
+      zapisnyListKey,
     );
 
     if (zapisaneMessage) {
@@ -748,7 +742,7 @@ function ZapisZPonukyPageContent() {
 
   function pridajPredmety(
     predmety: ZapisPredmet[],
-    callback: (mutationMessage: string | null) => void
+    callback: (mutationMessage: string | null) => void,
   ) {
     if (!predmety.length) {
       callback(null);
@@ -766,13 +760,13 @@ function ZapisZPonukyPageContent() {
         query.nazovPredmetu || null,
         skratky,
       ],
-      callback
+      callback,
     );
   }
 
   function odoberPredmety(
     predmety: ZapisPredmet[],
-    callback: (mutationMessage: string | null) => void
+    callback: (mutationMessage: string | null) => void,
   ) {
     if (!predmety.length) {
       callback(null);

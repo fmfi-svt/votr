@@ -26,7 +26,7 @@ import "../css/main.scss";
         stack: error && (error as { stack?: unknown }).stack,
       });
     },
-    false
+    false,
   );
   window.addEventListener(
     "unhandledrejection",
@@ -37,7 +37,7 @@ import "../css/main.scss";
         stack: error && (error as { stack?: unknown }).stack,
       });
     },
-    false
+    false,
   );
 
   const query = Votr.settings.destination;
@@ -54,11 +54,10 @@ import "../css/main.scss";
       <ErrorBoundary>
         <Root
           app={
-            Votr.settings.servers
-              ? LoginPage
-              : Votr.settings.error
-              ? ErrorPage
-              : App
+            Votr.settings.servers ? LoginPage
+            : Votr.settings.error ?
+              ErrorPage
+            : App
           }
         />
       </ErrorBoundary>

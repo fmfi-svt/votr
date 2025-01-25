@@ -138,7 +138,7 @@ function MojeHodnoteniaPriemeryTable() {
     priemery = [];
   } else if (zapisneListy) {
     const zapisnyListKey = maxBy(zapisneListy, (zapisnyList) =>
-      sortAs.date(zapisnyList.datum_zapisu)
+      sortAs.date(zapisnyList.datum_zapisu),
     )!.zapisny_list_key;
     [priemery, message] = cache.get("get_priemery", zapisnyListKey) || [];
   }

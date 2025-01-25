@@ -65,7 +65,7 @@ function RegisterPredmetovForm() {
   }));
 
   function handleFieldChange(
-    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
   ) {
     const name = event.target.name;
     const value = event.target.value;
@@ -82,7 +82,7 @@ function RegisterPredmetovForm() {
   function renderTextbox(
     label: string,
     name: keyof typeof state,
-    focus: boolean = false
+    focus: boolean = false,
   ) {
     return (
       <FormItem label={label}>
@@ -101,11 +101,11 @@ function RegisterPredmetovForm() {
   function renderSelect(
     label: string,
     name: keyof typeof state,
-    items: ComboBoxOption[] | undefined
+    items: ComboBoxOption[] | undefined,
   ) {
     return (
       <FormItem label={label}>
-        {items ? (
+        {items ?
           <select
             className="form-item-control"
             name={name}
@@ -118,9 +118,7 @@ function RegisterPredmetovForm() {
               </option>
             ))}
           </select>
-        ) : (
-          <Loading requests={cache.missing} />
-        )}
+        : <Loading requests={cache.missing} />}
       </FormItem>
     );
   }
@@ -178,7 +176,7 @@ function RegisterPredmetovResultTable() {
     query.skratkaPredmetu || null,
     query.nazovPredmetu || null,
     query.semester || null,
-    query.stupen || null
+    query.stupen || null,
   );
 
   if (!response) {

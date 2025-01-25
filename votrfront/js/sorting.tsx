@@ -74,7 +74,7 @@ export function column<
   K extends string = "",
   V = string | number | null | undefined,
   P = V,
-  Item extends InferItem<K, P> = InferItem<K, P>
+  Item extends InferItem<K, P> = InferItem<K, P>,
 >(
   input: Def &
     ColumnDefinition<K, V, P> &
@@ -85,15 +85,15 @@ export function column<
     ([K] extends [""] ? unknown : { prop: K }) &
     // If P != V, `projection` is required. (Just a sanity check in case P is
     // manually provided or badly inferred.)
-    (P extends V
-      ? V extends P
-        ? unknown
-        : { projection: object }
-      : { projection: object }) &
+    (P extends V ?
+      V extends P ?
+        unknown
+      : { projection: object }
+    : { projection: object }) &
     // K must not be just string. We want a literal or union of literals.
     ([string] extends [K] ? never : unknown) &
     // Forbid unknown properties on Def.
-    Record<Exclude<keyof Def, ColumnDefinitionKeys>, never>
+    Record<Exclude<keyof Def, ColumnDefinitionKeys>, never>,
 ): Column<Item> {
   const {
     label,
@@ -138,7 +138,7 @@ export function column<
 function getOrder(
   defaultOrder: string | null | undefined,
   query: Query,
-  queryKey: string
+  queryKey: string,
 ): string[] {
   const orderString = query[queryKey] || defaultOrder;
   return orderString ? orderString.split(/(?=[ad])/) : [];
@@ -147,7 +147,7 @@ function getOrder(
 function sortItems<T>(
   items: T[],
   columns: Column<T>[],
-  order: string[]
+  order: string[],
 ): number[] {
   const directions = order.map((o) => (o.startsWith("a") ? "asc" : "desc"));
   const iteratees = order.map((o) => {
@@ -163,7 +163,7 @@ function renderHeader<T>(
   query: Query,
   queryKey: string,
   order: string[],
-  reallyHide: boolean[]
+  reallyHide: boolean[],
 ): React.ReactNode {
   return (
     <tr>
@@ -173,11 +173,12 @@ function renderHeader<T>(
 
         function handleClick() {
           const newOrder = without(order, strA, strD);
-          // prettier-ignore
           newOrder.unshift(
-            order[0] == strA ? strD :
-            order[0] == strD ? strA :
-            preferDesc ? strD : strA);
+            order[0] == strA ? strD
+            : order[0] == strD ? strA
+            : preferDesc ? strD
+            : strA,
+          );
 
           navigate({ ...query, [queryKey]: newOrder.join("") });
         }
@@ -191,7 +192,7 @@ function renderHeader<T>(
             className={classNames(
               "sort",
               order[0] == strA && "asc",
-              order[0] == strD && "desc"
+              order[0] == strD && "desc",
             )}
           >
             {shortLabel}
@@ -249,7 +250,7 @@ export function SortableTable<T>({
 
   const canHide = columns.map((column) => column.hide(deviceSize));
   const reallyHide = canHide.map(
-    (canHideColumn) => canHideColumn && !fullTable
+    (canHideColumn) => canHideColumn && !fullTable,
   );
   const reallyHiddenCount = sum(reallyHide);
 
@@ -257,7 +258,7 @@ export function SortableTable<T>({
 
   const className = classNames(
     "table table-condensed table-bordered table-striped table-hover",
-    withButtons && "with-buttons-table"
+    withButtons && "with-buttons-table",
   );
 
   const rows = [];
@@ -285,15 +286,17 @@ export function SortableTable<T>({
                   <span
                     className={classNames(
                       "expand-arrow",
-                      open[originalIndex] ? "arrow-expanded" : "arrow-collapsed"
+                      open[originalIndex] ? "arrow-expanded" : (
+                        "arrow-collapsed"
+                      ),
                     )}
                   />
                 )}
                 {display(item)}
               </td>
-            )
+            ),
         )}
-      </tr>
+      </tr>,
     );
 
     if (reallyHiddenCount && open[originalIndex]) {
@@ -313,12 +316,12 @@ export function SortableTable<T>({
                         <td>{label}:</td>
                         <td>{display(item)}</td>
                       </tr>
-                    )
+                    ),
                 )}
               </tbody>
             </table>
           </td>
-        </tr>
+        </tr>,
       );
     }
   }

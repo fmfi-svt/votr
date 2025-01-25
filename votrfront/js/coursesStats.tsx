@@ -21,7 +21,7 @@ export function coursesStats(predmety: (Hodnotenie | ZapisPredmet)[]) {
   function add(
     type: "zima" | "leto" | "spolu",
     credits: number,
-    obtained: boolean
+    obtained: boolean,
   ) {
     result[type].count++;
     result[type].creditsEnrolled += credits;
@@ -75,8 +75,8 @@ export function renderCredits({
   creditsObtained: number;
   creditsEnrolled: number;
 }) {
-  return creditsObtained && creditsObtained != creditsEnrolled
-    ? `${creditsObtained}/${creditsEnrolled}`
+  return creditsObtained && creditsObtained != creditsEnrolled ?
+      `${creditsObtained}/${creditsEnrolled}`
     : `${creditsEnrolled}`;
 }
 

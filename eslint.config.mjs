@@ -175,5 +175,5 @@ export default tseslint.config(
       "**/static",
       "**/var",
     ],
-  }
+  },
 );

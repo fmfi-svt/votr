@@ -42,11 +42,11 @@ export function StudiumSelector({ children }: { children: React.ReactNode }) {
           </li>
         )}
       </ul>
-      {query.studiumKey ? (
+      {query.studiumKey ?
         <QueryContext.Provider value={query}>{children}</QueryContext.Provider>
-      ) : cache.loadedAll && items.length == 0 ? (
+      : cache.loadedAll && items.length == 0 ?
         <p>Žiadne štúdiá.</p>
-      ) : null}
+      : null}
     </React.Fragment>
   );
 }

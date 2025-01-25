@@ -19,12 +19,12 @@ const detailPredmetuStudentiDefaultOrder = "a0";
 function getZapisaniStudenti(
   cache: CacheRequester,
   predmetKey: string,
-  akademickyRok: string
+  akademickyRok: string,
 ) {
   return cache.get(
     "get_studenti_zapisani_na_predmet",
     predmetKey,
-    akademickyRok
+    akademickyRok,
   );
 }
 
@@ -37,7 +37,7 @@ function DetailPredmetuInformacnyList() {
   const data = cache.get(
     "get_informacny_list",
     modalPredmetKey,
-    modalAkademickyRok
+    modalAkademickyRok,
   );
 
   if (!data) {
@@ -77,16 +77,15 @@ function DetailPredmetuUcitelia() {
     modalPredmetKey,
     modalAkademickyRok,
     predmet.semester,
-    predmet.fakulta
+    predmet.fakulta,
   );
 
   if (!ucitelia) {
     return <Loading requests={cache.missing} />;
   }
 
-  const message = ucitelia.length
-    ? null
-    : "Predmet nemá v AISe žiadnych učiteľov.";
+  const message =
+    ucitelia.length ? null : "Predmet nemá v AISe žiadnych učiteľov.";
 
   return (
     <SortableTable
@@ -118,9 +117,10 @@ function DetailPredmetuZapisaniStudenti() {
     return "Dáta pre predmet neboli nájdené." as unknown as JSX.Element;
   }
 
-  const message = studenti.length
-    ? null
-    : "Predmet nemá v AISe žiadnych zapísaných študentov.";
+  const message =
+    studenti.length ? null : (
+      "Predmet nemá v AISe žiadnych zapísaných študentov."
+    );
 
   return (
     <SortableTable

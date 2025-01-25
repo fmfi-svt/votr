@@ -292,7 +292,8 @@ tfoot:empty {
 
   color: white;
   background-color: #ff7035;
-  background: no-repeat content-box center top / contain url(stars.svg),
+  background:
+    no-repeat content-box center top / contain url(stars.svg),
     linear-gradient(135deg, #ff7035, #ff5862);
 
   text-align: center;

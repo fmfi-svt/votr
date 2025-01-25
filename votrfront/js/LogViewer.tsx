@@ -73,7 +73,7 @@ function LogViewerContent(props: {
                       <code>{entry.message}</code>
                     </td>
                   </tr>
-                )
+                ),
             )}
           </tbody>
         </table>
@@ -153,7 +153,7 @@ export function LogViewer() {
   function toggleMode() {
     setLocalSetting(
       "logViewer",
-      getLocalSetting("logViewer") == "log" ? "benchmark" : "log"
+      getLocalSetting("logViewer") == "log" ? "benchmark" : "log",
     );
   }
 
@@ -177,7 +177,7 @@ export function LogViewer() {
         "font-size: 1.4em; font-weight: bold; color: #B3231B;",
         "Stlač Alt+L a uvidíš interné podrobnosti o tom, čo Votr robí.",
         "font-size: 1.4em;",
-        " (Najprv klikni do stránky, nech má focus.)"
+        " (Najprv klikni do stránky, nech má focus.)",
       );
     }
   }, []);

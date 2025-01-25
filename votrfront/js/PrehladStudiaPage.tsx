@@ -87,11 +87,9 @@ function PrehladStudiaObdobie(props: {
     <tr>
       <th>{props.label}</th>
       <td>
-        {result ? (
+        {result ?
           result.obdobie_od + " \u2013 " + result.obdobie_do
-        ) : (
-          <Loading requests={cache.missing} />
-        )}
+        : <Loading requests={cache.missing} />}
       </td>
     </tr>
   );
@@ -164,7 +162,7 @@ function PridatZapisnyListButton({ studium }: { studium: Studium }) {
           } else {
             invalidateRequestCache("get_zapisne_listy");
           }
-        }
+        },
       );
     }
   }
@@ -217,16 +215,15 @@ function PrehladStudiaZapisneListy() {
   for (const studium of studia) {
     const mojeZapisneListy = cache.get(
       "get_zapisne_listy",
-      studium.studium_key
+      studium.studium_key,
     );
     if (mojeZapisneListy) zapisneListy.push(...mojeZapisneListy);
   }
 
   const showTable = !!zapisneListy.length || cache.loadedAll;
 
-  const message = zapisneListy.length
-    ? null
-    : "V AISe nemáte žiadne zápisné listy.";
+  const message =
+    zapisneListy.length ? null : "V AISe nemáte žiadne zápisné listy.";
 
   return (
     <React.Fragment>

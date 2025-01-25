@@ -70,7 +70,7 @@ export function ErrorModal() {
       )}
       <br />
       <ul className="list-inline text-center">
-        {goHome ? (
+        {goHome ?
           <li>
             <button
               type="button"
@@ -80,13 +80,12 @@ export function ErrorModal() {
               Späť na začiatok
             </button>
           </li>
-        ) : (
-          <li>
+        : <li>
             <button type="button" className="btn btn-primary" onClick={goReset}>
               Skúsiť znova
             </button>
           </li>
-        )}
+        }
         <li>
           <button type="button" className="btn btn-default" onClick={goLogout}>
             Odhlásiť
@@ -94,14 +93,13 @@ export function ErrorModal() {
         </li>
       </ul>
       <br />
-      {open ? (
+      {open ?
         <pre>{error}</pre>
-      ) : (
-        <p className="text-center text-muted">
+      : <p className="text-center text-muted">
           Technické detaily: <code>{lastLine}</code>{" "}
           <FakeLink onClick={handleDetails}>Viac detailov...</FakeLink>
         </p>
-      )}
+      }
       {!Votr.settings.error && open && (
         <button
           type="button"
