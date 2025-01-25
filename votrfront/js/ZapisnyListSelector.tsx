@@ -73,7 +73,7 @@ export function ZapisnyListSelector({
         : null}
       </ul>
       {query.zapisnyListKey ?
-        <QueryContext.Provider value={query}>{children}</QueryContext.Provider>
+        <QueryContext value={query}>{children}</QueryContext>
       : cache.loadedAll && items.length == 0 ?
         <p>Žiadne zápisné listy.</p>
       : null}

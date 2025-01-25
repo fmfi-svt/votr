@@ -6,30 +6,30 @@
   "private": true,
   "dependencies": {
     "@types/bootstrap": "^3.4.0",
-    "@types/file-saver": "^2.0.5",
-    "@types/jquery": "^3.5.14",
-    "@types/lodash-es": "^4.17.7",
-    "@types/react": "^18.0.26",
-    "@types/react-big-calendar": "^1.6.3",
-    "@types/react-dom": "^18.0.10",
+    "@types/file-saver": "^2.0.7",
+    "@types/jquery": "^3.5.32",
+    "@types/lodash-es": "^4.17.12",
+    "@types/react": "^19.0.8",
+    "@types/react-big-calendar": "^1.16.1",
+    "@types/react-dom": "^19.0.3",
     "bootstrap-sass": "^3.4.3",
-    "classnames": "^2.3.2",
-    "css-loader": "^6.7.1",
-    "dayjs": "^1.11.7",
+    "classnames": "^2.5.1",
+    "css-loader": "^7.1.2",
+    "dayjs": "^1.11.13",
     "file-saver": "^2.0.5",
-    "imports-loader": "^4.0.1",
-    "jquery": "^3.6.1",
+    "imports-loader": "^5.0.0",
+    "jquery": "^3.7.1",
     "lodash-es": "^4.17.21",
-    "mini-css-extract-plugin": "^2.6.1",
-    "react": "^18.2.0",
-    "react-big-calendar": "^1.6.9",
-    "react-dom": "^18.2.0",
-    "sass": "^1.54.9",
-    "sass-loader": "^13.0.2",
-    "ts-loader": "^9.4.2",
-    "typescript": "^4.9.4",
-    "webpack": "^5.74.0",
-    "webpack-cli": "^4.10.0"
+    "mini-css-extract-plugin": "^2.9.2",
+    "react": "^19.0.0",
+    "react-big-calendar": "^1.17.1",
+    "react-dom": "^19.0.0",
+    "sass": "^1.83.4",
+    "sass-loader": "^16.0.4",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.7.3",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1"
   },
   "devDependencies": {
     "@eslint-react/eslint-plugin": "^1.24.1",
@@ -60,6 +60,21 @@
     "experimentalTernaries": true,
     "proseWrap": "always",
     "quoteProps": "preserve"
+  },
+  "pnpm": {
+    "overrides": {
+      "react-big-calendar>globalize": "-",
+      "react-big-calendar>lodash": "npm:lodash-es@^4",
+      "react-big-calendar>luxon": "-",
+      "react-big-calendar>moment": "-",
+      "react-big-calendar>moment-timezone": "-"
+    },
+    "peerDependencyRules": {
+      "allowedVersions": {
+        "react-big-calendar>react": "19",
+        "react-big-calendar>react-dom": "19"
+      }
+    }
   },
   "packageManager": "pnpm@10.0.0+sha512.b8fef5494bd3fe4cbd4edabd0745df2ee5be3e4b0b8b08fa643aa3e4c6702ccc0f00d68fa8a8c9858a735a0032485a44990ed2810526c875e416f001b17df12b"
 }

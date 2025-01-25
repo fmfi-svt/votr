@@ -55,9 +55,9 @@ export function Root({ app }: { app: React.ComponentType }) {
 
   const C = app;
   return (
-    <QueryContext.Provider value={query}>
+    <QueryContext value={query}>
       <C />
-    </QueryContext.Provider>
+    </QueryContext>
   );
 }
 

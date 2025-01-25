@@ -21,7 +21,9 @@ help1='Usage:
 # shellcheck disable=SC2016
 help2='
   ./x upgrade-py
-    Upgrades Python dependencies to the latest versions.
+  ./x upgrade-js
+  ./x upgrade
+    Upgrades {Python|JavaScript|both} dependencies to the latest versions.
 
   ./x uv COMMAND [ARGS]
     Runs uv. See https://docs.astral.sh/uv/reference/cli/
@@ -103,6 +105,20 @@ upgrade-py)
   shift
   add_uv_path
   exec uv sync --upgrade "$@"
+  ;;
+
+upgrade-js)
+  # Upgrade pnpm itself. Edits "packageManager" in package.json.
+  "$0" corepack use pnpm@latest
+  # Upgrade all minor/patch versions (and their deps).
+  "$0" pnpm update
+  # Upgrade major versions of selected direct dependencies (and their deps).
+  "$0" pnpm update --latest --interactive
+  ;;
+
+upgrade)
+  "$0" upgrade-py
+  "$0" upgrade-js
   ;;
 
 install)

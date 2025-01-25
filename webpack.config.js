@@ -1,24 +1,25 @@
 const fs = require("fs");
+const fsPromises = require("fs/promises");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const bootstrapPath =
   __dirname + "/node_modules/bootstrap-sass/assets/stylesheets";
 
-// A custom node-sass importer that removes some unwanted rules from _normalize.scss.
-function importerWhichRewritesBootstrapNormalizeScss(url, prev, done) {
-  if (url != "bootstrap/normalize") {
-    done(null);
-    return;
-  }
-
-  var originalPath = bootstrapPath + "/bootstrap/_normalize.scss";
-  fs.readFile(originalPath, "utf8", (err, originalData) => {
-    if (err) {
-      done(err);
-      return;
+// A custom sass importer that removes some unwanted rules from _normalize.scss.
+const importerWhichRewritesBootstrapNormalizeScss = {
+  canonicalize(url /* , unused context */) {
+    if (url == "bootstrap/normalize") {
+      return new URL("votr-custom:bootstrap/normalize");
+    } else {
+      return null;
     }
+  },
 
-    let data = originalData;
+  async load(canonicalUrl) {
+    if (canonicalUrl != "votr-custom:bootstrap/normalize") return null;
+
+    const originalPath = bootstrapPath + "/bootstrap/_normalize.scss";
+    let data = await fsPromises.readFile(originalPath, "utf8");
 
     function remove(what) {
       if (!data.includes(what)) throw Error(`"${what}" not found`);
@@ -33,9 +34,9 @@ function importerWhichRewritesBootstrapNormalizeScss(url, prev, done) {
     remove("color: inherit; // 1");
     remove("font: inherit; // 2");
 
-    done({ contents: data });
-  });
-}
+    return { contents: data, syntax: "scss" };
+  },
+};
 
 const outputPath = __dirname + "/votrfront/static";
 
@@ -133,9 +134,15 @@ function makeConfig(mode) {
               loader: "sass-loader",
               options: {
                 sassOptions: {
-                  includePaths: [bootstrapPath],
-                  outputStyle: mode == "development" ? undefined : "compressed",
-                  importer: importerWhichRewritesBootstrapNormalizeScss,
+                  loadPaths: [bootstrapPath],
+                  importers: [importerWhichRewritesBootstrapNormalizeScss],
+                  // TODO: Deal with these someday (after upgrading bootstrap).
+                  silenceDeprecations: [
+                    "color-functions",
+                    "global-builtin",
+                    "import",
+                    "mixed-decls",
+                  ],
                 },
               },
             },

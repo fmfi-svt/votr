@@ -68,8 +68,7 @@ function DetailPredmetuUcitelia() {
   const [studenti, predmet] = data;
 
   if (!predmet) {
-    // https://github.com/microsoft/TypeScript/issues/21699
-    return "Dáta pre predmet neboli nájdené." as unknown as JSX.Element;
+    return "Dáta pre predmet neboli nájdené.";
   }
 
   const ucitelia = cache.get(
@@ -113,8 +112,7 @@ function DetailPredmetuZapisaniStudenti() {
   const [studenti, predmet] = data;
 
   if (!predmet) {
-    // https://github.com/microsoft/TypeScript/issues/21699
-    return "Dáta pre predmet neboli nájdené." as unknown as JSX.Element;
+    return "Dáta pre predmet neboli nájdené.";
   }
 
   const message =
@@ -151,12 +149,10 @@ function DetailPredmetuTitle() {
   const [studenti, predmet] = data;
 
   if (!predmet) {
-    // https://github.com/microsoft/TypeScript/issues/21699
-    return "Dáta nenájdené" as unknown as JSX.Element;
+    return "Dáta nenájdené";
   }
 
-  // https://github.com/microsoft/TypeScript/issues/21699
-  return predmet.nazov as unknown as JSX.Element;
+  return predmet.nazov;
 }
 
 export function DetailPredmetuModal() {

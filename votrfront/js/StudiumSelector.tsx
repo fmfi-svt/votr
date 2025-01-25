@@ -43,7 +43,7 @@ export function StudiumSelector({ children }: { children: React.ReactNode }) {
         )}
       </ul>
       {query.studiumKey ?
-        <QueryContext.Provider value={query}>{children}</QueryContext.Provider>
+        <QueryContext value={query}>{children}</QueryContext>
       : cache.loadedAll && items.length == 0 ?
         <p>Žiadne štúdiá.</p>
       : null}
