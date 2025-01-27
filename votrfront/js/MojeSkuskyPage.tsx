@@ -19,6 +19,18 @@ import { type Column, column, SortableTable, sortAs } from "./sorting";
 import type { Href, Termin } from "./types";
 import { ZapisnyListSelector } from "./ZapisnyListSelector";
 
+// Work around bug https://github.com/jquense/react-big-calendar/issues/2434
+// (calendar buttons don't do anything in development JS build). It is caused by
+// https://github.com/jquense/uncontrollable/issues/60. This hack is based on
+// https://github.com/SanjoSolutions/uncontrollable/commit/b136943a4eae55327359a4303e10fd58880846c2
+// but even more precarious.
+/* eslint-disable */
+const CalendarUncontrolledComponent = (Calendar as any).render().type;
+CalendarUncontrolledComponent.prototype.componentDidMount = function () {
+  this.unmounted = false;
+};
+/* eslint-enable */
+
 // Need to globally configure default dayjs locale so that weeks start on Monday.
 // https://github.com/jquense/react-big-calendar/issues/2395
 dayjs.locale("sk");
