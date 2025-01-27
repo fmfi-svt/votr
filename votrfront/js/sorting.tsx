@@ -4,7 +4,7 @@ import React, { useContext, useState } from "react";
 import { getLocalSetting, setLocalSetting } from "./LocalSettings";
 import { ScreenSize, useScreenSize } from "./mediaQueries";
 import { navigate, QueryContext } from "./router";
-import { Query } from "./types";
+import type { Query } from "./types";
 
 export const sortAs = {
   personName: (text: string) => {

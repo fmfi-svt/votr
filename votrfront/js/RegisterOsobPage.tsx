@@ -4,7 +4,7 @@ import { currentAcademicYear } from "./coursesStats";
 import { FormItem, PageLayout, PageTitle } from "./layout";
 import { navigate, QueryContext } from "./router";
 import { column, SortableTable, sortAs } from "./sorting";
-import { ComboBoxOption } from "./types";
+import type { ComboBoxOption } from "./types";
 
 const registerOsobColumns = [
   column({ label: "Plné meno", prop: "plne_meno", sortKey: sortAs.personName }),

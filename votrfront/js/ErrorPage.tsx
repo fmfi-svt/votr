@@ -1,5 +1,5 @@
 import { noop } from "lodash-es";
-import React, { useState } from "react";
+import { useState } from "react";
 import { goLogout, goReset, goResetHome } from "./ajax";
 import { Modal, ModalBase } from "./layout";
 import { FakeLink } from "./router";

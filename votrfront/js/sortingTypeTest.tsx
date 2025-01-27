@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, @typescript-eslint/ban-ts-comment, @typescript-eslint/no-floating-promises */
 
-import { Column, column } from "./sorting";
+import { type Column, column } from "./sorting";
 
 function columnTypeTest() {
   const plain = column({ label: "" });

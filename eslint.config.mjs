@@ -51,6 +51,7 @@ export default tseslint.config(
       "@eslint-react/hooks-extra/no-unnecessary-use-memo": "warn",
       "@typescript-eslint/default-param-last": "warn",
       "@typescript-eslint/no-dupe-class-members": "warn",
+      "@typescript-eslint/no-import-type-side-effects": "warn",
       "@typescript-eslint/no-invalid-this": "warn",
       "@typescript-eslint/no-loop-func": "warn",
       "@typescript-eslint/no-redeclare": "warn",

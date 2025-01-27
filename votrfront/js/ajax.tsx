@@ -1,5 +1,5 @@
-import React, { useEffect } from "react";
-import { Rpcs } from "./types";
+import { useEffect } from "react";
+import type { Rpcs } from "./types";
 
 interface RpcAnnouncementPayload {
   announcement_html: string;

@@ -119,6 +119,11 @@ function makeConfig(mode) {
           test: /\.[tj]sx?$/,
           exclude: /node_modules/,
           loader: "ts-loader",
+          options: {
+            compilerOptions: {
+              jsx: mode == "development" ? "react-jsxdev" : "react-jsx",
+            },
+          },
         },
         {
           test: /node_modules\/bootstrap-sass\//,

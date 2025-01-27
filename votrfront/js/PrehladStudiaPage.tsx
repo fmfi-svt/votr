@@ -10,7 +10,7 @@ import { PageLayout, PageTitle } from "./layout";
 import { underSM, underXS } from "./mediaQueries";
 import { QueryContext } from "./router";
 import { column, SortableTable, sortAs } from "./sorting";
-import { Studium, ZapisnyList } from "./types";
+import type { Studium, ZapisnyList } from "./types";
 
 // TODO: Pridat kadejake sumarne informacie, aby to vyzeralo ako dashboard.
 // TODO: Ked to raz bude rychle, pouzit to ako "home page" pri prazdnom action.

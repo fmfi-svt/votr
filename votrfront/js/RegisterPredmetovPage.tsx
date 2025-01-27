@@ -6,7 +6,7 @@ import { FormItem, PageLayout, PageTitle } from "./layout";
 import { underSM, underXS } from "./mediaQueries";
 import { navigate, QueryContext, RelativeLink } from "./router";
 import { column, SortableTable, sortAs } from "./sorting";
-import { ComboBoxOption, RegPredmet } from "./types";
+import type { ComboBoxOption, RegPredmet } from "./types";
 
 function DetailPredmetuLink({ predmet }: { predmet: RegPredmet }) {
   const query = useContext(QueryContext);

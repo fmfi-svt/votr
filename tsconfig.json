@@ -5,18 +5,16 @@
     // es2019 roughly corresponds to current feature checks in prologue.tsx.
     "target": "es2019",
 
-    // es2020 adds import() and import.meta. es2022 adds top-level await.
-    // Wasn't needed yet.
-    "module": "es2015",
+    "module": "preserve",
 
-    "moduleResolution": "node",
+    "verbatimModuleSyntax": true,
 
     // These are marked "Recommended" in the tsconfig reference.
     // Except those implied by "strict".
+    // Except "esModuleInterop", as it's implied by "module": "preserve".
     // Except "skipLibCheck", for now.
     "exactOptionalPropertyTypes": true,
     "strict": true,
-    "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
 
     // Enable more error checking.
@@ -32,7 +30,7 @@
 
     // "noUnusedLocals", "noUnusedParameters": maybe later?
 
-    "jsx": "react",
+    "jsx": "react-jsx",
 
     // outDir is ignored by webpack ts-loader and by `tsc --noEmit`.
     // Nothing reads this directory or expects it to exist. It's just for

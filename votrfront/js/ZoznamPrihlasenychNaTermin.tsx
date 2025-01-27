@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { CacheRequester, Loading } from "./ajax";
 import { Modal } from "./layout";
 import { underSM, underXS } from "./mediaQueries";

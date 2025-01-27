@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { CacheRequester, Loading } from "./ajax";
 import {
   coursesStats,
@@ -14,8 +14,8 @@ import {
 import { PageLayout, PageTitle } from "./layout";
 import { ScreenSize, underSM, underXS } from "./mediaQueries";
 import { QueryContext, RelativeLink } from "./router";
-import { Column, column, SortableTable, sortAs } from "./sorting";
-import { Hodnotenie } from "./types";
+import { type Column, column, SortableTable, sortAs } from "./sorting";
+import type { Hodnotenie } from "./types";
 import { ZapisnyListSelector } from "./ZapisnyListSelector";
 
 export const mojePredmetyColumns: Column<Hodnotenie>[] = [

@@ -1,6 +1,5 @@
-import React from "react";
 import { getDateNow } from "./now";
-import { Hodnotenie, ZapisPredmet } from "./types";
+import type { Hodnotenie, ZapisPredmet } from "./types";
 
 const ZNAMKY: Record<string, number> = {
   "A": 1,

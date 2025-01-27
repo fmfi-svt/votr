@@ -1,4 +1,3 @@
-import React from "react";
 import { CacheRequester, Loading } from "./ajax";
 import { getLocalSetting, setLocalSetting } from "./LocalSettings";
 import { getMsecNow } from "./now";

@@ -1,5 +1,5 @@
 import { maxBy } from "lodash-es";
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { CacheRequester, Loading } from "./ajax";
 import {
   coursesStats,
@@ -15,9 +15,9 @@ import { PageLayout, PageTitle } from "./layout";
 import { ScreenSize, underSM, underXS } from "./mediaQueries";
 import { mojePredmetyColumns } from "./MojePredmetyPage";
 import { QueryContext } from "./router";
-import { Column, column, SortableTable, sortAs } from "./sorting";
+import { type Column, column, SortableTable, sortAs } from "./sorting";
 import { StudiumSelector } from "./StudiumSelector";
-import { Hodnotenie, Priemer } from "./types";
+import type { Hodnotenie, Priemer } from "./types";
 
 const [predmetSemesterColumn, ...predmetRemainingColumns] = mojePredmetyColumns;
 const mojeHodnoteniaColumns: Column<Hodnotenie>[] = [

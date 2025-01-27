@@ -12,8 +12,8 @@ import { humanizeTypVyucby, plural } from "./humanizeAISData";
 import { FormItem, PageLayout, PageTitle } from "./layout";
 import { ScreenSize, underSM, underXS } from "./mediaQueries";
 import { Link, navigate, QueryContext, RelativeLink } from "./router";
-import { Column, column, SortableTable, sortAs } from "./sorting";
-import {
+import { type Column, column, SortableTable, sortAs } from "./sorting";
+import type {
   ComboBoxOption,
   Href,
   ZapisCast,

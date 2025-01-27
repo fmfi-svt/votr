@@ -1,6 +1,6 @@
 import { pickBy } from "lodash-es";
 import React, { useContext, useEffect, useMemo, useState } from "react";
-import { Href, Query } from "./types";
+import type { Href, Query } from "./types";
 
 let trackPageViewLast: string | undefined;
 

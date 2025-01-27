@@ -15,8 +15,8 @@ import { PageLayout, PageTitle } from "./layout";
 import { underSM, underXS } from "./mediaQueries";
 import { getDateNow } from "./now";
 import { Link, QueryContext, RelativeLink } from "./router";
-import { Column, column, SortableTable, sortAs } from "./sorting";
-import { Href, Termin } from "./types";
+import { type Column, column, SortableTable, sortAs } from "./sorting";
+import type { Href, Termin } from "./types";
 import { ZapisnyListSelector } from "./ZapisnyListSelector";
 
 // Need to globally configure default dayjs locale so that weeks start on Monday.

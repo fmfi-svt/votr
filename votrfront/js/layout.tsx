@@ -17,7 +17,7 @@ import {
 } from "./ajax";
 import { AnketaPopup } from "./AnketaPopup";
 import { FakeLink, Link, QueryContext, RelativeLink } from "./router";
-import { Href } from "./types";
+import type { Href } from "./types";
 
 export class ErrorBoundary extends React.Component<
   { children: React.ReactNode },
