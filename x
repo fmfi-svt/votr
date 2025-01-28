@@ -14,8 +14,9 @@ help1='Usage:
     Options:
       --uv={local|system}      use system-wide uv or download it locally
       --nodejs={local|system}  use system-wide Node.js or download it locally
+      --prod-deps              install prod-only dependencies (e.g. gunicorn)
+      --no-dev-deps            omit dev-only dependencies (e.g. eslint)
       --clean                  reinstall everything from scratch
-      --prod                   install also prod dependencies
 '
 
 # shellcheck disable=SC2016
@@ -132,20 +133,35 @@ install)
   uv=$olduv
   nodejs=$oldnodejs
   clean=
-  uvsyncopts=
+  proddeps=
+  devdeps=y
   shift
   for arg; do
     case "$arg" in
     --uv=system | --uv=local) uv=${arg#*=} ;;
     --nodejs=system | --nodejs=local) nodejs=${arg#*=} ;;
     --clean) clean=y ;;
-    --prod) uvsyncopts+=' --group prod' ;;
+    --no-clean) clean= ;;
+    --prod-deps) proddeps=y ;;
+    --no-prod-deps) proddeps= ;;
+    --dev-deps) devdeps=y ;;
+    --no-dev-deps) devdeps= ;;
     *)
       echo >&2 "Unknown option: $arg"
       exit 1
       ;;
     esac
   done
+
+  uvsyncopts=
+  pnpmopts=
+  if [[ $proddeps ]]; then
+    uvsyncopts+=' --group prod'
+  fi
+  if [[ ! $devdeps ]]; then
+    uvsyncopts+=' --no-dev'
+    pnpmopts+=' --production'
+  fi
 
   trap 'if [[ $? != 0 ]]; then echo -e "${bright}${red}>>> Failed!${normal}"; fi' EXIT
 
@@ -197,7 +213,7 @@ install)
     log "./node_modules already exists. Reusing it."
   fi
 
-  log_and_run "Installing JavaScript dependencies to './node_modules'. " "uv run corepack pnpm install"
+  log_and_run "Installing JavaScript dependencies to './node_modules'. " "uv run corepack pnpm install$pnpmopts"
 
   log "Success!"
   ;;
