@@ -236,7 +236,6 @@ def finish_login(request, get_params):
                 'destination': destination,
             })
             client = create_client(server, params, logger=logger)
-            fake_time_msec = client.fake_time_msec
             csrf_token = generate_key()
             session = dict(
                 last_announcement=request.app.settings.announcement_html,
@@ -259,12 +258,12 @@ def finish_login(request, get_params):
         logger.log('login', 'Login finished', params.get('username'))
 
     request.votr_cookie_value = dict(sessid=sessid)
-    return app_response(
-        request,
-        csrf_token=csrf_token,
-        fake_time_msec=fake_time_msec,
-        destination=destination,
-    )
+
+    # TODO: This condition is duplicated with main.tsx.
+    redirect_url = request.root_url
+    if destination and destination.startswith('?'):
+        redirect_url += destination
+    return redirect(redirect_url)
 
 
 def _read_saml_attribute(auth, name):
