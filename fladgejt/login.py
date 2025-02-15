@@ -176,8 +176,10 @@ def _send_request_chain(ctx, params, url, data):
                         if params['type'].endswith('_password'):
                             raise PasswordLoginError(error_text)
                         else:
+                            # Could happen even with type saml_andrvotr if AIS
+                            # servers are having database connection issues.
                             raise Exception(
-                                f'Login error with {type}: {error_text}')
+                                f'Unexpected login error: {error_text}')
 
             # Handle "fake redirects" - HTML pages with JavaScript code that
             # instantly submits a POST form.
