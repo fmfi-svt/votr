@@ -1,10 +1,10 @@
 
-from bs4 import BeautifulSoup
 import sys
 import time
 import json
 import requests
 from urllib.parse import urljoin
+from lxml.html import document_fromstring
 from aisikl.exceptions import RESTServerError, LoggedOutError
 
 
@@ -66,15 +66,15 @@ class Context:
         :param url: the URL, either absolute or relative to the AIS server.
         :param method: HTTP method for the request.
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
-        :return: a ``BeautifulSoup`` object.
+        :return: the ``html`` root element as an ``lxml.html.HtmlElement``.
         '''
         return self.parse_html(self.request_ais(url, method=method, **kwargs))
 
     def parse_html(self, response):
         self.log('benchmark', 'Begin HTML parsing')
-        soup = BeautifulSoup(response.text, 'lxml')
+        element = document_fromstring(response.text)
         self.log('benchmark', 'End HTML parsing')
-        return soup
+        return element
 
     def request_json(self, url, **data):
         r'''Sends a request to REST API and parses the response as JSON.

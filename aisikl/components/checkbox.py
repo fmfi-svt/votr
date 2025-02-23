@@ -8,9 +8,9 @@ class CheckBox(Control):
     def __init__(self, dialog, id, type, parent_id, properties, element):
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.shortcut = properties.get('sc')
-        input = element.input
+        input = element.find('.//input')
         self.smoked = input.get('smoked', 'false') == 'true'
-        self.selected = input.has_attr('checked')
+        self.selected = 'checked' in input.attrib
 
     def _ais_setSmoked(self, value):
         self.smoked = is_true(value)

@@ -47,16 +47,16 @@ class Dialog:
 
         Called from :meth:`aisikl.app.Application.open_dialog`.
         '''
-        dialog_soup = self.app.ctx.request_html(url)
+        dialog_html = self.app.ctx.request_html(url)
         self.app.ctx.log('benchmark', 'Begin dialog initialization')
 
-        body = dialog_soup.body
-        first_element_child = body.find(True)
-        scripts = dialog_soup.find_all('script')
+        body = dialog_html.find(".//body")
+        first_element_child = body.find(".//*")
+        scripts = dialog_html.findall(".//script")
         if not (body.get('id') == self.name and
-                'jsct' not in body and
-                'dialogBody' in body.get('class', []) and
-                first_element_child and
+                'jsct' not in body.attrib and
+                'dialogBody' in body.classes and
+                first_element_child is not None and
                 first_element_child.get('id') == 'dialogComponentsArea' and
                 scripts):
             raise AISParseError("Unexpected dialog body response")
@@ -64,13 +64,13 @@ class Dialog:
         self.components = {}
         self.changed_components = None
 
-        last_line = scripts[-1].string.strip().split('\n')[-1].strip()
+        last_line = scripts[-1].text.strip().split('\n')[-1].strip()
         match = _properties_re.match(last_line)
         if not match:
             raise AISParseError("Couldn't find dialog componentProperties")
         component_properties = json.loads(match.group(1))
 
-        elements = { e['id']: e for e in dialog_soup.find_all(id=True) }
+        elements = { e.get('id'): e for e in dialog_html.iterfind(".//*[@id]") }
         if 'dt_selection' in elements or 'dt_selection_area' in elements:
             raise AISParseError("#dt_selection is not supported")
 
@@ -80,11 +80,11 @@ class Dialog:
 
             element = elements.get(id)
             parent_id = None
-            if element:
-                parent = element.find_parent(
-                    lambda p: p.get('id') in component_properties)
-                if parent:
-                    parent_id = parent['id']
+            if element is not None:
+                for parent in element.iterancestors():
+                    if parent.get('id') in component_properties:
+                        parent_id = parent.get('id')
+                        break
 
             type = properties.get('t')
             if type not in component_classes:

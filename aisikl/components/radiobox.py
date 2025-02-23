@@ -12,7 +12,7 @@ class RadioBox(Control):
     def __init__(self, dialog, id, type, parent_id, properties, element):
         super().__init__(dialog, id, type, parent_id, properties, element)
 
-        items = element.find(id='radioBox_items')
+        items = element.get_element_by_id('radioBox_items')
         self.always_selected = items.get('allwaysselected', 'false') == 'true'
 
         self._parse_options(items)
@@ -20,16 +20,16 @@ class RadioBox(Control):
     def _parse_options(self, items):
         self.selected_index = -1
         self.options = []
-        for index, td in enumerate(items.find_all('td')):
-            if self.enabled and td['index'] != str(index):
+        for index, td in enumerate(items.iterfind('.//td')):
+            if self.enabled and td.attrib['index'] != str(index):
                 raise AISParseError(
                     "RadioBox '{}' item #{} "
                     "has unexpected index attribute.".format(self.id, index))
             self.options.append(Option(
-                title=td.label.get_text(),
-                id=td.input.get('sid'),
+                title=td.find('.//label').text_content()[:],  # from lxml 'smart' string  # TODO: fit in 80 columns
+                id=td.find('.//input').get('sid'),
             ))
-            if td.input.has_attr('checked'):
+            if 'checked' in td.find('.//input').attrib:
                 self.selected_index = index
 
     @property
@@ -58,12 +58,12 @@ class RadioBox(Control):
         return self._build_changed_properties(dataView=(True, True, cdata))
 
     def _ais_setDataView(self, id, body):
-        data_view = body.find(id=id)
-        container = data_view.find(id='radioBox_container', recursive=False)
-        if not container:
+        data_view = body.get_element_by_id(id)
+        container = data_view.find('./*[@id="radioBox_container"]')  # direct child
+        if container is None:
             raise AISParseError("Expected radioBox_container")
-        if container.name == 'span':
-            self.selected_index = int(container['selectedindex'])
+        if container.tag == 'span':
+            self.selected_index = int(container.attrib['selectedindex'])
         else:
-            self._parse_options(container.find(id='radioBox_items'))
+            self._parse_options(container.get_element_by_id('radioBox_items'))
     _ais_setDataView.wants_body = True

@@ -65,7 +65,7 @@ DEFAULT_IGNORED_MESSAGES = [
 
 
 # Regexes for parsing AIS JavaScript
-_alert_re = re.compile(r'^function main\(\) { alert\((\'.*\')\); }$')
+_alert_re = re.compile(r'^\s*function main\(\) { alert\((\'.*\')\); }\s*$')
 _app_properties_re = re.compile(r'(?:^|\n)var appProperties=(.*);\s*$')
 _functions_re = re.compile(r'\nfunction (\w+)')
 _var_re = re.compile(r'^var \w+;\s*')
@@ -111,11 +111,11 @@ def _parse_args(args_str):
     return json.loads('[' + args_str + ']')
 
 
-def parse_response(soup):
+def parse_response(html):
     r'''Parses the resultFrame content (the response to a POST request).
 
     Args:
-        soup: The HTML structure.
+        html: The ``html`` element of the resultFrame document.
     Returns:
         An ``(operations, updates)`` tuple. ``operations`` is a list of
         :class:`Operation`\ s. ``updates`` is a list of :class:`Update`\ s.
@@ -123,12 +123,12 @@ def parse_response(soup):
     operations = []
     updates = []
 
-    script_tag = soup.head.script
-    if not script_tag or script_tag.get('src'):
+    script_tag = html.find('.//head//script')
+    if script_tag is None or script_tag.get('src'):
         raise AISParseError("Unexpected result frame response")
-    script = script_tag.get_text()
+    script = script_tag.text
 
-    match = _alert_re.match(script.strip())
+    match = _alert_re.match(script)
     if match:
         raise AISBehaviorError('AIS error in result frame response: %s' %
             match.group(1))
@@ -305,19 +305,22 @@ class Application:
         self.ctx.log('operation', 'Opening application {}'.format(
             self.class_name), url)
 
-        app_soup = self.ctx.request_html(url)
-        if not app_soup.find(id='webuiProperties'):
-            alert_match = _alert_re.match(
-                app_soup.script.get_text().strip() if app_soup.script else '')
+        app_html = self.ctx.request_html(url)
+
+        first_script_tag = app_html.find('.//script')
+        first_script = '' if first_script_tag is None else first_script_tag.text
+
+        if app_html.get_element_by_id('webuiProperties', None) is None:
+            alert_match = _alert_re.match(first_script)
             if alert_match:
                 raise AISBehaviorError("AIS2 application didn't open: %s" %
                     alert_match.group(1))
             raise AISParseError("AIS2 application didn't open")
 
-        onload = app_soup.body['onload']
+        onload = app_html.find(".//body").get("onload")
         if onload != 'window.setTimeout("WebUI_init()", 1)':
             raise AISParseError("Unexpected <body> onload")
-        first_script = app_soup.script.string if app_soup.script else ''
+
         properties_match = _app_properties_re.search(first_script)
         if not properties_match:
             raise AISParseError("Couldn't get app ID from appProperties")
@@ -327,7 +330,7 @@ class Application:
             raise AISParseError("Unexpected values in appProperties")
         self.app_id = properties['appId']
 
-        if app_soup.find(id='initScript').get_text() != '<!---->':
+        if app_html.get_element_by_id('initScript').text != '<!---->':
             raise AISParseError("initScript is not supported")
 
         rq = ("<events><ev><event class='avc.ui.event.AVCComponentEvent'>"
@@ -408,8 +411,8 @@ class Application:
 
         Usually called from :meth:`send_events`.
         '''
-        soup = self._send_request(body)
-        self._process_response(soup)
+        html = self._send_request(body)
+        self._process_response(html)
 
     def _send_request(self, body):
         xml_spec = '<request> <serial>{}</serial>\n{}</request>\n'.format(
@@ -433,11 +436,11 @@ class Application:
                         any(pattern in operation.args[0]
                             for pattern in self.ignored_messages))]
 
-    def _process_response(self, soup):
+    def _process_response(self, html):
         self.ctx.log('benchmark', 'Begin response frame processing')
         self.last_response_time = time.time()
-        operations, updates = parse_response(soup)
-        body = soup.body
+        operations, updates = parse_response(html)
+        body = html.find(".//body")
 
         for operation in operations:
             self.ctx.log('operation',
@@ -525,10 +528,10 @@ class Application:
         self.close_all_dialogs()
         self.ctx.log('operation',
             'Sending WebUIKillEvent to {}'.format(self.class_name))
-        soup = self._send_request(
+        html = self._send_request(
             "<events><ev><event class='avc.framework.webui.WebUIKillEvent'/>"
             "</ev></events>\n")
-        return not soup.script
+        return html.find('.//script') is None
 
     def collect_component_changes(self):
         '''Returns the <changedProps> string that goes into POST requests.'''

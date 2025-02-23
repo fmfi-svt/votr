@@ -26,15 +26,15 @@ class CheckList(Control):
     def _parse_items(self, element):
         self.selected_index = -1
         self.items = []
-        for index, tr in enumerate(element.find_all('tr')):
-            td = tr.td
+        for index, tr in enumerate(element.iterfind('.//tr')):
+            td = tr.find('.//td')
             self.items.append(Item(
-                title=tr.get_text(),
-                id=td['id'], sid=tr['sid'], rid=tr['rid'],
-                tool_tip_text=td['title'],
-                checked=tr.input.has_attr('checked'),
+                title=tr.text_content()[:],  # from lxml 'smart' string
+                id=td.attrib['id'], sid=tr.attrib['sid'], rid=tr.attrib['rid'],
+                tool_tip_text=td.attrib['title'],
+                checked=('checked' in tr.find('.//input').attrib),
             ))
-            if 'selectedListRow' in tr.get('class', []):
+            if 'selectedListRow' in tr.classes:
                 self.selected_index = index
 
     def up_down_row(self, command):
@@ -65,7 +65,7 @@ class CheckList(Control):
     def _ais_setUpDownEnabled(self, value):
         self.up_down_enabled = is_true(value)
     def _ais_setDataView(self, id, body):
-        self._parse_items(body.find(id=id))
+        self._parse_items(body.get_element_by_id(id))
     _ais_setDataView.wants_body = True
 
     def _mark_changed(self):

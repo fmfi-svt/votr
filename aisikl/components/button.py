@@ -10,8 +10,6 @@ class Button(ActionableControl):
         self.shortcut = properties.get('sc')
         self.confirm_question = element.get('confirmquestion')
         self.access_key = element.get('accesskey')
-        if isinstance(self.access_key, list):
-            self.access_key = ' '.join(self.access_key)  # BeautifulSoup :(
 
     def _ais_setAccessKey(self, value):
         self.access_key = value

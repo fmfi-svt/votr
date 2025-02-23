@@ -9,9 +9,8 @@ class TabbedPane(Control):
         self.selected_index = properties.get('selectedIndex', 0)
 
         self.panel_ids = []
-        arena = element.find(id=element['id'] + 'Arena', recursive=False)
-        for panel in arena.find_all(id=True, recursive=False):
-            self.panel_ids.append(panel['id'])
+        for panel in element.xpath('./*[@id=$a]/*[@id]', a=id + 'Arena'):
+            self.panel_ids.append(panel.attrib['id'])
 
     def _ais_setSelectedIndex(self, value):
         self.selected_index = int(value)

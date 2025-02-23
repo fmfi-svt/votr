@@ -8,7 +8,7 @@ class Label(Control):
         self.shortcut = properties.get('sc')
         self.title_like_text = element.get('titleliketext')
         self.for_ = element.get('for')
-        self.text = element.get_text()
+        self.text = element.text_content()[:]  # from lxml 'smart' string
 
     def _ais_setTitleLikeText(self, value):
         self.title_like_text = value

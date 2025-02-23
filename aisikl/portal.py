@@ -22,35 +22,35 @@ def get_modules(ctx):
         ``url``, ``title`` and ``description``.
     '''
     ctx.log('portal', 'Opening main menu')
-    front_soup = ctx.request_html('/ais/portal/changeTab.do?tab=0')
+    front_html = ctx.request_html('/ais/portal/changeTab.do?tab=0')
 
     results = []
 
-    for menu_item in front_soup.find_all(class_='left-menu-item'):
-        menu_link = menu_item.find('a')
-        _, _, module = menu_link['href'].partition('changeModul.do?modul=')
+    for menu_item in front_html.find_class('left-menu-item'):
+        menu_link = menu_item.find('.//a')
+        _, _, module = menu_link.attrib['href'].partition('changeModul.do?modul=')
         if not module: continue
 
-        ctx.log('portal', 'Opening section "{}"'.format(menu_link.get_text()))
-        applist_soup = ctx.request_html(
+        ctx.log('portal', f'Opening section "{menu_link.text_content()}"')
+        applist_html = ctx.request_html(
             '/ais/portal/changeModul.do?modul=' + module)
 
         submodules = []
-        for submodule in applist_soup.find_all(class_='submodul'):
+        for submodule in applist_html.find_class('submodul'):
             apps = []
-            for app in submodule.find_all(class_='aplikacia'):
-                app_link = app.a
+            for app in submodule.find_class('aplikacia'):
+                app_link = app.find('.//a')
                 apps.append(PortalApp(
-                    id=app.find(class_='kod').get_text(),
-                    title=app_link['title'],
-                    url=app_link['url'],
-                    description=app.find(class_='popis').get_text().strip(),
+                    id=app.find_class('kod')[0].text_content()[:],
+                    title=app_link.attrib['title'],
+                    url=app_link.attrib['url'],
+                    description=app.find_class('popis')[0].text_content().strip(),
                 ))
 
-            submodule_name = submodule.find(class_='submodul-text').get_text()
+            submodule_name = submodule.find_class('submodul-text')[0].text_content()[:]
             submodules.append((submodule_name, apps))
 
-        results.append((menu_link.get_text(), submodules))
+        results.append((menu_link.text_content()[:], submodules))
 
     return results
 

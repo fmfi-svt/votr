@@ -1,7 +1,7 @@
 
 import json
-from bs4 import BeautifulSoup
 from collections import namedtuple
+from lxml.html import fragment_fromstring
 from .component import is_true
 from .control import Control
 from .combobox import Option
@@ -41,18 +41,20 @@ class Row(object):
 
 
 def load_script_plain(data_view, id):
-    script_element = data_view.find(id=id)
-    if not script_element: return None
-    if script_element.name != 'script':
+    script_element = data_view.get_element_by_id(id, None)
+    if script_element is None: return None
+    if script_element.tag != 'script':
         raise AISParseError('Expected {} to be script instead of {}'.format(
-            id, script_element.name))
-    return script_element.get_text()[4:-3]   # always "<!--" and "-->"
+            id, script_element.tag))
+    return script_element.text[4:-3]   # always "<!--" and "-->"
 
 
 def load_script(data_view, id):
     text = load_script_plain(data_view, id)
     if text is None: return None
-    return BeautifulSoup(text, 'lxml')   # note: will be wrapped in <html> and <body>
+    # Result will be wrapped in <div>. It's needed e.g. for multiple `<col>` in
+    # dataTabColGroup. document_fromstring() wouldn't allow empty `text`.
+    return fragment_fromstring(text, create_parent='div')
 
 
 class Table(Control):
@@ -111,10 +113,10 @@ class Table(Control):
         self.changed_cells = set()
         self.last_changed_row_index = None
 
-        self._init_from_data_view(element.find(id=self.id + '_dataView'))
+        self._init_from_data_view(element.get_element_by_id(self.id + '_dataView', None))
 
     def _init_from_data_view(self, data_view):
-        if not data_view: return
+        if data_view is None: return
 
         self._update_data_position_properties(data_view)
         self._update_selection_model_properties(data_view)
@@ -129,10 +131,10 @@ class Table(Control):
             suffix = 'Fixed' if fixed else ''
             header_table = load_script(data_view, 'columnModel' + suffix)
             colgroup = load_script(data_view, 'dataTabColGroup' + suffix)
-            if not header_table: continue
-            tds = { e['id']: e for e in header_table.find_all(id=True) }
-            for col in colgroup.find_all('col'):
-                alias = col['id']
+            if header_table is None: continue
+            tds = { e.get('id'): e for e in header_table.iterfind('.//*[@id]') }
+            for col in colgroup.iterfind('.//col'):
+                alias = col.attrib['id']
                 col_properties = properties['columns'][alias]
                 td = tds['hdr-' + alias]
                 width = int(col.get('width', '0').partition('px')[0])
@@ -162,23 +164,23 @@ class Table(Control):
         # TODO remove me but document it
 
     def _update_data_position_properties(self, data_view):
-        if not data_view: return
-        element = data_view.find(id='dataPositionSpan')
-        if not element: return
+        if data_view is None: return
+        element = data_view.get_element_by_id('dataPositionSpan', None)
+        if element is None: return
         self.is_end_of_data = element.get('isend', 'false') == 'true'
         self.truncated = element.get('truncated', 'false') == 'true'
         self.fixed_columns = int(element.get('fixedcolumns', '0'))
 
     def _update_data_tab_bodies_properties(self, data_view):
-        if not data_view: return
-        element = data_view.find(id='dataTabBodies')
-        if not element: return
+        if data_view is None: return
+        element = data_view.get_element_by_id('dataTabBodies', None)
+        if element is None: return
         self.buffer_size = int(element.get('buffersize'))   # I hope this won't break anything
 
     def _update_selection_model_properties(self, data_view):
-        if not data_view: return
-        element = data_view.find(id='selectionModel')
-        if not element: return
+        if data_view is None: return
+        element = data_view.get_element_by_id('selectionModel', None)
+        if element is None: return
 
         # TODO: loaded_rows chcem aby isiel po ID-ckach, to jest loaded_rows[0] je row ktory ma id=row_0 a nie nutne najvyssi
         # ledaze by nie??? vyzera ze AIS v tom ma tiez taky bordel ako my
@@ -423,9 +425,9 @@ class Table(Control):
         return self._build_changed_properties(**properties)
 
     def _ais_setDataView(self, id, body):
-        data_view = body.find(id=id)
-        if not data_view.contents: return
-        if data_view.find(id='columnModel'):
+        data_view = body.get_element_by_id(id)
+        if not len(data_view): return
+        if data_view.get_element_by_id('columnModel', None) is not None:
             self._init_from_data_view(data_view)
         else:
             self._update_data(data_view)
@@ -434,9 +436,9 @@ class Table(Control):
     def _update_data(self, data_view):
         self._update_selection_model_properties(data_view)
 
-        data_tab_bodies = data_view.find(id='dataTabBodies')
-        data_tab_bodies_fixed = data_view.find(id='dataTabBodiesFixed')
-        if not data_tab_bodies: return
+        data_tab_bodies = data_view.get_element_by_id('dataTabBodies', None)
+        data_tab_bodies_fixed = data_view.get_element_by_id('dataTabBodiesFixed', None)
+        if data_tab_bodies is None: return
 
         self._update_data_tab_bodies_properties(data_view)
         self._update_data_position_properties(data_view)
@@ -446,15 +448,15 @@ class Table(Control):
             self.log('table', 'Updating info in {}'.format(self.id))
             return
 
-        if data_tab_bodies.find(id='dataTabTmp'):
-            if not data_tab_bodies.tbody:
+        if data_tab_bodies.get_element_by_id('dataTabTmp', None) is not None:
+            if data_tab_bodies.find('.//tbody') is None:
                 # This might be a behavior difference - WebUI actually does
                 # `this.dataSendType == "update";`. We hope they meant `=`.
                 data_send_type = 'update'
             self._load_rows(data_tab_bodies, data_tab_bodies_fixed,
                             replace=(data_send_type == 'update'))
 
-        self._load_edit_models(data_view.find(id='dataTabEditModels'))
+        self._load_edit_models(data_view.get_element_by_id('dataTabEditModels', None))
 
     def _load_rows(self, data_tab_bodies, data_tab_bodies_fixed, replace=True):
         really_replaced = replace and self.loaded_rows
@@ -463,28 +465,28 @@ class Table(Control):
             self.loaded_rows = []
             self.num_visible_buffers = 0
 
-        for tbody in data_tab_bodies.find_all('tbody'):
-            id = int(tbody['id'][len('dataTabBody'):])
+        for tbody in data_tab_bodies.iterfind('.//tbody'):
+            id = int(tbody.attrib['id'][len('dataTabBody'):])
             self.loaded_buffers.add(id)
             if self.num_visible_buffers < id + 1:
                 self.num_visible_buffers = id + 1
 
         fixed_trs = {}
-        if data_tab_bodies_fixed:
-            for tr in data_tab_bodies_fixed.find_all('tr'):
-                fixed_trs[tr['id']] = tr
+        if data_tab_bodies_fixed is not None:
+            for tr in data_tab_bodies_fixed.iterfind('.//tr'):
+                fixed_trs[tr.attrib['id']] = tr
 
         new_rows = {}
-        for tr in data_tab_bodies.find_all('tr'):
+        for tr in data_tab_bodies.iterfind('.//tr'):
             # Skip trs added for accessibility reasons
-            if tr['id'] == 'aria-columns-row':
+            if tr.attrib['id'] == 'aria-columns-row':
                 continue
 
-            id = int(tr['id'][len('row_'):])
-            rid = tr['rid']
-            tds = tr.find_all('td')
-            if data_tab_bodies_fixed:
-                tds = fixed_trs[tr['id']].find_all('td') + tds
+            id = int(tr.attrib['id'][len('row_'):])
+            rid = tr.attrib['rid']
+            tds = tr.findall('.//td')
+            if data_tab_bodies_fixed is not None:
+                tds = fixed_trs[tr.attrib['id']].findall('.//td') + tds
             cells = [self._load_cell(td) for td in tds]
             new_rows[id] = [cell.value for cell in cells]
             row = Row(id, rid, cells, self)
@@ -499,17 +501,17 @@ class Table(Control):
             new_rows)
 
     def _load_cell(self, td):
-        value = td.get_text()
+        value = td.text_content()[:]  # from lxml 'smart' string
         if value == '\xa0': value = ''
 
         if td.get('datatype') == 'boolean':
-            value = bool(td.find(class_='booleanCellChecked'))
+            value = bool(td.find_class('booleanCellChecked'))
 
         if td.get('datatype') == 'image':
-            value = td.img['src']
+            value = td.find('.//img').attrib['src']
 
-        checkbox = td.find('input', type='checkbox')
-        if checkbox:
+        checkbox = td.find('.//input[@type="checkbox"]')
+        if checkbox is not None:
             return Cell(
                 value=bool(checkbox.get('checked')), title=None,
                 edited_by='checkBox', combo_box_mode=None, model=None,
@@ -523,17 +525,18 @@ class Table(Control):
             disabled=td.get('disabled', 'false') == 'true')
 
     def _load_edit_models(self, data_tab_edit_models):
-        if not data_tab_edit_models: return
+        if data_tab_edit_models is None: return
 
         self.combobox_options = {}
 
-        for select in data_tab_edit_models.find_all('select'):
-            options = self.combobox_options[select['id']] = []
-            for index, option in enumerate(select.find_all('option')):
+        for select in data_tab_edit_models.iterfind('.//select'):
+            options = self.combobox_options[select.attrib['id']] = []
+            for index, option in enumerate(select.iterfind('.//option')):
+                assert option.text_content() == option.text  # TODO
                 options.append(Option(
-                    title=option.get_text(),
-                    id=option['sid'],
-                    tool_tip_text=option['title'],
+                    title=option.text,
+                    id=option.attrib['sid'],
+                    tool_tip_text=option.attrib['title'],
                 ))
 
     def scroll_down(self, buffers=1):

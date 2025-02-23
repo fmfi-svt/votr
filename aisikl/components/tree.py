@@ -43,12 +43,12 @@ class Tree(Control):
         self.expansion_changed = False
         self.checked_changed = False
 
-        self._init_from_data_view(element.find(id=self.id + '_dataView'))
+        self._init_from_data_view(element.get_element_by_id(self.id + '_dataView', None))
 
     def _init_from_data_view(self, data_view, updating=False):
-        if not data_view: return
+        if data_view is None: return
 
-        element = data_view.find(id='nodes')
+        element = data_view.get_element_by_id('nodes')
         selection = element.get('selection')
         self.selection = selection.split(',') if selection else []
         self.active_id = element.get('activepath') or None
@@ -61,21 +61,21 @@ class Tree(Control):
             nodes = load_script(data_view, 'nodes')
             self.nodes = {}
 
-        if nodes.find(nofilled=True):
+        if nodes.find('.//*[@nofilled]'):
             # It shouldn't be too hard to add, but we've never seen it.
             raise ValueError("noFilled attribute is not supported yet")
 
-        for node_div in nodes.find_all(class_='nodeDiv'):
-            node_element = node_div.parent
+        for node_div in nodes.find_class('nodeDiv'):
+            node_element = node_div.getparent()
 
-            id = node_element['id']
-            is_leaf = node_element['isleaf'] == 'true'
-            type = node_element['type']
-            expander = node_div.find(id='nodeExpanderImage')
-            expanded = ('expanded' in expander['class']) if expander else None
-            checkbox = node_div.find('input', type='checkbox')
-            checked = checkbox.has_attr('checked') if checkbox else None
-            title = node_div.find(id='nodeText').get_text().replace('\xa0', ' ')
+            id = node_element.attrib['id']
+            is_leaf = node_element.attrib['isleaf'] == 'true'
+            type = node_element.attrib['type']
+            expander = node_div.get_element_by_id('nodeExpanderImage', None)
+            expanded = None if expander is None else ('expanded' in expander.classes)
+            checkbox = node_div.find('.//input[@type="checkbox"]')
+            checked = checkbox is not None and 'checked' in checkbox.attrib
+            title = node_div.get_element_by_id('nodeText').text_content().replace('\xa0', ' ')
 
             self.nodes[id] = Node(id, is_leaf, type, expanded, checked, title)
 
@@ -93,10 +93,10 @@ class Tree(Control):
         self.dialog.try_interactive(self, "TreeSelectionEvent")
 
     def _ais_setDataView(self, id, body):
-        data_view = body.find(id=id)
-        if not data_view.contents: return
+        data_view = body.get_element_by_id(id)
+        if not len(data_view): return
 
-        if data_view.find(id='nodes').name == 'script':
+        if data_view.get_element_by_id('nodes').tag == 'script':
             self._init_from_data_view(data_view)
         else:
             self._init_from_data_view(data_view, updating=True)

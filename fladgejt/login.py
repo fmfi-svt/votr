@@ -78,20 +78,24 @@ def _send_request(ctx, url, data):
     return response
 
 
-def _parse_form(old_url, soup):
-    forms = soup.find_all('form')
+def _parse_form(old_url, html):
+    forms = html.findall('.//form')
     if len(forms) != 1:
         raise Exception(f'Unexpected number of form elements: {len(forms)}')
-    url = urljoin(old_url, forms[0]['action'])
+    form = forms[0]
+
+    url = urljoin(old_url, form.attrib['action'])
+
     data = {}
-    for elem in forms[0].find_all('input'):
+    for elem in form.iterfind('.//input'):
         if elem.get('type') == 'hidden':
-            data[elem['name']] = elem.get('value', '')
-    for elem in forms[0].find_all('input') + forms[0].find_all('button'):
+            data[elem.attrib['name']] = elem.get('value', '')
+    for elem in form.findall('.//input') + form.findall('.//button'):
         if elem.get('type') == 'submit':
             if elem.get('name'):
-                data[elem['name']] = elem.get('value', '')
+                data[elem.get('name')] = elem.get('value', '')
             break
+
     return url, data
 
 
@@ -144,16 +148,16 @@ def _send_request_chain(ctx, params, url, data):
         # SAML yet.
 
         if response.headers.get('content-type', '').startswith('text/html'):
-            soup = ctx.parse_html(response)
+            html = ctx.parse_html(response)
 
             # Detect successful AIS login (old interface).
-            username_element = soup.find(class_='user-name')
-            if username_element and username_element.get_text().strip():
+            username_elements = html.find_class('user-name')
+            if username_elements and username_elements[0].text_content().strip():
                 ctx.log('login', 'AIS login successful (old interface)')
                 return
 
             # Detect successful AIS login (new student interface).
-            if '/ais/apps/student/' in response.url and soup.find('app-root'):
+            if '/ais/apps/student/' in response.url and html.findall('.//app-root'):
                 ctx.log('login', 'AIS login successful (new student interface)')
                 return
 
@@ -169,9 +173,9 @@ def _send_request_chain(ctx, params, url, data):
                 'output--error',  # used by upstream Shibboleth IdP
                 'error-message',  # specific to Uniba Shibboleth IdP
             ]:
-                error_element = soup.find(class_=error_class)
-                if error_element:
-                    error_text = error_element.get_text().strip()
+                error_elements = html.find_class(error_class)
+                if error_elements:
+                    error_text = error_elements[0].text_content().strip()
                     if error_text:
                         if params['type'].endswith('_password'):
                             raise PasswordLoginError(error_text)
@@ -184,17 +188,17 @@ def _send_request_chain(ctx, params, url, data):
             # Handle "fake redirects" - HTML pages with JavaScript code that
             # instantly submits a POST form.
             js_submit = 'document.forms[0].submit()'
-            onload = (soup.body and soup.body.get('onload')) or ''
-            script = (soup.script and soup.script.get_text()) or ''
-            if js_submit in onload or js_submit in script:
+            if (html.xpath('.//body[contains(@onload, $s)]', s=js_submit) or
+                html.xpath('.//script[contains(text(), $s)]', s=js_submit)
+            ):
                 ctx.log('login', 'Detected a POST page')
-                url, data = _parse_form(url, soup)
+                url, data = _parse_form(url, html)
                 continue
 
             if params['type'] == 'saml_password':
                 # Handle Shibboleth IdP's "Loading Session Information" page.
-                if soup.find('input', attrs={'name': 'shib_idp_ls_supported'}):
-                    url, data = _parse_form(url, soup)
+                if html.findall('.//input[@name="shib_idp_ls_supported"]'):
+                    url, data = _parse_form(url, html)
                     # Real browsers set some fields to "true". Let's cargo cult.
                     data['shib_idp_ls_supported'] = 'true'
                     for k in data:
@@ -204,13 +208,14 @@ def _send_request_chain(ctx, params, url, data):
                     continue
 
                 # Handle Shibboleth IdP's password based login form.
-                if (soup.find('input', attrs={'name': 'j_username'}) and
-                        soup.find('input', attrs={'name': 'j_password'})):
+                if (html.findall('.//input[@name="j_username"]') and
+                    html.findall('.//input[@name="j_password"]')
+                ):
                     ctx.log('login', 'Detected a login form page')
                     if tried_saml_password_login:
                         raise Exception('Username and password did not work')
                     tried_saml_password_login = True
-                    url, data = _parse_form(url, soup)
+                    url, data = _parse_form(url, html)
                     data['j_username'] = params['username']
                     data['j_password'] = params['password']
                     continue

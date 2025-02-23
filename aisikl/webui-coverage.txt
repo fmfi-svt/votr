@@ -378,7 +378,8 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
     - Blur is UNSUPPORTED.
 - getXMPIsland()
     - Finds the element with the given id in the result frame.
-    - Replace with `body.find(id=id)` and mark the setter with `wants_body`.
+    - Replace with `body.get_element_by_id(id)` and mark the setter with
+      `wants_body`.
 - unReadOnlyElement(), DialogBody_unReadOnly()
     - IRRELEVANT
 - tabOrdering, getTabOrdering()
@@ -978,9 +979,7 @@ COMPLETE
 - getSelectedIndex() -> self.selected_index
 - getSelectedId() -> self.selected_option.id
 - getSelectedTitle() -> self.selected_option.title
-- findItem() -> `element.find_parent("td")`
-- findRadioInput() -> `element.radio`
-- findRadioLabel()
+- findItem(), findRadioInput(), findRadioLabel()
     - IRRELEVANT
 - fireUIChangesEvent() -> self._fire_event()
 - setDataView() -> self._ais_setDataView()
@@ -1012,7 +1011,8 @@ wasn't a subclass of UpDownList.
       a bug, but we preserve it.
 - getSelectionAsString(), resetSelection()
     - Inlined in self.changed_properties()
-- findItem() -> `element.find_parent("tr")`
+- findItem()
+    - IRRELEVANT
 - recolorTable() -> no-op
 - setDataView() -> self._ais_setDataView()
 - fireUIChangesEvent() -> self._mark_changed()
