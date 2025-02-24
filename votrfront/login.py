@@ -389,12 +389,13 @@ def saml_logout(request):
                 errors.append(error_reason)
             raise Exception(f'SAML logout failed: {errors!r}')
 
-        do_logout(request)
-
         if url:
+            # https://github.com/fmfi-svt/votr/wiki/SAML#externally-initiated-logout
+            do_logout(request)
             return redirect(url)
         else:
-            return app_response(request, destination='')
+            # https://github.com/fmfi-svt/votr/wiki/SAML#votr-initiated-logout
+            return Response('Logout successful.')
     except Exception as e:
         request.environ['wsgi.errors'].write(
             f'/saml_logout error:\n{traceback.format_exc()}')
