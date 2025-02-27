@@ -346,6 +346,10 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
 - keydownTryAction()
     - UNSUPPORTED, because findActionJSOForUseKeyDown() is UNSUPPORTED
       (see below).
+    - The findElementJSOForUseKeyDown() branch is IRRELEVANT. It can be emulated
+      with Button.click(), CheckBox.toggle(), or TabbedPane.select().
+    - It also tries to call Label.click(), but that seems to be a no-op in webui
+      (inherited from Control, not overridden in LabelPrototype).
 - keyup()
     - Only used in Safari. UNSUPPORTED.
 - click(), dblclick(), contextmenu(), mousemove(), mousedown(), mouseup(),
@@ -403,6 +407,7 @@ PARTIAL
 
 - setThis()
     - Inlined into Dialog.__init__().
+    - msgOnly is IRRELEVANT, see openDialog().
 - getName() -> self.name
 - getParentDialogName() -> self.parent_dialog_name
 - getModal() -> self.modal
@@ -420,7 +425,7 @@ PARTIAL
 - getMyDialogStack()
     - See below for DialogStack.
 - isNative
-    - UNSUPPORTED, see openDialog().
+    - IRRELEVANT, see openDialog().
 - active, getActive() -> `self == self.app.active_dialog`
 - enabled
     - Removed.
@@ -540,8 +545,8 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
     - useDialogFrame is IRRELEVANT (it only affects positioning and visuals).
 - openDialog()
     - Application.open_dialog()
-    - isNative is only true when called from showNativeDialog(), which is used
-      in messageBox(), confirmBox(), etc.
+    - isNative is true and/or msgOnly is non-null only when called from
+      showNativeDialog(), which is used in messageBox(), confirmBox(), etc.
     - Multiple dialog stacks are UNSUPPORTED.
     - x, y, width, height, resizeable, minWidth, minHeight, forControlOfParent
       are IRRELEVANT (only affecting positioning and visuals). minimizeable is
@@ -555,10 +560,19 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
     - Removed. Store the result of open_main_dialog() in a variable.
 - closeDialog(), checkDialogStacksEmpty()
     - Application.close_dialog()
-    - Note that `isNative` is an optional argument.
-    - Calling `webui.clean(true)` when no dialogs remain is TODO.
+    - `isNative` is an optional argument. It seems it is only used for calls
+      within webui.js, and always absent in result frame scripts.
+    - Result frame scripts always call checkDialogStacksEmpty after closeDialog.
+    - It seems closeDialog() is not used for main dialogs anymore. In old WebUI
+      versions, exitButton used to call `webui().serverCloseApplication();
+      dm().closeDialog("..."); webui().closeApplication(true);`. Nowadays it
+      only calls the other two.
+    - May call webui.clear(true), but because WebUI no longer calls closeDialog
+      for the last dialog, this no longer happens in practice. Except for native
+      dialogs which are IRRELEVANT. See clear() below.
 - closeAllDialogs()
     - Application.close_all_dialogs()
+    - Only called by webui.clear().
 - canKillApplication()
     - IRRELEVANT. Only used in beforeUnload().
 - disableAllDialogs() -> no-op
@@ -575,13 +589,34 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
   retrieveIdAndComponentTypeOnActiveDialog()
     - IRRELEVANT (seems to be unused in webui)
 - fillImageUrl() -> `'/ais/images/' + value + '.png'`
-- fileInputUpload(), messageBox(), confirmBox(), calendarBox(), fileUpload(),
-  fileXUpload(), editDoc(), abortBox(), onLoadAbortBox(), showNativeDialog(),
-  showNextNativeDialog(), onNativeDialogClosed(), onMessageBoxClose(),
-  onCalendarBoxClose(), onConfirmBoxClose(), closeAbortBox(),
-  onFileUploadSubmit(), onFileUploadCancel(), closeFileUpload(),
-  onFileXUploadClose(), onEditDocClose()
-    - TODO
+- fileInputUpload()
+    - UNSUPPORTED. Might need adding to known_operations, if it really is a
+      result frame operation.
+- panicMessageBox()
+    - IRRELEVANT. Seems to be only called within webui.js, not by result frame
+      scripts.
+- messageBox(), confirmBox(), calendarBox(), fileUpload(), fileXUpload(),
+  abortBox()
+    - Described below under WebUI. Result frame scripts always call them with
+      `webui().foo()`, at least for the operations we've seen so far.
+    - The implementation opens a GUI, which is IRRELEVANT.
+- onLoadAbortBox()
+    - Application.abort_box()
+- showNativeDialog(), showNextNativeDialog(), onNativeDialogClosed()
+    - IRRELEVANT
+- onMessageBoxClose()
+    - IRRELEVANT. messageBox does not send a request.
+- onCalendarBoxClose()
+    - UNSUPPORTED. calendarBox was not yet seen as a result frame operation with
+      sendRequest == true, only as DateControl with calendarEnabled. Should be
+      easy to implement if needed.
+- onConfirmBoxClose()
+    - Application.confirm_box()
+- closeAbortBox()
+    - IRRELEVANT
+- onFileUploadSubmit(), onFileUploadCancel(), closeFileUpload(),
+  onFileXUploadClose()
+    - UNSUPPORTED
 
 
 
@@ -622,15 +657,15 @@ COMPLETE
 
 
 
-# NativeDialog
+# NativeDialog, MessageBox, ConfirmBox, CalendarBox, AbortBox
 
-TODO
+IRRELEVANT
 
 
 
-# MessageBox, ConfirmBox, CalendarBox, FileUpload, FileXUpload, EditDoc, AbortBox
+#  FileUpload, FileXUpload
 
-TODO
+UNSUPPORTED
 
 
 
@@ -677,9 +712,12 @@ buttons and menu items.
 COMPLETE (removed)
 
 - getEventShortCut()
-    - Removed. Only used in findActionJSOForUseKeyDown().
+    - Removed. Only used in findActionJSOForUseKeyDown() and
+      findElementJSOForUseKeyDown().
 - findActionJSOForUseKeyDown()
     - UNSUPPORTED, because no known actions have a shortCut attribute.
+- findElementJSOForUseKeyDown()
+    - IRRELEVANT, see DialogBody.keydownTryAction().
 - initActionForElement()
     - IRRELEVANT, because ensureJSO() is IRRELEVANT.
 - getActionListForAction() -> `action.parent`
@@ -697,6 +735,7 @@ COMPLETE
 - setPopupMenu()
     - Webui version doesn't work, because it doesn't call the super method.
       (And they actually define the method twice.) Votr just uses superclass.
+- getShortCut() -> self.shortcut
 - getAccessKey(), setAccessKey() -> self.access_key
     - Webui doesn't use it directly, it's a standard HTML attribute.
 - getImage(), setImage() -> self.image
@@ -713,7 +752,7 @@ COMPLETE
 
 # FileInput
 
-TODO
+UNSUPPORTED
 
 
 
@@ -722,6 +761,9 @@ TODO
 COMPLETE
 
 - init() -> `__init__`
+- getCheckBoxElement()
+    - IRRELEVANT
+- getShortCut() -> self.shortcut
 - getTitle(), setTitle() is inherited
     - The overridden getTitle() is not needed in practice, the _title attribute
       (used by Component) contains the same text.
@@ -748,6 +790,7 @@ Added `self.text` which is the actual text content.
     - Removed. `self.title` should be handled as plaintext, and escaped when
       shown in a HTML document.
 - setTitle() is inherited
+- getShortCut() -> self.shortcut
 - getTitleLikeText(), setTitleLikeText() -> self.title_like_text
 - getFor(), setFor() -> self.for_
 
@@ -763,6 +806,7 @@ COMPLETE
   resizeChildren()
     - IRRELEVANT, because all functions that use it are IRRELEVANT.
 - getTabId() -> self.tab_id
+- getShortCut() -> self.shortcut
 - getMyTabbedPaneJSO(), setComponentStyle()
     - IRRELEVANT
 - getTitle(), setTitle() -> self.title (`_ais_setTitle()` is inherited)
@@ -1114,10 +1158,10 @@ COMPLETE
 COMPLETE
 
 - setHtml() -> self._ais_setHtml()
-- getBorderWidth(), initIframeWindow(), resizeComponent(), realizeEnability()
+- getBorderWidth(), initIframeWindow(), getDocument(), resizeComponent(),
+  realizeEnability()
     - IRRELEVANT
-- getSafeLinks()
-    - UNSUPPORTED
+- getSafeLinks() -> self.safe_links
 - initFromDataView() -> self._parse_content()
 - tryExecuteAction()
     - Equivalent to ActionableControl's version.
@@ -1187,6 +1231,7 @@ minimum needed to send requests and receive responses.
 - setText() -> self._ais_setText()
     - Votr assumes that AIS already produces mostly valid values, and doesn't
       try to reproduce webui's exact normalization logic and corner cases.
+- getUnit(), setUnit() -> self.unit
 - switchMode(), stopEdit(), removeSeparators1000(), fillDecimalByNulls(),
   toBdValue(), fillBdvalue(), getBDValueAsText(), setShowValue(),
   setEditValue(),  focus(), isPreparedToBlur(), getValueNotInRangeMessage(),
@@ -1273,7 +1318,7 @@ visible, so it's largely IRRELEVANT. The rest was moved directly to Table.
     - Inlined into select(), along with onDataTabActiveIndexChange().
 - scrollTopContentTo(), adjustScroll()
     - IRRELEVANT
-- onTableContainerScroll()
+- onTableContainerScroll(), loadBufferIfNeeded()
     - Inlined in scroll_down(), along with onScrollVerticaly() and
       loadDataOnScrollDown(). Commonly used from all_rows().
 - onVerticalScrollBarScroll(), onHorizontalScrollBarScroll(),
@@ -1382,6 +1427,7 @@ the various editor types are mostly ignored when possible.
     - IRRELEVANT? It seems there are no callers.
 - toXML()
     - Inlined in changed_properties().
+    - But implemented with real json.dumps() instead of string concatenation.
 - destroy()
     - IRRELEVANT
 
@@ -1417,7 +1463,8 @@ See Table for an overview. TableModel has been merged into Table.
 - reset()
     - IRRELEVANT (unused)
     - Equivalent to clearSelection(), see below.
-- onTableContainerSelectStart(), onTableContainerClick()
+- onTableContainerSelectStart(), onTableContainerMouseDown(),
+  onTableContainerClick()
     - IRRELEVANT
 - onTableContainerKeyDown()
     - Aisikl has different methods to produce the same effects.
@@ -1438,6 +1485,8 @@ See Table for an overview. TableModel has been merged into Table.
     - Reduces to TableService.onTableContainerScroll(), see above.
 - getVisibleBuffersAsString(), getLoadedBuffersAsString()
     - Inlined in changed_properties().
+- getVisibleBuffersAsIntArray(), getLoadedBuffersAsIntArray()
+    - IRRELEVANT in our simplified scrolling support. See the Table overview.
 - manageSelectionOnEvent()
     - Inlined in select().
 - activateElement()
@@ -1501,7 +1550,7 @@ See Table for an overview. TableModel has been merged into Table.
       editedBy to 'checkBox'. Instead, we set that value in self._load_cell().
     - origId support is TODO when we implement addRow() etc.
 - onCellEditorDeactivate(), onCellEditorKeyDown(), onTextFieldEditKeyDown(),
-  tryToAutoFocusNext(), onTextFieldButtonEditKeyDown()
+  tryToAutoFocusNext()
     - IRRELEVANT
 - onCellEditorClick()
     - See Table.onButtonNumCodeClick(). Otherwise IRRELEVANT.
@@ -1569,7 +1618,7 @@ TableSelectionModel. We don't see any good reason for this, and so, Votr only
 stores everything once, directly in Table.
 
 - init() -> `__init__`
-- ensureIframe()
+- ensureIframe(), getDocument()
     - IRRELEVANT
 - initFromDataView() -> self._init_from_data_view()
     - Creating the iframe content is IRRELEVANT, but we still need to parse the
@@ -1676,8 +1725,9 @@ stores everything once, directly in Table.
 - sort() -> self.sort() [TODO?]
 - switchSingleMultipleSelection() ->
   `self.dialog.try_interactive(self, "switchMultiple")`
-- onScrollVerticaly() ->
-  `self.scrolled_vertically = True; self.dialog.component_changes(self, True)`
+- onScrollVerticaly()
+    - Inlined in scroll_down() as `self.scrolled_vertically = True;
+      self.dialog.component_changes(self, True)`
     - Note the missing ell in WebUI.
 - loadDataOnScrollUp()
     - IRRELEVANT, see Table overview.
@@ -1939,6 +1989,8 @@ PARTIAL
 Mostly covered by Application. No longer global.
 
 - appId -> app.app_id
+- sessionId
+    - IRRELEVANT (seems to be unused in webui)
 - appContext -> "ais"
 - webuiContext -> "ais/webui2"
 - getSlashContext() -> "/ais"
@@ -1955,9 +2007,9 @@ Mostly covered by Application. No longer global.
 - windowFrameAccessible, isWindowFrameAccessible() -> True
     - UNSUPPORTED until we actually see it in use.
 - getWindowFrame() -> None
-    - Because isWindowInFrame() is False.
+    - Because isWindowInFrame() is False (UNSUPPORTED).
 - refreshAppEnabled -> False
-    - Because windowInFrame is False.
+    - Because windowInFrame is False (UNSUPPORTED).
 - timeDifference
     - IRRELEVANT
 - noteLastDoneRequest(), lastDoneRequest
@@ -1974,37 +2026,50 @@ Mostly covered by Application. No longer global.
 - wasWindowClose
     - IRRELEVANT. Only used to ensure window.close() is only called once.
 - wasClosedOnServer, serverCloseApplication()
-    - See clear() below. The serverCloseApplication() operation usually requires
-      no reaction, and is handled in Application.awaited_close_application().
+    - Seen in result frame scripts on access denied or exitButton click.
+    - serverCloseApplication() only sets wasClosedOnServer to true, which only
+      tells clear() not to send WebUIKillEvent. See clear() below.
+    - The Votr translation is that once you receive serverCloseApplication, you
+      should not call force_close(). You still can, but the server ignores it.
 - closeApplication()
+    - Seen in result frame scripts on access denied or exitButton click.
+      Also called by beforeUnload() and unload().
     - Equivalent to clear(true) followed by window.close().
     - The withBrowser argument is only used if NativeDialog_getOpenedDialog(),
       and even then, it only delays closeApplication() until the dialog closes.
 - beforeUnload(), unload()
-    - IRRELEVANT
+    - Application.force_close()
+    - Tries to call closeApplication(), which calls clear(true), which sends a
+      WebUIKillEvent request. It doesn't actually work in current Chrome -- the
+      POST request is cancelled. But it's useful for Votr, because it can close
+      an application regardless of its current state or the open dialogs.
 - clear()
-    - The main method for closing the application. WebUI calls in
-      closeApplication() (an operation used in result frame scripts), in
-      onAppClosedOnServer(), and after closing the last dialog.
-    - If wasClosedOnServer is false (i.e. serverCloseApplication() was not
-      called) and the withRequest argument is true, clear() sends
-      a WebUIKillEvent and ignores the response. In Votr, this is done with
-      Application.force_close().
-    - Afterwards, clear() sets various things to null (probably trying to avoid
-      memory leaks in old IE) and closes the window. Votr doesn't need that.
-      The program can access the Application object even after it's closed, but
-      sending any requests would cause an AISApplicationClosedError.
-    - Usually, pressing the close or exit button in the last dialog results in
-      serverCloseApplication(), closeDialog(), and closeApplication(). That
-      means clear() just closes the window without sending any requests. In
-      Votr, this is handled by Application.awaited_close_application().
-    - Normally, WebUIKillEvent is never sent. It would only be sent e.g. if the
-      server called closeDialog() but not serverCloseApplication(). But the
-      event is useful for Votr, because it can close an application regardless
-      of its current state or the open dialogs.
+    - The main method for closing the application.
+    - Called:
+        - Primarily by closeApplication().
+        - Technically also by DialogManager after closing the last dialog, but
+          in practice the main dialog's exitButton does not call closeDialog.
+          This code path is only used for e.g. the access denied message box.
+        - Technically also by onAppClosedOnServer() if refreshAppEnabled is
+          true, which needs windowInFrame, which was never seen (UNSUPPORTED).
+          Hence the withRequest argument is effectively always true.
+    - Does:
+        - If wasClosedOnServer is false (i.e. serverCloseApplication() was not
+          called) and the withRequest argument is true, sends a WebUIKillEvent
+          and ignores the response. This is very rare in practice, because
+          result frame scripts usually call serverCloseApplication() before
+          closeApplication(), and unload() doesn't work as intended.
+        - Calls dialogManager.closeAllDialogs(), destroying most of the DOM.
+        - Sets various globals to null (probably trying to avoid memory leaks in
+          old IE) and closes the window.
+    - The Votr equivalent is Application.force_close() if a WebUIKillEvent
+      should be sent, or Application.close_all_dialogs() if not. The Application
+      object technically remains usable, but sending any requests will raise an
+      AISApplicationClosedError.
 - onAppClosedOnServer()
-    - Shows an alert and calls clear(false), which basically closes the window
-      without sending any requests.
+    - Assuming refreshAppEnabled is false (as windowInFrame is UNSUPPORTED),
+      calls killApplication() with a message, which shows the message and
+      disables interaction, but does not actually close the browser window.
     - In Votr, this is handled in parse_response() by raising
       AISApplicationClosedError. No other cleanup (closing dialog etc) is done.
 - setReturnValue()
@@ -2022,13 +2087,15 @@ Mostly covered by Application. No longer global.
 - updateStartTime, previousResponseProcessingTime
     - UNSUPPORTED
 - sendFileUploadSubmit()
-    - TODO
+    - UNSUPPORTED
 - onSomeDialogBodyInitialized()
     - IRRELEVANT, because everything is synchronous, so requests never have to
       wait until some dialog is loaded.
 - sendWhatsUp(), whatsUpGetLastOutput(), whatsUpGetLastRequest(),
   startWhatsUpTimer(), setIdleEventInterval(), getPingOrIdleInterval()
     - TODO
+- requestInDisabledApp, getRequestInDisabledApp()
+    - Probably IRRELEVANT.
 - sendEmptyRequest() -> app.send_empty_request()
 - currentTimeMillis() -> time.time()
     - Used only in `antiCache`, so nobody cares whether it's a float.
@@ -2062,16 +2129,43 @@ Mostly covered by Application. No longer global.
     - IRRELEVANT (unused in webui)
 - hasRefreshImportantChanges() -> True
     - See onComponentChanges() above. Only used in clear().
-- messageBox(), confirmBox(), fileUpload(), fileXUpload(), editDoc(),
-  abortBox(), shellExec(), showHelp(), startApp()
+- messageBox()
+    - Listed in known_operations. Args: [message, title, image, detail]
+    - No response needed.
+- confirmBox()
+    - Listed in known_operations. Args: [message, title, image, buttons, check,
+      checkBoxLabel, detail, defaultButton]
+    - Votr code should respond with Application.confirm_box() or
+      Application.awaited_confirm_box().
+- calendarBox(), fileUpload(), fileXUpload()
+    - Listed in known_operations, but never seen. UNSUPPORTED.
+- abortBox()
     - Listed in known_operations.
-    - Specific support (especially sending proper responses) is TODO.
+    - Votr code should respond with Application.abort_box() or
+      Application.awaited_abort_box().
 - abort()
     - IRRELEVANT. Votr is synchronous, so a request can't be aborted.
 - sendSuggestionsRequest(), sendSuggestionsRequest_()
     - Suggestions are UNSUPPORTED
+- execCustom(), downloadFile()
+    - UNSUPPORTED. Only called by shellExec().
+- getCookie()
+    - UNSUPPORTED. Probably only called by editDoc().
+- editDoc()
+    - Listed in known_operations, but never seen. UNSUPPORTED.
 - setShellExecResult(), initCustomFrame(), setCustomFrameWindow()
     - UNSUPPORTED
+- shellExec()
+    - Listed in known_operations.
+    - Votr code can download files with Application.shell_exec() or
+      Application.awaited_shell_exec().
+    - "webui/execCustomFunction" is UNSUPPORTED.
+- showHelp()
+    - Listed in known_operations, but never seen. UNSUPPORTED.
+- startApp()
+    - Listed in known_operations.
+    - Votr code should respond with Application.start_app() or
+      Application.awaited_start_app().
 - dblClick(), keyDown(), updateAppSizeProperties(), workspaceResize(),
   setUpdateInterval(), getScrollBarWidth(), setWidth(), setHeight(),
   resizeBrowserByApp(), cancelEvent(), getSrcElement()
@@ -2085,7 +2179,9 @@ Mostly covered by Application. No longer global.
 - WebUI_init
     - Parsed in Application._open()
 - killApplication()
-    - IRRELEVANT. Calls window.close().
-    - Also called from the portal window just before logout.
-
-
+    - With a string argument: Called by onAppClosedOnServer() and RequestManager
+      on network errors. Calls panicMessageBox() and showDisableDialogsGlass()
+      which prevents further interaction. Surprisingly, it does not actually
+      close the browser window.
+    - Without arguments: Called by portal_2.js before logout. Calls
+      window.close(). IRRELEVANT.

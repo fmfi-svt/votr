@@ -50,8 +50,8 @@ Update = namedtuple('Update', ('dialog', 'target', 'method', 'args'))
 #: The known :class:`Operation` methods.
 known_operations = {
     'webui': { 'serverCloseApplication', 'closeApplication', 'messageBox',
-               'confirmBox', 'fileUpload', 'fileXUpload', 'editDoc',
-               'abortBox', 'shellExec', 'showHelp', 'startApp' },
+               'confirmBox', 'calendarBox', 'fileUpload', 'fileXUpload',
+               'abortBox', 'editDoc', 'shellExec', 'showHelp', 'startApp' },
     'dm': { 'openMainDialog', 'openDialog', 'closeDialog', 'refreshDialog' },
 }
 
@@ -652,6 +652,11 @@ class Application:
             self.active_dialog = self.d = (
                 modals or self.dialog_stack or [None])[-1]
 
+        # Just for completeness. In practice, WebUI has not been observed to
+        # call closeDialog on the last dialog.
+        if not self.dialog_stack:
+            self.force_close()
+
     def close_all_dialogs(self):
         '''Closes all dialogs after they have been closed on the server.'''
         if self.dialog_stack:
@@ -793,14 +798,17 @@ class Application:
         '''Combines :func:`assert_ops` and :meth:`close_all_dialogs` in one
         step.
 
-        If ``ops`` contains the serverCloseApplication, closeDialog and
-        closeApplication operations (which is common when pressing exit buttons
-        and such), closes all dialogs and does not send any other requests (the
-        server already considers the application closed). Throws otherwise.
+        Intended for ``exitButton``, because clicking it usually produces the
+        operations [serverCloseApplication, closeApplication]. If ``ops`` really
+        contains them, closes all dialogs and does not send any other requests
+        (the server already considers the application closed). Throws otherwise.
+
+        Currently dead code, because it is usually easier to call
+        ``app.force_close()`` instead of ``app.d.exitButton.click()`` etc.
         '''
-        assert_ops(ops,
-                   'serverCloseApplication', 'closeDialog', 'closeApplication')
+        assert_ops(ops, 'serverCloseApplication', 'closeApplication')
         self.close_all_dialogs()
+
 
 def check_connection(context):
     # We used to request /ais/portal/changeTab.do?tab=0, but it switches the

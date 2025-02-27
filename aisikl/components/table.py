@@ -365,10 +365,10 @@ class Table(Control):
             # TODO: AIS doesn't do it, but we should probably unset active_index_changed too
 
         if self.headers_changed:
-            cdata.append("<columns>")
-            for column in self.columns:
-                cdata.append("<column shortname='{}' width='{}'></column>".format(column.alias, column.width))
-            cdata.append("</columns>")
+            json_columns = json.dumps(
+                [{ "id": column.alias, "width": column.width }
+                 for column in self.columns])
+            cdata.append(f"<JSONcolumns>{json_columns}</JSONcolumns>")
             self.headers_changed = False
 
         if self.scrolled_vertically:

@@ -5,6 +5,7 @@ from .control import Control
 class Label(Control):
     def __init__(self, dialog, id, type, parent_id, properties, element):
         super().__init__(dialog, id, type, parent_id, properties, element)
+        self.shortcut = properties.get('sc')
         self.title_like_text = element.get('titleliketext')
         self.for_ = element.get('for')
         self.text = element.get_text()

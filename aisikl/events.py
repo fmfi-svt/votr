@@ -99,7 +99,8 @@ def action_event(source, command=None, original_source_name=None,
     return Event(source, EVENT_CANCEL if cancel else EVENT_ACTION,
         _tag("origSrcName", original_source_name, True) +
         "<event class='avc.ui.event.AVCActionEvent'>" +
-        _tag("command", command, True) + _tag("params", params, True) +
+        _tag("command", command, True) +
+        (f"<params><![CDATA[{params}]]></params>" if params else "") +
         "</event>")
 
 def selection_event(source, index=-1, selected=True):

@@ -14,9 +14,9 @@ class UpDown(Control):
             raise ValueError('wrong UpDown command')
         self.log('action', 'Clicking {} {}'.format(self.id, command.lower()))
         udc = self.dialog.components.get(self.up_downed_component)
-        if udc and udc.up_down_row:
+        if udc:
             udc.up_down_row(command)
-        if not udc:
+        else:
             ev = action_event(self, command, self.id)
             self.dialog.app.send_events(ev)
 

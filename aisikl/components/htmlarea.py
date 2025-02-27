@@ -5,6 +5,7 @@ from .actionablecontrol import ActionableControl
 class HtmlArea(ActionableControl):
     def __init__(self, dialog, id, type, parent_id, properties, element):
         super().__init__(dialog, id, type, parent_id, properties, element)
+        self.safe_links = properties.get('safeLinks', False)
         self._parse_content(element)
         # Note: This is where we should call component_changes() if we actually
         # supported canClose.

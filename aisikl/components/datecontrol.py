@@ -5,11 +5,11 @@ from .textinput import TextInput
 class DateControl(TextInput):
     def __init__(self, dialog, id, type, parent_id, properties, element):
         super().__init__(dialog, id, type, parent_id, properties, element)
-        self.min_value = element.get('minvalue')
-        self.max_value = element.get('maxvalue')
-        self.substitute_char = element.get('substitutechar', '_')
-        self.substitute_mask = element.get('substitutemask', '__.__.____')
-        self.mask = element.get('mask', 'dd.MM.yyyy')
+        self.min_value = properties.get('minValue')
+        self.max_value = properties.get('maxValue')
+        self.substitute_char = properties.get('substituteChar', '_')
+        self.substitute_mask = properties.get('substituteMask', '__.__.____')
+        self.mask = properties.get('mask', 'dd.MM.yyyy')
         self.calendar_enabled = properties.get('calendarEnabled', False)
         val = element.get('value', '')
         self.value = '' if val == self.substitute_mask else val

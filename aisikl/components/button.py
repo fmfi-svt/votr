@@ -7,6 +7,7 @@ class Button(ActionableControl):
     def __init__(self, dialog, id, type, parent_id, properties, element):
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.image = properties.get('img')
+        self.shortcut = properties.get('sc')
         self.confirm_question = element.get('confirmquestion')
         self.access_key = element.get('accesskey')
         if isinstance(self.access_key, list):

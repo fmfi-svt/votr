@@ -9,6 +9,7 @@ class Panel(Control):
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.tab_id = element.get('tabid')
         self.title = element.get('name')
+        self.shortcut = properties.get('sctp')
         self.autoscrolls = properties.get('autoscrolls', False)
         self.collapsable = properties.get('collapsable', False)
         self.collapsed = properties.get('collapsed', False)
