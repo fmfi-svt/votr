@@ -140,6 +140,7 @@ export default tseslint.config(
       ],
 
       // TODO: Maybe enable later.
+      "@eslint-react/no-use-context": "off",
       "@typescript-eslint/no-deprecated": "off",
       "@typescript-eslint/prefer-regexp-exec": "off",
 
