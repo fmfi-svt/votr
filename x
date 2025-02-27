@@ -122,6 +122,12 @@ upgrade)
   "$0" upgrade-js
   ;;
 
+pdoc)
+  shift
+  add_uv_path
+  exec uv run --with pdoc pdoc -d google -t pdoc_templates aisikl fladgejt votrfront "$@"
+  ;;
+
 install)
   # Detect which options were used last time, if any.
   olduv=system

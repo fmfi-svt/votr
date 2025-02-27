@@ -1,0 +1,8 @@
+{% extends "default/module.html.jinja2" %}
+{% macro is_public(doc) %}
+    {% if doc.name in ["__annotations__", "__dict__", "__doc__", "__module__", "__weakref__"] %}
+    {% elif doc.name.startswith("_") and not doc.docstring and doc.obj is not callable %}
+    {% else %}
+        true
+    {% endif %}
+{% endmacro %}
