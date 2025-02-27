@@ -1,6 +1,6 @@
 
 from base64 import b64decode, b64encode
-from datetime import datetime
+from datetime import datetime, UTC
 import hashlib
 import os
 import traceback
@@ -219,7 +219,7 @@ def finish_login(request, get_params):
     server = None
     destination = None
 
-    sessid = datetime.utcnow().strftime('%Y%m%d_') + generate_key()
+    sessid = datetime.now(UTC).strftime('%Y%m%d_') + generate_key()
     with sessions.lock(request.app, sessid), \
             sessions.open_log_file(request, sessid) as log_file:
         logger = Logger()

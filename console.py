@@ -25,5 +25,4 @@ if __name__ == '__main__':
     import sys
     sys.exit(application.run_command(sys.argv[1:]))
 
-# force a SyntaxError when using Python 2 by mistake
-if False: print("you must use Python 3 to run this", end='')
+f'{''}'  # Python >= 3.12 is required

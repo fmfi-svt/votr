@@ -1,5 +1,5 @@
 
-import datetime
+from datetime import datetime, UTC
 import gzip
 import json
 import lzma
@@ -79,7 +79,7 @@ def cron(app):
 
     prefixes = set(path.name[0:6] for path in (app.var / 'oldlogs').glob('*.xz'))
 
-    prefixes.discard(datetime.datetime.utcfromtimestamp(now).strftime('%Y%m'))
+    prefixes.discard(datetime.fromtimestamp(now, UTC).strftime('%Y%m'))
 
     for path in (app.var / 'logs').iterdir():
         prefixes.discard(path.name[0:6])

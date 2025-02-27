@@ -40,7 +40,7 @@ class Context:
                     _DnsOverrideAdapter(old_hostname, new_hostname))
 
     def request_ais(self, url, *, method='GET', **kwargs):
-        '''Sends a request to AIS and returns the :class:`requests.Response`.
+        r'''Sends a request to AIS and returns the :class:`requests.Response`.
 
         :param url: the URL, either absolute or relative to the AIS server.
         :param method: HTTP method for the request.
@@ -61,7 +61,7 @@ class Context:
         return response
 
     def request_html(self, url, *, method='GET', **kwargs):
-        '''Sends a request to AIS and parses the response as HTML.
+        r'''Sends a request to AIS and parses the response as HTML.
 
         :param url: the URL, either absolute or relative to the AIS server.
         :param method: HTTP method for the request.
@@ -77,7 +77,7 @@ class Context:
         return soup
 
     def request_json(self, url, **data):
-        '''Sends a request to REST API and parses the response as JSON.
+        r'''Sends a request to REST API and parses the response as JSON.
 
         :param url: the URL, either absolute or relative to the AIS server.
         :param method: HTTP method for the request.

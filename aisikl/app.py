@@ -112,7 +112,7 @@ def _parse_args(args_str):
 
 
 def parse_response(soup):
-    '''Parses the resultFrame content (the response to a POST request).
+    r'''Parses the resultFrame content (the response to a POST request).
 
     Args:
         soup: The HTML structure.
@@ -214,7 +214,7 @@ def parse_response(soup):
 
 
 def assert_ops(operations, *expected_methods):
-    '''Ensures the list of collected operations contains the methods we expect.
+    r'''Ensures the list of collected operations contains the methods we expect.
 
     This is a helper method you can use after calling
     :meth:`~Application.collect_operations`. It just looks at each operation's
@@ -236,7 +236,7 @@ def assert_ops(operations, *expected_methods):
 
 
 class Application:
-    '''An opened AIS application. (That is, a "browser window".)
+    r'''An opened AIS application. (That is, a "browser window".)
 
     Instances cannot be created directly. Use :meth:`open` if you know the full
     URL (e.g. from the :mod:`~aisikl.portal`), or :meth:`start_app` when
@@ -368,7 +368,7 @@ class Application:
 
     @contextmanager
     def collect_operations(self):
-        '''Collects :class:`Operation`\ s done by AIS.
+        r'''Collects :class:`Operation`\ s done by AIS.
 
         Calling this function means that you are expecting an Operation to
         happen and are prepared to handle it. Operations happens during this
@@ -487,7 +487,7 @@ class Application:
         self.ctx.log('benchmark', 'End response frame processing')
 
     def send_events(self, *events):
-        '''Sends the given events to AIS, if AIS is listening to them.
+        r'''Sends the given events to AIS, if AIS is listening to them.
 
         :param \*events: the events to send.
         '''

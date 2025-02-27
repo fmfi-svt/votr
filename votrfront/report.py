@@ -1,7 +1,7 @@
 
 import json
 import time
-from datetime import datetime
+from datetime import datetime, UTC
 from werkzeug.routing import Rule
 from werkzeug.wrappers import Response
 from werkzeug.exceptions import BadRequest
@@ -23,7 +23,7 @@ def report(request):
         'time': int(time.time()),
     }
 
-    filename = datetime.utcnow().strftime('%Y%m')
+    filename = datetime.now(UTC).strftime('%Y%m')
     with open(request.app.var / 'reportlogs' / filename, 'at') as f:
         f.write(json.dumps(payload, sort_keys=True) + '\n')
     return Response('OK', content_type='text/plain')

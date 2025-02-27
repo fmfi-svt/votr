@@ -14,7 +14,7 @@ class CantOpenApplication(Exception):
 
 
 def find_row(objects, **conditions):
-    '''Searches the list of objects for one that matches all given conditions.
+    r'''Searches the list of objects for one that matches all given conditions.
 
     ``obj['foo'] == bar`` must be true for all ``foo=bar`` keyword arguments
     for ``obj`` to match. The index of the first matching object is returned.
@@ -43,7 +43,7 @@ def find_row_insensitive(objects, **conditions):
 
 
 def find_option(objects, **conditions):
-    '''Searches the list of objects for one that matches all given conditions.
+    r'''Searches the list of objects for one that matches all given conditions.
 
     ``obj.foo == bar`` must be true for all ``foo=bar`` keyword arguments for
     ``obj`` to match. The index of the first matching object is returned. This

@@ -2,7 +2,7 @@
 name = "votr"
 version = "0.0.0"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4>=0",
     "lxml>=0",
