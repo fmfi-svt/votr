@@ -131,6 +131,8 @@ class Tree(Control):
         return self._build_changed_properties(dataView=(True, True, ''.join(cdata)))
 
     def double_click(self):
+        self.log('action', f'Double-clicking {self.id}')
+
         if self.action_name:
             action = self.dialog.components[self.action_name]
             if action:
@@ -149,6 +151,12 @@ class Tree(Control):
             ids = [ids]
         else:
             ids = sorted(set(ids))
+
+        self.log('action',
+            'Selecting ' +
+            (f'node {ids[0]!r} ' if len(ids) == 1 else f'nodes {ids!r} ') +
+            (f'with active id {active_id!r} ' if active_id else '') +
+            f'in {self.id}')
 
         if not ids:
             raise ValueError('empty tree selection is not supported')
@@ -173,6 +181,10 @@ class Tree(Control):
             raise ValueError("this node cannot expand")
         node.expanded = not node.expanded
 
+        self.log('action',
+            ('Expanding ' if node.expanded else 'Collapsing ') +
+            f'node {id!r} in {self.id}')
+
         path = id[1:]
         if self.expansion_synchronizer.get(path) == (not node.expanded):
             del self.expansion_synchronizer[path]
@@ -196,6 +208,10 @@ class Tree(Control):
         if node.checked is None:
             raise ValueError("this node does not have a checkbox")
         node.checked = not node.checked
+
+        self.log('action',
+            ('Checking ' if node.checked else 'Unchecking ') +
+            f'node {id!r} in {self.id}')
 
         path = id[1:]
         if self.checked_synchronizer.get(path) == (not node.checked):
