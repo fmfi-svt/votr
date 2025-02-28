@@ -1,5 +1,6 @@
 
 import json
+from .component import is_true
 from .control import Control
 from .table import load_script_plain, load_script
 from aisikl.events import (action_event, tree_expansion_event,

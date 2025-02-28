@@ -274,7 +274,7 @@ class Table(Control):
         self.dialog.component_changes(self, False)
         if 'EDITED_ROW|' in self.supported_events:
             self.used_listeners_mask |= 64
-            ev = row_edited_event(self, 'EDITED_ROW', changed_index)
+            ev = row_edited_event(self, 'EDITED_ROW', index)
             self.dialog.app.send_events(ev)
 
     def sort(self, column_alias, modifiers):

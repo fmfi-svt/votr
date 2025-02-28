@@ -1,4 +1,5 @@
 
+from .component import is_true
 from .textinput import TextInput
 
 

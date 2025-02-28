@@ -89,7 +89,7 @@ def row_edited_event(source, command, row_index):
     source.dialog.try_interactive(source, 'RowEditedEvent')
     return Event(source, EVENT_ACTION,
         "<event class='avc.ui.event.AVCRowEditedEvent'>" +
-        _tag("command", command, True) + _tag("rowIndex", str(rowIndex)) +
+        _tag("command", command, True) + _tag("rowIndex", str(row_index)) +
         "</event>")
 
 def action_event(source, command=None, original_source_name=None,
@@ -147,8 +147,8 @@ def table_header_event(
     source.dialog.try_interactive(source, 'TableHeaderEvent')
     return Event(source, EVENT_HEADER,
         "<event class='avc.ui.table.AVCTableHeaderEvent'>" +
-        _tag("type", type) + _tag("columnAlias", columnAlias) +
-        _tag("afterColumnAlias", afterColumnAlias, True) +
+        _tag("type", type) + _tag("columnAlias", column_alias) +
+        _tag("afterColumnAlias", after_column_alias, True) +
         _tag("modifiers", modifiers, True) +
         "</event>")
 

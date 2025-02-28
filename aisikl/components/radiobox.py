@@ -33,7 +33,7 @@ class RadioBox(Control):
                 self.selected_index = index
 
     @property
-    def selected_option():
+    def selected_option(self):
         if self.selected_index == -1: return None
         return self.options[self.selected_index]
 
@@ -54,7 +54,7 @@ class RadioBox(Control):
         index = '' if self.selected_index == -1 else self.selected_index
         cdata = ('<root><selection>'
             '<selectedIndexes>{}</selectedIndexes>'
-            '</selection></root>').format(self.selected_index)
+            '</selection></root>').format(index)
         return self._build_changed_properties(dataView=(True, True, cdata))
 
     def _ais_setDataView(self, id, body):
