@@ -191,7 +191,6 @@ try:
 except NameError:
     pass
 else:
-    from urllib.parse import quote
     from markupsafe import Markup
     from IPython.display import display, HTML
 

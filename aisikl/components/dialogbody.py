@@ -1,5 +1,4 @@
 
-from aisikl.exceptions import AISParseError
 from .component import Component
 
 

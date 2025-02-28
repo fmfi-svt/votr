@@ -15,7 +15,6 @@ It's the same idea as `werkzeug.middleware.proxy_fix.ProxyFix`, but using a
 custom list of headers.
 """
 
-import base64
 import traceback
 from werkzeug.exceptions import InternalServerError
 

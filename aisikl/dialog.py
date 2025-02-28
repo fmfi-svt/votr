@@ -1,7 +1,7 @@
 
 import json
 import re
-from .exceptions import AISParseError, AISBehaviorError
+from .exceptions import AISParseError
 from .components import component_classes
 from aisikl.events import component_event
 
