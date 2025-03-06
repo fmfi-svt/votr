@@ -115,13 +115,11 @@ def set_tags(app, sessid, lineno, tags_to_add, tags_to_remove):
     c.execute('SELECT tags FROM lines WHERE sessid = ? AND lineno = ?',
         (sessid, lineno))
     old_tags = c.fetchone()[0]
-    tags = old_tags.split()
+    tags = { t: True for t in old_tags.split() }
     for tag in tags_to_remove:
-        if tag in tags:
-            tags.remove(tag)
+        tags.pop(tag, None)
     for tag in tags_to_add:
-        if tag not in tags:
-            tags.append(tag)
+        tags[tag] = True
     c.execute('UPDATE lines SET tags = ? WHERE sessid = ? AND lineno = ? AND tags = ?',
         (' '.join(tags), sessid, lineno, old_tags))
 
@@ -189,9 +187,11 @@ def wrap_pager():
 
 
 def cli_tag(app, *args):
-    targets = set()
-    tags_to_add = set()
-    tags_to_remove = set()
+    # Use dict instead of set as it has consistent insertion iteration order in
+    # Python 3.7+, unlike set. (https://stackoverflow.com/q/3848091)
+    targets = {}
+    tags_to_add = {}
+    tags_to_remove = {}
 
     for arg in args:
         if arg.startswith('--'):
@@ -204,9 +204,10 @@ def cli_tag(app, *args):
                 raise ValueError("Empty tag: %r" % arg)
             if ' ' in name:
                 raise ValueError("Space in tag name: %r" % arg)
-            (tags_to_add if arg.startswith('+') else tags_to_remove).add(name)
+            tags_to = tags_to_add if arg.startswith('+') else tags_to_remove
+            tags_to[name] = True
         else:
-            targets.add(arg)
+            targets[arg] = True
 
     for target in targets:
         sessid, _, lineno = target.partition(':')
@@ -243,7 +244,7 @@ def cli_view(app, *args):
                 separator = "~" * 80
                 typestr = "<"+type+">"
                 when = '[%4d-%02d-%02d %02d:%02d:%02d = %.7f]' % (
-                    tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, timestamp)                
+                    tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, timestamp)
                 if color:
                     print("\033[1;31m%s\033[0m" % separator, file=out)
                     print("\033[33m%s\033[0m \033[32m%s\033[0m \033[1;36m%s\033[0m" % (when, typestr, message), file=out)

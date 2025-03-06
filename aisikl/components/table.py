@@ -380,7 +380,7 @@ class Table(Control):
 
         if self.edited_cells:
             cdata.append("<editedCells>")
-            for alias, row_index in self.changed_cells:
+            for alias, row_index in sorted(self.changed_cells):
                 column = self.column_map[alias]
                 cell = self.loaded_rows[row_index].cells[column.index]
                 edited_by = cell.edited_by or column.edited_by

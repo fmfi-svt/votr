@@ -133,13 +133,18 @@ class Dialog:
         # (is_minor decides whether to set elementsChanged or not.)
 
         if self.changed_components is None:
-            # Note that there's a difference between None and an empty set().
-            # set() means the dialog itself has changed, while None means there
-            # has been no change at all.
-            self.changed_components = set()
+            # Use dict instead of set as it has consistent iteration order in
+            # Python 3.7+, unlike set. (https://stackoverflow.com/q/3848091)
+            # The server seems to accept any order, but being deterministic is
+            # occasionally handy when inspecting or comparing log files.
+            #
+            # In theory changed_components == {} means only the dialog itself
+            # has changed, and None means no change at all. But Votr ignores
+            # Dialog properties, and never calls component_changes(None, ...).
+            self.changed_components = {}
 
         if component:
-            self.changed_components.add(component.id)
+            self.changed_components[component.id] = True
             self.try_interactive(component, 'change')
 
     def click_close_button(self):
@@ -151,4 +156,3 @@ class Dialog:
             'Pressing close button of {}'.format(self.name))
         ev = component_event(self.body, 'close', 'CLOSE')
         self.app.send_events(ev)
-

@@ -200,7 +200,7 @@ def _send_request_chain(ctx, params, url, data):
                     for k in data:
                         if k.startswith('shib_idp_ls_success.'):
                             data[k] = 'true'
-                    ctx.log('login', 'Detected a local storage page', data)
+                    ctx.log('login', 'Detected a local storage page')
                     continue
 
                 # Handle Shibboleth IdP's password based login form.

@@ -85,7 +85,7 @@ def cron(app):
         prefixes.discard(path.name[0:6])
     for path in (app.var / 'sessions').iterdir():
         prefixes.discard(path.name[0:6])
-    for prefix in prefixes:
+    for prefix in sorted(prefixes):
         create_archive(app, prefix)
 
 cron.help = '  $0 cron'
