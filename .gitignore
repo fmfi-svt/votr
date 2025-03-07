@@ -3,6 +3,8 @@
 *.pyc
 *.tmp*
 *env*/
+.coverage*
+htmlcov
 docs/_build
 gunicorn.conf.py
 local_settings.py

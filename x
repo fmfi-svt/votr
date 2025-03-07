@@ -43,6 +43,12 @@ help2='
 
   ./x pnpm [ARGS]
     Runs a pnpm command. Implemented as "./x uv run corepack pnpm ...".
+
+  ./x coverage [COVERAGE-COMMAND] [ARGS]
+    Runs Coverage.py.
+
+  ./x coverage-serve [SERVE-OPTIONS]
+    Runs serve with Coverage.py.
 '
 
 normal=$'\e[0m'
@@ -120,6 +126,22 @@ upgrade-js)
 upgrade)
   "$0" upgrade-py
   "$0" upgrade-js
+  ;;
+
+coverage)
+  shift
+  add_uv_path
+  exec uv run --with coverage coverage "$@"
+  ;;
+
+coverage-serve)
+  shift
+  add_uv_path
+  # https://coverage.readthedocs.io/en/latest/subprocess.html
+  # https://github.com/dougn/coverage_pth/pull/7
+  # ".coveragerc" is a special value, it reads "pyproject.toml" too.
+  export COVERAGE_PROCESS_START=.coveragerc
+  exec uv run --with coverage,git+https://github.com/TomiBelan/coverage_pth "$base_dir/console.py" serve "$@"
   ;;
 
 install)

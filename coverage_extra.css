@@ -1,0 +1,7 @@
+/* green background for covered lines in Coverage.py HTML report */
+#source p.run .t {
+  background: #efe;
+}
+#source p.run .t:hover {
+  background: #e2f2e2;
+}
