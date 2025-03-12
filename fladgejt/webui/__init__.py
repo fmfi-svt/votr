@@ -1,5 +1,6 @@
 
 from aisikl.app import check_connection
+from fladgejt.base import BaseClient
 from .commonui import WebuiCommonUIMixin
 from .hodnotenia import WebuiHodnoteniaMixin
 from .obdobia import WebuiObdobiaMixin
@@ -12,12 +13,14 @@ from .zapis import WebuiZapisMixin
 
 class WebuiClient(WebuiCommonUIMixin, WebuiHodnoteniaMixin, WebuiObdobiaMixin,
                   WebuiOsobyMixin, WebuiPredmetyMixin, WebuiStudiumMixin,
-                  WebuiTerminyMixin, WebuiZapisMixin):
-    def __init__(self, context):
-        self.context = context
+                  WebuiTerminyMixin, WebuiZapisMixin, BaseClient):
+    def __init__(self, context, *, logout_mode=None):
+        super().__init__(context)
+        self.logout_mode = logout_mode or self.LOGOUT_NOTHING
 
     def check_connection(self):
         check_connection(self.context)
+        super().check_connection()
 
     def logout(self):
         if self.logout_mode == self.LOGOUT_WITH_REDIRECTS:
@@ -30,11 +33,8 @@ class WebuiClient(WebuiCommonUIMixin, WebuiHodnoteniaMixin, WebuiObdobiaMixin,
             self.context.log('logout', 'Skipped logout.do')
         else:
             raise Exception("unknown logout_mode")
+        super().logout()
 
     LOGOUT_WITH_REDIRECTS = "LOGOUT_WITH_REDIRECTS"
     LOGOUT_WITHOUT_REDIRECTS = "LOGOUT_WITHOUT_REDIRECTS"
     LOGOUT_NOTHING = "LOGOUT_NOTHING"
-
-    logout_mode = LOGOUT_NOTHING
-
-    fake_time_msec = None

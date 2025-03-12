@@ -3,6 +3,7 @@ import json
 import os
 import sys
 import time
+from fladgejt.base import BaseClient
 
 _STATEFUL = {
     "prihlas_na_termin",
@@ -67,8 +68,9 @@ class TimeParadoxError(Exception):
 class ReplayedError(Exception):
     pass
 
-class FlashbackClient:
+class FlashbackClient(BaseClient):
     def __init__(self, context, flashbacks_dir, file):
+        super().__init__(context)
         if not os.path.exists(flashbacks_dir):
             raise Exception("Flashbacks are unavailable: %r does not exist" % flashbacks_dir)
         if not os.path.isdir(flashbacks_dir):
@@ -83,15 +85,8 @@ class FlashbackClient:
         if not os.path.isfile(filename):
             raise Exception("%r does not exist" % filename)
 
-        self.context = context
         self.fake_time_msec, self._rpcs = _load_log(filename)
         self._did = set()
-
-    def check_connection(self):
-        pass
-
-    def logout(self):
-        pass
 
     def __getattr__(self, name):
         if name.startswith('_'):

@@ -226,16 +226,13 @@ def _create_context(server, logger):
 
 def _create_normal_client(ctx, server, logout_mode):
     if 'ais_url' in server and 'rest_url' in server:
-        client = HybridClient(ctx)
+        return HybridClient(ctx, logout_mode=logout_mode)
     elif 'ais_url' in server:
-        client = WebuiClient(ctx)
+        return WebuiClient(ctx, logout_mode=logout_mode)
     elif 'rest_url' in server:
-        client = RestClient(ctx)
+        return RestClient(ctx)
     else:
         raise Exception('Neither ais_url nor rest_url is configured')
-
-    client.logout_mode = logout_mode
-    return client
 
 
 def _login_with_saml(server, params, logger):

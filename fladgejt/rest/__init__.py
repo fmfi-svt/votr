@@ -1,20 +1,13 @@
 
+from fladgejt.base import BaseClient
 from .studium import RestStudiumMixin
-from .terminy import RestTerminyMixin
+#from .terminy import RestTerminyMixin
 
 
 # Disable RestTerminyMixin until it gives us all columns.
-RestTerminyMixin = object
 
 
-class RestClient(RestStudiumMixin, RestTerminyMixin):
-    def __init__(self, context):
-        self.context = context
-
+class RestClient(RestStudiumMixin, BaseClient):
     def check_connection(self):
         self.context.request_json('')
-
-    def logout(self):
-        pass
-
-    fake_time_msec = None
+        super().check_connection()
