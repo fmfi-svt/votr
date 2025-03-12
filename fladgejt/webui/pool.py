@@ -32,10 +32,8 @@ def pooled_app(original_method):
     '''
     @wraps(original_method)
     def wrapper(self, *args):
-        if not hasattr(self, '_apps_pool'):
-            self._apps_pool = Pool()
-        open_apps = self._apps_pool.open_apps
-        active_keys = self._apps_pool.active_keys
+        open_apps = self.app_pool.open_apps
+        active_keys = self.app_pool.active_keys
         app_key = (original_method.__name__, args)
 
         if app_key in open_apps and not open_apps[app_key].is_still_open():
@@ -43,7 +41,7 @@ def pooled_app(original_method):
             active_keys.discard(app_key)
 
         if app_key not in open_apps:
-            self._apps_pool.reserve(1)
+            self.app_pool.reserve(1)
             open_apps[app_key] = original_method(self, *args)
 
         active_keys.add(app_key)
@@ -53,20 +51,39 @@ def pooled_app(original_method):
 
 
 class Pool:
-    def __init__(self):
+    def __init__(self, context):
+        self.context = context
         self.open_apps = {}
         self.active_keys = set()
 
     def reserve(self, count):
-        while len(self.open_apps) + count > OPEN_APP_LIMIT:
-            oldest_key = min(
-                (k for k in self.open_apps if k not in self.active_keys),
-                key=lambda k: self.open_apps[k].last_response_time)
-            self.open_apps.pop(oldest_key).force_close()
+        sorted_keys = sorted(
+            self.open_apps,
+            key=lambda k: self.open_apps[k].last_response_time)
 
-    def clear_active_apps(self):
+        for key in sorted_keys:
+            if len(self.open_apps) + count <= OPEN_APP_LIMIT:
+                break
+            if key in self.active_keys:
+                continue
+
+            self.context.log('operation', 'Closing pooled application', key)
+            app = self.open_apps.pop(key)
+            if not app.force_close():
+                # force_close() can fail if the AIS server is still busy, e.g.
+                # if an earlier Votr RPC timed out. The app still counts towards
+                # OPEN_APP_LIMIT, but right now it's in an unusable state for
+                # us. We can try again next time.
+                for i in range(len(sorted_keys)):
+                    new_key = ('_failed_to_close', key, i)
+                    if new_key not in self.open_apps:
+                        self.open_apps[new_key] = app
+                        break
+
+    def prepare_for_rpc(self, last_rpc_failed):
         self.active_keys = set()
 
-    def __getstate__(self):
-        # Do not save active_keys in session, so it's reset on every request.
-        return { 'open_apps': self.open_apps, 'active_keys': set() }
+        if last_rpc_failed and self.open_apps:
+            self.context.log('operation',
+                'Closing all open apps because of previous RPC error')
+            self.reserve(OPEN_APP_LIMIT)

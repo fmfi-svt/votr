@@ -196,11 +196,13 @@ class RpcHandler:
 
                     try:
                         self.send_json(self.captured_log)
+                        session['client'].prepare_for_rpc()
                         method = getattr(session['client'], name)
                         result = encode_result(method(*args))
                     except BaseException as e:
                         # See the file comment about catching BaseException too.
                         self.seen_error(e)
+                        session['client'].last_rpc_failed = True
                         session['client'].context.log(
                             'rpc',
                             f'RPC {name} failed with {type(e).__name__}',

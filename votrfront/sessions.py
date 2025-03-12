@@ -107,15 +107,16 @@ def transaction(request, sessid=None):
                 if (username := credentials.get('username')):
                     request.environ['votr.log_user'] = username
 
-            yield session
+            try:
+                yield session
+            finally:
+                # Use pickle.dumps instead of pickle.dump, so that if it fails,
+                # the session file is not truncated.
+                new_content = pickle.dumps(session, pickle.HIGHEST_PROTOCOL)
 
-            # Use pickle.dumps instead of pickle.dump, so that if it fails, the
-            # session file is not truncated.
-            new_content = pickle.dumps(session, pickle.HIGHEST_PROTOCOL)
-
-            f.seek(0)
-            f.truncate(0)
-            f.write(new_content)
+                f.seek(0)
+                f.truncate(0)
+                f.write(new_content)
 
 
 @contextlib.contextmanager

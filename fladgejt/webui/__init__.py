@@ -5,6 +5,7 @@ from .commonui import WebuiCommonUIMixin
 from .hodnotenia import WebuiHodnoteniaMixin
 from .obdobia import WebuiObdobiaMixin
 from .osoby import WebuiOsobyMixin
+from .pool import Pool
 from .predmety import WebuiPredmetyMixin
 from .studium import WebuiStudiumMixin
 from .terminy import WebuiTerminyMixin
@@ -16,11 +17,16 @@ class WebuiClient(WebuiCommonUIMixin, WebuiHodnoteniaMixin, WebuiObdobiaMixin,
                   WebuiTerminyMixin, WebuiZapisMixin, BaseClient):
     def __init__(self, context, *, logout_mode=None):
         super().__init__(context)
+        self.app_pool = Pool(context)
         self.logout_mode = logout_mode or self.LOGOUT_NOTHING
 
     def check_connection(self):
         check_connection(self.context)
         super().check_connection()
+
+    def prepare_for_rpc(self):
+        self.app_pool.prepare_for_rpc(self.last_rpc_failed)
+        super().prepare_for_rpc()
 
     def logout(self):
         if self.logout_mode == self.LOGOUT_WITH_REDIRECTS:

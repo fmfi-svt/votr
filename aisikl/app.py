@@ -408,8 +408,8 @@ class Application:
 
         Usually called from :meth:`send_events`.
         '''
-        response = self._send_request(body)
-        self._process_response(response)
+        soup = self._send_request(body)
+        self._process_response(soup)
 
     def _send_request(self, body):
         xml_spec = '<request> <serial>{}</serial>\n{}</request>\n'.format(
@@ -512,16 +512,23 @@ class Application:
     def force_close(self):
         '''Tells the server to close the application.
 
-        Usually, users close applications with the exit button in the main
+        Human users usually close applications with the exit button in the main
         dialog. This method disregards open dialogs and just closes everything.
-        It also works even if the application is already closed.
+        It's similar to closing the app's browser popup window (in theory). It
+        also usually works even if the application is already closed.
+
+        Returns:
+            True if the application is successfully closed, or already was.
+            False if there was an error, e.g. when the server is still busy with
+            an earlier HTTP request.
         '''
         self.close_all_dialogs()
         self.ctx.log('operation',
             'Sending WebUIKillEvent to {}'.format(self.class_name))
-        self._send_request(
+        soup = self._send_request(
             "<events><ev><event class='avc.framework.webui.WebUIKillEvent'/>"
             "</ev></events>\n")
+        return not soup.script
 
     def collect_component_changes(self):
         '''Returns the <changedProps> string that goes into POST requests.'''
