@@ -1,12 +1,20 @@
+import argparse
 import base64
 from collections import deque, namedtuple
+import contextlib
 import json
+import os
+import pathlib
 import re
 import time
+import traceback
 from types import SimpleNamespace
 from urllib.parse import urljoin
 from requests import HTTPError, Session
-from aisikl.context import Logger
+import aisikl.context
+from aisikl.context import Context, Logger
+from fladgejt.login import create_client
+from fladgejt.webui import WebuiClient
 
 
 LogEntry = namedtuple('LogEntry', ('timestamp', 'type', 'message', 'data'))
@@ -499,3 +507,110 @@ def _sort_xml(xml_spec, parent, item):
 class SSLError(Exception): pass
 class ConnectionError(Exception): pass
 class _FailFast(BaseException): pass
+
+
+def scenario_main(run, *, anonymous=False):
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument('--save', type=pathlib.Path, metavar='FILENAME',
+        help='Output log file path')
+
+    live_group = parser.add_argument_group(title='live mode options')
+    live_group.add_argument('--ais-url', metavar='URL',
+        help='AIS URL or hostname (required)')
+    if not anonymous:
+        live_group.add_argument('--params', type=pathlib.Path,
+            metavar='FILENAME',
+            help='Input JSON file with login params, should contain e.g. ' +
+            '{"type":"saml_password","username":"...","password":"..."}, ' +
+            'or set $AIS_PARAMS to a JSON string, ' +
+            'or set $AIS_USERNAME and $AIS_PASSWORD')
+
+    mock_group = parser.add_argument_group(title='mock mode options')
+    mock_group.add_argument('--load', type=pathlib.Path, metavar='FILENAME',
+        help='Input log file path (required)')
+    mock_group.add_argument('--fail-fast', action='store_true',
+        help='Do not continue past the first error/warning')
+
+    options = parser.parse_args()
+
+    def body():
+        client.context.log('scenario', 'Scenario started')
+        try:
+            result = run(client)
+            client.context.log('scenario', 'Scenario finished', result)
+        except Exception as e:
+            client.context.log('scenario',
+                f'Scenario failed with {type(e).__name__}',
+                traceback.format_exc())
+
+    with contextlib.ExitStack() as es:
+        if options.ais_url and options.load:
+            parser.error('cannot use both --ais-url and --load')
+
+        if not options.ais_url and not options.load:
+            parser.error('either --ais-url or --load is required')
+
+        if options.load:
+            if not anonymous and options.params:
+                parser.error('cannot use both --load and --params')
+
+            with options.load.open() as f:
+                entries = [LogEntry(*json.loads(line)) for line in f]
+
+            client = WebuiClient(Context(ais_url=''))
+
+            if options.save:
+                client.context.logger.log_file = es.enter_context(
+                    options.save.open('w'))
+
+            ok = MockRunner().run(
+                body, entries, print=print,
+                old_log=False, fail_fast=options.fail_fast)
+
+            print('PASS' if ok else 'FAIL')
+
+        if options.ais_url:
+            if options.fail_fast:
+                parser.error('cannot use both --ais-url and --fail-fast')
+
+            ais_url = options.ais_url
+            if '/' not in ais_url:
+                ais_url = f'https://{ais_url}/'
+
+            if anonymous:
+                client = WebuiClient(Context(ais_url=ais_url))
+            else:
+                if options.params:
+                    params = json.loads(options.params.read_text())
+                elif (params_env := os.getenv('AIS_PARAMS')):
+                    params = json.loads(params_env)
+                elif (
+                    (username := os.getenv('AIS_USERNAME')) and
+                    (password := os.getenv('AIS_PASSWORD'))
+                ):
+                    params = dict(
+                        type='saml_password',
+                        username=username,
+                        password=password,
+                    )
+                else:
+                    parser.error('either --params or $AIS_PARAMS or ' +
+                        '$AIS_USERNAME + $AIS_PASSWORD is required')
+
+                server = dict(
+                    login_types=(params['type'],),
+                    ais_url=ais_url,
+                    ais_cookie='JSESSIONID',
+                )
+                client = create_client(server, params)
+
+            if options.save:
+                client.context.logger.log_file = es.enter_context(
+                    options.save.open('w'))
+
+            aisikl.context.print_logs = True
+
+            time.time = lambda: 0.0
+
+            body()
