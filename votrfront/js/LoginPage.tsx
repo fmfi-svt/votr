@@ -65,7 +65,7 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
   const currentType = state.type || serverConfig.login_types[0];
 
   return (
-    <form className="login" action="login" method="POST" rel="nofollow">
+    <form action="login" method="POST" rel="nofollow">
       {Votr.settings.invalid_session && (
         <p>Vaše prihlásenie vypršalo. Prihláste sa znova.</p>
       )}
@@ -75,7 +75,7 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
           <p>Prihlásenie sa nepodarilo.</p>
           <p>
             {"Technické detaily: "}
-            <code className="login-error">
+            <code className="v-LoginPage-error">
               {Votr.settings.error.trim().replace(/[\s\S]*\n/, "")}
             </code>{" "}
             <FakeLink onClick={onOpenError}>Viac detailov...</FakeLink>
@@ -129,8 +129,10 @@ function LoginForm({ onOpenError }: { onOpenError: () => void }) {
 
       {(currentType == "saml_password" || currentType == "plain_password") && (
         <React.Fragment>
-          <details>
-            <summary>Bezpečnostné informácie</summary>
+          <details className="v-LoginPage-details">
+            <summary className="v-LoginPage-summary">
+              Bezpečnostné informácie
+            </summary>
             <p>Toto nie je oficiálny univerzitný prihlasovací formulár.</p>
             <p>
               Spravidla nie je bezpečné prezradiť vaše heslo z jednej stránky
@@ -251,7 +253,7 @@ export function LoginPage() {
 
   return (
     <React.Fragment>
-      <div className="login-page">
+      <div className="v-LoginPage">
         <div className="navbar navbar-inverse navbar-static-top">
           <div className="container-fluid">
             <div className="navbar-header">
@@ -261,7 +263,7 @@ export function LoginPage() {
             </div>
           </div>
         </div>
-        <div className="login-content">
+        <div className="v-LoginPage-content">
           <p>
             <strong>Votr</strong> ponúka študentom jednoduchší a pohodlnejší
             spôsob, ako robiť najčastejšie činnosti zo systému AIS. Zapíšte sa
@@ -276,7 +278,7 @@ export function LoginPage() {
           <ul className="list-inline">
             <li>
               <FakeLink
-                className="btn btn-link"
+                className="btn btn-link v-LoginPage-footer-link"
                 onClick={() => setModal(() => AboutModal)}
               >
                 O aplikácii
@@ -284,7 +286,7 @@ export function LoginPage() {
             </li>
             <li>
               <a
-                className="btn btn-link"
+                className="btn btn-link v-LoginPage-footer-link"
                 href="https://uniba.sk/"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -294,7 +296,7 @@ export function LoginPage() {
             </li>
             <li>
               <a
-                className="btn btn-link"
+                className="btn btn-link v-LoginPage-footer-link"
                 href="https://moja.uniba.sk/"
                 target="_blank"
                 rel="noopener noreferrer"

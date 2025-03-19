@@ -48,20 +48,20 @@ export function AnketaPopup() {
   const laterText = "Pripomenúť o 3 dni";
 
   return (
-    <div className="anketapopup">
+    <div className="v-AnketaPopup">
       <button
         type="button"
-        className="close"
+        className="close v-AnketaPopup-close"
         onClick={() => closePopup(getMsecNow() + later)}
         aria-label="Zavrieť"
       >
         <span aria-hidden="true">&times;</span>
       </button>
-      <div className="anketapopup-line1">Daj semestru ešte chvíľu</div>
-      <div className="anketapopup-line2">
+      <div className="v-AnketaPopup-line1">Daj semestru ešte chvíľu</div>
+      <div className="v-AnketaPopup-line2">
         <strong>Hlasuj v ankete</strong>
       </div>
-      <div className="anketapopup-buttons">
+      <div className="v-AnketaPopup-buttons">
         <a
           className="btn btn-primary"
           onClick={() => closePopup(-1)}

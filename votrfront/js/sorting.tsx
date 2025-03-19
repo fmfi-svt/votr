@@ -190,9 +190,9 @@ function renderHeader<T>(
             key={index}
             onClick={handleClick}
             className={classNames(
-              "sort",
-              order[0] == strA && "asc",
-              order[0] == strD && "desc",
+              "v-sorting-column",
+              order[0] == strA && "v-sorting-asc",
+              order[0] == strD && "v-sorting-desc",
             )}
           >
             {shortLabel}
@@ -258,7 +258,7 @@ export function SortableTable<T>({
 
   const className = classNames(
     "table table-condensed table-bordered table-striped table-hover",
-    withButtons && "with-buttons-table",
+    withButtons && "v-sorting-table-with-buttons",
   );
 
   const rows = [];
@@ -285,10 +285,10 @@ export function SortableTable<T>({
                 {expansionMark && !!reallyHiddenCount && (
                   <span
                     className={classNames(
-                      "expand-arrow",
-                      open[originalIndex] ? "arrow-expanded" : (
-                        "arrow-collapsed"
-                      ),
+                      "v-sorting-triangle",
+                      open[originalIndex] ?
+                        "v-sorting-triangle-up"
+                      : "v-sorting-triangle-down",
                     )}
                   />
                 )}
@@ -329,7 +329,7 @@ export function SortableTable<T>({
   return (
     <div>
       {canHide.some(Boolean) && (
-        <div className="btn-toolbar section">
+        <div className="btn-toolbar v-common-section">
           <button
             type="button"
             className={classNames("btn", "btn-default", fullTable && "active")}

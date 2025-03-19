@@ -27,8 +27,8 @@ export const humanizeBoolean = humanizeWith({
 });
 
 export function classForSemester(semester: string) {
-  if (semester == "Z") return "zima";
-  if (semester == "L") return "leto";
+  if (semester == "Z") return "v-humanizeAISData-zima";
+  if (semester == "L") return "v-humanizeAISData-leto";
   return undefined;
 }
 

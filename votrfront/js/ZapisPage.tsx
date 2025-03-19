@@ -51,7 +51,7 @@ function ZapisLink(props: { active: boolean; href: Href; label: string }) {
 function ZapisMenu() {
   const { action, cast, zapisnyListKey } = useContext(QueryContext);
   return (
-    <div className="header">
+    <div className="v-common-header">
       <PageTitle>Zápis predmetov</PageTitle>
       <div className="pull-right">
         <div className="btn-group">
@@ -272,7 +272,7 @@ function ZapisTable({
   }
 
   const saveButton = (
-    <div className="section">
+    <div className="v-common-section">
       <button
         type="submit"
         className="btn btn-primary"
@@ -610,7 +610,7 @@ function ZapisZPonukyForm() {
     return (
       <FormItem label={label}>
         <input
-          className="form-item-control"
+          className="v-common-form-control"
           name={name}
           autoFocus={focus}
           value={state[name] || ""}
@@ -629,7 +629,7 @@ function ZapisZPonukyForm() {
     return (
       <FormItem label={label}>
         <select
-          className="form-item-control"
+          className="v-common-form-control"
           name={name}
           value={state[name]}
           onChange={handleFieldChange}

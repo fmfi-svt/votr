@@ -54,7 +54,7 @@ a.btn {
   font-weight: bold;
 }
 
-.text-pill {
+.v-common-text-pill {
   position: relative;
   display: block;
   padding: $nav-link-padding;
@@ -67,7 +67,7 @@ a.btn {
   min-height: ($font-size-base * 1.5);
 }
 
-.selector {
+.v-common-selector {
   background: $gray-lighter;
   padding: 3px;
   border-radius: $border-radius-large;
@@ -77,12 +77,12 @@ a.btn {
   li a:focus {
     background-color: #ddd;
   }
-  .text-pill {
+  .v-common-text-pill {
     color: $gray-light;
   }
 }
 
-.header {
+.v-common-header {
   @include clearfix();
   margin-top: $line-height-computed;
   margin-bottom: $line-height-computed;
@@ -92,31 +92,38 @@ a.btn {
   }
 }
 
-.section {
+.v-common-section {
   margin-top: $line-height-computed;
   margin-bottom: $line-height-computed;
 }
 
-.skusky-calendar-menu {
+.v-MojeSkuskyPage-calendar-menu {
   margin-left: 10px;
 }
 
-/* "html" = specificity tie breaker */
-/* must win vs ".rbc-calendar", ".rbc-event", ".rbc-event.rbc-selected" */
-html .skusky-calendar {
-  height: 90vh;
-  .rbc-event {
-    cursor: inherit; /* there is no onClick event - for now */
-  }
-  .skusky-calendar-registered {
-    background-color: #337ab7;
-  }
-  .skusky-calendar-unregistered {
-    background-color: #999999;
-  }
+.v-MojeSkuskyPage-calendar {
+  // !important overrides .rbc-calendar (might not be necessary)
+  height: 90vh !important;
 }
 
-.loading {
+.v-MojeSkuskyPage-calendar-registered,
+.v-MojeSkuskyPage-calendar-unregistered {
+  // there is no onClick event - for now
+  // !important overrides .rbc-event (might not be necessary)
+  cursor: inherit !important;
+}
+
+.v-MojeSkuskyPage-calendar-registered {
+  // !important overrides .rbc-event, .rbc-event.rbc-selected
+  background-color: #337ab7 !important;
+}
+
+.v-MojeSkuskyPage-calendar-unregistered {
+  // !important overrides .rbc-event, .rbc-event.rbc-selected
+  background-color: #999999 !important;
+}
+
+.v-ajax-loading {
   background-image: url(spinner.svg);
   background-repeat: no-repeat;
   background-size: contain;
@@ -131,31 +138,35 @@ html .skusky-calendar {
   }
 }
 
-.table-narrow {
+.v-PrehladStudiaPage-table-narrow {
   width: auto;
 }
 
-th.sort {
+.v-sorting-column {
   cursor: pointer;
-  &.asc,
-  &.desc {
-    background: $gray-lighter;
-  }
-  &:after {
-    content: "\00a0↕"; // \00a0 is &nbsp;
-    visibility: hidden;
-  }
-  &.asc:after {
-    content: "\00a0↑"; // \00a0 is &nbsp;
-    visibility: visible;
-  }
-  &.desc:after {
-    content: "\00a0↓"; // \00a0 is &nbsp;
-    visibility: visible;
-  }
 }
 
-.log-viewer {
+.v-sorting-asc,
+.v-sorting-desc {
+  background: $gray-lighter;
+}
+
+.v-sorting-column:after {
+  content: "\00a0↕"; // \00a0 is &nbsp;
+  visibility: hidden;
+}
+
+.v-sorting-asc:after {
+  content: "\00a0↑"; // \00a0 is &nbsp;
+  visibility: visible;
+}
+
+.v-sorting-desc:after {
+  content: "\00a0↓"; // \00a0 is &nbsp;
+  visibility: visible;
+}
+
+.v-LogViewer {
   position: fixed;
   left: 5em;
   right: 5em;
@@ -166,57 +177,66 @@ th.sort {
   background: $gray-lighter;
   border: solid $gray-light;
   border-width: 0 2px;
-  .options {
-    position: absolute;
-    bottom: 100%;
-    left: -2px;
-    right: -2px;
-    background: $gray-lighter;
-    border: solid $gray-light;
-    border-width: 2px 2px 1px;
-  }
-  .list-inline {
-    margin: 0.2em;
-  }
-  .close {
-    padding: 0.2em;
-  }
-  .scroll {
-    height: 100%;
-    overflow: auto;
-  }
-  .scroll table {
-    margin: 1em;
-  }
-  .scroll td {
-    padding: 2px;
-  }
 }
 
-.login-page {
+.v-LogViewer-options {
+  position: absolute;
+  bottom: 100%;
+  left: -2px;
+  right: -2px;
+  background: $gray-lighter;
+  border: solid $gray-light;
+  border-width: 2px 2px 1px;
+}
+
+.v-LogViewer-types {
+  margin: 0.2em;
+}
+
+.v-LogViewer-close {
+  // !important overrides button.close
+  padding: 0.2em !important;
+}
+
+.v-LogViewer-scroll {
+  height: 100%;
+  overflow: auto;
+}
+
+.v-LogViewer-table {
+  margin: 1em;
+}
+
+.v-LogViewer-cell {
+  padding: 2px;
+}
+
+.v-LoginPage {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   min-height: 100%;
-  .login-content {
-    max-width: 30em;
-    padding: 10vh 15px 15px; /* TODO: increase to 20vh later? */
-    margin: auto;
-    flex-grow: 1;
-  }
-  .list-inline a {
-    color: $navbar-default-link-color;
-    &:hover {
-      color: $navbar-default-link-hover-color;
-    }
+}
+
+.v-LoginPage-content {
+  max-width: 30em;
+  padding: 10vh 15px 15px; /* TODO: increase to 20vh later? */
+  margin: auto;
+  flex-grow: 1;
+}
+
+.v-LoginPage-footer-link {
+  color: $navbar-default-link-color;
+  &:hover {
+    color: $navbar-default-link-hover-color;
   }
 }
 
-.login-error {
+.v-LoginPage-error {
   word-break: break-all;
 }
 
-details {
+.v-LoginPage-details {
   display: revert;
   margin-bottom: 9px; /* same as p, ul */
   padding: 5px;
@@ -224,12 +244,12 @@ details {
   border-radius: 5px;
 }
 
-summary {
+.v-LoginPage-summary {
   display: revert;
   cursor: pointer;
 }
 
-.central-box {
+.v-common-centered-message {
   position: absolute;
   left: 1em;
   right: 1em;
@@ -245,24 +265,24 @@ tfoot:empty {
   display: none;
 }
 
-.table.with-buttons-table td {
+.v-sorting-table-with-buttons.table td {
   vertical-align: middle;
 }
 
-.text-positive {
+.v-MojeSkuskyPage-positive {
   color: rgb(35, 184, 35);
 }
 
-.text-negative {
+.v-MojeSkuskyPage-negative {
   color: rgb(179, 35, 27);
 }
 
-.appear-disabled {
+.v-MojeSkuskyPage-appear-disabled {
   @include opacity(0.65);
   @include box-shadow(none);
 }
 
-.expand-arrow {
+.v-sorting-triangle {
   display: inline-block;
   width: 0;
   height: 0;
@@ -272,15 +292,15 @@ tfoot:empty {
   margin-right: 4px;
 }
 
-.arrow-expanded {
+.v-sorting-triangle-up {
   border-bottom: 6px dashed #555;
 }
 
-.arrow-collapsed {
+.v-sorting-triangle-down {
   border-top: 6px dashed #555;
 }
 
-.anketapopup {
+.v-AnketaPopup {
   padding: 15px;
   margin-bottom: $line-height-computed;
   border: solid $text-color 1px;
@@ -288,7 +308,7 @@ tfoot:empty {
 
   position: relative;
   transform: translateY(-120%);
-  animation: anketa-slide 0.5s forwards;
+  animation: v-AnketaPopup-slide 0.5s forwards;
 
   color: white;
   background-color: #ff7035;
@@ -297,42 +317,42 @@ tfoot:empty {
     linear-gradient(135deg, #ff7035, #ff5862);
 
   text-align: center;
-
-  .close {
-    // override default color and opacity from _close.scss
-    color: white;
-    @include opacity(0.8);
-    &:hover,
-    &:focus {
-      @include opacity(1);
-    }
-
-    // keep both lines of text centered
-    float: none;
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    z-index: 1;
-  }
 }
 
-@keyframes anketa-slide {
+.v-AnketaPopup-close {
+  // override default color and opacity from _close.scss
+  color: white !important;
+  @include opacity(0.8);
+  &:hover,
+  &:focus {
+    @include opacity(1);
+  }
+
+  // keep both lines of text centered
+  float: none;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 1;
+}
+
+@keyframes v-AnketaPopup-slide {
   100% {
     transform: translateY(0%);
   }
 }
 
-.anketapopup-line1 {
+.v-AnketaPopup-line1 {
   padding-top: 10px;
   font-size: 120%;
 }
 
-.anketapopup-line2 {
+.v-AnketaPopup-line2 {
   padding: 15px 0;
   font-size: 200%;
 }
 
-.anketapopup-buttons {
+.v-AnketaPopup-buttons {
   color: $text-color;
   background-color: $body-bg;
   padding: 1em;

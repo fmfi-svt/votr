@@ -1,18 +1,18 @@
 $menu-width: 200px;
 
 @media (min-width: $screen-md-min) {
-  .layout-container {
+  .v-layout-container {
     position: relative;
     padding-left: $menu-width;
     @include clearfix();
   }
-  .layout-menu {
+  .v-layout-menu {
     float: left;
     margin-left: -$menu-width;
     width: $menu-width;
     padding: 0 5px;
   }
-  .layout-menu:after {
+  .v-layout-menu:after {
     content: " ";
     position: absolute;
     z-index: -1;
@@ -22,9 +22,9 @@ $menu-width: 200px;
     height: 100%;
     border-right: solid $hr-border 1px;
   }
-  .layout-content {
-    // We float .layout-content too, so that it has its own "block formatting
-    // context" and using "clear: both" inside it won't clear the layout-menu.
+  .v-layout-content {
+    // We float .v-layout-content too, so that it has its own "block formatting
+    // context" and using "clear: both" inside it won't clear the v-layout-menu.
     float: left;
     width: 100%;
 
@@ -33,7 +33,7 @@ $menu-width: 200px;
 }
 
 @media (max-width: $screen-sm-max) {
-  .layout-menu {
+  .v-layout-menu {
     padding: 15px;
     max-width: 2 * $menu-width;
   }

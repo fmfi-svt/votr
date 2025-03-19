@@ -125,7 +125,7 @@ export function makeMojePredmetyPage() {
   return (
     <PageLayout>
       <ZapisnyListSelector>
-        <div className="header">
+        <div className="v-common-header">
           <PageTitle>Moje predmety</PageTitle>
         </div>
         <MojePredmetyPageContent />

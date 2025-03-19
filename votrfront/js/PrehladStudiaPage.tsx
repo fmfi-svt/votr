@@ -105,7 +105,7 @@ function PrehladStudiaObdobia() {
   }
 
   return (
-    <table className="table table-narrow table-condensed table-bordered table-hover">
+    <table className="table v-PrehladStudiaPage-table-narrow table-condensed table-bordered table-hover">
       <tbody>
         <PrehladStudiaObdobie
           label="Zimný semester"
@@ -244,7 +244,7 @@ function PrehladStudiaZapisneListy() {
 export function makePrehladStudiaPage() {
   return (
     <PageLayout>
-      <div className="header">
+      <div className="v-common-header">
         <PageTitle>Prehľad štúdia</PageTitle>
       </div>
       <PrehladStudiaObdobia />

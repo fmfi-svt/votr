@@ -35,11 +35,11 @@ function LogViewerContent(props: {
   const types = countBy(ajaxLogs, "log");
 
   return (
-    <div className="log-viewer">
-      <div className="options">
+    <div className="v-LogViewer">
+      <div className="v-LogViewer-options">
         {props.closeButton}
         {props.modeButton}
-        <ul className="list-inline">
+        <ul className="list-inline v-LogViewer-types">
           {sortBy(Object.entries(types), 0).map(([type, count]) => (
             <li key={type}>
               <label>
@@ -56,20 +56,20 @@ function LogViewerContent(props: {
         </ul>
       </div>
 
-      <div className="scroll" ref={scrollRef}>
-        <table>
+      <div className="v-LogViewer-scroll" ref={scrollRef}>
+        <table className="v-LogViewer-table">
           <tbody>
             {ajaxLogs.map(
               (entry, index) =>
                 !hidden[entry.log] && (
                   <tr key={index}>
-                    <td className="text-right">
+                    <td className="text-right v-LogViewer-cell">
                       {(entry.time - ajaxLogs[0]!.time).toFixed(3)}
                     </td>
-                    <td>
+                    <td className="v-LogViewer-cell">
                       <code>{entry.log}</code>
                     </td>
-                    <td>
+                    <td className="v-LogViewer-cell">
                       <code>{entry.message}</code>
                     </td>
                   </tr>
@@ -121,19 +121,21 @@ function LogViewerBenchmarkContent(props: {
   const benchmarks = computeBenchmarks();
 
   return (
-    <div className="log-viewer">
-      <div className="options">
+    <div className="v-LogViewer">
+      <div className="v-LogViewer-options">
         {props.closeButton}
         {props.modeButton}
       </div>
 
-      <div className="scroll">
-        <table>
+      <div className="v-LogViewer-scroll">
+        <table className="v-LogViewer-table">
           <tbody>
             {benchmarks.map(([message, sum]) => (
               <tr key={message}>
-                <td className="text-right">{sum.toFixed(3)}</td>
-                <td>{message}</td>
+                <td className="text-right v-LogViewer-cell">
+                  {sum.toFixed(3)}
+                </td>
+                <td className="v-LogViewer-cell">{message}</td>
               </tr>
             ))}
           </tbody>
@@ -193,7 +195,7 @@ export function LogViewer() {
   );
 
   const closeButton = (
-    <button type="button" className="close" onClick={toggle}>
+    <button type="button" className="close v-LogViewer-close" onClick={toggle}>
       <span aria-hidden="true">&times;</span>
       <span className="sr-only">Close</span>
     </button>

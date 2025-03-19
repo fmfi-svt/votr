@@ -30,14 +30,13 @@ bez zbytočného klikania.">
 <body>
 <span id="votr"></span>
 <noscript>
-<div class="login-page">
-<div class="login-content">
+<div class="v-common-centered-message">
 <h1>Votr</h1>
-<p><strong>Votr</strong> ponúka študentom jednoduchší a pohodlnejší spôsob, ako
-robiť najčastejšie činnosti zo systému AIS. Zapíšte sa na skúšky, prezrite si
-vaše hodnotenia a skontrolujte si počet kreditov bez zbytočného klikania.</p>
-<p><strong>Na používanie Votr musí byť zapnutý JavaScript.</strong></p>
-</div>
+<p><strong>Votr</strong> ponúka študentom jednoduchší a pohodlnejší spôsob, \
+ako robiť najčastejšie činnosti zo systému AIS. Zapíšte sa na skúšky, prezrite \
+si vaše hodnotenia a skontrolujte si počet kreditov bez zbytočného klikania.</p>
+<p><strong>Votr na svoju správnu funkciu potrebuje zapnutý \
+JavaScript.</strong></p>
 </div>
 </noscript>
 <script nonce="%(nonce)s">Votr = %(init_json)s</script>

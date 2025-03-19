@@ -57,7 +57,7 @@ const mojeSkuskyColumns: Column<Termin>[] = [
       title: value ? "Ste prihlásení" : "Nie ste prihlásení",
       className: classNames(
         "text-center",
-        value ? "text-positive" : "text-negative",
+        value ? "v-MojeSkuskyPage-positive" : "v-MojeSkuskyPage-negative",
       ),
     }),
   }),
@@ -227,7 +227,7 @@ function MojeSkuskyMenu() {
   const { kalendar, zapisnyListKey } = query;
   return (
     <div className="pull-left">
-      <div className="skusky-calendar-menu">
+      <div className="v-MojeSkuskyPage-calendar-menu">
         <div className="btn-group">
           <MojeSkuskyMenuLink
             label="Zoznam"
@@ -290,7 +290,7 @@ function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
       views={["month", "week", "day"]}
       defaultDate={defaultDate(props.eventList)}
       getNow={getDateNow}
-      className="skusky-calendar"
+      className="v-MojeSkuskyPage-calendar"
       messages={{
         allDay: "Celý deň",
         previous: "Späť",
@@ -308,8 +308,8 @@ function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
       eventPropGetter={(event) => ({
         className:
           event.prihlaseny ?
-            "skusky-calendar-registered"
-          : "skusky-calendar-unregistered",
+            "v-MojeSkuskyPage-calendar-registered"
+          : "v-MojeSkuskyPage-calendar-unregistered",
       })}
       // remove start and end times (we need only one included in title)
       formats={{ eventTimeRangeFormat: () => "" }}
@@ -419,7 +419,7 @@ function SkuskyRegisterButton({ termin }: { termin: Termin }) {
         "btn",
         "btn-xs",
         isSigninButton ? "btn-success" : "btn-danger",
-        appearDisabled && "appear-disabled",
+        appearDisabled && "v-MojeSkuskyPage-appear-disabled",
       )}
     >
       {pressed ?
@@ -435,7 +435,7 @@ export function makeMojeSkuskyPage() {
   return (
     <PageLayout>
       <ZapisnyListSelector>
-        <div className="header">
+        <div className="v-common-header">
           <PageTitle>Moje skúšky</PageTitle>
           <MojeSkuskyMenu />
         </div>

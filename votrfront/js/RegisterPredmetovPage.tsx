@@ -87,7 +87,7 @@ function RegisterPredmetovForm() {
     return (
       <FormItem label={label}>
         <input
-          className="form-item-control"
+          className="v-common-form-control"
           name={name}
           autoFocus={focus}
           value={state[name] || ""}
@@ -107,7 +107,7 @@ function RegisterPredmetovForm() {
       <FormItem label={label}>
         {items ?
           <select
-            className="form-item-control"
+            className="v-common-form-control"
             name={name}
             value={state[name]}
             onChange={handleFieldChange}
@@ -207,7 +207,7 @@ function RegisterPredmetovResultTable() {
 export function makeRegisterPredmetovPage() {
   return (
     <PageLayout>
-      <div className="header">
+      <div className="v-common-header">
         <PageTitle>Register predmetov</PageTitle>
       </div>
       <RegisterPredmetovForm />

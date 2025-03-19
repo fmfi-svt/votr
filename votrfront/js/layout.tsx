@@ -130,11 +130,11 @@ export function PageLayout(props: { children: React.ReactNode }) {
   return (
     <React.Fragment>
       <PageNavbar />
-      <div className="layout-container">
-        <div className="layout-menu">
+      <div className="v-layout-container">
+        <div className="v-layout-menu">
           <MainMenu />
         </div>
-        <div className="layout-content">
+        <div className="v-layout-content">
           <div className="container-fluid">
             <ErrorBoundary>
               <AnketaPopup />
@@ -239,13 +239,13 @@ function MainMenu() {
   const somStudent = cache.get("get_som_student");
 
   return (
-    <ul className="main-menu nav nav-pills nav-stacked">
+    <ul className="nav nav-pills nav-stacked">
       <li>
-        <strong className="text-pill">Moje štúdium</strong>
+        <strong className="v-common-text-pill">Moje štúdium</strong>
       </li>
       {somStudent === false && (
         <li>
-          <span className="text-pill">Nie ste študentom.</span>
+          <span className="v-common-text-pill">Nie ste študentom.</span>
         </li>
       )}
       {somStudent && (
@@ -277,7 +277,7 @@ function MainMenu() {
       )}
       {!cache.loadedAll && (
         <li>
-          <span className="text-pill">
+          <span className="v-common-text-pill">
             <Loading requests={cache.missing} />
           </span>
         </li>
@@ -286,7 +286,7 @@ function MainMenu() {
         <hr />
       </li>
       <li>
-        <strong className="text-pill">Registre</strong>
+        <strong className="v-common-text-pill">Registre</strong>
       </li>
       <MenuItem label="Register osôb" href={{ action: "registerOsob" }} />
       <MenuItem
@@ -321,14 +321,14 @@ export function FormItem(props: {
 }) {
   if (props.label) {
     return (
-      <label className="form-item">
-        <div className="col-sm-4 form-item-label">{props.label}</div>
+      <label className="v-common-form-item">
+        <div className="col-sm-4 v-common-form-label">{props.label}</div>
         <div className="col-sm-8">{props.children}</div>
       </label>
     );
   } else {
     return (
-      <div className="form-item">
+      <div className="v-common-form-item">
         <div className="col-sm-offset-4 col-sm-8">{props.children}</div>
       </div>
     );

@@ -166,7 +166,7 @@ export function makeMojeHodnoteniaPage() {
   return (
     <PageLayout>
       <StudiumSelector>
-        <div className="header">
+        <div className="v-common-header">
           <PageTitle>Moje hodnotenia</PageTitle>
         </div>
         <MojeHodnoteniaHodnoteniaTable />

@@ -246,7 +246,7 @@ export function Loading({ requests }: { requests?: (() => void)[] }) {
     }
   });
 
-  return <span className="loading">Načítavam...</span>;
+  return <span className="v-ajax-loading">Načítavam...</span>;
 }
 
 function goPost(url: string) {

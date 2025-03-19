@@ -1,13 +1,13 @@
 @use "sass:math";
 
-.form-item {
+.v-common-form-item {
   display: block;
   margin-bottom: math.div($line-height-computed, 2);
   @include make-row();
   max-width: 40em;
 }
 
-.form-item-label {
+.v-common-form-label {
   display: block;
   font-weight: bold;
   margin-bottom: 5px;
@@ -17,18 +17,9 @@
   }
 }
 
-.form-item-control {
+.v-common-form-control {
   display: block;
   width: 100%;
-}
-
-.form-item.has-error {
-  color: $state-danger-text;
-  input,
-  select,
-  textarea {
-    border: solid $state-danger-text 1px;
-  }
 }
 
 // Taken from bootstrap's _forms.scss

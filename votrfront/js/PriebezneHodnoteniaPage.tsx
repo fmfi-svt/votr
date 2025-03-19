@@ -73,7 +73,7 @@ export function makePriebezneHodnoteniaPage() {
   return (
     <PageLayout>
       <ZapisnyListSelector>
-        <div className="header">
+        <div className="v-common-header">
           <PageTitle>Priebežné hodnotenia</PageTitle>
         </div>
         <PriebezneHodnoteniaPageContent />

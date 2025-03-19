@@ -49,7 +49,7 @@ if (
   Votr.prologueCheck = true;
 } else {
   document.getElementById("votr")!.innerHTML = `
-    <div class="central-box">
+    <div class="v-common-centered-message">
     <h1>Votr</h1>
     <p>Votr ponúka študentom jednoduchší a pohodlnejší spôsob, ako robiť najčastejšie činnosti zo systému AIS.</p>
     <p>Váš prehliadač je príliš starý a nedokáže robiť všetko to, čo Votr potrebuje.</p>

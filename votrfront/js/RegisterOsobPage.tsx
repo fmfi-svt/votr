@@ -71,7 +71,7 @@ function RegisterOsobForm() {
     return (
       <FormItem label={label}>
         <input
-          className="form-item-control"
+          className="v-common-form-control"
           name={name}
           autoFocus={focus}
           value={state[name] || ""}
@@ -91,7 +91,7 @@ function RegisterOsobForm() {
       <FormItem label={label}>
         {items ?
           <select
-            className="form-item-control"
+            className="v-common-form-control"
             name={name}
             value={state[name]}
             onChange={handleFieldChange}
@@ -131,16 +131,16 @@ function RegisterOsobForm() {
       {renderSelect("Fakulta: ", "fakulta", fakulty)}
       {renderTextbox("Študijný program (skratka): ", "skratkaSp")}
       {renderSelect("Akademický rok: ", "akademickyRok", akademickeRoky)}
-      <div className="form-item">
-        <div className="col-sm-4 form-item-label">Typ osoby:</div>
+      <div className="v-common-form-item">
+        <div className="col-sm-4 v-common-form-label">Typ osoby:</div>
         <div className="col-sm-8">
           {renderCheckbox(" Absolventi ", "absolventi")}
           {renderCheckbox(" Študenti ", "studenti")}
           {renderCheckbox(" Zamestnanci ", "zamestnanci")}
         </div>
       </div>
-      <div className="form-item">
-        <div className="col-sm-4 form-item-label">Rok štúdia:</div>
+      <div className="v-common-form-item">
+        <div className="col-sm-4 v-common-form-label">Rok štúdia:</div>
         <div className="col-sm-8">
           {renderCheckbox(" 1. ", "prvyRocnik")}
           {renderCheckbox(" 2. ", "druhyRocnik")}
@@ -242,7 +242,7 @@ function RegisterOsobResultTable() {
 export function makeRegisterOsobPage() {
   return (
     <PageLayout>
-      <div className="header">
+      <div className="v-common-header">
         <PageTitle>Register osôb</PageTitle>
       </div>
       <RegisterOsobForm />

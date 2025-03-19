@@ -43,9 +43,9 @@ export function ZapisnyListSelector({
 
   return (
     <React.Fragment>
-      <ul className="nav nav-pills selector">
+      <ul className="nav nav-pills v-common-selector">
         <li>
-          <span className="text-pill">Zápisný list:</span>
+          <span className="v-common-text-pill">Zápisný list:</span>
         </li>
         {items.map((zapisnyList, index) => {
           // An item's `index` might change over time as more get_zapisne_listy
@@ -62,7 +62,7 @@ export function ZapisnyListSelector({
         })}
         {!cache.loadedAll ?
           <li>
-            <span className="text-pill">
+            <span className="v-common-text-pill">
               <Loading requests={cache.missing} />
             </span>
           </li>

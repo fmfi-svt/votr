@@ -19,9 +19,9 @@ export function StudiumSelector({ children }: { children: React.ReactNode }) {
 
   return (
     <React.Fragment>
-      <ul className="nav nav-pills selector">
+      <ul className="nav nav-pills v-common-selector">
         <li>
-          <span className="text-pill">Štúdium:</span>
+          <span className="v-common-text-pill">Štúdium:</span>
         </li>
         {items.map((studium, index) => {
           const studiumKey = studium.studium_key;
@@ -36,7 +36,7 @@ export function StudiumSelector({ children }: { children: React.ReactNode }) {
         })}
         {cache.loadedAll ? null : (
           <li>
-            <span className="text-pill">
+            <span className="v-common-text-pill">
               <Loading requests={cache.missing} />
             </span>
           </li>
