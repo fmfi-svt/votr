@@ -77,11 +77,11 @@ class Context:
         html_element = etree_fromstring(html_code, html_parser)
         if html_element is None:
             if html_code not in ('\n\n ', ''):
-                raise Exception('xxxxxx'+repr(html_code))
+                raise Exception('xxxxxx'+repr(html_code))  # TODO: remove
             # fromstring() returns None if html_code equals:
             # - '' (happens in Application.force_close() on successful close)
             # - '\n\n ' (happens in Tree if 'nodes' data view is empty)
-            # - '<!--x-->', <!DOCTYPE html>' (not seen in practice - JFYI)
+            # - '<!--x-->', '<!DOCTYPE html>' (not seen in practice - JFYI)
             # By the way, 'x' is parsed as <html><body><p>x</p></body></html>.
             html_element = etree_fromstring('<html><body>', html_parser)
         self.log('benchmark', 'End HTML parsing')
