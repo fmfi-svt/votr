@@ -74,7 +74,7 @@ class Tree(Control):
             expander = node_div.get_element_by_id('nodeExpanderImage', None)
             expanded = None if expander is None else ('expanded' in expander.classes)
             checkbox = node_div.find('.//input[@type="checkbox"]')
-            checked = checkbox is not None and 'checked' in checkbox.attrib
+            checked = None if checkbox is None and 'checked' in checkbox.attrib
             title = node_div.get_element_by_id('nodeText').text_content().replace('\xa0', ' ')
 
             self.nodes[id] = Node(id, is_leaf, type, expanded, checked, title)
