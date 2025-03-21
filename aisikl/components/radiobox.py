@@ -26,7 +26,7 @@ class RadioBox(Control):
                     "RadioBox '{}' item #{} "
                     "has unexpected index attribute.".format(self.id, index))
             self.options.append(Option(
-                title=td.find('.//label').text_content()[:],  # from lxml 'smart' string  # TODO: fit in 80 columns
+                title=td.find('.//label').only_text(),
                 id=td.find('.//input').get('sid'),
             ))
             if 'checked' in td.find('.//input').attrib:

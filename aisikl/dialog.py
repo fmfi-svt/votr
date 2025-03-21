@@ -64,7 +64,7 @@ class Dialog:
         self.components = {}
         self.changed_components = None
 
-        last_line = scripts[-1].text.strip().split('\n')[-1].strip()
+        last_line = scripts[-1].only_text().strip().split('\n')[-1].strip()
         match = _properties_re.match(last_line)
         if not match:
             raise AISParseError("Couldn't find dialog componentProperties")

@@ -17,9 +17,8 @@ class ComboBox(Control):
         self.selected_index = -1
         self.options = []
         for index, option in enumerate(element.iterfind('.//option')):
-            assert option.text_content() == (option.text or '')  # TODO
             self.options.append(Option(
-                title=option.text or '',
+                title=option.only_text(),
                 id=option.get('sid', ''),
                 tool_tip_text=option.get('title', ''),
             ))

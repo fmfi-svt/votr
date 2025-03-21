@@ -31,7 +31,7 @@ def get_modules(ctx):
         _, _, module = menu_link.attrib['href'].partition('changeModul.do?modul=')
         if not module: continue
 
-        ctx.log('portal', f'Opening section "{menu_link.text_content()}"')
+        ctx.log('portal', f'Opening section "{menu_link.only_text()}"')
         applist_html = ctx.request_html(
             '/ais/portal/changeModul.do?modul=' + module)
 
@@ -41,16 +41,16 @@ def get_modules(ctx):
             for app in submodule.find_class('aplikacia'):
                 app_link = app.find('.//a')
                 apps.append(PortalApp(
-                    id=app.find_class('kod')[0].text_content()[:],
+                    id=app.find_class('kod')[0].only_text(),
                     title=app_link.attrib['title'],
                     url=app_link.attrib['url'],
-                    description=app.find_class('popis')[0].text_content().strip(),
+                    description=app.find_class('popis')[0].only_text().strip(),
                 ))
 
-            submodule_name = submodule.find_class('submodul-text')[0].text_content()[:]
+            submodule_name = submodule.find_class('submodul-text')[0].only_text()
             submodules.append((submodule_name, apps))
 
-        results.append((menu_link.text_content()[:], submodules))
+        results.append((menu_link.only_text(), submodules))
 
     return results
 

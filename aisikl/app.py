@@ -124,9 +124,9 @@ def parse_response(html):
     updates = []
 
     script_tag = html.find('.//head//script')
-    if script_tag is None or script_tag.get('src'):
+    if not script_tag or script_tag.get('src'):
         raise AISParseError("Unexpected result frame response")
-    script = script_tag.text
+    script = script_tag.only_text()
 
     match = _alert_re.match(script)
     if match:
@@ -307,8 +307,8 @@ class Application:
 
         app_html = self.ctx.request_html(url)
 
-        first_script_tag = app_html.find('.//script')
-        first_script = '' if first_script_tag is None else first_script_tag.text
+        first_script_el = app_html.find('.//script')
+        first_script = first_script_el.only_text() if first_script_el else ''
 
         if app_html.get_element_by_id('webuiProperties', None) is None:
             alert_match = _alert_re.match(first_script)
@@ -330,7 +330,7 @@ class Application:
             raise AISParseError("Unexpected values in appProperties")
         self.app_id = properties['appId']
 
-        if app_html.get_element_by_id('initScript').text != '<!---->':
+        if app_html.get_element_by_id('initScript').only_text() != '<!---->':
             raise AISParseError("initScript is not supported")
 
         rq = ("<events><ev><event class='avc.ui.event.AVCComponentEvent'>"

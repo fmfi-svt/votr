@@ -58,7 +58,7 @@ class Tree(Control):
         if updating:
             nodes = element
         else:
-            nodes = load_script(data_view, 'nodes')
+            nodes = load_script(self, data_view, 'nodes')
             self.nodes = {}
 
         if nodes.find('.//*[@nofilled]'):

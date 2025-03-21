@@ -4,7 +4,8 @@ import time
 import json
 import requests
 from urllib.parse import urljoin
-from lxml.html import document_fromstring
+from lxml.etree import HTMLParser, fromstring as etree_fromstring
+from lxml.html import HtmlElementClassLookup
 from aisikl.exceptions import RESTServerError, LoggedOutError
 
 
@@ -68,13 +69,23 @@ class Context:
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
         :return: the ``html`` root element as an ``lxml.html.HtmlElement``.
         '''
-        return self.parse_html(self.request_ais(url, method=method, **kwargs))
+        response = self.request_ais(url, method=method, **kwargs)
+        return self.parse_html(response.text)
 
-    def parse_html(self, response):
+    def parse_html(self, html_code):
         self.log('benchmark', 'Begin HTML parsing')
-        element = document_fromstring(response.text)
+        html_element = etree_fromstring(html_code, html_parser)
+        if html_element is None:
+            if html_code not in ('\n\n ', ''):
+                raise Exception('xxxxxx'+repr(html_code))
+            # fromstring() returns None if html_code equals:
+            # - '' (happens in Application.force_close() on successful close)
+            # - '\n\n ' (happens in Tree if 'nodes' data view is empty)
+            # - '<!--x-->', <!DOCTYPE html>' (not seen in practice - JFYI)
+            # By the way, 'x' is parsed as <html><body><p>x</p></body></html>.
+            html_element = etree_fromstring('<html><body>', html_parser)
         self.log('benchmark', 'End HTML parsing')
-        return element
+        return html_element
 
     def request_json(self, url, **data):
         r'''Sends a request to REST API and parses the response as JSON.
@@ -184,6 +195,34 @@ class _DnsOverrideAdapter(requests.adapters.HTTPAdapter):
             'old_hostname': self.old_hostname,
             'new_hostname': self.new_hostname,
         }
+
+
+class NodeMixin:
+    def __bool__(self):
+        # TODO: Explain
+        return True
+
+    def only_text(self):
+        # TODO: Think carefully if we really want this custom method, or just text_content().
+        if len(self) != 0:
+            from lxml.etree import tostring
+            raise Exception(f'Element {tostring(self)} has children')
+        return self.text or ''
+
+
+node_classes = {}
+
+
+class CustomHtmlElementClassLookup(HtmlElementClassLookup):
+    def lookup(self, node_type, document, namespace, name):
+        cls = super().lookup(node_type, document, namespace, name)
+        if cls not in node_classes:
+            node_classes[cls] = type(cls.__name__, (NodeMixin, cls), {})
+        return node_classes[cls]
+
+
+html_parser = HTMLParser()
+html_parser.set_element_class_lookup(CustomHtmlElementClassLookup())
 
 
 try:

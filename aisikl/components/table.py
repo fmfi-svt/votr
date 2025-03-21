@@ -1,7 +1,6 @@
 
 import json
 from collections import namedtuple
-from lxml.html import fragment_fromstring
 from .component import is_true
 from .control import Control
 from .combobox import Option
@@ -46,15 +45,15 @@ def load_script_plain(data_view, id):
     if script_element.tag != 'script':
         raise AISParseError('Expected {} to be script instead of {}'.format(
             id, script_element.tag))
-    return script_element.text[4:-3]   # always "<!--" and "-->"
+    return script_element.only_text()[4:-3]   # always "<!--" and "-->"
 
 
-def load_script(data_view, id):
+def load_script(component, data_view, id):
     text = load_script_plain(data_view, id)
     if text is None: return None
-    # Result will be wrapped in <div>. It's needed e.g. for multiple `<col>` in
-    # dataTabColGroup. document_fromstring() wouldn't allow empty `text`.
-    return fragment_fromstring(text, create_parent='div')
+    if text == '': raise Exception('xxxxxx buhuhu ' + id) # TODO
+    # Result will be wrapped in <html> and <body>.
+    return component.dialog.app.ctx.parse_html(text)
 
 
 class Table(Control):
@@ -129,8 +128,8 @@ class Table(Control):
         index = 0
         for fixed in [True, False]:
             suffix = 'Fixed' if fixed else ''
-            header_table = load_script(data_view, 'columnModel' + suffix)
-            colgroup = load_script(data_view, 'dataTabColGroup' + suffix)
+            header_table = load_script(self, data_view, 'columnModel' + suffix)
+            colgroup = load_script(self, data_view, 'dataTabColGroup' + suffix)
             if header_table is None: continue
             tds = { e.get('id'): e for e in header_table.iterfind('.//*[@id]') }
             for col in colgroup.iterfind('.//col'):
@@ -153,10 +152,10 @@ class Table(Control):
 
         self.log('table', 'Found {} columns in {}'.format(len(self.columns), self.id), self.columns)
 
-        self._load_rows(load_script(data_view, 'dataTabBodies'),
-                        load_script(data_view, 'dataTabBodiesFixed'))
+        self._load_rows(load_script(self, data_view, 'dataTabBodies'),
+                        load_script(self, data_view, 'dataTabBodiesFixed'))
 
-        self._load_edit_models(load_script(data_view, 'dataTabEditModels'))
+        self._load_edit_models(load_script(self, data_view, 'dataTabEditModels'))
 
         # onload calls initTableModel which calls initPropertiesAndModels which calls this:
         #self._show_control_buttons()
@@ -501,7 +500,8 @@ class Table(Control):
             new_rows)
 
     def _load_cell(self, td):
-        value = td.text_content()[:]  # from lxml 'smart' string
+        # Not only_text() because it can also be <td><pre>VALUE</pre></td>.
+        value = td.text_content()
         if value == '\xa0': value = ''
 
         if td.get('datatype') == 'boolean':
@@ -530,14 +530,14 @@ class Table(Control):
         self.combobox_options = {}
 
         for select in data_tab_edit_models.iterfind('.//select'):
-            options = self.combobox_options[select.attrib['id']] = []
-            for index, option in enumerate(select.iterfind('.//option')):
-                assert option.text_content() == option.text  # TODO
-                options.append(Option(
-                    title=option.text,
+            self.combobox_options[select.attrib['id']] = [
+                Option(
+                    title=option.only_text(),
                     id=option.attrib['sid'],
                     tool_tip_text=option.attrib['title'],
-                ))
+                )
+                for option in select.iterfind('.//option')
+            ]
 
     def scroll_down(self, buffers=1):
         if self.is_end_of_data: return

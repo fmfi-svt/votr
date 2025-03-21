@@ -11,7 +11,7 @@ class HtmlArea(ActionableControl):
         # supported canClose.
 
     def _parse_content(self, element):
-        self.content = element.get_element_by_id('htmlContent').text[4:-3]
+        self.content = element.get_element_by_id('htmlContent').only_text()[4:-3]
 
     def _ais_setHtml(self, id, body):
         self._parse_content(body.get_element_by_id(id))

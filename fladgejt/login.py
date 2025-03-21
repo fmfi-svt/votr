@@ -148,11 +148,11 @@ def _send_request_chain(ctx, params, url, data):
         # SAML yet.
 
         if response.headers.get('content-type', '').startswith('text/html'):
-            html = ctx.parse_html(response)
+            html = ctx.parse_html(response.text)
 
             # Detect successful AIS login (old interface).
             username_elements = html.find_class('user-name')
-            if username_elements and username_elements[0].text_content().strip():
+            if username_elements and username_elements[0].only_text().strip():
                 ctx.log('login', 'AIS login successful (old interface)')
                 return
 
@@ -175,7 +175,7 @@ def _send_request_chain(ctx, params, url, data):
             ]:
                 error_elements = html.find_class(error_class)
                 if error_elements:
-                    error_text = error_elements[0].text_content().strip()
+                    error_text = error_elements[0].only_text().strip()
                     if error_text:
                         if params['type'].endswith('_password'):
                             raise PasswordLoginError(error_text)

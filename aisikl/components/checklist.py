@@ -29,7 +29,7 @@ class CheckList(Control):
         for index, tr in enumerate(element.iterfind('.//tr')):
             td = tr.find('.//td')
             self.items.append(Item(
-                title=tr.text_content()[:],  # from lxml 'smart' string
+                title=tr.text_content(),
                 id=td.attrib['id'], sid=tr.attrib['sid'], rid=tr.attrib['rid'],
                 tool_tip_text=td.attrib['title'],
                 checked=('checked' in tr.find('.//input').attrib),
