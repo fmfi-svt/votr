@@ -199,7 +199,15 @@ class _DnsOverrideAdapter(requests.adapters.HTTPAdapter):
 
 class NodeMixin:
     def __bool__(self):
-        # TODO: Explain
+        # Default lxml __bool__() displays a warning and returns whether the
+        # element has any children (len(self) != 0). It might change in future
+        # versions, but lxml is waiting to see what happens in CPython stdlib.
+        # I find it more intuitive and convenient to act like (self != None).
+        # https://bugs.launchpad.net/lxml/+bug/2071312
+        # https://github.com/python/cpython/issues/83122
+        # https://github.com/python/cpython/pull/31149
+        # https://github.com/python/cpython/issues/119577
+        # https://github.com/python/cpython/pull/119762
         return True
 
     def only_text(self):
