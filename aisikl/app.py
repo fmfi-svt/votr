@@ -310,7 +310,7 @@ class Application:
         first_script_el = app_html.find('.//script')
         first_script = first_script_el.only_text() if first_script_el else ''
 
-        if app_html.get_element_by_id('webuiProperties', None) is None:
+        if not app_html.get_element_by_id('webuiProperties', None):
             alert_match = _alert_re.match(first_script)
             if alert_match:
                 raise AISBehaviorError("AIS2 application didn't open: %s" %
@@ -531,7 +531,7 @@ class Application:
         html = self._send_request(
             "<events><ev><event class='avc.framework.webui.WebUIKillEvent'/>"
             "</ev></events>\n")
-        return html.find('.//script') is None
+        return not html.find('.//script')
 
     def collect_component_changes(self):
         '''Returns the <changedProps> string that goes into POST requests.'''

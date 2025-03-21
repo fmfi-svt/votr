@@ -56,7 +56,7 @@ class Dialog:
         if not (body.get('id') == self.name and
                 'jsct' not in body.attrib and
                 'dialogBody' in body.classes and
-                first_element_child is not None and
+                first_element_child and
                 first_element_child.get('id') == 'dialogComponentsArea' and
                 scripts):
             raise AISParseError("Unexpected dialog body response")
@@ -80,7 +80,7 @@ class Dialog:
 
             element = elements.get(id)
             parent_id = None
-            if element is not None:
+            if element:
                 for parent in element.iterancestors():
                     if parent.get('id') in component_properties:
                         parent_id = parent.get('id')

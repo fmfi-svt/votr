@@ -41,7 +41,7 @@ class Row(object):
 
 def load_script_plain(data_view, id):
     script_element = data_view.get_element_by_id(id, None)
-    if script_element is None: return None
+    if not script_element: return None
     if script_element.tag != 'script':
         raise AISParseError('Expected {} to be script instead of {}'.format(
             id, script_element.tag))
@@ -115,7 +115,7 @@ class Table(Control):
         self._init_from_data_view(element.get_element_by_id(self.id + '_dataView', None))
 
     def _init_from_data_view(self, data_view):
-        if data_view is None: return
+        if not data_view: return
 
         self._update_data_position_properties(data_view)
         self._update_selection_model_properties(data_view)
@@ -130,7 +130,7 @@ class Table(Control):
             suffix = 'Fixed' if fixed else ''
             header_table = load_script(self, data_view, 'columnModel' + suffix)
             colgroup = load_script(self, data_view, 'dataTabColGroup' + suffix)
-            if header_table is None: continue
+            if not header_table: continue
             tds = { e.get('id'): e for e in header_table.iterfind('.//*[@id]') }
             for col in colgroup.iterfind('.//col'):
                 alias = col.attrib['id']
@@ -163,23 +163,23 @@ class Table(Control):
         # TODO remove me but document it
 
     def _update_data_position_properties(self, data_view):
-        if data_view is None: return
+        if not data_view: return
         element = data_view.get_element_by_id('dataPositionSpan', None)
-        if element is None: return
+        if not element: return
         self.is_end_of_data = element.get('isend', 'false') == 'true'
         self.truncated = element.get('truncated', 'false') == 'true'
         self.fixed_columns = int(element.get('fixedcolumns', '0'))
 
     def _update_data_tab_bodies_properties(self, data_view):
-        if data_view is None: return
+        if not data_view: return
         element = data_view.get_element_by_id('dataTabBodies', None)
-        if element is None: return
+        if not element: return
         self.buffer_size = int(element.get('buffersize'))   # I hope this won't break anything
 
     def _update_selection_model_properties(self, data_view):
-        if data_view is None: return
+        if not data_view: return
         element = data_view.get_element_by_id('selectionModel', None)
-        if element is None: return
+        if not element: return
 
         # TODO: loaded_rows chcem aby isiel po ID-ckach, to jest loaded_rows[0] je row ktory ma id=row_0 a nie nutne najvyssi
         # ledaze by nie??? vyzera ze AIS v tom ma tiez taky bordel ako my
@@ -426,7 +426,7 @@ class Table(Control):
     def _ais_setDataView(self, id, body):
         data_view = body.get_element_by_id(id)
         if not len(data_view): return
-        if data_view.get_element_by_id('columnModel', None) is not None:
+        if data_view.get_element_by_id('columnModel', None):
             self._init_from_data_view(data_view)
         else:
             self._update_data(data_view)
@@ -437,7 +437,7 @@ class Table(Control):
 
         data_tab_bodies = data_view.get_element_by_id('dataTabBodies', None)
         data_tab_bodies_fixed = data_view.get_element_by_id('dataTabBodiesFixed', None)
-        if data_tab_bodies is None: return
+        if not data_tab_bodies: return
 
         self._update_data_tab_bodies_properties(data_view)
         self._update_data_position_properties(data_view)
@@ -447,8 +447,8 @@ class Table(Control):
             self.log('table', 'Updating info in {}'.format(self.id))
             return
 
-        if data_tab_bodies.get_element_by_id('dataTabTmp', None) is not None:
-            if data_tab_bodies.find('.//tbody') is None:
+        if data_tab_bodies.get_element_by_id('dataTabTmp', None):
+            if not data_tab_bodies.find('.//tbody'):
                 # This might be a behavior difference - WebUI actually does
                 # `this.dataSendType == "update";`. We hope they meant `=`.
                 data_send_type = 'update'
@@ -471,7 +471,7 @@ class Table(Control):
                 self.num_visible_buffers = id + 1
 
         fixed_trs = {}
-        if data_tab_bodies_fixed is not None:
+        if data_tab_bodies_fixed:
             for tr in data_tab_bodies_fixed.iterfind('.//tr'):
                 fixed_trs[tr.attrib['id']] = tr
 
@@ -484,7 +484,7 @@ class Table(Control):
             id = int(tr.attrib['id'][len('row_'):])
             rid = tr.attrib['rid']
             tds = tr.findall('.//td')
-            if data_tab_bodies_fixed is not None:
+            if data_tab_bodies_fixed:
                 tds = fixed_trs[tr.attrib['id']].findall('.//td') + tds
             cells = [self._load_cell(td) for td in tds]
             new_rows[id] = [cell.value for cell in cells]
@@ -511,7 +511,7 @@ class Table(Control):
             value = td.find('.//img').attrib['src']
 
         checkbox = td.find('.//input[@type="checkbox"]')
-        if checkbox is not None:
+        if checkbox:
             return Cell(
                 value=bool(checkbox.get('checked')), title=None,
                 edited_by='checkBox', combo_box_mode=None, model=None,
@@ -525,7 +525,7 @@ class Table(Control):
             disabled=td.get('disabled', 'false') == 'true')
 
     def _load_edit_models(self, data_tab_edit_models):
-        if data_tab_edit_models is None: return
+        if not data_tab_edit_models: return
 
         self.combobox_options = {}
 

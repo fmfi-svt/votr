@@ -46,7 +46,7 @@ class Tree(Control):
         self._init_from_data_view(element.get_element_by_id(self.id + '_dataView', None))
 
     def _init_from_data_view(self, data_view, updating=False):
-        if data_view is None: return
+        if not data_view: return
 
         element = data_view.get_element_by_id('nodes')
         selection = element.get('selection')
@@ -72,9 +72,9 @@ class Tree(Control):
             is_leaf = node_element.attrib['isleaf'] == 'true'
             type = node_element.attrib['type']
             expander = node_div.get_element_by_id('nodeExpanderImage', None)
-            expanded = None if expander is None else ('expanded' in expander.classes)
+            expanded = 'expanded' in expander.classes if expander else None
             checkbox = node_div.find('.//input[@type="checkbox"]')
-            checked = None if checkbox is None and 'checked' in checkbox.attrib
+            checked = 'checked' in checkbox.attrib if checkbox else None
             title = node_div.get_element_by_id('nodeText').text_content().replace('\xa0', ' ')
 
             self.nodes[id] = Node(id, is_leaf, type, expanded, checked, title)

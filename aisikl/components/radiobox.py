@@ -60,7 +60,7 @@ class RadioBox(Control):
     def _ais_setDataView(self, id, body):
         data_view = body.get_element_by_id(id)
         container = data_view.find('./*[@id="radioBox_container"]')  # direct child
-        if container is None:
+        if not container:
             raise AISParseError("Expected radioBox_container")
         if container.tag == 'span':
             self.selected_index = int(container.attrib['selectedindex'])

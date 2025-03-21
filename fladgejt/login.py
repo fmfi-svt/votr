@@ -157,7 +157,7 @@ def _send_request_chain(ctx, params, url, data):
                 return
 
             # Detect successful AIS login (new student interface).
-            if '/ais/apps/student/' in response.url and html.findall('.//app-root'):
+            if '/ais/apps/student/' in response.url and html.find('.//app-root'):
                 ctx.log('login', 'AIS login successful (new student interface)')
                 return
 
@@ -197,7 +197,7 @@ def _send_request_chain(ctx, params, url, data):
 
             if params['type'] == 'saml_password':
                 # Handle Shibboleth IdP's "Loading Session Information" page.
-                if html.findall('.//input[@name="shib_idp_ls_supported"]'):
+                if html.find('.//input[@name="shib_idp_ls_supported"]'):
                     url, data = _parse_form(url, html)
                     # Real browsers set some fields to "true". Let's cargo cult.
                     data['shib_idp_ls_supported'] = 'true'
@@ -208,8 +208,8 @@ def _send_request_chain(ctx, params, url, data):
                     continue
 
                 # Handle Shibboleth IdP's password based login form.
-                if (html.findall('.//input[@name="j_username"]') and
-                    html.findall('.//input[@name="j_password"]')
+                if (html.find('.//input[@name="j_username"]') and
+                    html.find('.//input[@name="j_password"]')
                 ):
                     ctx.log('login', 'Detected a login form page')
                     if tried_saml_password_login:
