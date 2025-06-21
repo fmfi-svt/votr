@@ -1,5 +1,17 @@
 @use "sass:math";
 
+// Taken from bootstrap's _forms.scss
+input[type="radio"],
+input[type="checkbox"] {
+  margin: 4px 0 0;
+  line-height: normal;
+}
+
+.v-common-form-control {
+  display: block;
+  width: 100%;
+}
+
 .v-common-form-item {
   display: block;
   margin-bottom: math.div($line-height-computed, 2);
@@ -15,16 +27,4 @@
     text-align: right;
     margin-bottom: 0;
   }
-}
-
-.v-common-form-control {
-  display: block;
-  width: 100%;
-}
-
-// Taken from bootstrap's _forms.scss
-input[type="radio"],
-input[type="checkbox"] {
-  margin: 4px 0 0;
-  line-height: normal;
 }

@@ -54,12 +54,6 @@ a.btn {
   font-weight: bold;
 }
 
-.v-common-text-pill {
-  position: relative;
-  display: block;
-  padding: $nav-link-padding;
-}
-
 .close {
   // default bootstrap close button is too small imho
   // the value is from font-size in _close.scss
@@ -67,19 +61,98 @@ a.btn {
   min-height: ($font-size-base * 1.5);
 }
 
-.v-common-selector {
-  background: $gray-lighter;
-  padding: 3px;
-  border-radius: $border-radius-large;
-  display: inline-block;
+.table-bordered {
+  th,
+  td {
+    border-left-style: none !important;
+    border-right-style: none !important;
+  }
+}
 
-  li a:hover,
-  li a:focus {
-    background-color: #ddd;
+// ugly workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=217769
+// suggested in https://bugzilla.mozilla.org/show_bug.cgi?id=409254
+thead:empty,
+tbody:empty,
+tfoot:empty {
+  display: none;
+}
+
+.v-ajax-loading {
+  background-image: url(spinner.svg);
+  background-repeat: no-repeat;
+  background-size: contain;
+  padding-left: 1.5em;
+}
+
+.v-AnketaPopup {
+  padding: 15px;
+  margin-bottom: $line-height-computed;
+  border: solid $text-color 1px;
+  border-radius: $border-radius-large;
+
+  position: relative;
+  transform: translateY(-120%);
+  animation: v-AnketaPopup-slide 0.5s forwards;
+
+  color: white;
+  background-color: #ff7035;
+  background:
+    no-repeat content-box center top / contain url(stars.svg),
+    linear-gradient(135deg, #ff7035, #ff5862);
+
+  text-align: center;
+}
+
+.v-AnketaPopup-buttons {
+  color: $text-color;
+  background-color: $body-bg;
+  padding: 1em;
+  border-radius: 1em;
+  display: inline-flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1em;
+}
+
+.v-AnketaPopup-close {
+  // override default color and opacity from _close.scss
+  color: white !important;
+  @include opacity(0.8);
+  &:hover,
+  &:focus {
+    @include opacity(1);
   }
-  .v-common-text-pill {
-    color: $gray-light;
+
+  // keep both lines of text centered
+  float: none;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  z-index: 1;
+}
+
+.v-AnketaPopup-line1 {
+  padding-top: 10px;
+  font-size: 120%;
+}
+
+.v-AnketaPopup-line2 {
+  padding: 15px 0;
+  font-size: 200%;
+}
+
+@keyframes v-AnketaPopup-slide {
+  100% {
+    transform: translateY(0%);
   }
+}
+
+.v-common-centered-message {
+  position: absolute;
+  left: 1em;
+  right: 1em;
+  top: 30%;
+  text-align: center;
 }
 
 .v-common-header {
@@ -97,8 +170,113 @@ a.btn {
   margin-bottom: $line-height-computed;
 }
 
-.v-MojeSkuskyPage-calendar-menu {
-  margin-left: 10px;
+.v-common-selector {
+  background: $gray-lighter;
+  padding: 3px;
+  border-radius: $border-radius-large;
+  display: inline-block;
+
+  li a:hover,
+  li a:focus {
+    background-color: #ddd;
+  }
+  .v-common-text-pill {
+    color: $gray-light;
+  }
+}
+
+.v-common-text-pill {
+  position: relative;
+  display: block;
+  padding: $nav-link-padding;
+}
+
+.v-LoginPage {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100%;
+}
+
+.v-LoginPage-content {
+  max-width: 30em;
+  padding: 10vh 15px 15px; /* TODO: increase to 20vh later? */
+  margin: auto;
+  flex-grow: 1;
+}
+
+.v-LoginPage-details {
+  display: revert;
+  margin-bottom: 9px; /* same as p, ul */
+  padding: 5px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.v-LoginPage-error {
+  word-break: break-all;
+}
+
+.v-LoginPage-footer-link {
+  color: $navbar-default-link-color;
+  &:hover {
+    color: $navbar-default-link-hover-color;
+  }
+}
+
+.v-LoginPage-summary {
+  display: revert;
+  cursor: pointer;
+}
+
+.v-LogViewer {
+  position: fixed;
+  left: 5em;
+  right: 5em;
+  bottom: 0;
+  height: 20em;
+  max-height: 70%;
+  z-index: 1111;
+  background: $gray-lighter;
+  border: solid $gray-light;
+  border-width: 0 2px;
+}
+
+.v-LogViewer-cell {
+  padding: 2px;
+}
+
+.v-LogViewer-close {
+  // !important overrides button.close
+  padding: 0.2em !important;
+}
+
+.v-LogViewer-options {
+  position: absolute;
+  bottom: 100%;
+  left: -2px;
+  right: -2px;
+  background: $gray-lighter;
+  border: solid $gray-light;
+  border-width: 2px 2px 1px;
+}
+
+.v-LogViewer-scroll {
+  height: 100%;
+  overflow: auto;
+}
+
+.v-LogViewer-table {
+  margin: 1em;
+}
+
+.v-LogViewer-types {
+  margin: 0.2em;
+}
+
+.v-MojeSkuskyPage-appear-disabled {
+  @include opacity(0.65);
+  @include box-shadow(none);
 }
 
 .v-MojeSkuskyPage-calendar {
@@ -106,11 +284,8 @@ a.btn {
   height: 90vh !important;
 }
 
-.v-MojeSkuskyPage-calendar-registered,
-.v-MojeSkuskyPage-calendar-unregistered {
-  // there is no onClick event - for now
-  // !important overrides .rbc-event (might not be necessary)
-  cursor: inherit !important;
+.v-MojeSkuskyPage-calendar-menu {
+  margin-left: 10px;
 }
 
 .v-MojeSkuskyPage-calendar-registered {
@@ -123,19 +298,19 @@ a.btn {
   background-color: #999999 !important;
 }
 
-.v-ajax-loading {
-  background-image: url(spinner.svg);
-  background-repeat: no-repeat;
-  background-size: contain;
-  padding-left: 1.5em;
+.v-MojeSkuskyPage-calendar-registered,
+.v-MojeSkuskyPage-calendar-unregistered {
+  // there is no onClick event - for now
+  // !important overrides .rbc-event (might not be necessary)
+  cursor: inherit !important;
 }
 
-.table-bordered {
-  th,
-  td {
-    border-left-style: none !important;
-    border-right-style: none !important;
-  }
+.v-MojeSkuskyPage-negative {
+  color: rgb(179, 35, 27);
+}
+
+.v-MojeSkuskyPage-positive {
+  color: rgb(35, 184, 35);
 }
 
 .v-PrehladStudiaPage-table-narrow {
@@ -166,120 +341,8 @@ a.btn {
   visibility: visible;
 }
 
-.v-LogViewer {
-  position: fixed;
-  left: 5em;
-  right: 5em;
-  bottom: 0;
-  height: 20em;
-  max-height: 70%;
-  z-index: 1111;
-  background: $gray-lighter;
-  border: solid $gray-light;
-  border-width: 0 2px;
-}
-
-.v-LogViewer-options {
-  position: absolute;
-  bottom: 100%;
-  left: -2px;
-  right: -2px;
-  background: $gray-lighter;
-  border: solid $gray-light;
-  border-width: 2px 2px 1px;
-}
-
-.v-LogViewer-types {
-  margin: 0.2em;
-}
-
-.v-LogViewer-close {
-  // !important overrides button.close
-  padding: 0.2em !important;
-}
-
-.v-LogViewer-scroll {
-  height: 100%;
-  overflow: auto;
-}
-
-.v-LogViewer-table {
-  margin: 1em;
-}
-
-.v-LogViewer-cell {
-  padding: 2px;
-}
-
-.v-LoginPage {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  min-height: 100%;
-}
-
-.v-LoginPage-content {
-  max-width: 30em;
-  padding: 10vh 15px 15px; /* TODO: increase to 20vh later? */
-  margin: auto;
-  flex-grow: 1;
-}
-
-.v-LoginPage-footer-link {
-  color: $navbar-default-link-color;
-  &:hover {
-    color: $navbar-default-link-hover-color;
-  }
-}
-
-.v-LoginPage-error {
-  word-break: break-all;
-}
-
-.v-LoginPage-details {
-  display: revert;
-  margin-bottom: 9px; /* same as p, ul */
-  padding: 5px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
-}
-
-.v-LoginPage-summary {
-  display: revert;
-  cursor: pointer;
-}
-
-.v-common-centered-message {
-  position: absolute;
-  left: 1em;
-  right: 1em;
-  top: 30%;
-  text-align: center;
-}
-
-// ugly workaround for https://bugzilla.mozilla.org/show_bug.cgi?id=217769
-// suggested in https://bugzilla.mozilla.org/show_bug.cgi?id=409254
-thead:empty,
-tbody:empty,
-tfoot:empty {
-  display: none;
-}
-
 .v-sorting-table-with-buttons.table td {
   vertical-align: middle;
-}
-
-.v-MojeSkuskyPage-positive {
-  color: rgb(35, 184, 35);
-}
-
-.v-MojeSkuskyPage-negative {
-  color: rgb(179, 35, 27);
-}
-
-.v-MojeSkuskyPage-appear-disabled {
-  @include opacity(0.65);
-  @include box-shadow(none);
 }
 
 .v-sorting-triangle {
@@ -292,73 +355,10 @@ tfoot:empty {
   margin-right: 4px;
 }
 
-.v-sorting-triangle-up {
-  border-bottom: 6px dashed #555;
-}
-
 .v-sorting-triangle-down {
   border-top: 6px dashed #555;
 }
 
-.v-AnketaPopup {
-  padding: 15px;
-  margin-bottom: $line-height-computed;
-  border: solid $text-color 1px;
-  border-radius: $border-radius-large;
-
-  position: relative;
-  transform: translateY(-120%);
-  animation: v-AnketaPopup-slide 0.5s forwards;
-
-  color: white;
-  background-color: #ff7035;
-  background:
-    no-repeat content-box center top / contain url(stars.svg),
-    linear-gradient(135deg, #ff7035, #ff5862);
-
-  text-align: center;
-}
-
-.v-AnketaPopup-close {
-  // override default color and opacity from _close.scss
-  color: white !important;
-  @include opacity(0.8);
-  &:hover,
-  &:focus {
-    @include opacity(1);
-  }
-
-  // keep both lines of text centered
-  float: none;
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  z-index: 1;
-}
-
-@keyframes v-AnketaPopup-slide {
-  100% {
-    transform: translateY(0%);
-  }
-}
-
-.v-AnketaPopup-line1 {
-  padding-top: 10px;
-  font-size: 120%;
-}
-
-.v-AnketaPopup-line2 {
-  padding: 15px 0;
-  font-size: 200%;
-}
-
-.v-AnketaPopup-buttons {
-  color: $text-color;
-  background-color: $body-bg;
-  padding: 1em;
-  border-radius: 1em;
-  display: inline-flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 1em;
+.v-sorting-triangle-up {
+  border-bottom: 6px dashed #555;
 }

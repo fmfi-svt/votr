@@ -6,12 +6,23 @@ $menu-width: 200px;
     padding-left: $menu-width;
     @include clearfix();
   }
+
+  .v-layout-content {
+    // We float .v-layout-content too, so that it has its own "block formatting
+    // context" and using "clear: both" inside it won't clear the v-layout-menu.
+    float: left;
+    width: 100%;
+
+    padding-bottom: 2em;
+  }
+
   .v-layout-menu {
     float: left;
     margin-left: -$menu-width;
     width: $menu-width;
     padding: 0 5px;
   }
+
   .v-layout-menu:after {
     content: " ";
     position: absolute;
@@ -21,14 +32,6 @@ $menu-width: 200px;
     width: $menu-width;
     height: 100%;
     border-right: solid $hr-border 1px;
-  }
-  .v-layout-content {
-    // We float .v-layout-content too, so that it has its own "block formatting
-    // context" and using "clear: both" inside it won't clear the v-layout-menu.
-    float: left;
-    width: 100%;
-
-    padding-bottom: 2em;
   }
 }
 
