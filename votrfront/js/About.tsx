@@ -91,8 +91,8 @@ function IndexPage() {
         </li>
         <li>
           <p>
-            <strong>Moje hodnotenia</strong> &mdash; hodnotenia predmetov a
-            získané študijné priemery za celé štúdium
+            <strong>Moje hodnotenia</strong> &mdash; hodnotenia predmetov za
+            celé štúdium
           </p>
         </li>
         <li>
