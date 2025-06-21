@@ -16,11 +16,6 @@ export const humanizeTerminHodnotenia = humanizeWith({
   "2 - Druhý opravný termín": "druhý opravný",
 });
 
-export const humanizeNazovPriemeru = humanizeWith({
-  "Sem ?": "Semester",
-  "AkadR ?": "Akademický rok",
-});
-
 export const humanizeBoolean = humanizeWith({
   "A": "áno",
   "N": "nie",
