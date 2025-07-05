@@ -1,5 +1,5 @@
 
-from fladgejt.helpers import CantOpenApplication, decode_key
+from fladgejt.helpers import CantOpenApplication, decode_key, STR_TO_BOOL
 from fladgejt.structures import Hodnotenie, Priemer, PriebezneHodnotenie, PriebezneHodnoteniaPredmetu
 
 
@@ -28,10 +28,11 @@ class WebuiHodnoteniaMixin:
                              hodn_termin=row['termin'],
                              hodn_datum=row['datum'],
                              hodn_znamka_popis=row['znamkaPopis'],
+                             nahradeny=(row['nahradzaMa'] != ''),
+                             potvrdeny=STR_TO_BOOL[row['poplatok']],
                              zapisny_list_key=zapisny_list_key)
                   for row in app.d.hodnoteniaTable.all_rows()]
         return [result, None]
-        # TODO: Hmm, Fajr mozno pouziva aj 'uznane'
 
     def get_priemery(self, zapisny_list_key):
         try:

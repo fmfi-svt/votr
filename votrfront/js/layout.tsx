@@ -5,6 +5,7 @@ import React, { useContext, useEffect, useRef } from "react";
 import "bootstrap-sass/assets/javascripts/bootstrap/transition"; // needed by modal.js.
 
 import "bootstrap-sass/assets/javascripts/bootstrap/modal"; // needed for $node.modal().
+import "bootstrap-sass/assets/javascripts/bootstrap/tooltip"; // needed for $node.tooltip().
 
 import {
   ajaxLogs,
@@ -419,5 +420,34 @@ export function Modal({
         <ErrorBoundary>{children}</ErrorBoundary>
       </div>
     </div>
+  );
+}
+
+export function InfoTooltip({
+  content,
+  icon,
+  tooltipHtml,
+}: {
+  content: React.ReactNode;
+  icon: string;
+  tooltipHtml: string;
+}) {
+  // TODO: Rewrite this whole thing when we upgrade Bootstrap.
+  // Add support for JSX content and proper accessibility.
+
+  const containerRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    $(containerRef.current!).tooltip({ title: tooltipHtml, html: true });
+  }, [tooltipHtml]);
+
+  return (
+    <span>
+      <span ref={containerRef}>
+        <span className="v-layout-InfoTooltip-content">{content}</span>
+        {icon ? " " : null}
+        <span className="v-layout-InfoTooltip-icon">{icon}</span>
+      </span>
+    </span>
   );
 }
