@@ -77,6 +77,10 @@ tfoot:empty {
   display: none;
 }
 
+.tooltip-inner {
+  max-width: 20em !important; // slightly increase from 200px
+}
+
 .v-ajax-loading {
   background-image: url(spinner.svg);
   background-repeat: no-repeat;
@@ -189,6 +193,18 @@ tfoot:empty {
   position: relative;
   display: block;
   padding: $nav-link-padding;
+}
+
+.v-layout-InfoTooltip-content {
+  // This might be too specific to what looks good on my machine...
+  // Safari would need vendor prefix for "text-decoration-color and text-decoration-style included in shorthand", per MDN.
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: rgba(0, 0, 0, 0.2);
+}
+
+.v-layout-InfoTooltip-icon {
+  cursor: default;
 }
 
 .v-LoginPage {

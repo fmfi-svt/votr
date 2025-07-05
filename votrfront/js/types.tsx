@@ -125,6 +125,8 @@ export interface Hodnotenie {
   hodn_termin: string;
   hodn_datum: string;
   hodn_znamka_popis: string;
+  nahradeny: boolean;
+  poplatok: string;
   zapisny_list_key: string;
   predmet_key: string;
 }
@@ -218,6 +220,15 @@ export interface ComboBoxOption {
 
 export type ZapisCast = "SC" | "SS";
 
+export interface GetPrehladKreditovResult {
+  items: Hodnotenie[];
+  message: string | null;
+  kredity_ziskane: number | null;
+  kredity_zapisane: number | null;
+  priemer_ohodnotenych: string | null;
+  priemer_vsetkych: string | null;
+}
+
 export interface Rpcs {
   // hodnotenia.py
   get_hodnotenia(
@@ -293,9 +304,7 @@ export interface Rpcs {
   get_studia(): Studium[];
   get_zapisne_listy(studium_key: string): ZapisnyList[];
   zapisny_list_key_to_akademicky_rok(zapisny_list_key: string): string;
-  get_prehlad_kreditov(
-    studium_key: string,
-  ): [items: Hodnotenie[], message: string | null];
+  get_prehlad_kreditov(studium_key: string): GetPrehladKreditovResult;
   get_akademicke_roky_noveho_zapisneho_listu(
     studium_key: string,
   ): ComboBoxOption[];

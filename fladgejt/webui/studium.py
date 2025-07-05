@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+import re
 from aisikl.app import Application, assert_ops, DEFAULT_IGNORED_MESSAGES
 from aisikl.exceptions import AISBehaviorError
 from fladgejt.helpers import (
@@ -175,7 +176,14 @@ class WebuiStudiumMixin:
             app.d.ziskaneMenuItem.click()
 
         if not ops:
-            return [[], "Prehľad hodnotenia pre toto štúdium nie je dostupný."]
+            return dict(
+                items=[],
+                message="Prehľad hodnotenia pre toto štúdium nie je dostupný.",
+                kredity_ziskane=None,
+                kredity_zapisane=None,
+                priemer_ohodnotenych=None,
+                priemer_vsetkych=None,
+            )
 
         # Otvori sa dialog s prehladom kreditov.
         app.awaited_open_dialog(ops)
@@ -191,9 +199,19 @@ class WebuiStudiumMixin:
                              hodn_termin=row['termin'],
                              hodn_datum=row['datum'],
                              hodn_znamka_popis=row['znamkaPopis'],
+                             nahradeny=(row['nahradzaMa'] != ''),
+                             poplatok=row['poplatok'],
                              zapisny_list_key=encode_key(
                                 (studium_key, row['akRok'])))
                   for row in app.d.predmetyTable.all_rows()]
+
+        kredity_ziskane, kredity_zapisane = self.__get_sucty_kreditov(app)
+
+        # "Vážený študijný priemer aj s časťou štátne skúšky:" / "Len ohodnotených predmetov:"
+        # tool_tip_text ma viac cifier presnosti.
+        priemer_ohodnotenych = app.d.lop_statniceLabel.tool_tip_text
+        # "Vážený študijný priemer aj s časťou štátne skúšky:"
+        priemer_vsetkych = app.d.vsp_statniceLabel.tool_tip_text
 
         # Stlacime zatvaraci button.
         with app.collect_operations() as ops:
@@ -202,7 +220,33 @@ class WebuiStudiumMixin:
         # Dialog sa zavrie.
         app.awaited_close_dialog(ops)
 
-        return [result, None]
+        return dict(
+            items=result,
+            message=None,
+            kredity_ziskane=kredity_ziskane,
+            kredity_zapisane=kredity_zapisane,
+            priemer_ohodnotenych=priemer_ohodnotenych,
+            priemer_vsetkych=priemer_vsetkych,
+        )
+
+    def __get_sucty_kreditov(self, app):
+        # Najdeme v tabulke suctov kreditov posledny riadok. V prvom stlpci ("Popis") by malo byt "SPOLU".
+        rows = app.d.kredityTable.all_rows()
+        if not rows:
+            self.context.log('warning', 'kredityTable is empty')
+            return None, None
+
+        last = rows[-1]
+        if last['popis'] != 'SPOLU':
+            self.context.log('warning', 'kredityTable popis is wrong', last)
+            return None, None
+
+        # V poslednom stlpci "Spolu  (Zapísané/Získané + Uznané + Dovezené)" by mali byt dve cele cisla.
+        if not (m := re.fullmatch(r'(\d+) / (\d+)', last['spolus'])):
+            self.context.log('warning', 'kredityTable spolus is unexpected', last)
+            return None, None
+
+        return int(m.group(2)), int(m.group(1))
 
     def __open_novy_zapisny_list_dialog(self, app, studium_key):
         # Vyberieme studium.

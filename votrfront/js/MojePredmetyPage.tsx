@@ -1,17 +1,14 @@
-import { useContext } from "react";
+import { escape } from "lodash-es";
+import React, { useContext } from "react";
 import { CacheRequester, Loading } from "./ajax";
-import {
-  coursesStats,
-  renderCredits,
-  renderWeightedStudyAverage,
-} from "./coursesStats";
+import { coursesStats, neuspesneZnamky } from "./coursesStats";
 import {
   classForSemester,
   humanizeTerminHodnotenia,
   humanizeTypVyucby,
   plural,
 } from "./humanizeAISData";
-import { PageLayout, PageTitle } from "./layout";
+import { InfoTooltip, PageLayout, PageTitle } from "./layout";
 import { ScreenSize, underSM, underXS } from "./mediaQueries";
 import { QueryContext, RelativeLink } from "./router";
 import { type Column, column, SortableTable, sortAs } from "./sorting";
@@ -42,7 +39,36 @@ export const mojePredmetyColumns: Column<Hodnotenie>[] = [
     expansionMark: true,
   }),
   column({ label: "Skratka predmetu", prop: "skratka", hide: underSM }),
-  column({ label: "Kredit", prop: "kredit", sortKey: sortAs.number }),
+  column({
+    label: "Kredit",
+    sortKey: (hodnotenie: Hodnotenie) => sortAs.number(hodnotenie.kredit),
+    display: (hodnotenie: Hodnotenie) => {
+      const neuspesny = neuspesneZnamky.has(hodnotenie.hodn_znamka);
+      const nahradeny = hodnotenie.nahradeny;
+      const nepotvrdeny = hodnotenie.poplatok != "A";
+      if (neuspesny || nahradeny || nepotvrdeny) {
+        const lines = [
+          "Na výpočet kreditov a/alebo vážených priemerov môže vplývať:",
+          neuspesny ? `Predmet má hodnotenie "${hodnotenie.hodn_znamka}".` : "",
+          nahradeny ? "Predmet bol nahradený iným predmetom." : "",
+          nepotvrdeny ?
+            hodnotenie.poplatok == "" ?
+              'Stĺpec "Potvrdený" ("Zaplatený poplatok a úplný zápis") je v AISe prázdny.'
+            : `V stĺpci "Potvrdený" ("Zaplatený poplatok a úplný zápis") sa v AISe píše "${hodnotenie.poplatok}".`
+          : "",
+        ];
+        return (
+          <InfoTooltip
+            content={<em>{hodnotenie.kredit}</em>}
+            icon={"\u2139\uFE0F"}
+            tooltipHtml={lines.filter(Boolean).map(escape).join("<br>")}
+          />
+        );
+      } else {
+        return hodnotenie.kredit;
+      }
+    },
+  }),
   column({
     label: "Typ výučby",
     prop: "typ_vyucby",
@@ -91,17 +117,33 @@ function MojePredmetyPageContent() {
     <tr>
       {size > ScreenSize.SM && <td />}
       <td colSpan={2}>
-        Celkom {stats.spolu.count}{" "}
-        {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
-        {" ("}
-        {stats.zima.count} v zime, {stats.leto.count} v lete)
+        <InfoTooltip
+          content={
+            <React.Fragment>
+              Celkom {stats.spolu.count}{" "}
+              {plural(stats.spolu.count, "predmet", "predmety", "predmetov")}
+              {" ("}
+              {stats.zima.count} v zime, {stats.leto.count} v lete)
+            </React.Fragment>
+          }
+          icon={"\u2754"}
+          tooltipHtml="Tieto čísla vypočítal Votr.<br>Nie sú oficiálne z AISu."
+        />
       </td>
       <td>
-        {renderCredits(stats.spolu)} ({renderCredits(stats.zima)}&nbsp;+&nbsp;
-        {renderCredits(stats.leto)})
+        <InfoTooltip
+          content={<em>{stats.spolu.creditsEnrolled}?</em>}
+          icon={"\u2754"}
+          tooltipHtml={
+            "Toto číslo vypočítal Votr.<br>Nie je oficiálne z AISu.<br>" +
+            `Celkom <strong>${stats.spolu.creditsEnrolled}</strong> kreditov ` +
+            `(<strong>${stats.zima.creditsEnrolled}</strong> v zime, <strong>${stats.leto.creditsEnrolled}</strong> v lete).<br>` +
+            "Do tohto súčtu sa počítajú <strong>všetky zapísané predmety</strong> &ndash; aj neúspešné, bez hodnotenia, alebo nahradené."
+          }
+        />
       </td>
       {size > ScreenSize.XS && <td />}
-      <td>{renderWeightedStudyAverage(hodnotenia)}</td>
+      <td />
       {size > ScreenSize.SM && <td />}
       {size > ScreenSize.SM && <td />}
     </tr>
