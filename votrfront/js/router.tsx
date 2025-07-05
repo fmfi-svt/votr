@@ -22,6 +22,7 @@ export const QueryContext = React.createContext<Query>(
 );
 
 export function Root({ app }: { app: React.ComponentType }) {
+  // eslint-disable-next-line @eslint-react/naming-convention/use-state
   const [, setState] = useState({});
 
   useEffect(() => {
