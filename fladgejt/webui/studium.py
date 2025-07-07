@@ -3,7 +3,8 @@
 import re
 from aisikl.app import Application, assert_ops, DEFAULT_IGNORED_MESSAGES
 from aisikl.exceptions import AISBehaviorError
-from fladgejt.helpers import CantOpenApplication, find_row, find_option, encode_key, decode_key, STR_TO_BOOL
+from fladgejt.helpers import (
+    CantOpenApplication, find_row, find_option, encode_key, decode_key)
 from fladgejt.structures import Studium, ZapisnyList, Hodnotenie
 from fladgejt.webui.pool import pooled_app
 

@@ -197,7 +197,10 @@ tfoot:empty {
 
 .v-layout-InfoTooltip-content {
   // This might be too specific to what looks good on my machine...
-  text-decoration: underline wavy rgba(0, 0, 0, 0.2);
+  // Safari would need vendor prefix for "text-decoration-color and text-decoration-style included in shorthand", per MDN.
+  text-decoration: underline;
+  text-decoration-style: wavy;
+  text-decoration-color: rgba(0, 0, 0, 0.2);
 }
 
 .v-layout-InfoTooltip-icon {

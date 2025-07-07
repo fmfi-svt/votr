@@ -166,6 +166,3 @@ def decode_key(string):
         part = part.decode('utf8')
         result.append(part)
     return tuple(result)
-
-
-STR_TO_BOOL = { 'A': True, 'N': False }

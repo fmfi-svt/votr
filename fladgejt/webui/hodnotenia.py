@@ -1,5 +1,5 @@
 
-from fladgejt.helpers import CantOpenApplication, decode_key, STR_TO_BOOL
+from fladgejt.helpers import CantOpenApplication, decode_key
 from fladgejt.structures import Hodnotenie, Priemer, PriebezneHodnotenie, PriebezneHodnoteniaPredmetu
 
 
