@@ -41,3 +41,8 @@ default-groups = ["votrfront"]
 
 [tool.uv.sources]
 gunicorn = { git = "https://github.com/TomiBelan/gunicorn" }
+xmlsec = { index = "tomixmlsec" }
+
+[[tool.uv.index]]
+name = "tomixmlsec"
+url = "https://omega.svt.fmph.uniba.sk/xmlsec-wheels"
