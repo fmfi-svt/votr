@@ -199,7 +199,7 @@ class WebuiStudiumMixin:
                              hodn_datum=row['datum'],
                              hodn_znamka_popis=row['znamkaPopis'],
                              nahradeny=(row['nahradzaMa'] != ''),
-                             potvrdeny=STR_TO_BOOL[row['poplatok']],
+                             poplatok=row['poplatok'],
                              zapisny_list_key=encode_key(
                                 (studium_key, row['akRok'])))
                   for row in app.d.predmetyTable.all_rows()]

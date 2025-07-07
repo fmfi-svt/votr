@@ -45,14 +45,16 @@ export const mojePredmetyColumns: Column<Hodnotenie>[] = [
     display: (hodnotenie: Hodnotenie) => {
       const neuspesny = neuspesneZnamky.has(hodnotenie.hodn_znamka);
       const nahradeny = hodnotenie.nahradeny;
-      const nepotvrdeny = !hodnotenie.potvrdeny;
+      const nepotvrdeny = hodnotenie.poplatok != "A";
       if (neuspesny || nahradeny || nepotvrdeny) {
         const lines = [
           "Na výpočet kreditov a/alebo vážených priemerov môže vplývať:",
           neuspesny ? `Predmet má hodnotenie "${hodnotenie.hodn_znamka}".` : "",
           nahradeny ? "Predmet bol nahradený iným predmetom." : "",
           nepotvrdeny ?
-            'V stĺpci "Potvrdený" ("Zaplatený poplatok a úplný zápis") sa v AISe píše "N".'
+            hodnotenie.poplatok == "" ?
+              'Stĺpec "Potvrdený" ("Zaplatený poplatok a úplný zápis") je v AISe prázdny.'
+            : `V stĺpci "Potvrdený" ("Zaplatený poplatok a úplný zápis") sa v AISe píše "${hodnotenie.poplatok}".`
           : "",
         ];
         return (

@@ -126,7 +126,7 @@ export interface Hodnotenie {
   hodn_datum: string;
   hodn_znamka_popis: string;
   nahradeny: boolean;
-  potvrdeny: boolean;
+  poplatok: string;
   zapisny_list_key: string;
   predmet_key: string;
 }

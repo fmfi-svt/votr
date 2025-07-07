@@ -29,7 +29,7 @@ class WebuiHodnoteniaMixin:
                              hodn_datum=row['datum'],
                              hodn_znamka_popis=row['znamkaPopis'],
                              nahradeny=(row['nahradzaMa'] != ''),
-                             potvrdeny=STR_TO_BOOL[row['poplatok']],
+                             poplatok=row['poplatok'],
                              zapisny_list_key=zapisny_list_key)
                   for row in app.d.hodnoteniaTable.all_rows()]
         return [result, None]
