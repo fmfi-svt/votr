@@ -95,6 +95,7 @@ _main_re = re.compile(r'^function main0?\(\) \{$')
 _operation_re = re.compile(r'^(webui|dm)\(\)\.(\w+)\((.*)\)$')
 _update_re = re.compile(r'^f\(\)\.getControlById\("(\w+)", *(\w+)\)\.(\w+)\((.*)\)$')
 _dialog_update_re = re.compile(r'^(\w+)\.getDialogJSObject\(\)\.(\w+)\((.*)\)$')
+_access_token_re = re.compile(r'retrieveAccessToken\(\)\s*\{[^{}]*setRequestHeader\("([^\\"]+)",\s*"([^\\"]+)"\)')
 
 
 def _parse_args(args_str):
@@ -824,15 +825,21 @@ def check_connection(context):
     # preference for next time they log in to AIS directly.
 
     try:
+        # Find the magic header value that must be sent on .../get-access-token.
+        # It is mostly stable, but sometimes changes rarely on some AIS updates.
+        # It can also be found in an inline script in /ais/start.do, but
+        # requesting that would switch the user to the old interface.
+        response = context.request_ais('/ais/apps/student/sk/main.js')
+        match = _access_token_re.search(response.text)
+        if not match:
+            raise AISParseError('Could not find header in main.js code')
+
         # This request returns 200 with empty body if logged in (and strangely
         # also if no JSESSIONID is sent), or 401 if a JSESSIONID is sent but the
         # session is logged out or expired.
-        # The header is from https://ais2.uniba.sk/ais/apps/student/sk/main.js
-        # (search "accessToken") and from an inline script in /ais/start.do.
-        # Let's hope it's stable over time.
         response = context.request_ais(
             '/ais/rest/apps/get-access-token',
-            headers={'B5nd8BgAoX': '2llVM1Fl3M'})
+            headers={match.group(1): match.group(2)})
         aisauth = response.headers.get('AISAuth')
         if not aisauth:
             raise AISParseError('Missing AISAuth header')
