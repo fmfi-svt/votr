@@ -59,14 +59,5 @@
     "experimentalTernaries": true,
     "proseWrap": "always",
     "quoteProps": "preserve"
-  },
-  "pnpm": {
-    "overrides": {
-      "react-big-calendar>globalize": "-",
-      "react-big-calendar>lodash": "npm:lodash-es@^4",
-      "react-big-calendar>luxon": "-",
-      "react-big-calendar>moment": "-",
-      "react-big-calendar>moment-timezone": "-"
-    }
   }
 }

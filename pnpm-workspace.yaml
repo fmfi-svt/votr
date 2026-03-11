@@ -5,5 +5,12 @@ hoist: false
 # than to make installs slightly faster when switching git branches.
 modulesCacheMaxAge: 0
 
+overrides:
+  "react-big-calendar>globalize": "-"
+  "react-big-calendar>lodash": "npm:lodash-es@^4"
+  "react-big-calendar>luxon": "-"
+  "react-big-calendar>moment": "-"
+  "react-big-calendar>moment-timezone": "-"
+
 # Neat.
 verifyDepsBeforeRun: prompt
