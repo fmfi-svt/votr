@@ -104,12 +104,6 @@ class WebuiPredmetyMixin:
         (skratka_predmetu,) = decode_key(predmet_key)
         app = self._open_register_predmetov()
 
-        # Ak AIS prihlasenie vyprsalo, AIS nam stale dovoli otvorit register
-        # predmetov, ale nie dialog poctu prihlasenych studentov. Ak to tak
-        # vyzera, skontrolujeme ci netreba nove prihlasenie.
-        if not app.d.poctyPrihlasenychStudentovMenuItem.enabled:
-            self.check_connection()
-
         self.__query_dialog(app, akademicky_rok, skratka_predmetu='/'.join(skratka_predmetu.split('/')[1:-1]))
 
         app.d.zobrazitPredmetyButton.click()
@@ -117,7 +111,7 @@ class WebuiPredmetyMixin:
         if not app.d.zoznamPredmetovTable.all_rows():
             # predmet nebol najdeny (napriklad uz je prilis stary ale napriek
             # tomu ho mam v mojom hodnoteni)
-            return [[], None]
+            return dict(items=[], message=None, predmet=None)
 
         predmet_index = find_row(app.d.zoznamPredmetovTable.all_rows(), skratka=skratka_predmetu)
         app.d.zoznamPredmetovTable.select(predmet_index)
@@ -133,23 +127,10 @@ class WebuiPredmetyMixin:
                              cudzi_nazov=predmet_row['nazovJ'],
                              kredit=predmet_row['kredit'])
         with app.collect_operations() as ops:
-            app.d.poctyPrihlasenychStudentovAction.execute()
-
-        app.awaited_open_dialog(ops)
-
-        try:
-            app.d.dataTable.select(
-                find_row(app.d.dataTable.all_rows(), skratka=skratka_predmetu))
-        except KeyError:
-            with app.collect_operations() as ops:
-                app.d.closeButton.click()
-
-            app.awaited_close_dialog(ops)
-
-            return [[], predmet]
-
-        with app.collect_operations() as ops:
             app.d.zoznamStudentovAction.execute()
+
+        if len(ops) == 1 and ops[0].method == 'messageBox':
+            return dict(items=[], message=ops[0].args[0], predmet=predmet)
 
         app.awaited_open_dialog(ops)
 
@@ -166,13 +147,7 @@ class WebuiPredmetyMixin:
 
         app.awaited_close_dialog(ops)
 
-        # zatvarame dialog pocty studentov
-        with app.collect_operations() as ops:
-            app.d.closeButton.click()
-
-        app.awaited_close_dialog(ops)
-
-        return [studenti, predmet]
+        return dict(items=studenti, message=None, predmet=predmet)
 
     @pooled_app
     def _open_nastenka_predmetu(self):
@@ -191,9 +166,6 @@ class WebuiPredmetyMixin:
         if app.d.fakultaComboBox.selected_index != fakulta_index:
             app.d.fakultaComboBox.select(fakulta_index)
             app.d.potvrditOrgJednotkuButton.click()
-
-        # automaticky nacitavanie ucitelov do tabulky
-        app.d.nacitavatAutomatickyCheckBox.set_to(True)
 
         akademicky_rok_index = find_option(app.d.rokComboBox.options, title=akademicky_rok)
         if app.d.rokComboBox.selected_index != akademicky_rok_index:

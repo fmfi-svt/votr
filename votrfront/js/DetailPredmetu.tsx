@@ -3,6 +3,7 @@ import { CacheRequester, Loading } from "./ajax";
 import { Modal } from "./layout";
 import { QueryContext } from "./router";
 import { column, SortableTable, sortAs } from "./sorting";
+import type { PrihlasenyStudent, RegPredmet } from "./types";
 import { prihlasenyStudentColumns } from "./ZoznamPrihlasenychNaTermin";
 
 const regUcitelPredmetuColumns = [
@@ -21,11 +22,22 @@ function getZapisaniStudenti(
   predmetKey: string,
   akademickyRok: string,
 ) {
-  return cache.get(
+  const data = cache.get(
     "get_studenti_zapisani_na_predmet",
     predmetKey,
     akademickyRok,
   );
+
+  // Legacy return type support (for flashbacks).
+  if (Array.isArray(data)) {
+    const [items, predmet] = data as unknown as [
+      PrihlasenyStudent[],
+      RegPredmet | null,
+    ];
+    return { items, message: null, predmet };
+  }
+
+  return data;
 }
 
 function DetailPredmetuInformacnyList() {
@@ -64,8 +76,7 @@ function DetailPredmetuUcitelia() {
     return <Loading requests={cache.missing} />;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [studenti, predmet] = data;
+  const { predmet } = data;
 
   if (!predmet) {
     return "Dáta pre predmet neboli nájdené.";
@@ -109,24 +120,24 @@ function DetailPredmetuZapisaniStudenti() {
     return <Loading requests={cache.missing} />;
   }
 
-  const [studenti, predmet] = data;
+  const { items, message, predmet } = data;
 
-  if (!predmet) {
+  if (!items.length && !predmet) {
     return "Dáta pre predmet neboli nájdené.";
   }
 
-  const message =
-    studenti.length ? null : (
-      "Predmet nemá v AISe žiadnych zapísaných študentov."
-    );
-
   return (
     <SortableTable
-      items={studenti}
+      items={items}
       columns={prihlasenyStudentColumns}
       defaultOrder={detailPredmetuStudentiDefaultOrder}
       queryKey="modalStudentiSort"
-      message={message}
+      message={
+        message ||
+        (items.length ? null : (
+          "Predmet nemá v AISe žiadnych zapísaných študentov."
+        ))
+      }
     />
   );
 }
@@ -145,8 +156,7 @@ function DetailPredmetuTitle() {
     return <Loading requests={cache.missing} />;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [studenti, predmet] = data;
+  const { predmet } = data;
 
   if (!predmet) {
     return "Dáta nenájdené";

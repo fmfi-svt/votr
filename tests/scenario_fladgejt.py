@@ -70,7 +70,7 @@ def run(client):
     for predmet in predmety[0:5]:
         call('get_informacny_list', predmet['predmet_key'], roky[2]['id'], silent=True)
 
-        _, predmet2 = call('get_studenti_zapisani_na_predmet', predmet['predmet_key'], roky[2]['id'])
+        predmet2 = call('get_studenti_zapisani_na_predmet', predmet['predmet_key'], roky[2]['id'])['predmet']
 
         call('get_ucitelia_predmetu', predmet['predmet_key'], roky[2]['id'], predmet2['semester'], predmet2['fakulta'])
 

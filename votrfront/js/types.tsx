@@ -229,6 +229,12 @@ export interface GetPrehladKreditovResult {
   priemer_vsetkych: string | null;
 }
 
+export interface GetStudentiZapisaniNaPredmetResult {
+  items: PrihlasenyStudent[];
+  message: string | null;
+  predmet: RegPredmet | null;
+}
+
 export interface Rpcs {
   // hodnotenia.py
   get_hodnotenia(
@@ -277,7 +283,7 @@ export interface Rpcs {
   get_studenti_zapisani_na_predmet(
     predmet_key: string,
     akademicky_rok: string,
-  ): [studenti: PrihlasenyStudent[], predmet: RegPredmet | null];
+  ): GetStudentiZapisaniNaPredmetResult;
   get_ucitelia_predmetu(
     predmet_key: string,
     akademicky_rok: string,
