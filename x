@@ -14,6 +14,7 @@ help1='Usage:
     Options:
       --uv={local|system}      use system-wide uv or download it locally
       --nodejs={local|system}  use system-wide Node.js or download it locally
+      --pnpm={local|system}    use system-wide pnpm or download it locally
       --prod-deps              install prod-only dependencies (e.g. gunicorn)
       --no-dev-deps            omit dev-only dependencies (e.g. eslint)
       --clean                  reinstall everything from scratch
@@ -38,11 +39,9 @@ help2='
   ./x python [ARGS]
   ./x python3 [ARGS]
   ./x node [ARGS]
-  ./x corepack [ARGS]
-    Alias for "./x uv run ...".
-
   ./x pnpm [ARGS]
-    Runs a pnpm command. Implemented as "./x uv run corepack pnpm ...".
+  ./x pnpx [ARGS]
+    Alias for "./x uv run ...".
 
   ./x coverage [COVERAGE-COMMAND] [ARGS]
     Runs Coverage.py.
@@ -93,14 +92,9 @@ run)
   exec uv "$@"
   ;;
 
-node | python | python3 | corepack | *.py)
+node | python | python3 | pnpm | pnpx | *.py)
   add_uv_path
   exec uv run "$@"
-  ;;
-
-pnpm)
-  add_uv_path
-  exec uv run corepack "$@"
   ;;
 
 serve | cron | log)
@@ -115,8 +109,7 @@ upgrade-py)
   ;;
 
 upgrade-js)
-  # Upgrade pnpm itself. Edits "packageManager" in package.json.
-  "$0" corepack use pnpm@latest
+  # TODO: Upgrade pnpm itself.
   # Upgrade all minor/patch versions (and their deps).
   "$0" pnpm update
   # Upgrade major versions of selected direct dependencies (and their deps).
@@ -148,12 +141,15 @@ install)
   # Detect which options were used last time, if any.
   olduv=system
   oldnodejs=system
+  oldpnpm=system
   [[ -e "$base_dir/.x_local_uv_env/uv" ]] && olduv=local
   [[ -e "$base_dir/.venv/bin/node" ]] && oldnodejs=local
+  [[ -e "$base_dir/.venv/bin/pnpm" ]] && oldpnpm=local
 
   # Parse arguments.
   uv=$olduv
   nodejs=$oldnodejs
+  pnpm=$oldpnpm
   clean=
   proddeps=
   devdeps=y
@@ -162,6 +158,7 @@ install)
     case "$arg" in
     --uv=system | --uv=local) uv=${arg#*=} ;;
     --nodejs=system | --nodejs=local) nodejs=${arg#*=} ;;
+    --pnpm=system | --pnpm=local) pnpm=${arg#*=} ;;
     --clean) clean=y ;;
     --no-clean) clean= ;;
     --prod-deps) proddeps=y ;;
@@ -193,7 +190,7 @@ install)
 
   if [[ "$clean" == y ]]; then
     log_and_run "Deleting the previous installation. " "rm -rf .x_local_uv_env .venv node_modules"
-  elif [[ -d .venv ]] && [[ "$uv" != "$olduv" || "$nodejs" != "$oldnodejs" ]]; then
+  elif [[ -d .venv ]] && [[ "$uv" != "$olduv" || "$nodejs" != "$oldnodejs" || "$pnpm" != "$oldpnpm" ]]; then
     log_and_run "Deleting .venv because options have changed. " "rm -rf .venv"
   fi
 
@@ -231,11 +228,18 @@ install)
     log_and_run "Uninstalling nodeenv. " "uv sync$uvsyncopts"
   fi
 
+  if [[ $pnpm == system ]]; then
+    log "Using system pnpm."
+    pnpm --version
+  else
+    log_and_run "Installing local pnpm to './.venv'. " "uv run npm install pnpm@10.13.1 -g --prefix=.venv" # TODO: Updates.
+  fi
+
   if [[ -d node_modules ]]; then
     log "./node_modules already exists. Reusing it."
   fi
 
-  log_and_run "Installing JavaScript dependencies to './node_modules'. " "uv run corepack pnpm install$pnpmopts"
+  log_and_run "Installing JavaScript dependencies to './node_modules'. " "uv run pnpm install$pnpmopts"
 
   log "Success!"
   ;;

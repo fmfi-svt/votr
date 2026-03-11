@@ -29,6 +29,7 @@ that Votr's users interact with.
 - _Optional step:_ [Install Node.js][node.js]. Make sure it's a recent version.
   The official packages on Debian/Ubuntu are frequently very outdated, but you
   can try [NodeSource][], or per-user installation with [nvm][].
+- _Optional step:_ [Install pnpm][pnpm].
 - [Install Git][git].
 - Download Votr source code using Git:
   ```shell
@@ -40,10 +41,10 @@ that Votr's users interact with.
   ./x install
   ```
   Rerun this every time you pull a new version of Votr, in case some
-  dependencies were updated.<br> _Optional step:_ Add `--uv=local` and/or
-  `--nodejs=local` if you didn't install them system-wide, or if you just prefer
-  to use an isolated local version. You may need to [install curl][curl].
-  (Behind the scenes, this downloads Python binaries from
+  dependencies were updated.<br> _Optional step:_ Add `--uv=local`,
+  `--nodejs=local` and/or `--pnpm=local` if you didn't install them system-wide,
+  or if you just prefer to use an isolated local version. You may need to
+  [install curl][curl]. (Behind the scenes, this downloads Python binaries from
   [python-build-standalone][pbs] and official Node.js binaries from nodejs.org.)
 - To start a local Votr server, open two terminals and run these commands:
   ```shell
@@ -57,6 +58,7 @@ that Votr's users interact with.
 [node.js]: https://nodejs.org/en/download/package-manager/
 [nodesource]: https://github.com/nodesource/distributions
 [nvm]: https://github.com/nvm-sh/nvm
+[pnpm]: https://pnpm.io/installation
 [git]: https://git-scm.com/download/linux
 [curl]: https://everything.curl.dev/get
 [pbs]: https://gregoryszorc.com/docs/python-build-standalone/main/
