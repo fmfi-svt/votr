@@ -127,7 +127,7 @@ export function Announcement() {
   );
 }
 
-export function PageLayout(props: { children: React.ReactNode }) {
+export function PageLayout({ children }: { children: React.ReactNode }) {
   return (
     <React.Fragment>
       <PageNavbar />
@@ -140,7 +140,7 @@ export function PageLayout(props: { children: React.ReactNode }) {
             <ErrorBoundary>
               <AnketaPopup />
               <Announcement />
-              {props.children}
+              {children}
             </ErrorBoundary>
           </div>
         </div>
@@ -217,19 +217,14 @@ function MenuItem(props: {
   href: Href;
   label: React.ReactNode;
 }) {
+  const { active, href, label } = props;
   const query = useContext(QueryContext);
-  const isActive = props.active || props.href.action == query.action;
+  const isActive = active || href.action == query.action;
   return (
     <li className={isActive ? "active" : undefined}>
-      <Link href={props.href}>{props.label}</Link>
+      <Link href={href}>{label}</Link>
     </li>
   );
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-function DisabledItem(props: { label: React.ReactNode }) {
-  // return <li className="disabled"><a>{props.label}</a></li>;
-  return null;
 }
 
 function MainMenu() {
@@ -267,7 +262,7 @@ function MainMenu() {
             label="Priebežné hodnotenia"
             href={{ action: "priebezneHodnotenia", zapisnyListKey }}
           />
-          <DisabledItem label="Môj rozvrh" />
+          {/* <MenuItem label="Môj rozvrh" href={...} /> */}
           <MenuItem
             label="Zápis predmetov"
             href={{ action: "zapisZPlanu", zapisnyListKey }}
@@ -294,8 +289,8 @@ function MainMenu() {
         label="Register predmetov"
         href={{ action: "registerPredmetov" }}
       />
-      <DisabledItem label="Register miestností" />
-      <DisabledItem label="Register študijných programov" />
+      {/* <MenuItem label="Register miestností" href={...} /> */}
+      {/* <MenuItem label="Register študijných programov" href={...} /> */}
       {!!Votr.settings.feedback_link && (
         <React.Fragment>
           <li>
@@ -320,17 +315,18 @@ export function FormItem(props: {
   label?: React.ReactNode;
   children: React.ReactNode;
 }) {
-  if (props.label) {
+  const { label, children } = props;
+  if (label) {
     return (
       <label className="v-common-form-item">
-        <div className="col-sm-4 v-common-form-label">{props.label}</div>
-        <div className="col-sm-8">{props.children}</div>
+        <div className="col-sm-4 v-common-form-label">{label}</div>
+        <div className="col-sm-8">{children}</div>
       </label>
     );
   } else {
     return (
       <div className="v-common-form-item">
-        <div className="col-sm-offset-4 col-sm-8">{props.children}</div>
+        <div className="col-sm-offset-4 col-sm-8">{children}</div>
       </div>
     );
   }

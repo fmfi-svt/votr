@@ -81,11 +81,12 @@ function PrehladStudiaObdobie(props: {
   semester: "Z" | "L";
   label: string;
 }) {
+  const { rpc, semester, label } = props;
   const cache = new CacheRequester();
-  const result = cache.get(props.rpc, props.semester);
+  const result = cache.get(rpc, semester);
   return (
     <tr>
-      <th>{props.label}</th>
+      <th>{label}</th>
       <td>
         {result ?
           result.obdobie_od + " \u2013 " + result.obdobie_do

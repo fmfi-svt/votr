@@ -14,7 +14,7 @@ export function coursesStats(predmety: (Hodnotenie | ZapisPredmet)[]) {
   }
 
   for (const row of predmety) {
-    const credits = parseInt(row.kredit);
+    const credits = Number(row.kredit);
     add("spolu", credits);
     if (row.semester == "Z") add("zima", credits);
     if (row.semester == "L") add("leto", credits);

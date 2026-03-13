@@ -38,12 +38,13 @@ const zapisVlastnostiColumns: Column<ZapisVlastnost>[] = [
 ];
 
 function ZapisLink(props: { active: boolean; href: Href; label: string }) {
+  const { active, href, label } = props;
   return (
     <Link
-      className={classNames("btn", "btn-default", props.active && "active")}
-      href={props.href}
+      className={classNames("btn", "btn-default", active && "active")}
+      href={href}
     >
-      {props.label}
+      {label}
     </Link>
   );
 }
@@ -81,21 +82,22 @@ function ZapisTableFooter(props: {
   moje: Record<string, boolean>;
   size: ScreenSize;
 }) {
+  const { predmety, moje, size } = props;
   const blokMoje = new Map<string, ZapisPredmet[]>();
   const vsetkyMoje: ZapisPredmet[] = [];
   const blokNazvy = new Map<string, string>();
   const semestre = new Set<string>();
 
-  for (const predmet of props.predmety.values()) {
+  for (const predmet of predmety.values()) {
     const { predmet_key, semester, blok_skratka, blok_nazov } = predmet;
     semestre.add(semester);
     if (blok_skratka) {
       if (blok_nazov) blokNazvy.set(blok_skratka, blok_nazov);
       let list = blokMoje.get(blok_skratka);
       if (!list) blokMoje.set(blok_skratka, (list = []));
-      if (props.moje[predmet_key]) list.push(predmet);
+      if (moje[predmet_key]) list.push(predmet);
     }
-    if (props.moje[predmet_key]) vsetkyMoje.push(predmet);
+    if (moje[predmet_key]) vsetkyMoje.push(predmet);
   }
 
   const zoradene = sortBy(Array.from(blokMoje.entries()), 0);
@@ -125,12 +127,12 @@ function ZapisTableFooter(props: {
           ));
         const pocetAKredity = `${pocet}, ${kredity} kreditov`;
         return (
-          props.size == ScreenSize.XS ?
+          size == ScreenSize.XS ?
             <tr key={skratka}>
               <td colSpan={2}>{uvodABlok}</td>
               <td colSpan={2}>{pocetAKredity}</td>
             </tr>
-          : props.size == ScreenSize.SM ?
+          : size == ScreenSize.SM ?
             <tr key={skratka}>
               <td colSpan={2}>{uvodABlok}</td>
               <td colSpan={2}>{pocet}</td>
@@ -316,8 +318,8 @@ function ZapisTable({
       column({
         label: "Blok",
         sortKey: (predmet: ZapisPredmet) =>
-          parseInt(predmet.blok_index || "0") * 1000 +
-          parseInt(predmet.v_bloku_index || "0"),
+          Number(predmet.blok_index || "0") * 1000 +
+          Number(predmet.v_bloku_index || "0"),
         hide: underSM,
         display: (predmet: ZapisPredmet) =>
           predmet.blok_nazov ?

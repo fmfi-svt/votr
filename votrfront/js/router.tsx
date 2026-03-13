@@ -88,6 +88,7 @@ export function Link(
     "href"
   >,
 ) {
+  const { href } = props;
   function handleClick(event: React.MouseEvent) {
     // Chrome fires onclick on middle click. Firefox only fires it on document,
     // see <http://lists.w3.org/Archives/Public/www-dom/2013JulSep/0203.html>,
@@ -95,10 +96,10 @@ export function Link(
     if (event.button != 0) return;
 
     event.preventDefault();
-    navigate(props.href);
+    navigate(href);
   }
 
-  return <a {...props} href={buildUrl(props.href)} onClick={handleClick} />;
+  return <a {...props} href={buildUrl(href)} onClick={handleClick} />;
 }
 
 export function RelativeLink({
@@ -116,13 +117,14 @@ export function FakeLink(
     onClick: (event: React.KeyboardEvent) => void;
   } & React.HTMLAttributes<HTMLAnchorElement>,
 ) {
+  const { onClick } = props;
   // Pressing Enter on <a href=...> emits a click event, and the HTML5 spec
   // says elements with tabindex should do that too, but they don't.
   // <http://www.w3.org/TR/WCAG20-TECHS/SCR29> suggests using a keyup event:
   function handleKeyUp(event: React.KeyboardEvent) {
     if (event.which == 13) {
       event.preventDefault();
-      props.onClick(event);
+      onClick(event);
     }
   }
 

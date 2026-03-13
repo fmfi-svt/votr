@@ -7,6 +7,7 @@ function LogViewerContent(props: {
   closeButton: React.ReactNode;
   modeButton: React.ReactNode;
 }) {
+  const { closeButton, modeButton } = props;
   const [hidden, setHidden] = useState<Record<string, boolean>>({
     benchmark: true,
     http: true,
@@ -37,8 +38,8 @@ function LogViewerContent(props: {
   return (
     <div className="v-LogViewer">
       <div className="v-LogViewer-options">
-        {props.closeButton}
-        {props.modeButton}
+        {closeButton}
+        {modeButton}
         <ul className="list-inline v-LogViewer-types">
           {sortBy(Object.entries(types), 0).map(([type, count]) => (
             <li key={type}>
@@ -118,13 +119,14 @@ function LogViewerBenchmarkContent(props: {
   closeButton: React.ReactNode;
   modeButton: React.ReactNode;
 }) {
+  const { closeButton, modeButton } = props;
   const benchmarks = computeBenchmarks();
 
   return (
     <div className="v-LogViewer">
       <div className="v-LogViewer-options">
-        {props.closeButton}
-        {props.modeButton}
+        {closeButton}
+        {modeButton}
       </div>
 
       <div className="v-LogViewer-scroll">

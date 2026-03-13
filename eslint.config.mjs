@@ -20,7 +20,7 @@ export default tseslint.config(
   compat.configs["flat/recommended"],
   escompat.configs["flat/recommended"],
   escompat.configs["flat/typescript-" + tstarget],
-  eslintReact.configs["recommended-type-checked"],
+  eslintReact.configs["strict-type-checked"],
   {
     languageOptions: {
       parserOptions: {
@@ -36,8 +36,12 @@ export default tseslint.config(
 
       // Nice to have. Not too valuable, but not too bothersome. We can remove
       // them if they cause trouble later.
+      "@eslint-react/globals": "warn",
+      "@eslint-react/immutability": "warn",
       "@eslint-react/no-missing-component-display-name": "warn",
-      "@eslint-react/no-unused-class-component-members": "warn",
+      "@eslint-react/no-unused-props": "warn",
+      "@eslint-react/no-unused-state": "warn",
+      "@eslint-react/refs": "warn",
       "@typescript-eslint/default-param-last": "warn",
       "@typescript-eslint/no-dupe-class-members": "warn",
       "@typescript-eslint/no-import-type-side-effects": "warn",
@@ -45,13 +49,16 @@ export default tseslint.config(
       "@typescript-eslint/no-loop-func": "warn",
       "@typescript-eslint/no-redeclare": "warn",
       "@typescript-eslint/no-unused-expressions": "warn",
+      "@typescript-eslint/no-unused-private-class-members": "warn",
       "@typescript-eslint/require-array-sort-compare": "warn",
+      "@typescript-eslint/strict-void-return": "warn",
       "accessor-pairs": "warn",
       "block-scoped-var": "warn",
       "consistent-return": "warn",
-      "default-case-last": "warn",
       "default-case": "warn",
+      "default-case-last": "warn",
       "eqeqeq": "off", // TODO: Maybe enable later; maybe { "null": "ignore" }
+      "func-names": ["warn", "never"],
       "grouped-accessor-pairs": "warn",
       "lines-between-class-members": "warn",
       "logical-assignment-operators": "warn",
@@ -60,16 +67,19 @@ export default tseslint.config(
       "no-bitwise": "warn",
       "no-caller": "warn",
       "no-constant-binary-expression": "warn",
+      "no-constructor-return": "warn",
       "no-eval": "warn",
       "no-extend-native": "warn",
       "no-extra-bind": "warn",
       "no-extra-label": "warn",
       "no-label-var": "warn",
       "no-lone-blocks": "warn",
+      "no-multi-assign": ["warn", { "ignoreNonDeclaration": true }],
       "no-multi-str": "warn",
       "no-new-func": "warn",
       "no-new-object": "warn",
       "no-new-wrappers": "warn",
+      "no-object-constructor": "warn",
       "no-octal-escape": "warn",
       "no-param-reassign": ["warn", { "props": true }],
       "no-promise-executor-return": "warn",
@@ -92,6 +102,9 @@ export default tseslint.config(
       "prefer-numeric-literals": "warn",
       "prefer-object-spread": "warn",
       "prefer-promise-reject-errors": "warn",
+      "prefer-regex-literals": "warn",
+      "radix": "warn",
+      "require-atomic-updates": "warn",
       "symbol-description": "warn",
       "yoda": "warn",
 
@@ -105,6 +118,11 @@ export default tseslint.config(
         {
           "selector": "NewExpression[callee.name='Date'][arguments.length=0]",
           "message": "Remember to use getDateNow() instead of new Date()",
+        },
+        {
+          // No deep reason. I personally find <React.Fragment> more readable.
+          "selector": "JSXFragment",
+          "message": "Prefer <React.Fragment> instead of <>",
         },
       ],
 
@@ -147,6 +165,14 @@ export default tseslint.config(
       // I don't think "no-shadow" is useful enough to enable permanently, but
       // you can occasionally try it with:
       //   ./x pnpm eslint . --rule '{"@typescript-eslint/no-shadow":"warn"}'
+    },
+  },
+  {
+    settings: {
+      // Options for eslint-plugin-compat:
+      // Despite the name, ignoreConditionalChecks enables stricter checks.
+      ignoreConditionalChecks: true,
+      lintAllEsApis: true,
     },
   },
   {

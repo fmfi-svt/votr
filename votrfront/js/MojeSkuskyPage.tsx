@@ -212,12 +212,13 @@ function MojeSkuskyMenuLink(props: {
   href: Href;
   label: React.ReactNode;
 }) {
+  const { active, href, label } = props;
   return (
     <Link
-      className={classNames("btn", "btn-default", props.active && "active")}
-      href={props.href}
+      className={classNames("btn", "btn-default", active && "active")}
+      href={href}
     >
-      {props.label}
+      {label}
     </Link>
   );
 }
@@ -283,12 +284,13 @@ function defaultDate(eventList: CalendarEvent[]) {
 }
 
 function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
+  const { eventList } = props;
   return (
     <Calendar
       localizer={localizer}
-      events={props.eventList}
+      events={eventList}
       views={["month", "week", "day"]}
-      defaultDate={defaultDate(props.eventList)}
+      defaultDate={defaultDate(eventList)}
       getNow={getDateNow}
       className="v-MojeSkuskyPage-calendar"
       messages={{
