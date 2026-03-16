@@ -44,7 +44,6 @@
     "typescript-eslint": "^8.37.0"
   },
   "scripts": {
-    "lint": "echo Running prettier; prettier --check .; echo Running eslint; eslint .; echo Running tsc; tsc --noEmit",
     "builddev": "webpack --mode=development --progress --stats=minimal",
     "buildprod": "webpack --mode=production --progress --stats=minimal",
     "watch": "webpack --mode=development --progress --stats=minimal --watch",

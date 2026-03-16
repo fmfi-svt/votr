@@ -1,12 +1,19 @@
 #!/usr/bin/env bash
-# shellcheck disable=SC2250
+# shellcheck enable=all disable=SC2250
 
 set -e -u -o pipefail
 
 base_dir=$(dirname "$0")
 base_dir=$(readlink -fv "$base_dir")
 
-help1='Usage:
+help1='Usage: ./x [COMMON-OPTIONS] X-COMMAND ...
+
+Common options:
+
+  -W
+    Enables Python warnings. (PYTHONWARNINGS=always)
+
+Commands:
 
   ./x install [OPTIONS]
     Downloads dependencies to "./.venv" (Py) and "./node_modules" (JS).
@@ -43,11 +50,32 @@ help2='
   ./x pnpx [ARGS]
     Alias for "./x uv run ...".
 
+  ./x lint
+    Checks for code warnings.
+
+  ./x format
+    Autoformats code.
+
+  ./x build-docs
+    Generates HTML API docs from source code docstrings.
+
   ./x coverage [COVERAGE-COMMAND] [ARGS]
-    Runs Coverage.py.
+    Runs Coverage.py. See https://coverage.readthedocs.io/en/latest/commands/
+    Notable commands:
+      ./x coverage run something.py
+      ./x coverage combine [--append]
+      ./x coverage html
 
   ./x coverage-serve [SERVE-OPTIONS]
-    Runs serve with Coverage.py.
+    Runs "./x serve ..." with Coverage.py.
+
+  ./x watch-and-serve [SERVE-OPTIONS]
+    Runs both "./x pnpm watch" (JavaScript bundler) and "./x serve ..."
+    (Python development server) in parallel.
+
+  ./x watch-and-coverage-serve [SERVE-OPTIONS]
+    Runs both "./x pnpm watch" (JavaScript bundler) and "./x coverage-serve ..."
+    (Python development server with Coverage.py) in parallel.
 '
 
 normal=$'\e[0m'
@@ -71,7 +99,23 @@ add_uv_path() {
   fi
 }
 
-case "${1:---help}" in
+log_and_cd_to_basedir() {
+  if [[ "$PWD" != "$base_dir" ]]; then
+    log_and_run "" "cd ${base_dir@Q}"
+  fi
+}
+
+while true; do
+  case "${1:-}" in
+  -W) shift; export PYTHONWARNINGS=always;;
+  *) break;;
+  esac
+done
+
+command=${1:---help}
+shift || true
+
+case "$command" in
 --help)
   if [[ -d "$base_dir/.venv" ]]; then
     echo >&2 "$help1$help2"
@@ -84,51 +128,81 @@ case "${1:---help}" in
 
 uv)
   add_uv_path
-  exec "$@"
+  exec uv "$@"
   ;;
 
 run)
   add_uv_path
-  exec uv "$@"
+  exec uv run "$@"
   ;;
 
 node | python | python3 | pnpm | pnpx | *.py)
   add_uv_path
-  exec uv run "$@"
+  exec uv run "$command" "$@"
   ;;
 
 serve | cron | log)
   add_uv_path
-  exec uv run "$base_dir/console.py" "$@"
+  exec uv run "$base_dir/console.py" "$command" "$@"
   ;;
 
 upgrade-py)
-  shift
-  add_uv_path
-  exec uv sync --upgrade "$@"
+  log_and_cd_to_basedir
+  printf -v uvcmd ' %q' uv sync --upgrade "$@"
+  log_and_run "Upgrading Python dependencies. " "./x$uvcmd"
   ;;
 
 upgrade-js)
+  log_and_cd_to_basedir
   # TODO: Upgrade pnpm itself.
-  # Upgrade all minor/patch versions (and their deps).
-  "$0" pnpm update
-  # Upgrade major versions of selected direct dependencies (and their deps).
-  "$0" pnpm update --latest --interactive
+  log_and_run "Upgrading JavaScript: minor versions of all dependencies. " "./x pnpm update"
+  log_and_run "Upgrading JavaScript: major versions of chosen direct dependencies, and minor versions of their dependencies. " "./x pnpm update --latest --interactive"
   ;;
 
 upgrade)
-  "$0" upgrade-py
-  "$0" upgrade-js
+  log_and_cd_to_basedir
+  ./x upgrade-py
+  ./x upgrade-js
+  ;;
+
+lint)
+  log_and_cd_to_basedir
+  combined_status=0
+  lint_run() {
+    # shellcheck disable=SC2310 # `&& true` intentionally disarms `set -e` within log_and_run
+    log_and_run "$@" && true
+    status=$?
+    if (( status )); then
+      combined_status=$status
+      echo >&2 "${bright}${red}>>> ${normal}${red}Failed with status ${status}.${normal}"
+    fi
+  }
+  lint_run "Checking Prettier formatting. " "./x pnpm prettier --check ."
+  lint_run "Checking TypeScript. " "./x pnpm tsc --noEmit"
+  lint_run "Checking ESLint. " "./x pnpm eslint ."
+  exit "$combined_status"
+  ;;
+
+format)
+  log_and_cd_to_basedir
+  log_and_run "" "./x pnpm prettier --write ."
+  ;;
+
+build-docs)
+  log_and_cd_to_basedir
+  log_and_run "" "./x uv run --with sphinx,sphinx-rtd-theme make -C docs html"
+  ;;
+
+watch-and-serve | watch-and-coverage-serve)
+  exec bash -c "env --default-signal ${0@Q} ${command#watch-and-} ${*@Q} & ${0@Q} pnpm watch"
   ;;
 
 coverage)
-  shift
   add_uv_path
   exec uv run --with coverage coverage "$@"
   ;;
 
 coverage-serve)
-  shift
   add_uv_path
   # https://coverage.readthedocs.io/en/latest/subprocess.html
   # https://github.com/dougn/coverage_pth/pull/7
@@ -153,7 +227,6 @@ install)
   clean=
   proddeps=
   devdeps=y
-  shift
   for arg; do
     case "$arg" in
     --uv=system | --uv=local) uv=${arg#*=} ;;
@@ -174,19 +247,17 @@ install)
 
   uvsyncopts=
   pnpmopts=
-  if [[ $proddeps ]]; then
+  if [[ -n $proddeps ]]; then
     uvsyncopts+=' --group prod'
   fi
-  if [[ ! $devdeps ]]; then
+  if [[ -z $devdeps ]]; then
     uvsyncopts+=' --no-dev'
     pnpmopts+=' --production'
   fi
 
-  trap 'if [[ $? != 0 ]]; then echo -e "${bright}${red}>>> Failed!${normal}"; fi' EXIT
+  trap 'if (( $? )); then echo >&2 "${bright}${red}>>> Failed!${normal}"; fi' EXIT
 
-  if [[ "$PWD" != "$base_dir" ]]; then
-    log_and_run "" "cd ${base_dir@Q}"
-  fi
+  log_and_cd_to_basedir
 
   if [[ "$clean" == y ]]; then
     log_and_run "Deleting the previous installation. " "rm -rf .x_local_uv_env .venv node_modules"
@@ -245,14 +316,14 @@ install)
   ;;
 
 -*)
-  echo >&2 "Unknown option: $1"
-  "$0" --help
+  echo >&2 "Unknown option: $command"
+  echo >&2 "Try: $0 --help"
   exit 1
   ;;
 
 *)
-  echo >&2 "Unknown command: $1"
-  "$0" --help
+  echo >&2 "Unknown command: $command"
+  echo >&2 "Try: $0 --help"
   exit 1
   ;;
 esac
