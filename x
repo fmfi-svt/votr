@@ -105,6 +105,28 @@ log_and_cd_to_basedir() {
   fi
 }
 
+install_local_node() {
+  if [[ -e .venv/bin/node && "$(.venv/bin/node --version || true)" == "$(< .node-version)" ]]; then
+    log "Local node is already the correct version. Reusing it."
+  else
+    if [[ -d .venv/lib/node_modules ]]; then
+      log_and_run "Deleting the previous node version. " "rm -rf .venv/lib/node_modules"
+    fi
+    log_and_run "Installing nodeenv. " "uv pip install nodeenv"
+    log_and_run "Installing local node. " "uv run nodeenv -p"
+    log_and_run "Cleaning up unnecessary files. " "rm -rf .venv/include/node .venv/src/node*"
+    log_and_run "Uninstalling nodeenv. " "uv pip uninstall nodeenv"
+  fi
+}
+
+install_local_pnpm() {
+  if [[ -e .venv/bin/pnpm && -e .venv/lib/node_modules/pnpm && "$(uv run pnpm --version || true)" == "$(< .pnpm-version)" ]]; then
+    log "Local pnpm is already the correct version. Reusing it."
+  else
+    log_and_run "Installing local pnpm to './.venv'. " "uv run npm install 'pnpm@$(< .pnpm-version)' -g --prefix=.venv"
+  fi
+}
+
 while true; do
   case "${1:-}" in
   -W) shift; export PYTHONWARNINGS=always;;
@@ -154,7 +176,26 @@ upgrade-py)
 
 upgrade-js)
   log_and_cd_to_basedir
-  # TODO: Upgrade pnpm itself.
+  add_uv_path
+
+  # See also https://github.com/nodejs/nodejs-dist-indexer
+  log_and_run "Determining latest Node.js version. " "curl -fsSL https://nodejs.org/download/release/index.tab | sed -n '2s/\t.*//p' > .node-version"
+
+  # The filename ".pnpm-version" is not standard. Only ./x uses it.
+  log_and_run "Determining latest pnpm version. " "./x pnpm view pnpm version > .pnpm-version"
+
+  if ! [[ -e .venv/bin/node ]]; then
+    log "Using system-wide node. Therefore an update won't be attempted."
+  else
+    install_local_node
+  fi
+
+  if ! [[ -e .venv/bin/pnpm || -L .venv/bin/pnpm ]]; then
+    log "Using system-wide pnpm. Therefore an update won't be attempted."
+  else
+    install_local_pnpm
+  fi
+
   log_and_run "Upgrading JavaScript: minor versions of all dependencies. " "./x pnpm update"
   log_and_run "Upgrading JavaScript: major versions of chosen direct dependencies, and minor versions of their dependencies. " "./x pnpm update --latest --interactive"
   ;;
@@ -286,24 +327,15 @@ install)
   if [[ $nodejs == system ]]; then
     log "Using system node."
     node --version
-  elif [[ -e .venv/bin/node ]]; then
-    log "./.venv/bin/node already exists. Reusing it."
   else
-    log_and_run "Installing nodeenv. " "uv pip install nodeenv"
-    if [[ -n "${X_NODE_VERSION:-}" ]]; then
-      log_and_run "Installing local node. " "uv run nodeenv -p -n \"\$X_NODE_VERSION\""
-    else
-      log_and_run "Installing local node (latest because \$X_NODE_VERSION is unset). " "uv run nodeenv -p"
-    fi
-    log_and_run "Cleaning up unnecessary files. " "rm -rf .venv/include/node .venv/src/node*"
-    log_and_run "Uninstalling nodeenv. " "uv sync$uvsyncopts"
+    install_local_node
   fi
 
   if [[ $pnpm == system ]]; then
     log "Using system pnpm."
     pnpm --version
   else
-    log_and_run "Installing local pnpm to './.venv'. " "uv run npm install pnpm@10.13.1 -g --prefix=.venv" # TODO: Updates.
+    install_local_pnpm
   fi
 
   if [[ -d node_modules ]]; then
