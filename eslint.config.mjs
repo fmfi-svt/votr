@@ -4,7 +4,6 @@ import eslintReact from "@eslint-react/eslint-plugin";
 import eslintJs from "@eslint/js";
 import compat from "eslint-plugin-compat";
 import escompat from "eslint-plugin-escompat";
-import hooks from "eslint-plugin-react-hooks";
 import globals from "globals";
 import { readFileSync } from "node:fs";
 import tseslint from "typescript-eslint";
@@ -23,11 +22,6 @@ export default tseslint.config(
   escompat.configs["flat/typescript-" + tstarget],
   eslintReact.configs["recommended-type-checked"],
   {
-    // https://github.com/facebook/react/issues/28313
-    plugins: { "react-hooks": hooks },
-    rules: hooks.configs.recommended.rules,
-  },
-  {
     languageOptions: {
       parserOptions: {
         projectService: true,
@@ -42,13 +36,8 @@ export default tseslint.config(
 
       // Nice to have. Not too valuable, but not too bothersome. We can remove
       // them if they cause trouble later.
-      "@eslint-react/naming-convention/component-name": "warn",
-      "@eslint-react/naming-convention/use-state": "warn",
-      "@eslint-react/no-children-prop": "warn",
       "@eslint-react/no-missing-component-display-name": "warn",
       "@eslint-react/no-unused-class-component-members": "warn",
-      "@eslint-react/hooks-extra/no-unnecessary-use-callback": "warn",
-      "@eslint-react/hooks-extra/no-unnecessary-use-memo": "warn",
       "@typescript-eslint/default-param-last": "warn",
       "@typescript-eslint/no-dupe-class-members": "warn",
       "@typescript-eslint/no-import-type-side-effects": "warn",

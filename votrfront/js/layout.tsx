@@ -121,7 +121,7 @@ export function Announcement() {
     <p
       className="alert alert-warning"
       role="alert"
-      // eslint-disable-next-line @eslint-react/dom/no-dangerously-set-innerhtml
+      // eslint-disable-next-line @eslint-react/dom-no-dangerously-set-innerhtml
       dangerouslySetInnerHTML={{ __html: announcement }}
     />
   );

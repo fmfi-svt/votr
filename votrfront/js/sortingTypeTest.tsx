@@ -86,7 +86,7 @@ function columnTypeTest() {
   // @ts-expect-error
   const propStringIsError = column(propStringObj);
 
-  const fooOrBar: "foo" | "bar" = "foo" as "foo" | "bar";
+  const fooOrBar: "foo" | "bar" = confirm("...") ? "foo" : "bar";
   const multipleProps = column({ label: "", prop: fooOrBar });
   multipleProps.display({ "foo": 123, "bar": "hi" });
   // @ts-expect-error

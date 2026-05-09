@@ -6,11 +6,21 @@ hoist: false
 modulesCacheMaxAge: 0
 
 overrides:
+  # TODO: Remove after https://github.com/amilajack/eslint-plugin-compat/pull/686
+  "eslint-plugin-compat>@mdn/browser-compat-data": "-"
+  # We do not need these react-big-calendar dependencies.
   "react-big-calendar>globalize": "-"
   "react-big-calendar>lodash": "npm:lodash-es@^4"
   "react-big-calendar>luxon": "-"
   "react-big-calendar>moment": "-"
   "react-big-calendar>moment-timezone": "-"
+
+packageExtensions:
+  # Work around a stupid bug in eslint-plugin-compat.
+  # TODO: Remove after https://github.com/amilajack/eslint-plugin-compat/pull/682
+  eslint-plugin-compat:
+    dependencies:
+      caniuse-lite: "*"
 
 # Neat.
 verifyDepsBeforeRun: prompt
