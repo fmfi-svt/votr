@@ -17,6 +17,9 @@ votrfront = [
 prod = [
     "gunicorn[setproctitle]>=0",
     "python3-saml>=0",
+    # Old setuptools are needed because our version of gunicorn still depends on
+    # pkg_resources. TODO: Update gunicorn and remove this dependency.
+    "setuptools<82",
 ]
 
 [build-system]

@@ -1,5 +1,5 @@
 version = 1
-revision = 2
+revision = 3
 requires-python = ">=3.12"
 
 [[package]]
@@ -291,6 +291,7 @@ dependencies = [
 prod = [
     { name = "gunicorn", extra = ["setproctitle"] },
     { name = "python3-saml" },
+    { name = "setuptools" },
 ]
 votrfront = [
     { name = "markupsafe" },
@@ -308,6 +309,7 @@ requires-dist = [
 prod = [
     { name = "gunicorn", extras = ["setproctitle"], git = "https://github.com/TomiBelan/gunicorn" },
     { name = "python3-saml", specifier = ">=0" },
+    { name = "setuptools", specifier = "<82" },
 ]
 votrfront = [
     { name = "markupsafe", specifier = ">=0" },
