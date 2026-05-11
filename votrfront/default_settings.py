@@ -1,3 +1,11 @@
+"""To change these settings, create votrfront/local_settings.py containing:
+
+    from .default_settings import *
+
+    foo = 'bar'
+
+    ...
+"""
 
 instance_id = 'votr'
 
@@ -22,40 +30,16 @@ announcement_html = ''
 
 servers = [
     dict(
-        title='ais2.uniba.sk + REST',
-        login_types=('saml_password', 'cookie'),
-        ais_cookie='JSESSIONID',
-        ais_url='https://ais2.uniba.sk/',
-        rest_cookie='JSESSIONID',
-        rest_url='https://votr-api.uniba.sk/',
-    ),
-    dict(
         title='ais2.uniba.sk',
         login_types=('saml_password', 'cookie'),
         ais_cookie='JSESSIONID',
         ais_url='https://ais2.uniba.sk/',
     ),
     dict(
-        title='ais2-beta.uniba.sk + REST',
-        login_types=('saml_password', 'cookie'),
-        ais_cookie='JSESSIONID',
-        ais_url='https://ais2-beta.uniba.sk/',
-        rest_cookie='JSESSIONID',
-        rest_url='https://int-dev.uniba.sk:8443/beta/',
-    ),
-    dict(
         title='ais2-beta.uniba.sk',
         login_types=('saml_password', 'cookie'),
         ais_cookie='JSESSIONID',
         ais_url='https://ais2-beta.uniba.sk/',
-    ),
-    dict(
-        title='ais2-test.uniba.sk + REST',
-        login_types=('saml_password', 'cookie'),
-        ais_cookie='JSESSIONID',
-        ais_url='https://ais2-test.uniba.sk/',
-        rest_cookie='JSESSIONID',
-        rest_url='https://int-dev.uniba.sk:8443/test/',
     ),
     dict(
         title='ais2-test.uniba.sk',

@@ -15,12 +15,13 @@ import aisikl.app
 import aisikl.portal
 from aisikl.app import Application, assert_ops
 from fladgejt.login import create_client
-from votrfront.default_settings import servers as default_servers
+from votrfront.default_settings import servers as _ds
 
 # Servers. Choose one as the first argument of create_client().
-ais = default_servers[0]
-ais_beta = default_servers[2]
-ais_test = default_servers[4]
+default_servers = { _s['title']: _s for _s in _ds }
+ais = default_servers['ais2.uniba.sk']
+ais_beta = default_servers['ais2-beta.uniba.sk']
+ais_test = default_servers['ais2-test.uniba.sk']
 
 def get_login_params():
     import getpass
