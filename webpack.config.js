@@ -145,8 +145,8 @@ function makeConfig(mode) {
                   silenceDeprecations: [
                     "color-functions",
                     "global-builtin",
+                    "if-function",
                     "import",
-                    "mixed-decls",
                   ],
                 },
               },

@@ -206,7 +206,7 @@ export function PageTitle({
   const titleRef = useRef<HTMLHeadingElement | null>(null);
 
   useEffect(() => {
-    document.title = forceTitle ?? titleRef.current!.textContent!;
+    document.title = forceTitle ?? titleRef.current!.textContent;
   });
 
   return <h1 ref={titleRef}>{children}</h1>;

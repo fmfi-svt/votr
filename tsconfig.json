@@ -28,9 +28,22 @@
     // Not using "noPropertyAccessFromIndexSignature" because it's cumbersome
     // for properties of `query` and `Votr`.
 
-    // "noUnusedLocals", "noUnusedParameters": maybe later?
+    // Not using "noUnusedLocals" or "noUnusedParameters". Instead, we use
+    // @typescript-eslint/no-unused-vars, which can be locally disabled.
 
     "jsx": "react-jsx",
+
+    "rootDir": ".",
+
+    "types": [
+      "bootstrap",
+      "file-saver",
+      "jquery",
+      "lodash-es",
+      "react",
+      "react-big-calendar",
+      "react-dom"
+    ],
 
     // outDir is ignored by webpack ts-loader and by `tsc --noEmit`.
     // Nothing reads this directory or expects it to exist. It's just for

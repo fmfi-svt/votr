@@ -14,6 +14,8 @@ overrides:
   "react-big-calendar>luxon": "-"
   "react-big-calendar>moment": "-"
   "react-big-calendar>moment-timezone": "-"
+  # Only used by the node_modules/.bin/sass CLI. Skip to silence a pnpm warning.
+  "sass>@parcel/watcher": "-"
 
 packageExtensions:
   # Work around a stupid bug in eslint-plugin-compat.
