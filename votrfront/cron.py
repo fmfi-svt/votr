@@ -5,6 +5,7 @@ import lzma
 import shutil
 import tarfile
 import time
+import trio
 from votrfront import logutil
 from votrfront import sessions
 from votrfront.base import var_path
@@ -46,25 +47,24 @@ def create_archive(prefix):
         raise Exception(f'Remaining files: {remains!r}')
 
 
-def cron(app):
-    settings = app.settings
+async def cron(settings):
     now = time.time()
 
     for path in var_path('sessions').iterdir():
-        with sessions.lock(path.name):
+        async with sessions.lock(path.name):
             if not path.exists(): continue  # Logged out just now?
             mtime = path.stat().st_mtime
             if now - mtime > settings.session_max_age:
                 path.unlink()
 
-    logutil.process_logfiles(
+    await logutil.process_logfiles(
         logutil.connect_logdb(),
         [str(path) for path in var_path('logs').iterdir()],
     )
 
     for path in var_path('logs').glob('*.gz'):
         sessid = path.name.partition('.')[0]
-        with sessions.lock(sessid):
+        async with sessions.lock(sessid):
             mtime = path.stat().st_mtime
             if not (now - mtime > settings.session_max_age): continue
             if var_path('sessions', sessid).exists(): continue
@@ -88,6 +88,6 @@ def cron(app):
         create_archive(prefix)
 
 
-commands = {
-    'cron': cron,
-}
+if __name__ == '__main__':
+    import votrfront.local_settings as _settings
+    trio.run(cron, _settings)

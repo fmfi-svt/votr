@@ -12,17 +12,17 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pyrefly>=0",
+    "watchdog>=0",
 ]
 prod = [
-    "gunicorn[setproctitle]>=0",
     "python3-saml>=0",
-    # Old setuptools are needed because our version of gunicorn still depends on
-    # pkg_resources. TODO: Update gunicorn and remove this dependency.
-    "setuptools<82",
 ]
 votrfront = [
+    "anycorn>=0",
     "markupsafe>=0",
-    "werkzeug>=0",
+    "python-multipart>=0", # optional dependency for starlette; not used directly
+    "starlette>=0",
+    "trio>=0",
 ]
 
 [build-system]
@@ -68,6 +68,6 @@ project-includes = ["aisikl/**/*.py*", "fladgejt/**/*.py", "tests/**/*.py"]
 
 [tool.uv]
 default-groups = ["votrfront"]
-
-[tool.uv.sources]
-gunicorn = { git = "https://github.com/TomiBelan/gunicorn" }
+exclude-dependencies = [
+    "rich-click", # kind of big, and only needed by anycorn's CLI
+]

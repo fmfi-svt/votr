@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# shellcheck enable=all disable=SC2250
+# shellcheck source=/dev/null enable=all disable=SC2250
 
 set -e -u -o pipefail
 
@@ -14,6 +14,17 @@ Common options:
   -W
     Enables Python warnings. (PYTHONWARNINGS=always)
 
+  --venv-activate
+    Starts Python with "source .venv/bin/activate" instead of "uv run".
+    Use it when the repository owner is not the running user (e.g. www-data).
+    Works with ./x commands: python, python3, FILE.py, cron, log, serve
+
+  --coverage-run
+    Collects Python code coverage data.
+    Similar to "./x coverage run FILE.py", but affects all subprocesses.
+    Use "./x coverage combine [--append]" and "./x coverage html" to render it.
+    Works with ./x commands: python, python3, FILE.py, cron, log, serve
+
 Commands:
 
   ./x install [OPTIONS]
@@ -23,7 +34,7 @@ Commands:
       --uv={local|system}      use system-wide uv or download it locally
       --nodejs={local|system}  use system-wide Node.js or download it locally
       --pnpm={local|system}    use system-wide pnpm or download it locally
-      --prod-deps              install prod-only dependencies (e.g. gunicorn)
+      --prod-deps              install prod-only dependencies (e.g. saml)
       --no-dev-deps            omit dev-only dependencies (e.g. eslint)
       --clean                  reinstall everything from scratch
 
@@ -32,21 +43,30 @@ Commands:
   ./x upgrade
     Upgrades {Python|JavaScript|both} dependencies to the latest versions.
 
-  ./x uv COMMAND [ARGS]
-    Runs uv. See https://docs.astral.sh/uv/reference/cli/
+  ./x uv UV-COMMAND [ARGS]
+    Runs uv (the Python package manager).
+    See https://docs.astral.sh/uv/reference/cli/
 
   ./x run [UV-OPTIONS] PROGRAM [ARGS]
     Alias for "./x uv run".
     Downloads Python dependencies to ".venv/" if uv.lock has changed.
     Runs PROGRAM with ".venv/bin" added to its $PATH.
 
-  ./x console.py [ARGS]   (or any other *.py file)
   ./x python [ARGS]
   ./x python3 [ARGS]
+  ./x FILE.py [ARGS]
+    Runs Python, using dependencies in "./.venv".
+    See https://docs.python.org/3/using/cmdline.html
+    Uses "uv run" by default, but see --venv-activate and --coverage-run.
+
   ./x node [ARGS]
-  ./x pnpm [ARGS]
-  ./x pnpx [ARGS]
-    Alias for "./x uv run ...".
+    Runs Node.js (the server-side JavaScript runtime).
+    See https://nodejs.org/api/cli.html
+
+  ./x pnpm PNPM-COMMAND [ARGS]
+  ./x pnpx NPM-PACKAGE [ARGS]
+    Runs pnpm (the JavaScript package manager).
+    See https://pnpm.io/pnpm-cli
 
   ./x lint
     Checks for code warnings.
@@ -57,31 +77,31 @@ Commands:
   ./x build-docs
     Generates HTML API docs from source code docstrings.
 
-  ./x coverage [COVERAGE-COMMAND] [ARGS]
-    Runs Coverage.py. See https://coverage.readthedocs.io/en/latest/commands/
+  ./x coverage COVERAGE-COMMAND [ARGS]
+    Runs Coverage.py.
+    See https://coverage.readthedocs.io/en/latest/commands/
     Notable commands:
       ./x coverage run something.py
+      ./x --coverage-run something.py (see above)
       ./x coverage combine [--append]
       ./x coverage html
 
   ./x serve [SERVE-OPTIONS]
-    Runs the Python development server.
+    Runs the Python HTTP server.
     Options:
-      --debug               enables the werkzeug debugger
-      --https               serves https with a self-signed cert
-      --bind=X.X.X.X        listens on this address (default: 127.0.0.1)
-      --port=N              listens on this port (default: 5000)
-
-  ./x coverage-serve [SERVE-OPTIONS]
-    Runs "./x serve ..." with Coverage.py.
-
-  ./x watch-and-serve [SERVE-OPTIONS]
-    Runs both "./x pnpm watch" (JavaScript bundler) and "./x serve ..."
-    (Python development server) in parallel.
-
-  ./x watch-and-coverage-serve [SERVE-OPTIONS]
-    Runs both "./x pnpm watch" (JavaScript bundler) and "./x coverage-serve ..."
-    (Python development server with Coverage.py) in parallel.
+      --bind=ADDRESS           listen on X.X.X.X:N or unix:/PATH
+                                 (default: 127.0.0.1:5000)
+      --no-debug               don'\''t show tracebacks on exception pages
+      --no-static              don'\''t serve /static/
+      --no-watch-js            don'\''t rebuild JS/CSS files on change
+      --no-watch-py            don'\''t reload Python code on change
+      --proxy-fix              read X-Forwarded-... headers
+      --https                  serve HTTPS with a self-signed cert
+      --root-path=PREFIX       URL path prefix
+      --access-logfile=FILE    where to write access logs (default: stderr)
+      --error-logfile=FILE     where to write error logs (default: stderr)
+      --log-level=LEVEL        verbosity (ERROR, WARNING, INFO, DEBUG)
+      --log-label=NAME         name of this process for logs
 
   ./x cron
     Runs periodic processing and cleanup of sessions and log files.
@@ -162,12 +182,46 @@ install_local_pnpm() {
   fi
 }
 
+exec_using_venv_activate() {
+  source "$base_dir/.venv/bin/activate"
+  exec "$@"
+}
+
+exec_using_uv_with_coverage() {
+  # - See https://coverage.readthedocs.io/en/latest/subprocess.html
+  # - The docs have a section that says you should create a .pth file, but
+  #   that's out of date. The requisite .pth file is now included with Coverage.
+  # - ".coveragerc" is a special value - it reads "pyproject.toml" too.
+  export COVERAGE_PROCESS_START=.coveragerc
+  add_uv_path
+  exec uv run --with coverage "$@"
+}
+
+exec_using_uv() {
+  add_uv_path
+  exec uv run "$@"
+}
+
+python_exec_mode=exec_using_uv
+
 while true; do
   case "${1:-}" in
   -W) shift; export PYTHONWARNINGS=always;;
+  --venv-activate) shift; python_exec_mode=exec_using_venv_activate;;
+  --coverage-run) shift; python_exec_mode=exec_using_uv_with_coverage;;
   *) break;;
   esac
 done
+
+case "${1:-}" in
+run) set -- uv "$@";;
+coverage) set -- uv run --with coverage "$@";;
+*.py) set -- python3 "$@";;
+cron) shift; set -- python3 -Pm votrfront.cron "$@";;
+log) shift; set -- python3 -Pm votrfront.logutil "$@";;
+serve) shift; set -- python3 -Pm votrfront.serve "$@";;
+*) ;;
+esac
 
 command=${1:---help}
 shift || true
@@ -182,19 +236,12 @@ uv)
   exec uv "$@"
   ;;
 
-run)
-  add_uv_path
-  exec uv run "$@"
+node | pnpm | pnpx)
+  exec_using_venv_activate "$command" "$@"
   ;;
 
-node | python | python3 | pnpm | pnpx | *.py)
-  add_uv_path
-  exec uv run "$command" "$@"
-  ;;
-
-serve | cron | log)
-  add_uv_path
-  exec uv run "$base_dir/console.py" "$command" "$@"
+python | python3)
+  "$python_exec_mode" "$command" "$@"
   ;;
 
 upgrade-py)
@@ -263,24 +310,6 @@ format)
 build-docs)
   log_and_cd_to_basedir
   log_and_run "" "./x uv run --with sphinx,sphinx-rtd-theme make -C docs html"
-  ;;
-
-watch-and-serve | watch-and-coverage-serve)
-  exec bash -c "env --default-signal ${0@Q} ${command#watch-and-} ${*@Q} & ${0@Q} pnpm watch"
-  ;;
-
-coverage)
-  add_uv_path
-  exec uv run --with coverage coverage "$@"
-  ;;
-
-coverage-serve)
-  add_uv_path
-  # https://coverage.readthedocs.io/en/latest/subprocess.html
-  # https://github.com/dougn/coverage_pth/pull/7
-  # ".coveragerc" is a special value, it reads "pyproject.toml" too.
-  export COVERAGE_PROCESS_START=.coveragerc
-  exec uv run --with coverage,git+https://github.com/TomiBelan/coverage_pth "$base_dir/console.py" serve "$@"
   ;;
 
 install)

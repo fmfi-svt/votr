@@ -51,7 +51,7 @@ app that Votr's users interact with.
   Run it again every time you pull a new version of Votr.
 - **Start a local Votr server:**
   ```shell
-  ./x -W watch-and-serve --debug
+  ./x -W serve
   ```
 
 ## Contributing to Votr

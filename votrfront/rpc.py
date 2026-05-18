@@ -1,83 +1,82 @@
 """
-## The write() callable
+## Cancellation
 
-https://peps.python.org/pep-0333/ (the WSGI PEP) says:
+There are 6 known cases of cancellation. Let's give them these names:
 
-> Note: the `write()` callable is provided only to support certain existing
-> frameworks' imperative output APIs; it should not be used by new applications
-> or frameworks if it can be avoided.
+- C1: Normal rpc_inner() completion (on success or normal error)
+- C2: Client disconnected - received "http.disconnect"
+- C3: Client disconnected - send() raised an error
+- C4: (not implemented yet)
+- C5: Timed out by our RequestTimeoutMiddleware
+- C6: The web server is shutting down
 
-> New WSGI applications and frameworks **should not** use the `write()` callable
-> if it is possible to avoid doing so. The `write()` callable is strictly a hack
-> to support imperative streaming APIs. In general, applications should produce
-> their output via their returned iterable [...].
+Types C1-C4 cancel `main_nursery`: control flow continues after its `async with
+open_nursery()` block. Types C5-C6 cancel some outer scope: from rpc.py's point
+of view, it's an uncaught Cancelled exception.
 
-Votr uses write() anyway. We want dynamic immediate client side logging, because
-it's useful for developers, and a little fun for users while they wait for AIS.
-But almost every Votr function can log. The "proper" WSGI solution is to use
-generators and `yield from` everywhere. The "proper" ASGI solution is to use
-`async def` and `await` everywhere. But that's ugly and uncomfortable. So we use
-write() instead. Fortunately, despite the warnings, all relevant WSGI servers
-and middlewares support it.
+
+## Disconnects
+
+The ASGI spec has two ways to tell you the client has disconnected. One is
+receiving a "http.disconnect" message:
+
+> Once you have received this event, you should expect future calls to `send()`
+> to raise an exception, as described above. However, if you have highly
+> concurrent code, you may find calls to `send()` erroring slightly before you
+> receive this event.
+
+The other is OSError raised by send(). It was added in ASGI>=2.4, which is not
+yet implemented by any ASGI server as of this writing, but we're ready for it.
+
+> Applications may catch this exception and do cleanup work before re-raising
+> it or returning with no exception.
+
+Either way, in all ASGI servers: Once the client has disconnected, it doesn't
+matter if you end by reraising the OSError or by returning None; it doesn't
+matter if you [already sent / will send] a `"more_data": False` event or not;
+it doesn't matter if you continue calling send() or avoid it.
+
 
 ## Error handling
 
-We want to log both normal Exceptions and BaseExceptions. The most important
-BaseException is SystemExit, because we use gunicorn's sync worker, which calls
-sys.exit(1) in Worker.handle_abort() if a request times out. In this scenario we
-want to log it and exit ASAP because the arbiter will probably SIGKILL us soon.
-My guess is that file and local socket I/O is probably OK, but network I/O could
-block or be too slow.
-
-Less importantly, KeyboardInterrupt can happen when the dev server is Ctrl+C'd.
-The other BaseExceptions are handled the same way, but they shouldn't happen.
-
-Errors are logged to up to four destinations:
+Errors in rpc.py are logged to up to four destinations:
 
 - To the user's session log, as JSON `[time, "rpc", "RPC ... failed with ...",
-  traceback]`. (But not if the error happens too early or too late. The sessid
-  must be known and the log file must be open.)
+  traceback]`. This is done even if cancelled. But not if the error happens too
+  early or too late (e.g. couldn't load/save the session).
 
-- To access.log. The HTTP status for /rpc is always 200 because it's sent before
-  the actual RPC is called. That's not very useful for debugging. Instead we use
-  a custom field `environ['votr.log_status']` and our gunicorn.conf.py is set up
-  to read it with `%({votr.log_status}e)s` in `access_log_format`.
+- To access.log. The HTTP status code for /rpc is always 200 because we send it
+  before calling the actual RPCs. That's not very useful for debugging. Instead
+  we use a custom field, `request.state["votr_log_status"]`, which can change
+  during the request. anycorn_config.py reads and logs its final value.
 
-- To error.log, via `environ['wsgi.errors']`. (Mostly as a fallback for errors
-  which couldn't be logged to the session log. See the code for details.)
+- To error.log, via Python `logging`, for especially weird errors.
 
-- Sent to the client in up to 2 JSON messages. `{ "log": "rpc", ... }` which is
-  only displayed in the navbar and log viewer, and `{ "error": ... }` which
-  opens the error UI modal. (But not BaseExceptions and not if the client
-  connection is already closed.)
+- Sent to the client in up to 2 JSON messages: `{ "log": "rpc", "message": "RPC
+  ... failed with ..." }` which is only displayed in the navbar and log viewer,
+  and `{ "error": "..." }` which opens the error UI modal.
 
-## Known limits of error handling
+BaseExceptions other than Cancelled (see above) are mostly not handled.
+KeyboardInterrupt might happen in development, but isn't too likely during an
+RPC, and SIGKILL is an option if we get too stuck. In production, SIGTERM is
+handled as a cancellation (called C6 here).
 
-Despite all this effort, it's not perfect.
-
-I tried to handle all cases where at most 1 thing goes wrong. But if an error
-happens while an earlier error is handled (while we're writing the first error
-to the log, closing the log or session or lock, writing it to error.log, sending
-JSON, etc.), it can sometimes be a problem (e.g. some logging might be skipped,
-the lock might not be deleted, maybe the session or log could be corrupted).
-
-If the first exception is a SystemExit, raising a second exception in some
-`except ...:` or `finally:` block could override it and the program might not
-actually exit.
-
-Handling SystemExit is always a roll of the dice. They can happen anywhere and
-leave the program in all kinds of unexpected states. Luckily, in practice there
-is not much variety. Most happen in Context.request_ais() while waiting for AIS.
-See also: https://docs.python.org/3/library/signal.html#handlers-and-exceptions
+It is assumed that the environment is reasonable, e.g. `logging` calls can't
+fail. That's of course not quite true, but it's sufficiently true.
 """
 
-import asyncio
-import json
-import traceback
-from werkzeug.routing import Rule
 from aisikl.exceptions import LoggedOutError
+import json
+import logging
+import traceback
+import trio
+from starlette.exceptions import HTTPException
+from starlette.routing import Route
+from starlette.requests import Request
 from votrfront import sessions
 from votrfront.utils import check_header
+
+pylogger = logging.getLogger(__name__)
 
 
 def encode_result(thing: object) -> object:
@@ -91,183 +90,261 @@ def encode_result(thing: object) -> object:
     return thing
 
 
-class RpcHandler:
-    def __init__(self, request):
-        self.request = request
-        self.write = None
-        self.error_happened = False
-        self.stop_sending_json = False
-        self.capture_log = False
-        self.captured_log = None
-        self.stage = 'veryearly'
+def serialize(json_object: object) -> bytes:
+    payload = json.dumps(json_object).encode('ascii') + b'\n'
+    return b"%010d%s" % (len(payload), payload)
 
-    def seen_error(self, e):
-        self.error_happened = True
-        if not isinstance(e, Exception):
-            self.stop_sending_json = True
 
-    def send_json(self, json_object):
-        # Don't send anything to the client if a) an earlier send_json failed,
-        # which probably means the client connection was closed, OR b) any
-        # BaseException was raised and caught, which probably means we must exit
-        # ASAP and it's safer to avoid network I/O (see file comment).
-        if self.stop_sending_json: return
+async def rpc_inner(send, request, names, argss, session, cancel_main_nursery):
+    async def send_json(json_object: object) -> None:
+        # Check for cancellation. We use cancellation as a general "don't call
+        # send() anymore" flag. This checkpoint might not be strictly necessary,
+        # but let's do it just in case, because 1) Trio might not always raise
+        # Cancelled immediately, and 2) although send() will make its own check
+        # for cancellation, who knows if it does so right away.
+        await trio.lowlevel.checkpoint()
+
+        body = serialize(json_object)
 
         try:
-            payload = json.dumps(json_object).encode('ascii') + b'\n'
-            header = ('%010d' % len(payload)).encode('ascii')
-            self.write(header + payload)
-        except Exception as e:
-            # It's most likely an OSError (the client connection was closed).
-            # Whether or not, don't try to send any JSON to the client again.
-            self.stop_sending_json = True
+            await send({
+                "type": "http.response.body",
+                "body": body,
+                "more_body": True,
+            })
+        except Exception as exc:
+            # In ASGI>=2.4, send() may raise OSError on client disconnects. We
+            # react by cancelling main_nursery, which neatly prevents all
+            # further send() calls; except for the final send() in rpc_asgi(),
+            # which will probably raise OSError again, but that's ok.
 
-            # If this is the first time something went wrong, reraise it. But
-            # don't log it to wsgi.errors.
-            # If we're already handling a previous exception, ignore this one.
-            # It means we tried to tell the client about the original error, but
-            # another error happened during that. The original error is more
-            # important -- its type matters more in `except:` clauses, logging
-            # of `type(e).__name__`, etc.
-            if not self.error_happened:
-                e.votr_rpc_dont_log_to_wsgi_errors = True
-                raise
-        # BaseException is not caught here. They should be reraised regardless
-        # of error_happened, always be logged to wsgi.errors, and always stop
-        # sending json (seen_error deals with that). So no need to catch them.
+            # BaseException is not caught here. There's no reason to: we have
+            # nothing better to do with them than to just reraise them.
 
-    def send_log(self, timestamp, type, message, data):
-        json_object = { 'log': type, 'message': message, 'time': timestamp }
-        if self.capture_log:
-            self.capture_log = False
-            self.captured_log = json_object
-        else:
-            self.send_json(json_object)
+            if not isinstance(exc, OSError):
+                # If it's not OSError, something is probably very broken, but
+                # let's just log it and then use the same logic as for OSError.
+                # Preventing further send() calls is a good reaction either way.
+                pylogger.exception("send() raised a non-OSError?! WTF")
 
-    def __call__(self, environ, start_response):
+            exc_message = ''.join(traceback.format_exception_only(exc)).strip()
+            cancel_main_nursery(f'send failed: {exc_message}')  # C3
+            await trio.sleep_forever()  # actually raises Cancelled
+
+    async def send_log(timestamp, type, message, data):
+        await send_json({'log': type, 'message': message, 'time': timestamp})
+
+    if not (client := session.get('client')):
+        request.state['votr_log_status'] = 'rpc:session_error'
+        await send_json({'error': 'LoggedOutError: Session is logged out'})
+        return
+
+    if request.headers.get('X-CSRF-Token') != session['csrf_token']:
+        request.state['votr_log_status'] = 'rpc:session_error'
+        await send_json({'error': 'CsrfTokenError: Bad X-CSRF-Token value'})
+        return
+
+    current = request.state['settings'].announcement_html
+    if current != session.get('last_announcement', None):
+        await send_json({ 'announcement_html': current })
+        session['last_announcement'] = current
+
+    client.context.logger.send_log = send_log
+
+    for i, (name, args) in enumerate(zip(names, argss, strict=True)):
+
+        request.state['votr_log_status'] = f'rpc:{i}:wtf'
+
+        # This is the "inner try/except". It handles most RPC exceptions.
+        #
+        # It catches BaseException, but really, we only expect Cancelled and
+        # Exception. Other BaseExceptions have low effort handling, and carry
+        # some risk of getting masked, e.g. by Cancelled in send_log.
+        #
+        # Exception groups are not likely here. They're most commonly raised
+        # by open_nursery(), which isn't called inside this try block.
         try:
-            # See the file comment about access.log. This initial value should
-            # never be printed because it's overwritten below both on success
-            # and on failure. If things are so bad/stuck/broken that neither of
-            # them are executed, then the gunicorn code that writes to
-            # access.log probably can't run either.
-            environ['votr.log_status'] = 'rpc:wtf'
+            # Ackchyually, logging this *inside* the try block is not perfect.
+            # log() will 1) write to the log file, 2) send_log(). Step 1 should
+            # arguably happen outside the try block, because of the possibility
+            # that writing "RPC started" to the log file fails, but writing "RPC
+            # failed" to the log file succeeds. However, that's very unlikely.
+            # It's more likely that step 1 of "RPC started" works, but step 2 of
+            # "RPC started" raises Cancelled, in which case we'll want to catch
+            # it and write "RPC failed with Cancelled" to the log file.
+            await client.context.log('rpc', f'RPC {name} started', args)
 
-            # See the file comment about the write() callable.
-            self.write = start_response('200 OK', [
-                ('Content-Type', 'text/plain'),
-                # Prevent https://code.google.com/p/chromium/issues/detail?id=2016
-                # (onprogress only happening after the client receives 1024 bytes)
-                # See also: ShouldSniffContent(), kMaxBytesToSniff
-                ('X-Content-Type-Options', 'nosniff'),
-            ])
+            await client.prepare_for_rpc()
+            method = getattr(client, name)
+            result = encode_result(await method(*args))
 
-            self.stage = 'early'
+        except BaseException as exc:
+            client.last_rpc_failed = True
 
-            with sessions.logged_transaction(self.request) as session:
-                if self.request.headers.get('X-CSRF-Token') != session['csrf_token']:
-                    raise ValueError('Bad X-CSRF-Token value')
+            exc_name = type(exc).__name__
+            exc_trace = traceback.format_exc()
+            request.state['votr_log_status'] = f'rpc:{i}:error:{exc_name}'
 
-                # 'names' is sent in the query string (not in the request body)
-                # because it's nice to see them in web server logs.
-                names = self.request.args['names'].split(',')
-                argss = self.request.json
+            # If exc is Cancelled, log() will probably raise another Cancelled,
+            # but that's ok.
+            await client.context.log(
+                'rpc', f'RPC {name} failed with {exc_name}', exc_trace)
 
-                if not isinstance(argss, list) or len(argss) != len(names):
-                    raise ValueError('argss length does not match names length')
-
-                current = self.request.app.settings.announcement_html
-                if current != session.get('last_announcement', None):
-                    self.send_json({ 'announcement_html': current })
-                    session['last_announcement'] = current
-
-                session['client'].context.logger.send_log = self.send_log
-
-                for i, (name, args) in enumerate(zip(names, argss)):
-                    self.stage = str(i+1)
-
-                    # Context.log() calls 1. log_file.write(), 2. send_log().
-                    # For this first log "RPC started", 1 should be outside the
-                    # `try:` block and 2 inside it. I.e. if writing to log_file
-                    # fails, don't write "RPC failed". If sending "RPC started"
-                    # to the client fails, log "RPC failed" to log_file.
-                    self.capture_log = True
-                    asyncio.run(session['client'].context.log(
-                        'rpc', f'RPC {name} started', args))
-
-                    try:
-                        self.send_json(self.captured_log)
-                        asyncio.run(session['client'].prepare_for_rpc())
-                        method = getattr(session['client'], name)
-                        result = encode_result(asyncio.run(method(*args)))
-                    except BaseException as e:
-                        # See the file comment about catching BaseException too.
-                        self.seen_error(e)
-                        session['client'].last_rpc_failed = True
-                        asyncio.run(session['client'].context.log(
-                            'rpc',
-                            f'RPC {name} failed with {type(e).__name__}',
-                            traceback.format_exc()))
-                        e.votr_rpc_dont_log_to_wsgi_errors = True
-                        raise
-
-                    # If writing this to log_file fails, we'll end up with an
-                    # unmatched "RPC started". And if this send_json fails,
-                    # log_file will look like a complete success. But oh well.
-                    asyncio.run(session['client'].context.log(
-                        'rpc', f'RPC {name} finished', result))
-
-                    self.send_json({ 'result': result })
-
-                self.stage = 'late'
-
-            environ['votr.log_status'] = 'rpc:ok'
-
-        except BaseException as e:
-            # See the file comment about catching BaseException too.
-            self.seen_error(e)
-            is_base_exception = not isinstance(e, Exception)
-
-            # In all cases, write basic info to access.log (see file comment).
-            kind = 'errbase' if is_base_exception else 'err'
-            e_name = type(e).__name__
-            environ['votr.log_status'] = f'rpc:{kind}:{e_name}:{self.stage}'
-
-            # In some rare cases, write the full traceback to error.log.
-            log_to_wsgi_errors = (
-                # BaseException? Rare and scary. (I might change this later.)
-                True if is_base_exception else
-                # LoggedOutError? Expected and boring.
-                False if isinstance(e, LoggedOutError) else
-                # - Already logged to the session log? Don't log it again.
-                # - Raised in send_json (e.g. sending announcement_html, result,
-                #   or "RPC finished")? Unusual, but still expected and boring.
-                not getattr(e, 'votr_rpc_dont_log_to_wsgi_errors', False)
-            )
-            if log_to_wsgi_errors:
-                environ['wsgi.errors'].write(
-                    f'RPC error:\n{traceback.format_exc()}')
-
-            # If possible, send the error to the client. This shows the error
-            # modal. Do it last, just in case the network I/O blocks or is slow.
-            self.send_json({ 'error': traceback.format_exc() })
-
-            # Reraise BaseExceptions such as SystemExit and KeyboardInterrupt.
-            if is_base_exception:
+            if isinstance(exc, Exception):
+                await send_json({ 'error': exc_trace })
+                return
+            else:
                 raise
 
-        # Our whole output was written with write(), but WSGI applications
-        # are required to return an iterable anyway.
-        return []
+        # If writing this to log_file fails, we'll end up with an unmatched "RPC
+        # started". And if this send_json fails, log_file will look like a
+        # complete success. But oh well.
+        await client.context.log('rpc', f'RPC {name} finished', result)
+
+        await send_json({ 'result': result })
+
+    request.state['votr_log_status'] = 'rpc:ok'
 
 
-def handle_rpc(request):
+async def rpc_asgi(scope, receive, send):
+    # Phase 1: Read request body and do basic checks. Errors in this phase are
+    # dealt with normally - by raising a HTTPException. It is then caught and
+    # handled by our `exception_handlers`.
+
+    request = Request(scope, receive)
+
+    request.state['votr_log_status'] = 'rpc:early_error'
+
     check_header(request, 'Sec-Fetch-Site', { 'same-origin' })
     check_header(request, 'Sec-Fetch-Mode', { 'cors' })
     check_header(request, 'Sec-Fetch-Dest', { 'empty' })
 
-    return RpcHandler(request)
+    # Read `names` and `argss`. `names` are sent in the query string (not in the
+    # request body) because it's nice to see them in access logs.
+    try:
+        names = request.query_params['names'].split(',')
+        argss = await request.json()
+    except HTTPException:
+        # Just in case. RequestBodyLimitMiddleware might raise this, maybe.
+        raise
+    except Exception as exc:
+        exc_message = ''.join(traceback.format_exception_only(exc)).strip()
+        raise HTTPException(400, exc_message) from exc
+
+    if not isinstance(argss, list) or len(argss) != len(names):
+        raise HTTPException(400, 'argss length does not match names length')
+
+    # --------------------------------------------------------------------------
+    #
+    # Phase 2: Start sending the response now.
+    #
+    # We should not raise HTTPException after this point. (Both because it's
+    # pointless, and because ExceptionMiddleware would complain.)
+
+    # If this first send() raises OSError in ASGI>=2.4 because the client
+    # disconnected just now, just let it propagate. No cleanup needed.
+    await send({
+        'type': 'http.response.start',
+        'status': 200,
+        'headers': [
+            (b'content-type', b'text/plain'),
+            # Prevent https://code.google.com/p/chromium/issues/detail?id=2016
+            # (onprogress only happening after the client receives 1024 bytes)
+            # See also: ShouldSniffContent(), kMaxBytesToSniff
+            (b'x-content-type-options', b'nosniff'),
+        ],
+    })
+
+    request.state['votr_log_status'] = 'rpc:setup_wtf'
+
+    last_chunk = b''
+
+    async def listen_for_disconnect() -> None:
+        while True:
+            message = await receive()
+            if message['type'] == 'http.disconnect':
+                break
+
+        main_nursery.cancel_scope.cancel('received http.disconnect')  # C2
+
+    # This is the "outer try/except". In theory, it catches e.g. unexpected
+    # errors when loading/saving sessions. In practice, it should rarely if ever
+    # catch anything, and arguably it might not really need to exist.
+    #
+    # Uses `except* Exception` because open_nursery() generally wraps everything
+    # in groups. It catches bare Exceptions, ExceptionGroups, and the non-base
+    # members of mixed BaseExceptionGroups.
+    #
+    # It won't catch:
+    #   - Cancelled bound for an outer cancel scope (happens in cases C5, C6)
+    #   - BaseExceptionGroup containing Cancelled (same as above)
+    #   - other BaseExceptions or groups containing them (purely theoretical)
+    # In those cases, the response stays unfinished => the ASGI server forcibly
+    # closes the HTTP stream (e.g. in hypercorn & anycorn: StreamClosed without
+    # EndBody) => our reverse proxy preserves that => the client surfaces it as
+    # a network error (e.g. curl 18, XHR onerror). The end result is similar to
+    # sending JSON {"error":...}, but displays a less specific error message in
+    # the UI. That's not perfect (e.g. for C5), but it's good enough.
+    try:
+        async with trio.open_nursery() as main_nursery:
+            main_nursery.start_soon(listen_for_disconnect)
+
+            transaction_started = False
+            try:
+                async with sessions.logged_transaction(request) as session:
+                    transaction_started = True
+                    await rpc_inner(
+                        send, request, names, argss, session,
+                        main_nursery.cancel_scope.cancel)
+            except LoggedOutError:
+                # Catch expected session loading errors: "Invalid sessid",
+                # "Session cookie not found", "Votr session does not exist".
+                if not transaction_started:
+                    request.state['votr_log_status'] = 'rpc:session_error'
+                    last_chunk = serialize({'error': traceback.format_exc()})
+                else:
+                    raise
+
+            main_nursery.cancel_scope.cancel()  # C1
+
+        # If we get here, we might not know whether rpc_inner finished, or got
+        # cancelled partway through, but either way the remaining cleanup is the
+        # same.
+
+    except* Exception as excgroup:
+        request.state['votr_log_status'] += (
+            ':outer_wtf:'
+            + ','.join(type(exc).__name__ for exc in excgroup.exceptions))
+
+        pylogger.exception('RPC fatal error WTF')
+
+        last_chunk = serialize({'error': traceback.format_exc()})
+
+    # --------------------------------------------------------------------------
+    #
+    # Phase 3: Close the response.
+    #
+    # In ASGI>=2.4, this send() might raise OSError. If it does, just let it
+    # propagate through our middlewares (which will do nothing) to the server
+    # (which swallows it). We could instead remember a flag that the client has
+    # disconnected (C2, C3), in which case we'd skip the send() and just return,
+    # but there's no benefit to doing that.
+    #
+    # A send() call in an except block can be dangerous (the OSError could mask
+    # another error), but this one is not. Any exceptions we caught are already
+    # logged; `last_chunk` is a nice-to-have.
+
+    await send({
+        'type': 'http.response.body',
+        'body': last_chunk,
+        'more_body': False,
+    })
 
 
-def get_routes():
-    yield Rule('/rpc', methods=['POST'], endpoint=handle_rpc)
+async def rpc_endpoint(request):
+    return rpc_asgi
+
+
+routes = [
+    Route('/rpc', methods=['POST'], endpoint=rpc_endpoint),
+]

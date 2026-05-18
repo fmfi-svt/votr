@@ -1,6 +1,6 @@
 import json
 import time
-from werkzeug.exceptions import Forbidden
+from starlette.exceptions import HTTPException
 from votrfront.base import var_path
 
 
@@ -15,9 +15,14 @@ def check_header(request, name, allowed_values):
             'value': value,
             'allowed_values': sorted(allowed_values),
             'time': int(time.time()),
-            'request': { k: v for k, v in request.environ.items() if isinstance(v, (int, str, bool)) },
+            'url': str(request.url),
+            'client': request.scope['client'],
+            'headers': [
+                [k.decode('latin1'), v.decode('latin1')]
+                for k, v in request.scope['headers']
+            ],
         }
         with var_path('fetchmetalog').open('at') as f:
             f.write(json.dumps(payload, sort_keys=True) + '\n')
 
-        raise Forbidden('Unexpected %s header value' % name)
+        raise HTTPException(403, f'Unexpected {name} header value')

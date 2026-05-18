@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import argparse
-import asyncio
 from collections import Counter
 from dataclasses import dataclass
 import json
 import re
 import sys
 import traceback
+import trio
 from typing import Any, TYPE_CHECKING, cast
 from aisikl.context import Context, Logger
 from aisikl.typeutils import nn
@@ -267,4 +267,4 @@ async def main(args: list[str]) -> None:
 
 
 if __name__ == '__main__':
-    asyncio.run(main(sys.argv[1:]))
+    trio.run(main, sys.argv[1:])

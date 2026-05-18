@@ -4,18 +4,19 @@ import fcntl
 import gzip
 import os
 import pickle
+import trio
 from aisikl.exceptions import LoggedOutError
 from votrfront.base import var_path
 
 
 def get_sessid_from_cookie(request):
-    return request.votr_cookie_value.get('sessid')
+    return request.state['votr_cookie_value'].get('sessid')
 
 
 def check_sessid(sessid):
     for ch in sessid:
         if ch not in '0123456789abcdef_':
-            raise ValueError('Invalid sessid')
+            raise LoggedOutError('Invalid sessid')
 
 
 def open_log_file(sessid):
@@ -43,8 +44,8 @@ def delete(request, sessid=None):
         return False
 
 
-@contextlib.contextmanager
-def lock(sessid):
+@contextlib.asynccontextmanager
+async def lock(sessid):
     """Acquires a named mutex identified by ``sessid``, waiting if another
     process/thread is already holding it. If a process dies, its held locks are
     automatically released. Locks are per user."""
@@ -65,7 +66,9 @@ def lock(sessid):
     while True:
         f = open(lock_path, 'ab')
         try:
-            fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+            await trio.to_thread.run_sync(
+                fcntl.flock, f.fileno(), fcntl.LOCK_EX,
+                abandon_on_cancel=True)
 
             # Lock acquired, but is it still the same file? Compare inodes.
             my_inode = os.fstat(f.fileno()).st_ino
@@ -88,13 +91,13 @@ def lock(sessid):
             f.close()
 
 
-@contextlib.contextmanager
-def transaction(request, sessid=None):
+@contextlib.asynccontextmanager
+async def transaction(request, sessid=None):
     if not sessid: sessid = get_sessid_from_cookie(request)
     if not sessid: raise LoggedOutError('Session cookie not found')
     check_sessid(sessid)
 
-    with lock(sessid):
+    async with lock(sessid):
         try:
             f = var_path('sessions', sessid).open('r+b')
         except FileNotFoundError as e:
@@ -105,7 +108,7 @@ def transaction(request, sessid=None):
 
             if (credentials := session.get('credentials')):
                 if (username := credentials.get('username')):
-                    request.environ['votr.log_user'] = username
+                    request.state['votr_log_user'] = username
 
             try:
                 yield session
@@ -119,11 +122,11 @@ def transaction(request, sessid=None):
                 f.write(new_content)
 
 
-@contextlib.contextmanager
-def logged_transaction(request, sessid=None):
+@contextlib.asynccontextmanager
+async def logged_transaction(request, sessid=None):
     if not sessid: sessid = get_sessid_from_cookie(request)
 
-    with transaction(request, sessid) as session:
+    async with transaction(request, sessid) as session:
         with open_log_file(sessid) as log_file:
             client = session.get('client')
             if client: client.context.logger.log_file = log_file

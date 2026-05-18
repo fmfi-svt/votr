@@ -13,7 +13,7 @@ from aisikl.typeutils import nn
 from typing import Any, Literal, TYPE_CHECKING, TextIO, override
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Iterable, Mapping
+    from collections.abc import Awaitable, Callable, Iterable, Mapping
     from http.cookiejar import Cookie
 
 
@@ -198,7 +198,7 @@ class Logger:
     #: A function that will be called with (timestamp, type, message, data) for
     #: every log entry. Votrfront uses it to send JSON logs to the client during
     #: a RPC request. The value is not preserved between requests.
-    send_log: Callable[[float, str, str, object], None] | None = None
+    send_log: Callable[[float, str, str, object], Awaitable[None]] | None = None
 
     @override
     def __getstate__(self) -> dict[object, object]:
@@ -213,7 +213,7 @@ class Logger:
                                            ensure_ascii=False) + '\n')
 
         if self.send_log:
-            self.send_log(timestamp, type, message, data)
+            await self.send_log(timestamp, type, message, data)
 
         if print_logs:
             print('\033[1;36m{} \033[1;33m{} \033[0m{}'.format(
@@ -315,7 +315,7 @@ else:
     from markupsafe import Markup
     from IPython.display import display, HTML  # pyrefly: ignore [missing-import] # pyright: ignore [reportMissingImports, reportUnknownVariableType]
 
-    def ipython_log(self: object, timestamp: float, type: str, message: str, data: object) -> None:
+    async def ipython_log(self: object, timestamp: float, type: str, message: str, data: object) -> None:
         if type == 'benchmark': return
         content = Markup('<span style="background:#FF8"><b>{}</b> {}</span>').format(type, message)
         if data is not None:

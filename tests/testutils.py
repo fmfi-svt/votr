@@ -1,7 +1,6 @@
 # pyright: reportUninitializedInstanceVariable=none
 
 import argparse
-import asyncio
 import base64
 from collections import deque
 import contextlib
@@ -13,6 +12,7 @@ import re
 import sys
 import time
 import traceback
+import trio
 from typing import Any, NamedTuple, NotRequired, TYPE_CHECKING, TypedDict, cast
 from urllib.parse import urljoin
 from aisikl.context import Context, Logger
@@ -102,7 +102,7 @@ class MockRunner:
         # fully trusted.
         return self.responses.popleft()()
 
-    def _mock_send_log(
+    async def _mock_send_log(
         self, atimestamp: float, atype: str, amessage: str, adata: object,
     ) -> None:
         self._mock_send_log_match(atimestamp, atype, amessage, adata)
@@ -113,13 +113,26 @@ class MockRunner:
         if self.expected_logs:
             self.now = self.expected_logs[0].timestamp
 
-            # Handle BrokenPipeError. If the original user's HTTP connection
-            # broke, Votr usually finds out when Logger.log() calls send_log()
-            # after it wrote to disk, and it raises BrokenPipeError. So if the
-            # log file contains a normal entry followed by "... failed with
-            # BrokenPipeError", we assume the send_log() call raised it, and
-            # raise one too.
-            if self.expected_logs[0].message.endswith(
+            # Handle Cancelled.
+            #
+            # Timing note: The real Cancelled may be raised by almost any async
+            # function. A given log file tells us that it happened after the
+            # last successful log line was written to disk, and before the next
+            # one would have been written. MockRunner doesn't try to precisely
+            # replicate the timing by parsing the traceback, or such. It always
+            # raises a fake Cancelled as soon as possible: at the end of the
+            # last successful send_log() call. That should, by definition,
+            # produce the same log sequence.
+            if self.expected_logs[0].message.endswith(' failed with Cancelled'):
+                raise Cancelled(
+                    nn(re.search(
+                        r'\ntrio.Cancelled: (.*\S)\n*$',
+                        ct(str, self.expected_logs[0].data),
+                    )).group(1))
+
+            # BrokenPipeError was raised instead of Cancelled before the Trio
+            # migration (2026-10-ish).
+            if self.old_log and self.expected_logs[0].message.endswith(
                     ' failed with BrokenPipeError'):
                 raise BrokenPipeError(
                     nn(re.search(
@@ -554,7 +567,7 @@ def _prepare_http_response(
             content = base64.b64decode(ct(str, final_entry.data))
         else:
             # In other cases, e.g. redirect responses in fladgejt.login, or
-            # BrokenPipeError in get_informacny_list, the body shouldn't matter.
+            # Cancelled in get_informacny_list, the body shouldn't matter.
             text = ''
 
         response = Response(
@@ -668,6 +681,15 @@ def _sort_xml(xml_spec: str, parent: str, item: str) -> str:
 
 
 class _FailFast(BaseException): pass
+
+
+class Cancelled(Exception):
+    """Fake Cancelled used in tests to emulate the real ``trio.Cancelled``.
+    This one has a public constructor and is a normal ``Exception``, to avoid
+    having to deal with ``BaseException`` and ``CancelScope`` in test code that
+    calls MockRunner.
+    """
+    __module__ = "trio"
 
 
 class ConnectError(Exception):
@@ -823,4 +845,4 @@ def scenario_main(
     run: Callable[[BaseClient], Awaitable[None]], *,
     anonymous: bool=False,
 ) -> None:
-    asyncio.run(_scenario_main_async(run, anonymous))
+    trio.run(_scenario_main_async, run, anonymous)

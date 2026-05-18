@@ -9,6 +9,7 @@ import subprocess
 import sys
 import time
 import traceback
+import trio
 from votrfront import sessions
 from votrfront.base import var_path
 
@@ -18,13 +19,8 @@ PAGER = ['less', '-RS']
 BASE_PATTERN = r'"\w+", "[\w ]+ failed'
 
 def classify(line):
-    if "OSError: failed to write data" in line.content:
-        return 'OSError'
-    if ("OSError: Apache/mod_wsgi failed to write response data: Broken pipe"
-            in line.content):
-        return 'OSError'
-    if "failed with BrokenPipeError" in line.content:
-        return 'OSError'
+    if "failed with Cancelled" in line.content:
+        return 'Cancelled'
     if "base.ps.PSException: Nie je connection" in line.content:
         return 'SQLError'
     if "java.sql.SQLException: Connection is not valid" in line.content:
@@ -121,14 +117,14 @@ def set_tags(logdb, sessid, lineno, tags_to_add, tags_to_remove):
         (' '.join(tags), sessid, lineno, old_tags))
 
 
-def process_logfiles(logdb, files):
+async def process_logfiles(logdb, files):
     c = logdb.cursor()
 
     errors = []
 
     for filename in files:
         sessid = os.path.basename(filename).partition('.')[0]
-        with sessions.lock(sessid):
+        async with sessions.lock(sessid):
             try:
                 with open_log(filename) as f:
                     lineno = 0
@@ -377,7 +373,7 @@ def cli_process(*files):
     if not files:
         raise ValueError('No files given')
     logdb = connect_logdb()
-    process_logfiles(logdb, files)
+    trio.run(process_logfiles, logdb, files)
 
 
 log_commands = {
@@ -389,7 +385,7 @@ log_commands = {
 }
 
 
-def cli(app, *args):
+def cli(*args):
     if not args:
         sys.exit('Missing log subcommand\nTry: ./x --help')
     if args[0] not in log_commands:
@@ -397,6 +393,5 @@ def cli(app, *args):
     log_commands[args[0]](*args[1:])
 
 
-commands = {
-    'log': cli,
-}
+if __name__ == '__main__':
+    cli(*sys.argv[1:])

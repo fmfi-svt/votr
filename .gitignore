@@ -6,7 +6,6 @@
 .coverage*
 htmlcov
 docs/_build
-gunicorn.conf.py
 local_settings.py
 node_modules
 static

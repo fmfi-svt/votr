@@ -1,33 +1,34 @@
 import json
 import time
 from datetime import datetime, UTC
-from werkzeug.routing import Rule
-from werkzeug.wrappers import Response
-from werkzeug.exceptions import BadRequest
-from votrfront import sessions
+from starlette.routing import Route
+from starlette.responses import PlainTextResponse
+from starlette.exceptions import HTTPException
 from votrfront.base import var_path
+from votrfront.sessions import get_sessid_from_cookie
 
 
-def report(request):
+async def report(request):
     try:
-        body = json.loads(request.get_data(as_text=True))
-        type = request.args['type']
+        body = await request.json()
+        type = request.query_params['type']
     except Exception as e:
-        raise BadRequest(repr(e))
+        raise HTTPException(400, repr(e)) from e
 
     payload = {
         'body': body,
         'type': type,
-        'ua': request.user_agent.string,
-        'sessid': sessions.get_sessid_from_cookie(request),
+        'ua': request.headers.get('user-agent', ''),
+        'sessid': get_sessid_from_cookie(request),
         'time': int(time.time()),
     }
 
     filename = datetime.now(UTC).strftime('%Y%m')
     with var_path('reportlogs', filename).open('at') as f:
         f.write(json.dumps(payload, sort_keys=True) + '\n')
-    return Response('OK', content_type='text/plain')
+    return PlainTextResponse('OK')
 
 
-def get_routes():
-    yield Rule('/report', methods=['POST'], endpoint=report)
+routes = [
+    Route('/report', methods=['POST'], endpoint=report),
+]
