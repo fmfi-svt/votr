@@ -1,4 +1,3 @@
-
 import contextlib
 import gzip
 import json
@@ -10,7 +9,8 @@ import subprocess
 import sys
 import time
 import traceback
-from . import sessions
+from votrfront import sessions
+from votrfront.base import var_path
 
 
 TAG_PREFIX = '%'
@@ -63,36 +63,35 @@ class Line:
         self.timestamp = timestamp
 
 
-def _connect(app):
-    if not hasattr(app, 'logutil_conn'):
-        app.logutil_conn = sqlite3.connect(app.var / 'logdb/logdb.sqlite')
-        c = app.logutil_conn.cursor()
-        # sub(\s+) is just to look nicer when you print ".schema".
-        c.execute(re.sub(r'\s+', ' ', '''
-            CREATE TABLE IF NOT EXISTS lines (
-                sessid TEXT,
-                lineno INTEGER,
-                tags TEXT,
-                content TEXT,
-                timestamp INTEGER GENERATED ALWAYS AS (JSON_EXTRACT(content, '$[0]')) STORED,
-                PRIMARY KEY (sessid, lineno)
-            )
-        '''))
-        c.execute('CREATE INDEX IF NOT EXISTS lines_tags ON lines (tags)')
-        c.execute('CREATE INDEX IF NOT EXISTS lines_timestamp ON lines (timestamp)')
-    return app.logutil_conn
+def connect_logdb():
+    logdb = sqlite3.connect(var_path('logdb/logdb.sqlite'))
+    c = logdb.cursor()
+    # sub(\s+) is just to look nicer when you print ".schema".
+    c.execute(re.sub(r'\s+', ' ', '''
+        CREATE TABLE IF NOT EXISTS lines (
+            sessid TEXT,
+            lineno INTEGER,
+            tags TEXT,
+            content TEXT,
+            timestamp INTEGER GENERATED ALWAYS AS (JSON_EXTRACT(content, '$[0]')) STORED,
+            PRIMARY KEY (sessid, lineno)
+        )
+    '''))
+    c.execute('CREATE INDEX IF NOT EXISTS lines_tags ON lines (tags)')
+    c.execute('CREATE INDEX IF NOT EXISTS lines_timestamp ON lines (timestamp)')
+    return logdb
 
 
-def locate(app, sessid):
+def locate(sessid):
     sessid = str(sessid)
     if '/' in sessid:
         options = [sessid]
     else:
         options = [
-            app.var / 'logs' / sessid,  # legacy
-            app.var / 'logs' / (sessid + '.gz'),
-            app.var / 'oldlogs' / sessid[0:2] / (sessid + '.gz'),  # legacy
-            app.var / 'oldlogs' / (sessid + '.xz'),
+            var_path('logs', sessid),  # legacy
+            var_path('logs', sessid + '.gz'),
+            var_path('oldlogs', sessid[0:2], sessid + '.gz'),  # legacy
+            var_path('oldlogs', sessid + '.xz'),
             sessid,
         ]
     for option in options:
@@ -110,8 +109,8 @@ def open_log(filename):
         return open(filename, encoding='utf8')
 
 
-def set_tags(app, sessid, lineno, tags_to_add, tags_to_remove):
-    c = _connect(app).cursor()
+def set_tags(logdb, sessid, lineno, tags_to_add, tags_to_remove):
+    c = logdb.cursor()
     c.execute('SELECT tags FROM lines WHERE sessid = ? AND lineno = ?',
         (sessid, lineno))
     old_tags = c.fetchone()[0]
@@ -124,14 +123,14 @@ def set_tags(app, sessid, lineno, tags_to_add, tags_to_remove):
         (' '.join(tags), sessid, lineno, old_tags))
 
 
-def process_logfiles(app, files):
-    c = _connect(app).cursor()
+def process_logfiles(logdb, files):
+    c = logdb.cursor()
 
     errors = []
 
     for filename in files:
         sessid = os.path.basename(filename).partition('.')[0]
-        with sessions.lock(app, sessid):
+        with sessions.lock(sessid):
             try:
                 with open_log(filename) as f:
                     lineno = 0
@@ -155,9 +154,9 @@ def process_logfiles(app, files):
         line = Line(sessid, lineno, tags, content, timestamp)
         new_tags = classify(line).split()
         if new_tags:
-            set_tags(app, sessid, lineno, new_tags, ['new'])
+            set_tags(logdb, sessid, lineno, new_tags, ['new'])
 
-    _connect(app).commit()
+    logdb.commit()
 
     if errors:
         msgs = [f'{len(errors)} errors occurred while processing logs:']
@@ -186,7 +185,7 @@ def wrap_pager():
 # ----------------------------------------
 
 
-def cli_tag(app, *args):
+def cli_tag(*args):
     # Use dict instead of set as it has consistent insertion iteration order in
     # Python 3.7+, unlike set. (https://stackoverflow.com/q/3848091)
     targets = {}
@@ -209,14 +208,16 @@ def cli_tag(app, *args):
         else:
             targets[arg] = True
 
+    logdb = connect_logdb()
+
     for target in targets:
         sessid, _, lineno = target.partition(':')
-        set_tags(app, sessid, int(lineno), tags_to_add, tags_to_remove)
+        set_tags(logdb, sessid, int(lineno), tags_to_add, tags_to_remove)
 
-    _connect(app).commit()
+    logdb.commit()
 
 
-def cli_view(app, *args):
+def cli_view(*args):
     color = False
     sessid = None
 
@@ -234,7 +235,7 @@ def cli_view(app, *args):
     if not sessid:
         raise ValueError('No sessid or filename given')
 
-    filename = locate(app, sessid)
+    filename = locate(sessid)
 
     with wrap_pager() as out:
         with open_log(filename) as f:
@@ -254,23 +255,23 @@ def cli_view(app, *args):
                 print(data, file=out)
 
 
-def cli_path(app, *sessids):
+def cli_path(*sessids):
     for sessid in sessids:
-        print(locate(app, sessid))
+        print(locate(sessid))
 
 
-def format_base(app, line):
+def format_base(line):
     tm = time.localtime(line.timestamp)
     when = '%4d-%02d-%02d %02d:%02d:%02d' % (
         tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec)
     tags = ' '.join(TAG_PREFIX + tag for tag in line.tags.split())
     return (line.sessid, line.lineno, when, tags, line.content)
 
-def format_plain(app, line):
-    return '%s:%-5s %s %-20s %s' % format_base(app, line)
+def format_plain(line):
+    return '%s:%-5s %s %-20s %s' % format_base(line)
 
-def format_color(app, line):
-    sessid, lineno, when, tags, content = format_base(app, line)
+def format_color(line):
+    sessid, lineno, when, tags, content = format_base(line)
 
     content = re.sub(
         r'( "RPC )(\w+)( failed with )(\w+)(")',
@@ -285,17 +286,17 @@ def format_color(app, line):
 
     return '%s:%-5s \033[1;33m%s\033[0m \033[1;34m%-20s\033[0m %s' % (sessid, lineno, when, tags, content)
 
-def format_sessids(app, line):
+def format_sessids(line):
     return line.sessid
 
-def format_linenos(app, line):
+def format_linenos(line):
     return '%s:%s' % (line.sessid, line.lineno)
 
-def format_files(app, line):
-    return locate(app, line.sessid)
+def format_files(line):
+    return locate(line.sessid)
 
 
-def cli_list(app, *args):
+def cli_list(*args):
     match = []
     match_not = []
     match_from = None
@@ -348,12 +349,13 @@ def cli_list(app, *args):
 
     query += ' ORDER BY timestamp'
 
-    c = _connect(app).cursor()
+    logdb = connect_logdb()
+    c = logdb.cursor()
     c.execute(query, params)
     with wrap_pager() as out:
         for sessid, lineno, tags, content, timestamp in c:
             line = Line(sessid, lineno, tags, content, timestamp)
-            plain = format_plain(app, line)
+            plain = format_plain(line)
             tm = time.localtime(line.timestamp)
             date = int('%d%02d%02d' % (tm.tm_year, tm.tm_mon, tm.tm_mday))
 
@@ -362,13 +364,14 @@ def cli_list(app, *args):
                 all(not re.search(pattern, plain) for pattern in match_not) and
                 match_from <= date <= match_to
             ):
-                print(formatter(app, line), file=out)
+                print(formatter(line), file=out)
 
 
-def cli_process(app, *files):
+def cli_process(*files):
     if not files:
         raise ValueError('No files given')
-    process_logfiles(app, files)
+    logdb = connect_logdb()
+    process_logfiles(logdb, files)
 
 
 log_commands = {
@@ -381,9 +384,11 @@ log_commands = {
 
 
 def cli(app, *args):
-    if not args or args[0] not in log_commands:
-        return app.run_help()
-    log_commands[args[0]](app, *args[1:])
+    if not args:
+        sys.exit('Missing log subcommand\nTry: ./x --help')
+    if args[0] not in log_commands:
+        sys.exit('Unknown log subcommand\nTry: ./x --help')
+    log_commands[args[0]](*args[1:])
 
 cli.help = (
     '  $0 log tag +TAGNAME1 -TAGNAME2 SESSID1:LINENO1 SESSID2:LINENO2 ...\n'

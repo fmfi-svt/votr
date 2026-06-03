@@ -11,11 +11,7 @@ instance_id = 'votr'
 
 instance_title = 'Votr (dev)'
 
-var_path = './var'
-
 session_max_age = 60 * 60 * 24
-
-log_max_age = 60 * 60 * 25
 
 root_url = None
 

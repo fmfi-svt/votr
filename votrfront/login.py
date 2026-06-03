@@ -12,6 +12,7 @@ from werkzeug.wrappers import Response
 from aisikl.context import Logger
 from fladgejt.login import create_client
 from votrfront import sessions
+from votrfront.base import var_path
 from votrfront.front import app_response
 from votrfront.utils import check_header
 
@@ -24,10 +25,10 @@ except ImportError:
     saml_imported = False
 
 
-def build_saml_settings(votr_settings, var):
+def build_saml_settings(votr_settings):
     if not saml_imported:
         return 'python3-saml is not installed'
-    idp_metadata_path = var / 'saml/idp-metadata.xml'
+    idp_metadata_path = var_path('saml/idp-metadata.xml')
     if not idp_metadata_path.exists():
         return 'idp-metadata.xml not found'
 
@@ -82,7 +83,7 @@ def build_saml_settings(votr_settings, var):
 
     return OneLogin_Saml2_Settings(
         settings=settings_dict,
-        custom_base_path=str(var / 'saml'),
+        custom_base_path=str(var_path('saml')),
     )
 
 
@@ -220,8 +221,7 @@ def finish_login(request, get_params):
     destination = None
 
     sessid = datetime.now(UTC).strftime('%Y%m%d_') + generate_key()
-    with sessions.lock(request.app, sessid), \
-            sessions.open_log_file(request, sessid) as log_file:
+    with sessions.lock(sessid), sessions.open_log_file(sessid) as log_file:
         logger = Logger()
         logger.log_file = log_file
 
@@ -300,8 +300,7 @@ def build_params_from_saml_response(request):
 
     uid = _read_saml_attribute(auth, 'urn:oid:0.9.2342.19200300.100.1.1')
 
-    andrvotr_api_key_path = request.app.var / 'saml/andrvotr_api_key'
-    andrvotr_api_key = andrvotr_api_key_path.read_text().strip()
+    andrvotr_api_key = var_path('saml/andrvotr_api_key').read_text().strip()
 
     # TODO: One day: comply with SessionNotOnOrAfter (get_session_expiration).
 

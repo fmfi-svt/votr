@@ -1,7 +1,7 @@
-
 import os
 import subprocess
 from werkzeug.serving import run_simple
+from votrfront.base import var_path
 
 
 def serve(app, *args):
@@ -22,22 +22,22 @@ def serve(app, *args):
         else:
             raise Exception('Unexpected argument %r' % arg)
 
-    os.makedirs(app.var / 'locks', exist_ok=True)
-    os.makedirs(app.var / 'logs', exist_ok=True)
-    os.makedirs(app.var / 'logdb', exist_ok=True)
-    os.makedirs(app.var / 'oldlogs', exist_ok=True)
-    os.makedirs(app.var / 'logarchive', exist_ok=True)
-    os.makedirs(app.var / 'sessions', exist_ok=True)
-    os.makedirs(app.var / 'reportlogs', exist_ok=True)
+    os.makedirs(var_path('locks'), exist_ok=True)
+    os.makedirs(var_path('logs'), exist_ok=True)
+    os.makedirs(var_path('logdb'), exist_ok=True)
+    os.makedirs(var_path('oldlogs'), exist_ok=True)
+    os.makedirs(var_path('logarchive'), exist_ok=True)
+    os.makedirs(var_path('sessions'), exist_ok=True)
+    os.makedirs(var_path('reportlogs'), exist_ok=True)
 
     if https:
-        ssl_context = (app.var / 'ssl.crt', app.var / 'ssl.key')
+        ssl_context = (var_path('ssl.crt'), var_path('ssl.key'))
         if not os.path.exists(ssl_context[0]):
             subprocess.check_call([
                 'openssl', 'req', '-x509', '-newkey', 'rsa:4096',
                 '-keyout', 'ssl.key', '-out', 'ssl.crt',
                 '-sha256', '-days', '365', '-nodes', '-subj', '/CN=*',
-            ], cwd=app.var)
+            ], cwd=var_path())
     else:
         ssl_context = None
 

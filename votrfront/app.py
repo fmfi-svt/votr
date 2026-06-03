@@ -18,9 +18,7 @@ class VotrApp(object):
     def __init__(self, settings):
         self.settings = settings
 
-        self.var = Path(__file__).resolve().parent.parent / settings.var_path
-
-        self.saml_settings = login.build_saml_settings(settings, self.var)
+        self.saml_settings = login.build_saml_settings(settings)
 
         self.commands = {}
         for module in site_modules:

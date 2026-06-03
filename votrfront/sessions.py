@@ -5,6 +5,7 @@ import gzip
 import os
 import pickle
 from aisikl.exceptions import LoggedOutError
+from votrfront.base import var_path
 
 
 def get_sessid_from_cookie(request):
@@ -17,15 +18,15 @@ def check_sessid(sessid):
             raise ValueError('Invalid sessid')
 
 
-def open_log_file(request, sessid):
+def open_log_file(sessid):
     check_sessid(sessid)
-    filename = request.app.var / 'logs' / (sessid + '.gz')
+    filename = var_path('logs', sessid + '.gz')
     return gzip.open(filename, 'at', encoding='utf8')
 
 
 def create(request, sessid, session):
     check_sessid(sessid)
-    with open(request.app.var / 'sessions' / sessid, 'xb') as f:
+    with var_path('sessions', sessid).open('xb') as f:
         pickle.dump(session, f, pickle.HIGHEST_PROTOCOL)
 
     return sessid
@@ -36,14 +37,14 @@ def delete(request, sessid=None):
     if not sessid: return
     check_sessid(sessid)
     try:
-        os.unlink(request.app.var / 'sessions' / sessid)
+        var_path('sessions', sessid).unlink()
         return True
     except FileNotFoundError:
         return False
 
 
 @contextlib.contextmanager
-def lock(app, sessid):
+def lock(sessid):
     """Acquires a named mutex identified by ``sessid``, waiting if another
     process/thread is already holding it. If a process dies, its held locks are
     automatically released. Locks are per user."""
@@ -60,8 +61,7 @@ def lock(app, sessid):
     # conditions when one thread deletes the file but another thread already has
     # it open and is trying to lock it.
     check_sessid(sessid)
-    lock_base = f'{app.settings.instance_id}.{os.getuid()}.{sessid}'
-    lock_path = app.var / 'locks' / lock_base
+    lock_path = var_path('locks', sessid)
     while True:
         f = open(lock_path, 'ab')
         try:
@@ -94,9 +94,9 @@ def transaction(request, sessid=None):
     if not sessid: raise LoggedOutError('Session cookie not found')
     check_sessid(sessid)
 
-    with lock(request.app, sessid):
+    with lock(sessid):
         try:
-            f = open(request.app.var / 'sessions' / sessid, 'r+b')
+            f = var_path('sessions', sessid).open('r+b')
         except FileNotFoundError as e:
             raise LoggedOutError('Votr session does not exist') from e
 
@@ -124,7 +124,7 @@ def logged_transaction(request, sessid=None):
     if not sessid: sessid = get_sessid_from_cookie(request)
 
     with transaction(request, sessid) as session:
-        with open_log_file(request, sessid) as log_file:
+        with open_log_file(sessid) as log_file:
             client = session.get('client')
             if client: client.context.logger.log_file = log_file
             yield session

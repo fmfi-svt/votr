@@ -1,11 +1,11 @@
-
 import json
 import time
 from datetime import datetime, UTC
 from werkzeug.routing import Rule
 from werkzeug.wrappers import Response
 from werkzeug.exceptions import BadRequest
-from . import sessions
+from votrfront import sessions
+from votrfront.base import var_path
 
 
 def report(request):
@@ -24,7 +24,7 @@ def report(request):
     }
 
     filename = datetime.now(UTC).strftime('%Y%m')
-    with open(request.app.var / 'reportlogs' / filename, 'at') as f:
+    with var_path('reportlogs', filename).open('at') as f:
         f.write(json.dumps(payload, sort_keys=True) + '\n')
     return Response('OK', content_type='text/plain')
 

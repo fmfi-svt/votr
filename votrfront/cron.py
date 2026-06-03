@@ -1,25 +1,23 @@
-
 from datetime import datetime, UTC
 import gzip
 import json
 import lzma
-import os
 import shutil
 import tarfile
 import time
-from . import logutil
-from . import sessions
+from votrfront import logutil
+from votrfront import sessions
+from votrfront.base import var_path
 
 
-def create_archive(app, prefix):
-    wip = app.var / 'logarchive' / 'wip.tar.xz'
-    sources = sorted((app.var / 'oldlogs').glob(prefix + '*.xz'))
-    dest = app.var / 'logarchive' / (prefix + '.tar.xz')
+def create_archive(prefix):
+    wip = var_path('logarchive', 'wip.tar.xz')
+    sources = sorted(var_path('oldlogs').glob(prefix + '*.xz'))
+    dest = var_path('logarchive', prefix + '.tar.xz')
 
-    if os.path.exists(wip):
-        os.unlink(wip)
+    wip.unlink(missing_ok=True)
 
-    if not os.path.exists(dest):
+    if not dest.exists():
         with tarfile.open(wip, 'w:xz', preset=9) as tar:
             for source in sources:
                 with lzma.open(source) as f:
@@ -36,57 +34,58 @@ def create_archive(app, prefix):
                     tarinfo.mtime = mtime
                     tar.addfile(tarinfo, fileobj=f)
 
-        os.rename(wip, dest)
+        wip.rename(dest)
 
     with tarfile.open(dest, 'r') as tar:
         for entry in tar:
             sessid = entry.name.rpartition('/')[2]
-            path = app.var / 'oldlogs' / (sessid + '.xz')
-            if os.path.exists(path):
-                os.unlink(path)
+            var_path('oldlogs', sessid + '.xz').unlink(missing_ok=True)
 
-    remains = list((app.var / 'oldlogs').glob(prefix + '*.xz'))
+    remains = sorted(var_path('oldlogs').glob(prefix + '*.xz'))
     if remains:
-        raise Exception('Remaining files: %r' % remains)
+        raise Exception(f'Remaining files: {remains!r}')
 
 
 def cron(app):
+    settings = app.settings
     now = time.time()
 
-    for path in (app.var / 'sessions').iterdir():
-        with sessions.lock(app, path.name):
-            if not os.path.exists(path): continue  # Logged out just now?
-            mtime = os.path.getmtime(path)
-            if now - mtime > app.settings.session_max_age:
-                os.unlink(path)
+    for path in var_path('sessions').iterdir():
+        with sessions.lock(path.name):
+            if not path.exists(): continue  # Logged out just now?
+            mtime = path.stat().st_mtime
+            if now - mtime > settings.session_max_age:
+                path.unlink()
 
     logutil.process_logfiles(
-        app, [str(path) for path in (app.var / 'logs').iterdir()])
+        logutil.connect_logdb(),
+        [str(path) for path in var_path('logs').iterdir()],
+    )
 
-    for path in (app.var / 'logs').glob('*.gz'):
+    for path in var_path('logs').glob('*.gz'):
         sessid = path.name.partition('.')[0]
-        with sessions.lock(app, sessid):
-            mtime = os.path.getmtime(path)
-            if not (now - mtime > app.settings.session_max_age): continue
-            if os.path.exists(app.var / 'sessions' / sessid): continue
+        with sessions.lock(sessid):
+            mtime = path.stat().st_mtime
+            if not (now - mtime > settings.session_max_age): continue
+            if var_path('sessions', sessid).exists(): continue
 
-            newpath = app.var / 'oldlogs' / (sessid + '.xz')
+            newpath = var_path('oldlogs', sessid + '.xz')
 
             with gzip.open(path) as src:
                 with lzma.open(newpath, 'w', preset=9) as dest:
                     shutil.copyfileobj(src, dest)
-            os.unlink(path)
+            path.unlink()
 
-    prefixes = set(path.name[0:6] for path in (app.var / 'oldlogs').glob('*.xz'))
+    prefixes = set(path.name[0:6] for path in var_path('oldlogs').glob('*.xz'))
 
     prefixes.discard(datetime.fromtimestamp(now, UTC).strftime('%Y%m'))
 
-    for path in (app.var / 'logs').iterdir():
+    for path in var_path('logs').iterdir():
         prefixes.discard(path.name[0:6])
-    for path in (app.var / 'sessions').iterdir():
+    for path in var_path('sessions').iterdir():
         prefixes.discard(path.name[0:6])
     for prefix in sorted(prefixes):
-        create_archive(app, prefix)
+        create_archive(prefix)
 
 cron.help = '  $0 cron'
 
