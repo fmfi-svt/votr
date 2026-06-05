@@ -1,12 +1,7 @@
 #!/usr/bin/env python
 
 try:
-    try:
-        import votrfront.local_settings as settings
-    except ImportError as e:
-        if 'local_settings' not in str(e): raise
-        import votrfront.default_settings as settings
-
+    import votrfront.local_settings as settings
     from votrfront.app import VotrApp
     from votrfront.proxied import ProxiedMiddleware
 

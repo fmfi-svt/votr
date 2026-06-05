@@ -310,6 +310,7 @@ install)
 
   if [[ "$clean" == y ]]; then
     log_and_run "Deleting the previous installation. " "rm -rf .x_local_uv_env .venv node_modules"
+    # votrfront/local_settings.py is never reset, even if --clean is on.
   elif [[ -d .venv ]] && [[ "$uv" != "$olduv" || "$nodejs" != "$oldnodejs" || "$pnpm" != "$oldpnpm" ]]; then
     log_and_run "Deleting .venv because options have changed. " "rm -rf .venv"
   fi
@@ -351,6 +352,13 @@ install)
   fi
 
   log_and_run "Installing JavaScript dependencies to './node_modules'. " "uv run pnpm install$pnpmopts"
+
+  if [[ -f votrfront/local_settings.py ]]; then
+    log "votrfront/local_settings.py already exists. Keeping it."
+  else
+    log "Creating votrfront/local_settings.py."
+    printf "'''Add custom settings here. Defaults can be seen in default_settings.py.'''\nfrom .default_settings import *\n" > votrfront/local_settings.py
+  fi
 
   log "Success!"
   ;;

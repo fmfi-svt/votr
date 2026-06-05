@@ -1,11 +1,4 @@
-"""To change these settings, create votrfront/local_settings.py containing:
-
-    from .default_settings import *
-
-    foo = 'bar'
-
-    ...
-"""
+'''Local changes belong in votrfront/local_settings.py.'''
 
 instance_id = 'votr'
 
