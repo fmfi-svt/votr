@@ -45,8 +45,6 @@ def serve(app, *args):
     run_simple(bind, port, app_with_static, ssl_context=ssl_context,
                use_debugger=debug, use_reloader=True, threaded=True)
 
-serve.help = '  $0 serve [--debug] [--https] [--bind=X.X.X.X] [--port=N]'
-
 
 commands = {
     'serve': serve,

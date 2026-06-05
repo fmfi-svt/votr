@@ -6,7 +6,8 @@ set -e -u -o pipefail
 base_dir=$(dirname "$0")
 base_dir=$(readlink -fv "$base_dir")
 
-help1='Usage: ./x [COMMON-OPTIONS] X-COMMAND ...
+# shellcheck disable=SC2016
+help='Usage: ./x [COMMON-OPTIONS] X-COMMAND ...
 
 Common options:
 
@@ -25,10 +26,7 @@ Commands:
       --prod-deps              install prod-only dependencies (e.g. gunicorn)
       --no-dev-deps            omit dev-only dependencies (e.g. eslint)
       --clean                  reinstall everything from scratch
-'
 
-# shellcheck disable=SC2016
-help2='
   ./x upgrade-py
   ./x upgrade-js
   ./x upgrade
@@ -66,6 +64,14 @@ help2='
       ./x coverage combine [--append]
       ./x coverage html
 
+  ./x serve [SERVE-OPTIONS]
+    Runs the Python development server.
+    Options:
+      --debug               enables the werkzeug debugger
+      --https               serves https with a self-signed cert
+      --bind=X.X.X.X        listens on this address (default: 127.0.0.1)
+      --port=N              listens on this port (default: 5000)
+
   ./x coverage-serve [SERVE-OPTIONS]
     Runs "./x serve ..." with Coverage.py.
 
@@ -76,6 +82,35 @@ help2='
   ./x watch-and-coverage-serve [SERVE-OPTIONS]
     Runs both "./x pnpm watch" (JavaScript bundler) and "./x coverage-serve ..."
     (Python development server with Coverage.py) in parallel.
+
+  ./x cron
+    Runs periodic processing and cleanup of sessions and log files.
+
+  ./x log tag +TAGNAME1 -TAGNAME2 SESSID1:LINENO1 SESSID2:LINENO2 ...
+    Adds or removes tags to the given row(s) in the error log database.
+
+  ./x log view SESSID-OR-FILENAME
+    Pretty-prints the log file in a pager.
+    Options:
+      -c, --color           print colored output
+
+  ./x log path SESSID1 SESSID2 ...
+    Prints the log filename for each sessid. Only rarely useful.
+
+  ./x log process FILENAME...
+    Scans log files for errors and adds them to the error log database.
+    Usually done by cron. This command is only for manual testing.
+
+  ./x log list [PATTERN] ...
+    Lists rows in the error logs database.
+    Options:
+      -n, --not PATTERN     do not select lines matching PATTERN
+      -F, --from YYYYMMDD   match only lines logged since the given date
+      -T, --to YYYYMMDD     match only lines logged until the given date
+      -c, --color           print colored output
+      -s, --sessids         print list of matching sessids
+      -l, --linenos         print list of matching sessid:linenos
+      -f, --files           print list of matching filenames
 '
 
 normal=$'\e[0m'
@@ -139,13 +174,7 @@ shift || true
 
 case "$command" in
 --help)
-  if [[ -d "$base_dir/.venv" ]]; then
-    echo >&2 "$help1$help2"
-    "$0" console.py 2>&1 | sed '/^usage:$/d; s!^  console.py!  ./x!' >&2
-  else
-    echo >&2 "$help1"
-    echo >&2 'More commands will be available after running "./x install".'
-  fi
+  echo -n "$help" >&2
   ;;
 
 uv)

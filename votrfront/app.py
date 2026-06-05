@@ -32,13 +32,7 @@ class VotrApp(object):
                     self.url_map.add(rulefactory)
 
     def run_help(self, *args):
-        '''Shows the usage when console.py is run with an unknown command.'''
-        print('usage:')
-        for module in site_modules:
-            if hasattr(module, 'commands'):
-                for command in module.commands.values():
-                    if hasattr(command, 'help'):
-                        print(command.help.replace('$0', sys.argv[0]))
+        sys.exit('Try: ./x --help')
 
     def run_command(self, args):
         '''Used by console.py to run the command given in `args`.'''

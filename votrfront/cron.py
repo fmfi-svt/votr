@@ -87,8 +87,6 @@ def cron(app):
     for prefix in sorted(prefixes):
         create_archive(prefix)
 
-cron.help = '  $0 cron'
-
 
 commands = {
     'cron': cron,
