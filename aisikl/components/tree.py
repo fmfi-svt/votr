@@ -1,15 +1,20 @@
 
+from __future__ import annotations
 import json
 from .component import is_true
 from .control import Control
 from .table import load_script_plain, load_script
-from aisikl.events import (action_event, tree_expansion_event,
-                           tree_expansion_action_event, tree_selection_event)
+from aisikl.events import (action_event, tree_expansion_event, tree_expansion_action_event, tree_selection_event)
+from typing import TYPE_CHECKING, Dict, Union
+
+if TYPE_CHECKING:
+    from aisikl.dialog import Dialog
+    from bs4.element import Tag
 
 
 # Not a namedtuple, because 'expanded' and 'checked' can change.
 class Node(object):
-    def __init__(self, id, is_leaf, type, expanded, checked, title):
+    def __init__(self, id: str, is_leaf: bool, type: str, expanded: None, checked: None, title: str) -> None:
         self.id = id
         self.is_leaf = is_leaf
         self.type = type
@@ -31,7 +36,7 @@ def _synchronizer_to_cdata(sync, true_name, false_name):
 
 
 class Tree(Control):
-    def __init__(self, dialog, id, type, parent_id, properties, element):
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: Dict[str, Union[str, bool, int]], element: Tag) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
 
         self.multiple_selection = properties.get('multipleSelection', False)
@@ -45,7 +50,7 @@ class Tree(Control):
 
         self._init_from_data_view(element.find(id=self.id + '_dataView'))
 
-    def _init_from_data_view(self, data_view, updating=False):
+    def _init_from_data_view(self, data_view: Tag, updating: bool=False) -> None:
         if not data_view: return
 
         element = data_view.find(id='nodes')
@@ -92,7 +97,7 @@ class Tree(Control):
 
         self.dialog.try_interactive(self, "TreeSelectionEvent")
 
-    def _ais_setDataView(self, id, body):
+    def _ais_setDataView(self, id: str, body: Tag) -> None:
         data_view = body.find(id=id)
         if not data_view.contents: return
 

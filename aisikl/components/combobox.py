@@ -1,19 +1,25 @@
 
+from __future__ import annotations
 from collections import namedtuple
 from .control import Control
 from aisikl.events import selection_event
+from typing import TYPE_CHECKING, Dict, Union
+
+if TYPE_CHECKING:
+    from aisikl.dialog import Dialog
+    from bs4.element import Tag
 
 
 Option = namedtuple('Option', ['title', 'id', 'tool_tip_text'])
 
 
 class ComboBox(Control):
-    def __init__(self, dialog, id, type, parent_id, properties, element):
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: Dict[str, Union[str, bool, int]], element: Tag) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.tool_tip_like_data = properties.get('ttld', False)
         self._parse_options(element)
 
-    def _parse_options(self, element):
+    def _parse_options(self, element: Tag) -> None:
         self.selected_index = -1
         self.options = []
         for index, option in enumerate(element.find_all('option')):
@@ -30,24 +36,24 @@ class ComboBox(Control):
         if self.selected_index == -1: return None
         return self.options[self.selected_index]
 
-    def select(self, index):
+    def select(self, index: int) -> None:
         self.log('action', 'Selecting "{}" in {}'.format(
             self.options[index].title, self.id))
         self.selected_index = index
         self._fire_event()
 
-    def _fire_event(self):
+    def _fire_event(self) -> None:
         self.dialog.component_changes(self, False)
         ev = selection_event(self, self.selected_index)
         self.dialog.app.send_events(ev)
 
-    def changed_properties(self):
+    def changed_properties(self) -> str:
         cdata = ('<root><selection>'
             '<selectedIndexes>{}</selectedIndexes>'
             '</selection></root>').format(self.selected_index)
         return self._build_changed_properties(dataView=(True, True, cdata))
 
-    def _ais_setDataView(self, id, body):
+    def _ais_setDataView(self, id: str, body: Tag) -> None:
         data_view = body.find(id=id)
         combo_box_list = data_view.find(id='comboBoxList', recursive=False)
         if combo_box_list.has_attr('selectedIndex_'):

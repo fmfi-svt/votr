@@ -1,9 +1,16 @@
 
+from __future__ import annotations
 import json
 import re
 from .exceptions import AISParseError
 from .components import component_classes
 from aisikl.events import component_event
+from typing import TYPE_CHECKING, Optional
+
+if TYPE_CHECKING:
+    from aisikl.app import Application
+    from aisikl.components.component import Component
+    from aisikl.components.control import Control
 
 _properties_re = re.compile(r'^var componentsProperties\s*=\s*(.*);$')
 
@@ -27,8 +34,8 @@ class Dialog:
         components: The dict of components present in the dialog.
     '''
 
-    def __init__(self, name, title, code, parent_dialog_name, modal,
-                 is_main_dialog, closeable, hide_title_bar, app):
+    def __init__(self, name: str, title: str, code: str, parent_dialog_name: Optional[str], modal: bool,
+                 is_main_dialog: bool, closeable: bool, hide_title_bar: bool, app: Application) -> None:
         self.name = name
         self.title = title
         self.code = code
@@ -42,7 +49,7 @@ class Dialog:
         self.components = {}
         self.changed_components = None
 
-    def _init(self, url):
+    def _init(self, url: str) -> None:
         '''Load the dialog body.
 
         Called from :meth:`aisikl.app.Application.open_dialog`.
@@ -98,7 +105,7 @@ class Dialog:
 
         self.app.ctx.log('benchmark', 'End dialog initialization')
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Component:
         if 'components' in self.__dict__ and name in self.components:
             return self.components[name]
         raise AttributeError(name)
@@ -106,7 +113,7 @@ class Dialog:
     def __dir__(self):
         return super().__dir__() + list(self.components)
 
-    def changed_properties(self):
+    def changed_properties(self) -> str:
         '''Return the <changedProperties> string for this dialog.'''
         # We ignore width, height, x, y, focusedComponent and dtSelection.
         # So there are no <nameValue> pairs, only <embObjChProps>.
@@ -121,12 +128,12 @@ class Dialog:
         self.changed_components = None
         return result
 
-    def try_interactive(self, component, type):
+    def try_interactive(self, component: Component, type: str) -> None:
         # Moved from DocumentBody. TODO: document that.
 
         pass # TODO
 
-    def component_changes(self, component, is_minor):
+    def component_changes(self, component: Control, is_minor: bool) -> None:
         # Moved from DocumentBody. TODO: document that.
 
         # TODO: Eventual support for ChangeGuardInteractive goes here.
@@ -147,7 +154,7 @@ class Dialog:
             self.changed_components[component.id] = True
             self.try_interactive(component, 'change')
 
-    def click_close_button(self):
+    def click_close_button(self) -> None:
         if not self.closeable:
             raise ValueError("Dialog {} has no close button".format(self.name))
         # TODO: Return unless "self.enabled" is True.

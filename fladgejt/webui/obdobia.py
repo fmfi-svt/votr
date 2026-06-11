@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
 from aisikl.app import Application
 from fladgejt.helpers import find_row
 from fladgejt.structures import Obdobie
 from fladgejt.webui.pool import pooled_app
+from typing import TYPE_CHECKING
 
 
 class WebuiObdobiaMixin:
     @pooled_app
-    def _open_sprava_datumov(self):
+    def _open_sprava_datumov(self) -> Application:
         '''Opens 'Správa dátumových akcií' application (VSST010).
 
         :return: a :class:`~Application` object.
@@ -19,7 +21,7 @@ class WebuiObdobiaMixin:
         app.awaited_open_main_dialog(ops)
         return app
 
-    def get_obdobie(self, datumova_akcia_id, akademicky_rok=None):
+    def get_obdobie(self, datumova_akcia_id: str, akademicky_rok: None=None) -> Obdobie:
         '''Returns a time range defined by a given datumova_akcia_id. The
         academic year of such action can be changed with optional parameter
         akademicky_rok.
@@ -52,7 +54,7 @@ class WebuiObdobiaMixin:
                        obdobie_do=row['doDatumu'],
                        id_akcie=datumova_akcia_id)
 
-    def get_semester_obdobie(self, semester, akademicky_rok=None):
+    def get_semester_obdobie(self, semester: str, akademicky_rok: None=None) -> Obdobie:
         '''Returns a time range of a given semester.
 
         Args:
@@ -70,7 +72,7 @@ class WebuiObdobiaMixin:
         else:
             raise ValueError('Wrong type of semester "{0}"'.format(semester))
 
-    def get_skuskove_obdobie(self, semester, akademicky_rok=None):
+    def get_skuskove_obdobie(self, semester: str, akademicky_rok: None=None) -> Obdobie:
         '''Returns a time range of a given examination period.
 
         Args:

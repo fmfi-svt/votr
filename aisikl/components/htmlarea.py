@@ -1,19 +1,25 @@
 
+from __future__ import annotations
 from .actionablecontrol import ActionableControl
+from typing import TYPE_CHECKING, Dict, Union
+
+if TYPE_CHECKING:
+    from aisikl.dialog import Dialog
+    from bs4.element import Tag
 
 
 class HtmlArea(ActionableControl):
-    def __init__(self, dialog, id, type, parent_id, properties, element):
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: Dict[str, Union[int, str]], element: Tag) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.safe_links = properties.get('safeLinks', False)
         self._parse_content(element)
         # Note: This is where we should call component_changes() if we actually
         # supported canClose.
 
-    def _parse_content(self, element):
+    def _parse_content(self, element: Tag) -> None:
         self.content = element.find(id='htmlContent').get_text()[4:-3]
 
-    def _ais_setHtml(self, id, body):
+    def _ais_setHtml(self, id: str, body: Tag) -> None:
         self._parse_content(body.find(id=id))
     _ais_setHtml.wants_body = True
 

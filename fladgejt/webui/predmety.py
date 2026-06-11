@@ -1,21 +1,26 @@
 # -*- coding: utf-8 -*-
+from __future__ import annotations
 import base64
 
 from aisikl.app import Application, assert_ops
 from fladgejt.webui.pool import pooled_app
 from fladgejt.helpers import find_option, find_row, decode_key
 from fladgejt.structures import RegUcitelPredmetu, PrihlasenyStudent, RegPredmet
+from typing import TYPE_CHECKING, List
+
+if TYPE_CHECKING:
+    from aisikl.components.combobox import Option
 
 
 class WebuiPredmetyMixin:
     @pooled_app
-    def _open_register_predmetov(self):
+    def _open_register_predmetov(self) -> Application:
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.st.VSST060App&kodAplikacie=VSST060&uiLang=SK'
         app, ops = Application.open(self.context, url)
         app.awaited_open_main_dialog(ops)
         return app
 
-    def get_informacny_list(self, kod_predmetu, akademicky_rok):
+    def get_informacny_list(self, kod_predmetu: str, akademicky_rok: str) -> str:
         app = self._open_register_predmetov()
 
         stredisko, _, zvysok = decode_key(kod_predmetu)[0].partition('/')
@@ -150,13 +155,13 @@ class WebuiPredmetyMixin:
         return dict(items=studenti, message=None, predmet=predmet)
 
     @pooled_app
-    def _open_nastenka_predmetu(self):
+    def _open_nastenka_predmetu(self) -> Application:
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.st.VSST157App&kodAplikacie=VSST157&uiLang=SK'
         app, ops = Application.open(self.context, url)
         app.awaited_open_main_dialog(ops)
         return app
 
-    def get_ucitelia_predmetu(self, predmet_key, akademicky_rok, semester, fakulty):
+    def get_ucitelia_predmetu(self, predmet_key: str, akademicky_rok: str, semester: str, fakulty: str) -> List[RegUcitelPredmetu]:
         (skratka_predmetu,) = decode_key(predmet_key)
 
         app = self._open_nastenka_predmetu()
@@ -198,8 +203,8 @@ class WebuiPredmetyMixin:
 
         return []
 
-    def vyhladaj_predmety(self, akademicky_rok, fakulta, stredisko, skratka_sp,
-                          skratka_predmetu, nazov_predmetu, semester, stupen):
+    def vyhladaj_predmety(self, akademicky_rok: str, fakulta: str, stredisko: str, skratka_sp: str,
+                          skratka_predmetu: str, nazov_predmetu: str, semester: str, stupen: str) -> List[str]:
         app = self._open_register_predmetov()
 
         message = None
@@ -238,22 +243,22 @@ class WebuiPredmetyMixin:
 
         return [predmety, message]
 
-    def get_register_predmetov_fakulta_options(self):
+    def get_register_predmetov_fakulta_options(self) -> List[Option]:
         app = self._open_register_predmetov()
 
         return app.d.fakultaUniverzitaComboBox.options
 
-    def get_register_predmetov_akademicky_rok_options(self):
+    def get_register_predmetov_akademicky_rok_options(self) -> List[Option]:
         app = self._open_register_predmetov()
 
         return app.d.akRokComboBox.options
 
-    def get_register_predmetov_semester_options(self):
+    def get_register_predmetov_semester_options(self) -> List[Option]:
         app = self._open_register_predmetov()
 
         return app.d.semesterComboBox.options
 
-    def get_register_predmetov_stupen_options(self):
+    def get_register_predmetov_stupen_options(self) -> List[Option]:
         app = self._open_register_predmetov()
 
         return app.d.stupenPredmetuComboBox.options

@@ -1,10 +1,15 @@
 
+from __future__ import annotations
 from aisikl.events import action_event
 from .component import Component, is_true
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
+
+if TYPE_CHECKING:
+    from aisikl.dialog import Dialog
 
 
 class Action(Component):
-    def __init__(self, dialog, id, type, parent_id, properties, element):
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: None, properties: Dict[str, Union[bool, str, int, List[str]]], element: None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.accessible = properties.get('accessible', True)
         self.tool_tip_text = properties.get('toolTipText')
@@ -20,7 +25,7 @@ class Action(Component):
         return [o for o in self.get_components()
                 if o.component_type in ('button', 'menuItem')]
 
-    def execute(self, original_source_name=None, params=None):
+    def execute(self, original_source_name: Optional[str]=None, params: None=None) -> None:
         '''Executes the action and emits the appropriate event.'''
         if not (self.accessible and self.enabled and self.enabled_in_ui and
                 self.visible and self.visible_in_ui):
@@ -36,7 +41,7 @@ class Action(Component):
         # (if ev.listening is True), but we probably don't care.
         self.dialog.app.send_events(ev)
 
-    def _ais_setAccessible(self, value):
+    def _ais_setAccessible(self, value: str) -> None:
         self.accessible = is_true(value)
     def _ais_setVisibleInUI(self, value):
         super()._ais_setVisibleInUI(value)

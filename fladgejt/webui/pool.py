@@ -1,11 +1,16 @@
 
+from __future__ import annotations
 from functools import wraps
+from typing import TYPE_CHECKING, Callable
+
+if TYPE_CHECKING:
+    from aisikl.context import Context
 
 
 OPEN_APP_LIMIT = 10
 
 
-def pooled_app(original_method):
+def pooled_app(original_method: Callable) -> Callable:
     '''Decorator for methods that return an :class:`~aisikl.app.Application`.
 
     Generally, we don't want to open an application if we've already opened it.
@@ -51,12 +56,12 @@ def pooled_app(original_method):
 
 
 class Pool:
-    def __init__(self, context):
+    def __init__(self, context: Context) -> None:
         self.context = context
         self.open_apps = {}
         self.active_keys = set()
 
-    def reserve(self, count):
+    def reserve(self, count: int) -> None:
         sorted_keys = sorted(
             self.open_apps,
             key=lambda k: self.open_apps[k].last_response_time)
@@ -80,7 +85,7 @@ class Pool:
                         self.open_apps[new_key] = app
                         break
 
-    def prepare_for_rpc(self, last_rpc_failed):
+    def prepare_for_rpc(self, last_rpc_failed: bool) -> None:
         self.active_keys = set()
 
         if last_rpc_failed and self.open_apps:

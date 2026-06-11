@@ -1,4 +1,16 @@
 
+from __future__ import annotations
+from typing import TYPE_CHECKING, Optional, Union
+
+if TYPE_CHECKING:
+    from aisikl.components.action import Action
+    from aisikl.components.button import Button
+    from aisikl.components.checkbox import CheckBox
+    from aisikl.components.combobox import ComboBox
+    from aisikl.components.component import Component
+    from aisikl.components.dialogbody import DialogBody
+    from aisikl.components.table import Table
+
 class Event:
     '''A WebUI event that might be sent to the server.
 
@@ -11,7 +23,7 @@ class Event:
             :meth:`aisikl.app.Application.send_events` will ignore it.
         xml: The XML payload.
     '''
-    def __init__(self, source, mask_bit, xml):
+    def __init__(self, source: Component, mask_bit: int, xml: str) -> None:
         comp_name = source.id
         dlg_name = source.dialog.name
 
@@ -23,7 +35,7 @@ class Event:
             xml)
 
 
-def _tag(name, value, optional=False):
+def _tag(name: str, value: Optional[str], optional: bool=False) -> str:
     if optional and not value: return ''
     return '<'+name+'>' + value + '</'+name+'>'
 
@@ -52,7 +64,7 @@ ComponentEventMethods = {
     'beforeclose': EVENT_BEFORECLOSE
 }
 
-def component_event(source, method, command=None):
+def component_event(source: DialogBody, method: str, command: Optional[str]=None) -> Event:
     source.dialog.try_interactive(source, 'ComponentEvent')
     return Event(source, ComponentEventMethods[method],
         "<event class='avc.ui.event.AVCComponentEvent'>" +
@@ -92,8 +104,8 @@ def row_edited_event(source, command, row_index):
         _tag("command", command, True) + _tag("rowIndex", str(row_index)) +
         "</event>")
 
-def action_event(source, command=None, original_source_name=None,
-                 params=None, cancel=False):
+def action_event(source: Union[Button, Table, Action], command: Optional[str]=None, original_source_name: Optional[str]=None,
+                 params: None=None, cancel: bool=False) -> Event:
     source.dialog.try_interactive(source, 'ActionEvent')
     # Note that <origSrcName> goes outside of <event>.
     return Event(source, EVENT_CANCEL if cancel else EVENT_ACTION,
@@ -103,7 +115,7 @@ def action_event(source, command=None, original_source_name=None,
         (f"<params><![CDATA[{params}]]></params>" if params else "") +
         "</event>")
 
-def selection_event(source, index=-1, selected=True):
+def selection_event(source: Union[ComboBox, Table], index: int=-1, selected: bool=True) -> Event:
     source.dialog.try_interactive(source, 'SelectionEvent')
     return Event(source, EVENT_SELCHANGE,
         "<event class='avc.ui.event.AVCSelectionActionEvent'>" +
@@ -135,7 +147,7 @@ def tree_selection_event(source, path, command):
 
 CursorEventMethods = { 'pageup': EVENT_PAGEUP, 'pagedown': EVENT_PAGEDOWN }
 
-def cursor_event(source, method, command=None):
+def cursor_event(source: Table, method: str, command: Optional[str]=None) -> Event:
     source.dialog.try_interactive(source, 'CursorEvent')
     return Event(source, CursorEventMethods[method],
         "<event class='avc.ui.event.AVCCursorEvent'>" +
@@ -152,7 +164,7 @@ def table_header_event(
         _tag("modifiers", modifiers, True) +
         "</event>")
 
-def item_event(source):
+def item_event(source: CheckBox) -> Event:
     source.dialog.try_interactive(source, 'ItemEvent')
     return Event(source, EVENT_ITEMCHANGE,
         "<event class='avc.ui.event.AVCItemEvent'/>")

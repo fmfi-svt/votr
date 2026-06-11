@@ -1,14 +1,19 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
 from aisikl.app import Application, assert_ops
 from fladgejt.webui.pool import pooled_app
 from fladgejt.helpers import find_option
 from fladgejt.structures import RegOsoba
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
+
+if TYPE_CHECKING:
+    from aisikl.components.combobox import Option
 
 
 class WebuiOsobyMixin:
     @pooled_app
-    def _open_register_osob(self):
+    def _open_register_osob(self) -> Application:
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.lz.LZ014App&kodAplikacie=LZ014&uiLang=SK'
         app, ops = Application.open(self.context, url)
         assert_ops(ops, 'openMainDialog', 'openDialog')
@@ -71,12 +76,12 @@ class WebuiOsobyMixin:
                 if item != app.d.rocnikCheckList.items[index].checked:
                     app.d.rocnikCheckList.toggle(index)
 
-    def vyhladaj_osobu(self, meno, priezvisko, absolvent,
-                       student, zamestnanec, akademicky_rok,
-                       fakulta, studijny_program, uchadzaci,
-                       prvy_rocnik, druhy_rocnik, treti_rocnik,
-                       stvrty_rocnik, piaty_rocnik, siesty_rocnik,
-                       siedmy_rocnik, osmy_rocnik, absolventi):
+    def vyhladaj_osobu(self, meno: str, priezvisko: str, absolvent: bool,
+                       student: bool, zamestnanec: bool, akademicky_rok: str,
+                       fakulta: Optional[str], studijny_program: Optional[str], uchadzaci: bool,
+                       prvy_rocnik: bool, druhy_rocnik: bool, treti_rocnik: bool,
+                       stvrty_rocnik: bool, piaty_rocnik: bool, siesty_rocnik: bool,
+                       siedmy_rocnik: bool, osmy_rocnik: bool, absolventi: bool) -> List[Optional[Union[List[RegOsoba], str]]]:
         app = self._open_register_osob()
 
         self.__open_filter(app)
@@ -108,14 +113,14 @@ class WebuiOsobyMixin:
 
         return [result, message]
 
-    def get_register_osob_akademicky_rok_options(self):
+    def get_register_osob_akademicky_rok_options(self) -> List[Option]:
         app = self._open_register_osob()
 
         self.__open_filter(app)
 
         return app.d.akademickyRokComboBox.options
 
-    def get_register_osob_fakulty(self):
+    def get_register_osob_fakulty(self) -> List[Dict[str, str]]:
         app = self._open_register_osob()
 
         self.__open_filter(app)

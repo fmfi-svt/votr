@@ -1,13 +1,15 @@
 
+from __future__ import annotations
 from .component import Component
+from typing import TYPE_CHECKING
 
 
 class DialogBody(Component):
-    def _ais_setWidth(self, value):
+    def _ais_setWidth(self, value: str) -> None:
         pass
 
     def _ais_setHeight(self, value):
         pass
 
-    def _ais_setFocusedComponent(self, value):
+    def _ais_setFocusedComponent(self, value: str) -> None:
         pass

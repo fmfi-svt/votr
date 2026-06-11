@@ -1,8 +1,10 @@
 
+from __future__ import annotations
 from aisikl.app import assert_ops
 from fladgejt.helpers import (
     CantOpenApplication, find_row, find_option, encode_key, decode_key)
 from fladgejt.structures import Predmet, Termin, PrihlasenyStudent
+from typing import TYPE_CHECKING
 
 
 class WebuiTerminyMixin:
@@ -12,7 +14,7 @@ class WebuiTerminyMixin:
             app.d.semesterComboBox.select(index)
             app.d.filterAction.execute()
 
-    def get_vidim_terminy_hodnotenia(self, zapisny_list_key):
+    def get_vidim_terminy_hodnotenia(self, zapisny_list_key: str) -> bool:
         try:
             self._open_terminy_hodnotenia_app(zapisny_list_key)
         except CantOpenApplication:

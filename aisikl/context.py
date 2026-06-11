@@ -1,4 +1,5 @@
 
+from __future__ import annotations
 from bs4 import BeautifulSoup
 import sys
 import time
@@ -6,6 +7,10 @@ import json
 import requests
 from urllib.parse import urljoin
 from aisikl.exceptions import RESTServerError, LoggedOutError
+from typing import TYPE_CHECKING, Any, Optional
+
+if TYPE_CHECKING:
+    from requests.models import Response
 
 
 #: Set this to True (either in the source code, or with ``import aisikl.context;
@@ -27,8 +32,8 @@ class Context:
         logger: An optional :class:`Logger` instance to use.
     '''
 
-    def __init__(self, *, ais_url=None, rest_url=None, dns_overrides=None,
-                 logger=None):
+    def __init__(self, *, ais_url: Optional[str]=None, rest_url: None=None, dns_overrides: None=None,
+                 logger: Optional[Logger]=None) -> None:
         self.ais_url = ais_url
         self.rest_url = rest_url
         self.logger = logger or Logger()
@@ -39,7 +44,7 @@ class Context:
                     f'https://{old_hostname}/',
                     _DnsOverrideAdapter(old_hostname, new_hostname))
 
-    def request_ais(self, url, *, method='GET', **kwargs):
+    def request_ais(self, url: str, *, method: str='GET', **kwargs) -> Response:
         r'''Sends a request to AIS and returns the :class:`requests.Response`.
 
         :param url: the URL, either absolute or relative to the AIS server.
@@ -60,7 +65,7 @@ class Context:
         self.log('benchmark', 'End AIS network request')
         return response
 
-    def request_html(self, url, *, method='GET', **kwargs):
+    def request_html(self, url: str, *, method: str='GET', **kwargs) -> BeautifulSoup:
         r'''Sends a request to AIS and parses the response as HTML.
 
         :param url: the URL, either absolute or relative to the AIS server.
@@ -70,7 +75,7 @@ class Context:
         '''
         return self.parse_html(self.request_ais(url, method=method, **kwargs))
 
-    def parse_html(self, response):
+    def parse_html(self, response: Response) -> BeautifulSoup:
         self.log('benchmark', 'Begin HTML parsing')
         soup = BeautifulSoup(response.text, 'lxml')
         self.log('benchmark', 'End HTML parsing')
@@ -104,7 +109,7 @@ class Context:
         self.log('http', 'Parsed JSON data')
         return response['response']
 
-    def log(self, type, message, data=None):
+    def log(self, type: str, message: str, data: Optional[Any]=None) -> None:
         '''Logs a message.
 
         Args:
@@ -130,7 +135,7 @@ class Logger:
     def __getstate__(self):
         return {}
 
-    def log(self, type, message, data=None):
+    def log(self, type: str, message: str, data: Optional[Any]=None) -> None:
         timestamp = time.time()
 
         if self.log_file and type != 'benchmark':

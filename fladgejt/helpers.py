@@ -1,6 +1,12 @@
 
+from __future__ import annotations
 from collections import namedtuple
 from base64 import urlsafe_b64encode, urlsafe_b64decode
+from typing import TYPE_CHECKING, List, Tuple, Union
+
+if TYPE_CHECKING:
+    from aisikl.components.combobox import Option
+    from aisikl.components.table import Row
 
 
 class CantOpenApplication(Exception):
@@ -13,7 +19,7 @@ class CantOpenApplication(Exception):
     '''
 
 
-def find_row(objects, **conditions):
+def find_row(objects: List[Row], **conditions) -> int:
     r'''Searches the list of objects for one that matches all given conditions.
 
     ``obj['foo'] == bar`` must be true for all ``foo=bar`` keyword arguments
@@ -33,7 +39,7 @@ def find_row(objects, **conditions):
     raise KeyError("Object not found: {!r}".format(conditions))
 
 
-def find_row_insensitive(objects, **conditions):
+def find_row_insensitive(objects: List[Row], **conditions) -> int:
     '''Same as :func:`find_row` but case insensitive.'''
     for index, obj in enumerate(objects):
         if all(obj[key].lower() == value.lower()
@@ -42,7 +48,7 @@ def find_row_insensitive(objects, **conditions):
     raise KeyError("Object not found: {!r}".format(conditions))
 
 
-def find_option(objects, **conditions):
+def find_option(objects: List[Option], **conditions) -> int:
     r'''Searches the list of objects for one that matches all given conditions.
 
     ``obj.foo == bar`` must be true for all ``foo=bar`` keyword arguments for
@@ -122,7 +128,7 @@ def keyed_namedtuple(typename, field_names, **key_fields):
     return result_class
 
 
-def encode_key(tuple):
+def encode_key(tuple: Union[Tuple[str, str], Tuple[str]]) -> str:
     '''Reversibly encode a tuple of strings into a single string.
 
     See :func:`keyed_namedtuple` for the rationale.
@@ -148,7 +154,7 @@ def encode_key(tuple):
     return '.'.join(result)
 
 
-def decode_key(string):
+def decode_key(string: str) -> Union[Tuple[str, str], Tuple[str]]:
     '''Decode the output of :func:`encode_key` back into a tuple of strings.
 
     See :func:`keyed_namedtuple` for the rationale.

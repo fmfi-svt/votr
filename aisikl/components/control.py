@@ -1,9 +1,17 @@
 
+from __future__ import annotations
 from .component import Component, is_true
+from typing import TYPE_CHECKING, Dict, Union
+
+if TYPE_CHECKING:
+    from aisikl.components.dialogbody import DialogBody
+    from aisikl.components.panel import Panel
+    from aisikl.dialog import Dialog
+    from bs4.element import Tag
 
 
 class Control(Component):
-    def __init__(self, dialog, id, type, parent_id, properties, element):
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: Dict[str, Union[str, bool, int]], element: Tag) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.parent_id = parent_id
         self.read_only = properties.get('ro', False)
@@ -11,13 +19,13 @@ class Control(Component):
         self.tool_tip_text = element.get('title')
 
     @property
-    def parent(self):
+    def parent(self) -> Union[DialogBody, Panel]:
         return self.dialog.components[self.parent_id]
 
-    def is_really_enabled(self):
+    def is_really_enabled(self) -> bool:
         return super().is_really_enabled() and self.parent.is_really_enabled()
 
-    def _ais_setReadOnly(self, value):
+    def _ais_setReadOnly(self, value: str) -> None:
         self.read_only = is_true(value)
     def _ais_setTabOrder(self, value):
         self.tab_order = int(value)
@@ -37,7 +45,7 @@ class Control(Component):
     def changed_properties(self):
         return ''
 
-    def _build_changed_properties(self, **kwargs):
+    def _build_changed_properties(self, **kwargs) -> str:
         # TODO: This could be shorter.
         result = []
         write = result.append
@@ -65,7 +73,7 @@ class Control(Component):
 
         return ''.join(result)
 
-    def update_value_interactives(self, type):
+    def update_value_interactives(self, type: str) -> None:
         pass # TODO
 
     # TODO: We need a method to explicitly request firing a blur event.

@@ -1,18 +1,25 @@
 
+from __future__ import annotations
 from .control import Control
+from typing import TYPE_CHECKING, Dict, Optional, Union
+
+if TYPE_CHECKING:
+    from aisikl.components.action import Action
+    from aisikl.dialog import Dialog
+    from bs4.element import Tag
 
 
 class ActionableControl(Control):
-    def __init__(self, dialog, id, type, parent_id, properties, element):
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: Dict[str, Union[str, bool, int]], element: Tag) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.action_name = properties.get('an')
 
     @property
-    def action(self):
+    def action(self) -> Optional[Action]:
         if not self.action_name: return None
         return self.dialog.components[self.action_name]
 
-    def try_execute_action(self, params=None):
+    def try_execute_action(self, params: None=None) -> bool:
         if self.action:
             self.action.execute(self.id, params)
             return True

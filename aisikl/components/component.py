@@ -1,15 +1,21 @@
 
+from __future__ import annotations
 from aisikl.exceptions import AISParseError
+from typing import TYPE_CHECKING, Dict, List, Optional, Union
+
+if TYPE_CHECKING:
+    from aisikl.dialog import Dialog
+    from bs4.element import Tag
 
 
-def is_true(value):
+def is_true(value: str) -> bool:
     return value == 'true' or value == True
 
 
 # TODO: Document Component and all subclasses.
 
 class Component:
-    def __init__(self, dialog, id, type, parent_id, properties, element):
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: Optional[str], properties: Dict[str, Union[bool, str, int, List[str]]], element: Optional[Tag]) -> None:
         self.dialog = dialog
         self.id = id
         self.component_type = type
@@ -24,25 +30,25 @@ class Component:
         if properties.get('state', 1) == 2:
             raise AISParseError('STATE_DT is not supported')
 
-    def log(self, *args, **kwargs):
+    def log(self, *args, **kwargs) -> None:
         self.dialog.app.ctx.log(*args, **kwargs)
 
-    def is_really_enabled(self):
+    def is_really_enabled(self) -> bool:
         return self.enabled and self.enabled_in_ui
 
     def _ais_setState(self, value):
         if int(value) == 2: raise AISParseError('STATE_DT is not supported')
-    def _ais_setUsedListenersMask(self, value):
+    def _ais_setUsedListenersMask(self, value: str) -> None:
         self.used_listeners_mask = int(value)
-    def _ais_setEnabled(self, value):
+    def _ais_setEnabled(self, value: str) -> None:
         self.enabled = is_true(value)
     def _ais_setEnabledInUI(self, value):
         self.enabled_in_ui = is_true(value)
-    def _ais_setVisible(self, value):
+    def _ais_setVisible(self, value: str) -> None:
         self.visible = is_true(value)
     def _ais_setVisibleInUI(self, value):
         self.visible_in_ui = is_true(value)
-    def _ais_setTitle(self, value):
+    def _ais_setTitle(self, value: str) -> None:
         self.title = value
     def _ais_setPopupMenu(self, value):
         self.popup_menu = value

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import annotations
 import re
 from aisikl.app import Application, assert_ops, DEFAULT_IGNORED_MESSAGES
 from aisikl.exceptions import AISBehaviorError
@@ -7,18 +8,19 @@ from fladgejt.helpers import (
     CantOpenApplication, find_row, find_option, encode_key, decode_key)
 from fladgejt.structures import Studium, ZapisnyList, Hodnotenie
 from fladgejt.webui.pool import pooled_app
+from typing import TYPE_CHECKING
 
 
 class WebuiStudiumMixin:
     @pooled_app
-    def _open_administracia_studia(self):
+    def _open_administracia_studia(self) -> Application:
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.es.VSES017App&kodAplikacie=VSES017&uiLang=SK'
         ignored_messages = DEFAULT_IGNORED_MESSAGES + ['Štúdium je prerušené. Zvoľte aktívne štúdium.']
         app, ops = Application.open(self.context, url, ignored_messages)
         app.awaited_open_main_dialog(ops)
         return app
 
-    def get_som_student(self):
+    def get_som_student(self) -> bool:
         try:
             self._open_administracia_studia()
         except AISBehaviorError as e:
@@ -55,7 +57,7 @@ class WebuiStudiumMixin:
                   for row in app.d.zapisneListyTable.all_rows()]
         return result
 
-    def zapisny_list_key_to_akademicky_rok(self, zapisny_list_key):
+    def zapisny_list_key_to_akademicky_rok(self, zapisny_list_key: str) -> str:
         studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
         return akademicky_rok
@@ -94,7 +96,7 @@ class WebuiStudiumMixin:
         app.d.zapisneListyTable.select(zapisny_list_index)
 
     @pooled_app
-    def _open_priebezne_hodnotenie_app(self, zapisny_list_key):
+    def _open_priebezne_hodnotenie_app(self, zapisny_list_key: str):
         app = self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
@@ -112,7 +114,7 @@ class WebuiStudiumMixin:
         return new_app
 
     @pooled_app
-    def _open_zapis_predmetov_app(self, zapisny_list_key):
+    def _open_zapis_predmetov_app(self, zapisny_list_key: str):
         app = self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
@@ -130,7 +132,7 @@ class WebuiStudiumMixin:
         return new_app
 
     @pooled_app
-    def _open_terminy_hodnotenia_app(self, zapisny_list_key):
+    def _open_terminy_hodnotenia_app(self, zapisny_list_key: str):
         app = self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
@@ -148,7 +150,7 @@ class WebuiStudiumMixin:
         return new_app
 
     @pooled_app
-    def _open_hodnotenia_priemery_app(self, zapisny_list_key):
+    def _open_hodnotenia_priemery_app(self, zapisny_list_key: str) -> Application:
         app = self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.

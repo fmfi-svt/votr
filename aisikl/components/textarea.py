@@ -1,9 +1,15 @@
 
+from __future__ import annotations
 from .textcontrol import TextControl
+from typing import TYPE_CHECKING, Dict, Union
+
+if TYPE_CHECKING:
+    from aisikl.dialog import Dialog
+    from bs4.element import Tag
 
 
 class TextArea(TextControl):
-    def __init__(self, dialog, id, type, parent_id, properties, element):
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: Dict[str, Union[str, bool, int]], element: Tag) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.value = element.get_text()
 

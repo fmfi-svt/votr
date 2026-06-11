@@ -1,11 +1,17 @@
 
+from __future__ import annotations
 from .component import is_true
 from .control import Control
+from typing import TYPE_CHECKING, Dict, Union
+
+if TYPE_CHECKING:
+    from aisikl.dialog import Dialog
+    from bs4.element import Tag
 
 
 # Not a namedtuple, because 'checked' can change.
 class Item:
-    def __init__(self, title, id, sid, rid, tool_tip_text, checked):
+    def __init__(self, title: str, id: str, sid: str, rid: str, tool_tip_text: str, checked: bool) -> None:
         self.title = title
         self.id = id
         self.sid = sid
@@ -18,12 +24,12 @@ class Item:
 
 
 class CheckList(Control):
-    def __init__(self, dialog, id, type, parent_id, properties, element):
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: Dict[str, Union[str, bool, int]], element: Tag) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.up_down_enabled = properties.get('upDownEnabled', False)
         self._parse_items(element)
 
-    def _parse_items(self, element):
+    def _parse_items(self, element: Tag) -> None:
         self.selected_index = -1
         self.items = []
         for index, tr in enumerate(element.find_all('tr')):
@@ -54,7 +60,7 @@ class CheckList(Control):
             self.items[index].title, self.id))
         self.selected_index = index
 
-    def toggle(self, index):
+    def toggle(self, index: int) -> None:
         self.items[index].checked = not self.items[index].checked
         self.log('action', '{} item "{}" in {}'.format(
             'Checking' if self.items[index].checked else 'Unchecking',
@@ -68,10 +74,10 @@ class CheckList(Control):
         self._parse_items(body.find(id=id))
     _ais_setDataView.wants_body = True
 
-    def _mark_changed(self):
+    def _mark_changed(self) -> None:
         self.dialog.component_changes(self, False)
 
-    def changed_properties(self):
+    def changed_properties(self) -> str:
         selection = ','.join(
             ('' if item.checked else '-') + item.rid for item in self.items)
 
