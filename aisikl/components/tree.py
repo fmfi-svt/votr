@@ -5,7 +5,7 @@ from .component import is_true
 from .control import Control
 from .table import load_script_plain, load_script
 from aisikl.events import (action_event, tree_expansion_event, tree_expansion_action_event, tree_selection_event)
-from typing import TYPE_CHECKING, Dict, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
@@ -36,7 +36,7 @@ def _synchronizer_to_cdata(sync, true_name, false_name):
 
 
 class Tree(Control):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: Dict[str, Union[str, bool, int]], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, str | bool | int], element: Tag) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
 
         self.multiple_selection = properties.get('multipleSelection', False)

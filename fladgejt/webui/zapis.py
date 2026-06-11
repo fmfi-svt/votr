@@ -4,14 +4,13 @@ from aisikl.app import assert_ops
 from fladgejt.helpers import (
     CantOpenApplication, find_row, find_option, decode_key)
 from fladgejt.structures import ZapisPredmet, ZapisVlastnost
-from typing import TYPE_CHECKING, List
 
 
 UNAVAILABLE = "Zápis predmetov pre tento zápisný list nie je dostupný."
 
 
 class WebuiZapisMixin:
-    def zapis_get_zapisane_predmety(self, zapisny_list_key: str, cast: str) -> List[str]:
+    def zapis_get_zapisane_predmety(self, zapisny_list_key: str, cast: str) -> list[str]:
         try:
             app = self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
@@ -41,7 +40,7 @@ class WebuiZapisMixin:
                   for row in app.d.predmetyTable.all_rows()]
         return [result, None]
 
-    def zapis_get_vlastnosti_programu(self, zapisny_list_key: str) -> List[str]:
+    def zapis_get_vlastnosti_programu(self, zapisny_list_key: str) -> list[str]:
         try:
             app = self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
@@ -55,7 +54,7 @@ class WebuiZapisMixin:
                   for row in app.d.vlastnostiStudProgramuTable.all_rows()]
         return [result, None]
 
-    def zapis_plan_vyhladaj(self, zapisny_list_key: str, cast: str) -> List[str]:
+    def zapis_plan_vyhladaj(self, zapisny_list_key: str, cast: str) -> list[str]:
         try:
             app = self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
@@ -278,7 +277,7 @@ class WebuiZapisMixin:
         return None
 
     def zapis_ponuka_vyhladaj(self, zapisny_list_key: str, fakulta: str, stredisko: str,
-                              filter_skratka: str, filter_nazov: str) -> List[str]:
+                              filter_skratka: str, filter_nazov: str) -> list[str]:
         try:
             app = self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
@@ -358,7 +357,7 @@ class WebuiZapisMixin:
 
         return None
 
-    def zapis_ponuka_options(self, zapisny_list_key: str) -> List[str]:
+    def zapis_ponuka_options(self, zapisny_list_key: str) -> list[str]:
         try:
             app = self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:

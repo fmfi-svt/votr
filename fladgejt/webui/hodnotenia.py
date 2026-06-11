@@ -2,7 +2,6 @@
 from __future__ import annotations
 from fladgejt.helpers import CantOpenApplication, decode_key
 from fladgejt.structures import Hodnotenie, Priemer, PriebezneHodnotenie, PriebezneHodnoteniaPredmetu
-from typing import TYPE_CHECKING, List
 
 
 class WebuiHodnoteniaMixin:
@@ -36,7 +35,7 @@ class WebuiHodnoteniaMixin:
                   for row in app.d.hodnoteniaTable.all_rows()]
         return [result, None]
 
-    def get_priemery(self, zapisny_list_key: str) -> List[None]:
+    def get_priemery(self, zapisny_list_key: str) -> list[None]:
         try:
             app = self._open_hodnotenia_priemery_app(zapisny_list_key)
         except CantOpenApplication:
@@ -57,7 +56,7 @@ class WebuiHodnoteniaMixin:
                   for row in app.d.priemeryTable.all_rows()]
         return [result, None]
 
-    def get_priebezne_hodnotenia(self, zapisny_list_key: str) -> List[str]:
+    def get_priebezne_hodnotenia(self, zapisny_list_key: str) -> list[str]:
         try:
             app = self._open_priebezne_hodnotenie_app(zapisny_list_key)
         except CantOpenApplication:

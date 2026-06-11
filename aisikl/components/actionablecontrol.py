@@ -1,7 +1,7 @@
 
 from __future__ import annotations
 from .control import Control
-from typing import TYPE_CHECKING, Dict, Optional, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.components.action import Action
@@ -10,12 +10,12 @@ if TYPE_CHECKING:
 
 
 class ActionableControl(Control):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: Dict[str, Union[str, bool, int]], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, str | bool | int], element: Tag) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.action_name = properties.get('an')
 
     @property
-    def action(self) -> Optional[Action]:
+    def action(self) -> Action | None:
         if not self.action_name: return None
         return self.dialog.components[self.action_name]
 

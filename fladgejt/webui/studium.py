@@ -8,7 +8,6 @@ from fladgejt.helpers import (
     CantOpenApplication, find_row, find_option, encode_key, decode_key)
 from fladgejt.structures import Studium, ZapisnyList, Hodnotenie
 from fladgejt.webui.pool import pooled_app
-from typing import TYPE_CHECKING
 
 
 class WebuiStudiumMixin:

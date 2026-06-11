@@ -5,7 +5,7 @@ from aisikl.app import Application, assert_ops
 from fladgejt.webui.pool import pooled_app
 from fladgejt.helpers import find_option
 from fladgejt.structures import RegOsoba
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.components.combobox import Option
@@ -78,10 +78,10 @@ class WebuiOsobyMixin:
 
     def vyhladaj_osobu(self, meno: str, priezvisko: str, absolvent: bool,
                        student: bool, zamestnanec: bool, akademicky_rok: str,
-                       fakulta: Optional[str], studijny_program: Optional[str], uchadzaci: bool,
+                       fakulta: str | None, studijny_program: str | None, uchadzaci: bool,
                        prvy_rocnik: bool, druhy_rocnik: bool, treti_rocnik: bool,
                        stvrty_rocnik: bool, piaty_rocnik: bool, siesty_rocnik: bool,
-                       siedmy_rocnik: bool, osmy_rocnik: bool, absolventi: bool) -> List[Optional[Union[List[RegOsoba], str]]]:
+                       siedmy_rocnik: bool, osmy_rocnik: bool, absolventi: bool) -> list[list[RegOsoba] | str | None]:
         app = self._open_register_osob()
 
         self.__open_filter(app)
@@ -113,14 +113,14 @@ class WebuiOsobyMixin:
 
         return [result, message]
 
-    def get_register_osob_akademicky_rok_options(self) -> List[Option]:
+    def get_register_osob_akademicky_rok_options(self) -> list[Option]:
         app = self._open_register_osob()
 
         self.__open_filter(app)
 
         return app.d.akademickyRokComboBox.options
 
-    def get_register_osob_fakulty(self) -> List[Dict[str, str]]:
+    def get_register_osob_fakulty(self) -> list[dict[str, str]]:
         app = self._open_register_osob()
 
         self.__open_filter(app)

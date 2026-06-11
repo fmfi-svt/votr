@@ -5,7 +5,6 @@ from aisikl.app import Application
 from fladgejt.helpers import find_row
 from fladgejt.structures import Obdobie
 from fladgejt.webui.pool import pooled_app
-from typing import TYPE_CHECKING
 
 
 class WebuiObdobiaMixin:

@@ -1,7 +1,7 @@
 
 from __future__ import annotations
 from .component import Component, is_true
-from typing import TYPE_CHECKING, Dict, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.components.dialogbody import DialogBody
@@ -11,7 +11,7 @@ if TYPE_CHECKING:
 
 
 class Control(Component):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: Dict[str, Union[str, bool, int]], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, str | bool | int], element: Tag) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.parent_id = parent_id
         self.read_only = properties.get('ro', False)
@@ -19,7 +19,7 @@ class Control(Component):
         self.tool_tip_text = element.get('title')
 
     @property
-    def parent(self) -> Union[DialogBody, Panel]:
+    def parent(self) -> DialogBody | Panel:
         return self.dialog.components[self.parent_id]
 
     def is_really_enabled(self) -> bool:

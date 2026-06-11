@@ -4,7 +4,6 @@ from aisikl.app import assert_ops
 from fladgejt.helpers import (
     CantOpenApplication, find_row, find_option, encode_key, decode_key)
 from fladgejt.structures import Predmet, Termin, PrihlasenyStudent
-from typing import TYPE_CHECKING
 
 
 class WebuiTerminyMixin:

@@ -1,7 +1,7 @@
 
 from __future__ import annotations
 from .actionablecontrol import ActionableControl
-from typing import TYPE_CHECKING, Dict, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 class HtmlArea(ActionableControl):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: Dict[str, Union[int, str]], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, int | str], element: Tag) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.safe_links = properties.get('safeLinks', False)
         self._parse_content(element)

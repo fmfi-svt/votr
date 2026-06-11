@@ -7,7 +7,7 @@ from fladgejt.flashback import FlashbackClient
 from fladgejt.hybrid import HybridClient
 from fladgejt.rest import RestClient
 from fladgejt.webui import WebuiClient
-from typing import TYPE_CHECKING, Dict, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
@@ -59,7 +59,7 @@ def _redact_response(response: Response) -> str:
 _samlsso_re = re.compile(r'^https://[^/]+/ais/sso/samlsso\?')
 
 
-def _send_request(ctx: Context, url: str, data: Optional[Dict[str, str]]) -> Response:
+def _send_request(ctx: Context, url: str, data: dict[str, str] | None) -> Response:
     method = 'POST' if data else 'GET'
 
     redacted_data = { k: '[...]' for k in data } if data else data
@@ -84,7 +84,7 @@ def _send_request(ctx: Context, url: str, data: Optional[Dict[str, str]]) -> Res
     return response
 
 
-def _parse_form(old_url: str, soup: BeautifulSoup) -> Tuple[str, Dict[str, str]]:
+def _parse_form(old_url: str, soup: BeautifulSoup) -> tuple[str, dict[str, str]]:
     forms = soup.find_all('form')
     if len(forms) != 1:
         raise Exception(f'Unexpected number of form elements: {len(forms)}')
@@ -104,7 +104,7 @@ def _parse_form(old_url: str, soup: BeautifulSoup) -> Tuple[str, Dict[str, str]]
 _idp_profile_re = re.compile(r'^https://[^/]+/idp/profile/')
 
 
-def _send_request_chain(ctx: Context, params: Dict[str, str], url: str, data: None) -> None:
+def _send_request_chain(ctx: Context, params: dict[str, str], url: str, data: None) -> None:
     count = 0
     tried_saml_password_login = False
     while True:
@@ -224,13 +224,13 @@ def _send_request_chain(ctx: Context, params: Dict[str, str], url: str, data: No
         raise Exception('Unrecognized response during login process')
 
 
-def _create_context(server: Dict[str, Union[Tuple[str], str]], logger: Logger) -> Context:
+def _create_context(server: dict[str, tuple[str] | str], logger: Logger) -> Context:
     return Context(
         ais_url=server.get('ais_url'), rest_url=server.get('rest_url'),
         dns_overrides=server.get('dns_overrides'), logger=logger)
 
 
-def _create_normal_client(ctx: Context, server: Dict[str, Union[Tuple[str], str]], logout_mode: str) -> WebuiClient:
+def _create_normal_client(ctx: Context, server: dict[str, tuple[str] | str], logout_mode: str) -> WebuiClient:
     if 'ais_url' in server and 'rest_url' in server:
         return HybridClient(ctx, logout_mode=logout_mode)
     elif 'ais_url' in server:
@@ -241,7 +241,7 @@ def _create_normal_client(ctx: Context, server: Dict[str, Union[Tuple[str], str]
         raise Exception('Neither ais_url nor rest_url is configured')
 
 
-def _login_with_saml(server: Dict[str, Union[Tuple[str], str]], params: Dict[str, str], logger: Logger) -> WebuiClient:
+def _login_with_saml(server: dict[str, tuple[str] | str], params: dict[str, str], logger: Logger) -> WebuiClient:
     ctx = _create_context(server, logger)
 
     if 'ais_url' in server:
@@ -350,7 +350,7 @@ _handlers = {
 }
 
 
-def create_client(server: Dict[str, Union[Tuple[str], str]], params: Dict[str, str], *, logger: None=None) -> WebuiClient:
+def create_client(server: dict[str, tuple[str] | str], params: dict[str, str], *, logger: None=None) -> WebuiClient:
     # server should be:
     #   { login_types: tuple[str],
     #     ais_url?: str, ais_cookie?: str,

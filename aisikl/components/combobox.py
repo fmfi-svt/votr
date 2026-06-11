@@ -3,7 +3,7 @@ from __future__ import annotations
 from collections import namedtuple
 from .control import Control
 from aisikl.events import selection_event
-from typing import TYPE_CHECKING, Dict, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
@@ -14,7 +14,7 @@ Option = namedtuple('Option', ['title', 'id', 'tool_tip_text'])
 
 
 class ComboBox(Control):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: Dict[str, Union[str, bool, int]], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, str | bool | int], element: Tag) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.tool_tip_like_data = properties.get('ttld', False)
         self._parse_options(element)

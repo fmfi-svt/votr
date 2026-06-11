@@ -8,7 +8,7 @@ from .control import Control
 from .combobox import Option
 from aisikl.events import (cell_edited_event, row_edited_event, action_event, selection_event, cursor_event, table_header_event)
 from aisikl.exceptions import AISParseError, AISBehaviorError
-from typing import TYPE_CHECKING, Any, Dict, List, Optional, Union
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
@@ -27,13 +27,13 @@ Cell = namedtuple('Cell', [
 
 
 class Row(object):
-    def __init__(self, id: int, rid: str, cells: List[Cell], table: "Table") -> None:
+    def __init__(self, id: int, rid: str, cells: list[Cell], table: Table) -> None:
         self.id = id
         self.rid = rid
         self.cells = cells
         self.table = table
 
-    def __getitem__(self, name: str) -> Union[str, bool]:
+    def __getitem__(self, name: str) -> str | bool:
         if isinstance(name, int):
             return self.cells[name].value
         return self.cells[self.table.column_map[name].index].value
@@ -45,7 +45,7 @@ class Row(object):
         return '{}({})'.format(self.__class__.__name__, repr(self.cells)[1:-1])
 
 
-def load_script_plain(data_view: Tag, id: str) -> Optional[str]:
+def load_script_plain(data_view: Tag, id: str) -> str | None:
     script_element = data_view.find(id=id)
     if not script_element: return None
     if script_element.name != 'script':
@@ -54,14 +54,14 @@ def load_script_plain(data_view: Tag, id: str) -> Optional[str]:
     return script_element.get_text()[4:-3]   # always "<!--" and "-->"
 
 
-def load_script(data_view: Tag, id: str) -> Optional[BeautifulSoup]:
+def load_script(data_view: Tag, id: str) -> BeautifulSoup | None:
     text = load_script_plain(data_view, id)
     if text is None: return None
     return BeautifulSoup(text, 'lxml')   # note: will be wrapped in <html> and <body>
 
 
 class Table(Control):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: Dict[str, Union[str, bool, int]], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, str | bool | int], element: Tag) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
 
         # In the original JavaScript, these properties have default values, but
@@ -118,7 +118,7 @@ class Table(Control):
 
         self._init_from_data_view(element.find(id=self.id + '_dataView'))
 
-    def _init_from_data_view(self, data_view: Optional[Tag]) -> None:
+    def _init_from_data_view(self, data_view: Tag | None) -> None:
         if not data_view: return
 
         self._update_data_position_properties(data_view)
@@ -461,7 +461,7 @@ class Table(Control):
 
         self._load_edit_models(data_view.find(id='dataTabEditModels'))
 
-    def _load_rows(self, data_tab_bodies: Union[BeautifulSoup, Tag], data_tab_bodies_fixed: None, replace: bool=True) -> None:
+    def _load_rows(self, data_tab_bodies: BeautifulSoup | Tag, data_tab_bodies_fixed: None, replace: bool=True) -> None:
         really_replaced = replace and self.loaded_rows
         if replace:
             self.loaded_buffers = set()
@@ -503,7 +503,7 @@ class Table(Control):
             ' (replacing old content)' if really_replaced else ''),
             new_rows)
 
-    def _load_cell(self, td: Tag) -> "Cell":
+    def _load_cell(self, td: Tag) -> Cell:
         value = td.get_text()
         if value == '\xa0': value = ''
 
@@ -550,7 +550,7 @@ class Table(Control):
         ev = cursor_event(self, 'pagedown', 'PAGEDOWN')
         self.dialog.app.send_events(ev)
 
-    def all_rows(self) -> List[Union[Any, Row]]:
+    def all_rows(self) -> list[Any | Row]:
         if self.declared_row_count > 0:
             self.scroll_down(self.declared_row_count // self.buffer_size + 1)
 

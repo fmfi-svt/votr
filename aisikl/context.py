@@ -7,7 +7,7 @@ import json
 import requests
 from urllib.parse import urljoin
 from aisikl.exceptions import RESTServerError, LoggedOutError
-from typing import TYPE_CHECKING, Any, Optional
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from requests.models import Response
@@ -32,8 +32,8 @@ class Context:
         logger: An optional :class:`Logger` instance to use.
     '''
 
-    def __init__(self, *, ais_url: Optional[str]=None, rest_url: None=None, dns_overrides: None=None,
-                 logger: Optional[Logger]=None) -> None:
+    def __init__(self, *, ais_url: str | None=None, rest_url: None=None, dns_overrides: None=None,
+                 logger: Logger | None=None) -> None:
         self.ais_url = ais_url
         self.rest_url = rest_url
         self.logger = logger or Logger()
@@ -109,7 +109,7 @@ class Context:
         self.log('http', 'Parsed JSON data')
         return response['response']
 
-    def log(self, type: str, message: str, data: Optional[Any]=None) -> None:
+    def log(self, type: str, message: str, data: Any | None=None) -> None:
         '''Logs a message.
 
         Args:
@@ -135,7 +135,7 @@ class Logger:
     def __getstate__(self):
         return {}
 
-    def log(self, type: str, message: str, data: Optional[Any]=None) -> None:
+    def log(self, type: str, message: str, data: Any | None=None) -> None:
         timestamp = time.time()
 
         if self.log_file and type != 'benchmark':

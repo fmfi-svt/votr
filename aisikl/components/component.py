@@ -1,7 +1,7 @@
 
 from __future__ import annotations
 from aisikl.exceptions import AISParseError
-from typing import TYPE_CHECKING, Dict, List, Optional, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
@@ -15,7 +15,7 @@ def is_true(value: str) -> bool:
 # TODO: Document Component and all subclasses.
 
 class Component:
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: Optional[str], properties: Dict[str, Union[bool, str, int, List[str]]], element: Optional[Tag]) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, bool | str | int | list[str]], element: Tag | None) -> None:
         self.dialog = dialog
         self.id = id
         self.component_type = type

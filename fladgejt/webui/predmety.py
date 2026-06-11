@@ -6,7 +6,7 @@ from aisikl.app import Application, assert_ops
 from fladgejt.webui.pool import pooled_app
 from fladgejt.helpers import find_option, find_row, decode_key
 from fladgejt.structures import RegUcitelPredmetu, PrihlasenyStudent, RegPredmet
-from typing import TYPE_CHECKING, List
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.components.combobox import Option
@@ -161,7 +161,7 @@ class WebuiPredmetyMixin:
         app.awaited_open_main_dialog(ops)
         return app
 
-    def get_ucitelia_predmetu(self, predmet_key: str, akademicky_rok: str, semester: str, fakulty: str) -> List[RegUcitelPredmetu]:
+    def get_ucitelia_predmetu(self, predmet_key: str, akademicky_rok: str, semester: str, fakulty: str) -> list[RegUcitelPredmetu]:
         (skratka_predmetu,) = decode_key(predmet_key)
 
         app = self._open_nastenka_predmetu()
@@ -204,7 +204,7 @@ class WebuiPredmetyMixin:
         return []
 
     def vyhladaj_predmety(self, akademicky_rok: str, fakulta: str, stredisko: str, skratka_sp: str,
-                          skratka_predmetu: str, nazov_predmetu: str, semester: str, stupen: str) -> List[str]:
+                          skratka_predmetu: str, nazov_predmetu: str, semester: str, stupen: str) -> list[str]:
         app = self._open_register_predmetov()
 
         message = None
@@ -243,22 +243,22 @@ class WebuiPredmetyMixin:
 
         return [predmety, message]
 
-    def get_register_predmetov_fakulta_options(self) -> List[Option]:
+    def get_register_predmetov_fakulta_options(self) -> list[Option]:
         app = self._open_register_predmetov()
 
         return app.d.fakultaUniverzitaComboBox.options
 
-    def get_register_predmetov_akademicky_rok_options(self) -> List[Option]:
+    def get_register_predmetov_akademicky_rok_options(self) -> list[Option]:
         app = self._open_register_predmetov()
 
         return app.d.akRokComboBox.options
 
-    def get_register_predmetov_semester_options(self) -> List[Option]:
+    def get_register_predmetov_semester_options(self) -> list[Option]:
         app = self._open_register_predmetov()
 
         return app.d.semesterComboBox.options
 
-    def get_register_predmetov_stupen_options(self) -> List[Option]:
+    def get_register_predmetov_stupen_options(self) -> list[Option]:
         app = self._open_register_predmetov()
 
         return app.d.stupenPredmetuComboBox.options

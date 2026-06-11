@@ -2,7 +2,7 @@
 from __future__ import annotations
 from aisikl.events import action_event
 from .actionablecontrol import ActionableControl
-from typing import TYPE_CHECKING, Dict, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 
 
 class MenuItem(ActionableControl):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: Dict[str, Union[bool, str]], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, bool | str], element: Tag) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.popup_menu_id = properties.get('pmid')
         self.confirm_question = properties.get('confirmQuestion')

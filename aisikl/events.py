@@ -1,6 +1,6 @@
 
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.components.action import Action
@@ -35,7 +35,7 @@ class Event:
             xml)
 
 
-def _tag(name: str, value: Optional[str], optional: bool=False) -> str:
+def _tag(name: str, value: str | None, optional: bool=False) -> str:
     if optional and not value: return ''
     return '<'+name+'>' + value + '</'+name+'>'
 
@@ -64,7 +64,7 @@ ComponentEventMethods = {
     'beforeclose': EVENT_BEFORECLOSE
 }
 
-def component_event(source: DialogBody, method: str, command: Optional[str]=None) -> Event:
+def component_event(source: DialogBody, method: str, command: str | None=None) -> Event:
     source.dialog.try_interactive(source, 'ComponentEvent')
     return Event(source, ComponentEventMethods[method],
         "<event class='avc.ui.event.AVCComponentEvent'>" +
@@ -104,7 +104,7 @@ def row_edited_event(source, command, row_index):
         _tag("command", command, True) + _tag("rowIndex", str(row_index)) +
         "</event>")
 
-def action_event(source: Union[Button, Table, Action], command: Optional[str]=None, original_source_name: Optional[str]=None,
+def action_event(source: Button | Table | Action, command: str | None=None, original_source_name: str | None=None,
                  params: None=None, cancel: bool=False) -> Event:
     source.dialog.try_interactive(source, 'ActionEvent')
     # Note that <origSrcName> goes outside of <event>.
@@ -115,7 +115,7 @@ def action_event(source: Union[Button, Table, Action], command: Optional[str]=No
         (f"<params><![CDATA[{params}]]></params>" if params else "") +
         "</event>")
 
-def selection_event(source: Union[ComboBox, Table], index: int=-1, selected: bool=True) -> Event:
+def selection_event(source: ComboBox | Table, index: int=-1, selected: bool=True) -> Event:
     source.dialog.try_interactive(source, 'SelectionEvent')
     return Event(source, EVENT_SELCHANGE,
         "<event class='avc.ui.event.AVCSelectionActionEvent'>" +
@@ -147,7 +147,7 @@ def tree_selection_event(source, path, command):
 
 CursorEventMethods = { 'pageup': EVENT_PAGEUP, 'pagedown': EVENT_PAGEDOWN }
 
-def cursor_event(source: Table, method: str, command: Optional[str]=None) -> Event:
+def cursor_event(source: Table, method: str, command: str | None=None) -> Event:
     source.dialog.try_interactive(source, 'CursorEvent')
     return Event(source, CursorEventMethods[method],
         "<event class='avc.ui.event.AVCCursorEvent'>" +

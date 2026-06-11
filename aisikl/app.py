@@ -10,7 +10,7 @@ import urllib.parse
 from .exceptions import (
     AISParseError, AISBehaviorError, AISApplicationClosedError, LoggedOutError)
 from .dialog import Dialog
-from typing import TYPE_CHECKING, Any, Dict, Iterator, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING, Any, Iterator
 
 if TYPE_CHECKING:
     from aisikl.context import Context
@@ -106,7 +106,7 @@ _dialog_update_re = re.compile(r'^(\w+)\.getDialogJSObject\(\)\.(\w+)\((.*)\)$')
 _access_token_re = re.compile(r'retrieveAccessToken\(\)\s*\{[^{}]*setRequestHeader\("([^\\"]+)",\s*"([^\\"]+)"\)')
 
 
-def _parse_args(args_str: str) -> List[Union[str, int]]:
+def _parse_args(args_str: str) -> list[str | int]:
     # args_str are WebUI's arguments for a JavaScript function call. We want to
     # parse it with our JSON parser. But WebUI needlessly escapes apostrophes,
     # and `\'` is not a valid escape in JSON. So we replace `\'` with `'`. But
@@ -120,7 +120,7 @@ def _parse_args(args_str: str) -> List[Union[str, int]]:
     return json.loads('[' + args_str + ']')
 
 
-def parse_response(soup: BeautifulSoup) -> Union[Tuple[List[Any], List[Any]], Tuple[List[Any], List[Update]], Tuple[List[Operation], List[Any]], Tuple[List[Operation], List[Update]]]:
+def parse_response(soup: BeautifulSoup) -> tuple[list[Any], list[Any]] | tuple[list[Any], list[Update]] | tuple[list[Operation], list[Any]] | tuple[list[Operation], list[Update]]:
     r'''Parses the resultFrame content (the response to a POST request).
 
     Args:
@@ -222,7 +222,7 @@ def parse_response(soup: BeautifulSoup) -> Union[Tuple[List[Any], List[Any]], Tu
     return (operations, updates)
 
 
-def assert_ops(operations: List[Operation], *expected_methods) -> None:
+def assert_ops(operations: list[Operation], *expected_methods) -> None:
     r'''Ensures the list of collected operations contains the methods we expect.
 
     This is a helper method you can use after calling
@@ -268,7 +268,7 @@ class Application:
     '''
 
     @classmethod
-    def open(cls, ctx: Context, url: str, ignored_messages: Optional[List[str]]=None) -> Tuple[Application, List[Operation]]:
+    def open(cls, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> tuple[Application, list[Operation]]:
         '''Opens a new application.
 
         Returns an ``(app, ops)`` tuple containing the new Application instance
@@ -297,7 +297,7 @@ class Application:
         raise Exception(
             "The Application constructor is private, use open() instead")
 
-    def _open(self, ctx: Context, url: str, ignored_messages: Optional[List[str]]=None) -> List[Operation]:
+    def _open(self, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> list[Operation]:
         '''Actually opens the new instance created by :meth:`open`.'''
         self.ctx = ctx
         self.serial = 0
@@ -376,7 +376,7 @@ class Application:
         self.active_dialog = self.d = self.dialogs[name]
 
     @contextmanager
-    def collect_operations(self) -> Iterator[List[Any]]:
+    def collect_operations(self) -> Iterator[list[Any]]:
         r'''Collects :class:`Operation`\ s done by AIS.
 
         Calling this function means that you are expecting an Operation to
@@ -406,7 +406,7 @@ class Application:
         finally:
             self.collector = None
 
-    def _prepare_url_base(self) -> Dict[str, Union[str, float, int]]:
+    def _prepare_url_base(self) -> dict[str, str | float | int]:
         old_req_index = self.req_index
         self.req_index += 1
         return { 'appId': self.app_id, 'antiCache': time.time(),
@@ -436,7 +436,7 @@ class Application:
         return self.ctx.request_html('/ais/servlets/WebUIServlet',
             method='POST', params=params, data=data, headers=headers)
 
-    def _filter_operations(self, operations: List[Union[Any, Operation]]) -> List[Union[Any, Operation]]:
+    def _filter_operations(self, operations: list[Any | Operation]) -> list[Any | Operation]:
         return [operation for operation in operations
                 if not (operation.method == 'messageBox' and
                         any(pattern in operation.args[0]
@@ -509,7 +509,7 @@ class Application:
         '''Sends a request without any events to AIS.'''
         self._do_request(self.collect_component_changes())
 
-    def _send_namevalue_request(self, name: str, value: Union[int, str]) -> None:
+    def _send_namevalue_request(self, name: str, value: int | str) -> None:
         '''Helper function for small requests sent by some operations.
         These requests don't contain any events or component changes.
         '''
@@ -581,7 +581,7 @@ class Application:
                 return False
         return True
 
-    def start_app(self, url: str, params: str, *, ignored_messages: None=None) -> Tuple[Application, List[Operation]]:
+    def start_app(self, url: str, params: str, *, ignored_messages: None=None) -> tuple[Application, list[Operation]]:
         '''Opens a new application in response to the startApp
         :class:`Operation`.
 
@@ -592,7 +592,7 @@ class Application:
                'antiCache={}').format(url, params, time.time())
         return self.open(self.ctx, url, ignored_messages)
 
-    def open_main_dialog(self, props: Dict[str, Union[str, bool, int]]) -> Dialog:
+    def open_main_dialog(self, props: dict[str, str | bool | int]) -> Dialog:
         '''Opens the main dialog in response to the openMainDialog
         :class:`Operation`.
 
@@ -601,7 +601,7 @@ class Application:
         '''
         return self.open_dialog(props)
 
-    def open_dialog(self, props: Dict[str, Union[str, bool, int]]) -> Dialog:
+    def open_dialog(self, props: dict[str, str | bool | int]) -> Dialog:
         '''Opens a new dialog in response to the openDialog :class:`Operation`.
 
         Returns:
@@ -746,7 +746,7 @@ class Application:
         '''
         self._send_namevalue_request('shellExecResult', shell_exec_result)
 
-    def awaited_start_app(self, ops: List[Operation], ignored_messages: None=None) -> Tuple[Application, List[Operation]]:
+    def awaited_start_app(self, ops: list[Operation], ignored_messages: None=None) -> tuple[Application, list[Operation]]:
         '''Combines :func:`assert_ops` and :meth:`start_app` in one step.
 
         If ``ops`` really contains a single startApp :class:`Operation` as
@@ -755,7 +755,7 @@ class Application:
         assert_ops(ops, 'startApp')
         return self.start_app(*ops[0].args, ignored_messages=ignored_messages)
 
-    def awaited_open_dialog(self, ops: List[Operation]) -> Dialog:
+    def awaited_open_dialog(self, ops: list[Operation]) -> Dialog:
         '''Combines :func:`assert_ops` and :meth:`open_dialog` in one step.
 
         If ``ops`` really contains a single openDialog :class:`Operation` as
@@ -764,7 +764,7 @@ class Application:
         assert_ops(ops, 'openDialog')
         return self.open_dialog(*ops[0].args)
 
-    def awaited_open_main_dialog(self, ops: List[Operation]) -> Dialog:
+    def awaited_open_main_dialog(self, ops: list[Operation]) -> Dialog:
         '''Combines :func:`assert_ops` and :meth:`open_main_dialog` in one
         step.
 
@@ -774,7 +774,7 @@ class Application:
         assert_ops(ops, 'openMainDialog')
         return self.open_main_dialog(*ops[0].args)
 
-    def awaited_refresh_dialog(self, ops: List[Operation]) -> None:
+    def awaited_refresh_dialog(self, ops: list[Operation]) -> None:
         '''Combines :func:`assert_ops` and :meth:`refresh_dialog` in one step.
 
         If ``ops`` really contains a single refreshDialog :class:`Operation` as
@@ -783,7 +783,7 @@ class Application:
         assert_ops(ops, 'refreshDialog')
         return self.refresh_dialog(*ops[0].args)
 
-    def awaited_close_dialog(self, ops: List[Operation]) -> None:
+    def awaited_close_dialog(self, ops: list[Operation]) -> None:
         '''Combines :func:`assert_ops` and :meth:`close_dialog` in one step.
 
         If ``ops`` really contains a single closeDialog :class:`Operation` as
@@ -801,7 +801,7 @@ class Application:
         assert_ops(ops, 'abortBox')
         return self.abort_box(*ops[0].args)
 
-    def awaited_shell_exec(self, ops: List[Operation]) -> Response:
+    def awaited_shell_exec(self, ops: list[Operation]) -> Response:
         '''Combines :func:`assert_ops` and :meth:`shell_exec` in one step.
 
         If ``ops`` really contains a single shellExec :class:`Operation` as

@@ -5,7 +5,7 @@ import re
 from .exceptions import AISParseError
 from .components import component_classes
 from aisikl.events import component_event
-from typing import TYPE_CHECKING, Optional
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.app import Application
@@ -34,7 +34,7 @@ class Dialog:
         components: The dict of components present in the dialog.
     '''
 
-    def __init__(self, name: str, title: str, code: str, parent_dialog_name: Optional[str], modal: bool,
+    def __init__(self, name: str, title: str, code: str, parent_dialog_name: str | None, modal: bool,
                  is_main_dialog: bool, closeable: bool, hide_title_bar: bool, app: Application) -> None:
         self.name = name
         self.title = title

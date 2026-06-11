@@ -1,7 +1,6 @@
 
 from __future__ import annotations
 from .component import Component
-from typing import TYPE_CHECKING
 
 
 class DialogBody(Component):
