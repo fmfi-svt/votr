@@ -1,7 +1,6 @@
-
-from __future__ import annotations
-from .control import Control
+from aisikl.components.control import Control
 from aisikl.events import action_event
+from aisikl.typeutils import ct, ct_none
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -10,30 +9,32 @@ if TYPE_CHECKING:
 
 
 class UpDown(Control):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, str | bool | int], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
-        self.up_downed_component = properties.get('upDownedComponent')
-        self.top_bottom_enabled = properties.get('topBottomEnabled', False)
+        self.up_downed_component = ct_none(str, properties.get('upDownedComponent'))
+        self.top_bottom_enabled = ct(bool, properties.get('topBottomEnabled', False))
 
-    def click(self, command):
+    def click(self, command: str) -> None:
         if command not in ('UP', 'DOWN', 'TOP', 'BOTTOM'):
             raise ValueError('wrong UpDown command')
         self.log('action', 'Clicking {} {}'.format(self.id, command.lower()))
+        # pyrefly: ignore [bad-argument-type] # None just means udc = None.
         udc = self.dialog.components.get(self.up_downed_component)
         if udc:
+            # pyrefly: ignore [missing-attribute] # If it's not Table|CheckList, this will raise.
             udc.up_down_row(command)
         else:
             ev = action_event(self, command, self.id)
             self.dialog.app.send_events(ev)
 
-    def click_up(self):
+    def click_up(self) -> None:
         self.click('UP')
 
-    def click_down(self):
+    def click_down(self) -> None:
         self.click('DOWN')
 
-    def click_top(self):
+    def click_top(self) -> None:
         self.click('TOP')
 
-    def click_bottom(self):
+    def click_bottom(self) -> None:
         self.click('BOTTOM')

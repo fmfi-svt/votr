@@ -1,6 +1,5 @@
-
-from __future__ import annotations
-from .control import Control
+from aisikl.components.control import Control
+from aisikl.typeutils import ct_none, nn
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -9,6 +8,6 @@ if TYPE_CHECKING:
 
 
 class StackedPane(Control):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, int | str], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
-        self.title = element.get('name')
+        self.title = ct_none(str, nn(element).get('name'))

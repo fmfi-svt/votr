@@ -3,7 +3,13 @@ import json
 import os
 import sys
 import time
+from aisikl.typeutils import nn
 from fladgejt.base import BaseClient
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from aisikl.context import Context
+
 
 _STATEFUL = {
     "prihlas_na_termin",
@@ -14,16 +20,16 @@ _STATEFUL = {
     "create_zapisny_list",
 }
 
-def _tuplify(obj):
+def _tuplify(obj: object) -> object:
     if isinstance(obj, (list, tuple)):
         return tuple(_tuplify(mem) for mem in obj)
     return obj
 
-def _load_log(filename):
-    rpcs = []
-    current_rpc_name = None
-    current_rpc_args = None
-    fake_time_msec = None
+def _load_log(filename: str) -> tuple[int | None, dict[tuple[str, object], list[tuple[tuple[str, object] | None, tuple[bool, object]]]]]:
+    rpcs: list[tuple[str, object, tuple[bool, object]]] = []
+    current_rpc_name: str | None = None
+    current_rpc_args: object = None
+    fake_time_msec: int | None = None
 
     with (gzip.open(filename) if filename.endswith('.gz') else open(filename, 'rb')) as f:
         for line in f:
@@ -36,19 +42,21 @@ def _load_log(filename):
                     current_rpc_name = words[1]
                     current_rpc_args = _tuplify(line[3])
                 if words[2] == "finished":
+                    assert current_rpc_name
                     assert words[1] == current_rpc_name
                     rpcs.append((current_rpc_name, current_rpc_args, (True, line[3])))
                 if words[2] == "failed":
+                    assert current_rpc_name
                     assert words[1] == current_rpc_name
                     rpcs.append((current_rpc_name, current_rpc_args, (False, line[3])))
 
-    grouped = {}
+    grouped: dict[tuple[str, object], list[tuple[tuple[str, object] | None, tuple[bool, object]]]] = {}
     last_stateful = None
     for i, (name, args, outcome) in enumerate(rpcs):
         if (name, args) not in grouped:
             grouped[(name, args)] = [(None, outcome)]
         elif grouped[(name, args)][-1][1] != outcome:
-            grouped[(name, args)].append((rpcs[last_stateful][0:2], outcome))
+            grouped[(name, args)].append((rpcs[nn(last_stateful)][0:2], outcome))
 
         if name in _STATEFUL:
             last_stateful = i
@@ -69,7 +77,7 @@ class ReplayedError(Exception):
     pass
 
 class FlashbackClient(BaseClient):
-    def __init__(self, context, flashbacks_dir, file):
+    def __init__(self, context: Context, flashbacks_dir: str, file: str | None) -> None:
         super().__init__(context)
         if not os.path.exists(flashbacks_dir):
             raise Exception("Flashbacks are unavailable: %r does not exist" % flashbacks_dir)
@@ -88,12 +96,12 @@ class FlashbackClient(BaseClient):
         self.fake_time_msec, self._rpcs = _load_log(filename)
         self._did = set()
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> object:
         if name.startswith('_'):
             raise AttributeError(name)
 
-        def rpc_method(*args):
-            args = _tuplify(args)
+        def rpc_method(*argst: object) -> object:
+            args = _tuplify(argst)
             found = self._rpcs.get((name, args))
             if not found:
                 raise TimeParadoxError("RPC %s%r did not happen in the flashback" % (name, args))
@@ -112,7 +120,7 @@ class FlashbackClient(BaseClient):
             # TODO: Configurable sleep.
             time.sleep(0.5)
 
-            success, result = outcome
+            success, result = nn(outcome)
             if success:
                 return result
             else:

@@ -1,20 +1,21 @@
-
-from __future__ import annotations
 import json
-from .component import is_true
-from .control import Control
-from .table import load_script_plain, load_script
+from aisikl.components.component import is_true
+from aisikl.components.action import Action
+from aisikl.components.control import Control
+from aisikl.components.table import load_script_plain, load_script
 from aisikl.events import (action_event, tree_expansion_event, tree_expansion_action_event, tree_selection_event)
-from typing import TYPE_CHECKING
+from aisikl.typeutils import ct, ct_none, nn
+from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
     from bs4.element import Tag
+    from collections.abc import Iterable
 
 
 # Not a namedtuple, because 'expanded' and 'checked' can change.
 class Node(object):
-    def __init__(self, id: str, is_leaf: bool, type: str, expanded: None, checked: None, title: str) -> None:
+    def __init__(self, id: str, is_leaf: bool, type: str, expanded: bool | None, checked: bool | None, title: str) -> None:
         self.id = id
         self.is_leaf = is_leaf
         self.type = type
@@ -22,11 +23,12 @@ class Node(object):
         self.checked = checked
         self.title = title
 
-    def __repr__(self):
+    @override
+    def __repr__(self) -> str:
         return '<{} {}>'.format(self.__class__.__name__, repr(self.__dict__))
 
 
-def _synchronizer_to_cdata(sync, true_name, false_name):
+def _synchronizer_to_cdata(sync: dict[str, bool], true_name: str, false_name: str) -> str:
     true_keys = "|".join(k for k in sync if sync[k])
     if true_keys: true_keys = "|" + true_keys + "|"
     false_keys = "|".join(k for k in sync if not sync[k])
@@ -36,34 +38,34 @@ def _synchronizer_to_cdata(sync, true_name, false_name):
 
 
 class Tree(Control):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, str | bool | int], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
 
-        self.multiple_selection = properties.get('multipleSelection', False)
-        self.commands = properties.get('commands')
-        self.border_width = properties.get('borderWidth', 1)
-        self.action_name = properties.get('an')
+        self.multiple_selection = ct(bool, properties.get('multipleSelection', False))
+        self.commands = ct_none(str, properties.get('commands'))
+        self.border_width = ct(int, properties.get('borderWidth', 1))
+        self.action_name = ct_none(str, properties.get('an'))
 
         self.selection_changed = False
         self.expansion_changed = False
         self.checked_changed = False
 
-        self._init_from_data_view(element.find(id=self.id + '_dataView'))
+        self._init_from_data_view(nn(element).find(id=self.id + '_dataView'))
 
-    def _init_from_data_view(self, data_view: Tag, updating: bool=False) -> None:
+    def _init_from_data_view(self, data_view: Tag | None, updating: bool=False) -> None:
         if not data_view: return
 
-        element = data_view.find(id='nodes')
-        selection = element.get('selection')
+        element = nn(data_view.find(id='nodes'))
+        selection = ct(str, element['selection'])
         self.selection = selection.split(',') if selection else []
-        self.active_id = element.get('activepath') or None
+        self.active_id = ct(str, element['activepath']) or None
 
-        properties = json.loads(load_script_plain(data_view, 'json'))
+        properties = json.loads(nn(load_script_plain(data_view, 'json')))
 
         if updating:
             nodes = element
         else:
-            nodes = load_script(data_view, 'nodes')
+            nodes = nn(load_script(data_view, 'nodes'))
             self.nodes = {}
 
         if nodes.find(nofilled=True):
@@ -71,16 +73,16 @@ class Tree(Control):
             raise ValueError("noFilled attribute is not supported yet")
 
         for node_div in nodes.find_all(class_='nodeDiv'):
-            node_element = node_div.parent
+            node_element = nn(node_div.parent)
 
-            id = node_element['id']
+            id = ct(str, node_element['id'])
             is_leaf = node_element['isleaf'] == 'true'
-            type = node_element['type']
+            type = ct(str, node_element['type'])
             expander = node_div.find(id='nodeExpanderImage')
             expanded = ('expanded' in expander['class']) if expander else None
             checkbox = node_div.find('input', type='checkbox')
             checked = checkbox.has_attr('checked') if checkbox else None
-            title = node_div.find(id='nodeText').get_text().replace('\xa0', ' ')
+            title = nn(node_div.find(id='nodeText')).get_text().replace('\xa0', ' ')
 
             self.nodes[id] = Node(id, is_leaf, type, expanded, checked, title)
 
@@ -92,22 +94,24 @@ class Tree(Control):
                 if self.nodes[id].expanded:
                     self.toggle_expansion(id, _send_event=False)
         else:
-            self.expansion_synchronizer = {}
-            self.checked_synchronizer = {}
+            self.expansion_synchronizer: dict[str, bool] = {}
+            self.checked_synchronizer: dict[str, bool] = {}
 
         self.dialog.try_interactive(self, "TreeSelectionEvent")
 
     def _ais_setDataView(self, id: str, body: Tag) -> None:
-        data_view = body.find(id=id)
+        data_view = nn(body.find(id=id))
         if not data_view.contents: return
 
-        if data_view.find(id='nodes').name == 'script':
+        if nn(data_view.find(id='nodes')).name == 'script':
             self._init_from_data_view(data_view)
         else:
             self._init_from_data_view(data_view, updating=True)
+    # pyrefly: ignore [missing-attribute]
     _ais_setDataView.wants_body = True
 
-    def changed_properties(self):
+    @override
+    def changed_properties(self) -> str:
         cdata = ['<root>']
 
         if self.selection_changed:
@@ -115,9 +119,8 @@ class Tree(Control):
             cdata.append("<selectedPaths>{}</selectedPaths>".format(selected_paths))
             self.selection_changed = False
 
-        active_path = self.active_id[1:]
-        if active_path:
-            cdata.append("<activePath>{}</activePath>".format(active_path))
+        if self.active_id:
+            cdata.append("<activePath>{}</activePath>".format(self.active_id[1:]))
 
         if self.expansion_changed and self.expansion_synchronizer:
             cdata.append(_synchronizer_to_cdata(
@@ -135,23 +138,23 @@ class Tree(Control):
 
         return self._build_changed_properties(dataView=(True, True, ''.join(cdata)))
 
-    def double_click(self):
+    def double_click(self) -> None:
         self.log('action', f'Double-clicking {self.id}')
 
         if self.action_name:
             action = self.dialog.components[self.action_name]
             if action:
-                action.on_execute(self.id)
+                ct(Action, action).execute(self.id)
                 return
         ev = action_event(self, None, self.id)
         self.dialog.app.send_events(ev)
 
-    def _ais_setMultipleSelection(self, value):
+    def _ais_setMultipleSelection(self, value: object) -> None:
         self.multiple_selection = is_true(value)
-    def _ais_setCommands(self, value):
-        self.commands = value
+    def _ais_setCommands(self, value: object) -> None:
+        self.commands = ct_none(str, value)
 
-    def select(self, ids, active_id=None):
+    def select(self, ids: str | Iterable[str], active_id: str | None=None) -> None:
         if isinstance(ids, str):
             ids = [ids]
         else:
@@ -167,7 +170,7 @@ class Tree(Control):
             raise ValueError('empty tree selection is not supported')
 
         # Pick an arbitrary active node if it doesn't matter to the caller.
-        if active_id is None: active_id = ids[-1]
+        if not active_id: active_id = ids[-1]
 
         if len(ids) > 1 and not self.multiple_selection:
             raise ValueError('multiple selection not supported for this tree')
@@ -180,7 +183,7 @@ class Tree(Control):
         ev = tree_selection_event(self, active_id, "SELECT")
         self.dialog.app.send_events(ev)
 
-    def toggle_expansion(self, id, _send_event=True):
+    def toggle_expansion(self, id: str, _send_event: bool=True) -> None:
         node = self.nodes[id]
         if node.expanded is None:
             raise ValueError("this node cannot expand")
@@ -208,7 +211,7 @@ class Tree(Control):
             ev = tree_expansion_event(self, path, node.expanded)
             self.dialog.app.send_events(ev)
 
-    def toggle_checkbox(self, id):
+    def toggle_checkbox(self, id: str) -> None:
         node = self.nodes[id]
         if node.checked is None:
             raise ValueError("this node does not have a checkbox")
@@ -226,7 +229,7 @@ class Tree(Control):
 
             self.checked_changed = True
             self.dialog.component_changes(self, False)
-            if 'CHECK_CHANGE_COMMAND|' not in self.commands: return
+            if 'CHECK_CHANGE_COMMAND|' not in (self.commands or ''): return
             self.used_listeners_mask |= 64
             ev = action_event(self, 'CHECK_CHANGE_COMMAND', self.id)
             self.dialog.app.send_events(ev)

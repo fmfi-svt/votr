@@ -10,9 +10,8 @@ dependencies = [
 ]
 
 [dependency-groups]
-votrfront = [
-    "markupsafe>=0",
-    "werkzeug>=0",
+dev = [
+    "pyrefly>=0",
 ]
 prod = [
     "gunicorn[setproctitle]>=0",
@@ -20,6 +19,10 @@ prod = [
     # Old setuptools are needed because our version of gunicorn still depends on
     # pkg_resources. TODO: Update gunicorn and remove this dependency.
     "setuptools<82",
+]
+votrfront = [
+    "markupsafe>=0",
+    "werkzeug>=0",
 ]
 
 [build-system]
@@ -38,6 +41,10 @@ extra_css = "coverage_extra.css"
 
 [tool.hatch.build]
 include = ["aisikl", "fladgejt"]
+
+[tool.pyrefly]
+preset = "strict"
+project-includes = ["aisikl/**/*.py*", "fladgejt/**/*.py"]
 
 [tool.uv]
 default-groups = ["votrfront"]

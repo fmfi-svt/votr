@@ -1,14 +1,7 @@
-
-from __future__ import annotations
-from .component import Component
+from aisikl.components.component import Component
 
 
 class DialogBody(Component):
-    def _ais_setWidth(self, value: str) -> None:
-        pass
-
-    def _ais_setHeight(self, value):
-        pass
-
-    def _ais_setFocusedComponent(self, value: str) -> None:
-        pass
+    def _ais_setWidth(self, value: object) -> None: pass
+    def _ais_setHeight(self, value: object) -> None: pass
+    def _ais_setFocusedComponent(self, value: object) -> None: pass

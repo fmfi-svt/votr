@@ -1,21 +1,67 @@
-# -*- coding: utf-8 -*-
-
-from __future__ import annotations
 import re
 from aisikl.app import Application, assert_ops, DEFAULT_IGNORED_MESSAGES
 from aisikl.exceptions import AISBehaviorError
-from fladgejt.helpers import (
-    CantOpenApplication, find_row, find_option, encode_key, decode_key)
+from aisikl.typeutils import ct
+from fladgejt.base import BaseClient
+from fladgejt.helpers import CantOpenApplication, find_row, find_option, encode_key, decode_key
 from fladgejt.structures import Studium, ZapisnyList, Hodnotenie
 from fladgejt.webui.pool import pooled_app
+from typing import TYPE_CHECKING, TypedDict
+
+if TYPE_CHECKING:
+    from aisikl.components.button import Button
+    from aisikl.components.label import Label
+    from aisikl.components.menuitem import MenuItem
+    from aisikl.components.action import Action
+    from aisikl.components.combobox import ComboBox, Option
+    from aisikl.components.table import Table
+    from aisikl.dialog import Dialog
+    from fladgejt.webui.hodnotenia import HodnoteniaPriemeryDialogsType, PriebezneHodnotenieDialogsType
+    from fladgejt.webui.terminy import TerminyHodnoteniaDialogsType
+    from fladgejt.webui.zapis import ZapisPredmetovDialogsType
+
+    class AdministraciaStudiaDialogsType(Dialog):
+        studiaTable: Table
+        zapisneListyTable: Table
+        nacitatButton: Button
+        kredityTable: Table
+        pridatZapisnyListButton: Button
+        terminyHodnoteniaAction: Action
+        hodnoteniaPriemeryAction: Action
+        ziskaneMenuItem: MenuItem
+        predmetyTable: Table
+        lop_statniceLabel: Label
+        vsp_statniceLabel: Label
+        rokComboBox: ComboBox
+        closeButton: Button
+        rocnikComboBox: ComboBox
+        priebezneHodnotenieAction: Action
+        zapisPredmetovKredityAction: Action
+        enterButton: Button
+        odobratZapisnyListButton: Button
+else:
+    AdministraciaStudiaDialogsType = None
+    HodnoteniaPriemeryDialogsType = None
+    PriebezneHodnotenieDialogsType = None
+    TerminyHodnoteniaDialogsType = None
+    ZapisPredmetovDialogsType = None
 
 
-class WebuiStudiumMixin:
+class GetPrehladKreditovResult(TypedDict):
+    items: list[Hodnotenie]
+    message: str | None
+    kredity_ziskane: int | None
+    kredity_zapisane: int | None
+    priemer_ohodnotenych: str | None
+    priemer_vsetkych: str | None
+
+
+class WebuiStudiumMixin(BaseClient):
     @pooled_app
-    def _open_administracia_studia(self) -> Application:
+    def _open_administracia_studia(self) -> Application[AdministraciaStudiaDialogsType]:
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.es.VSES017App&kodAplikacie=VSES017&uiLang=SK'
         ignored_messages = DEFAULT_IGNORED_MESSAGES + ['Štúdium je prerušené. Zvoľte aktívne štúdium.']
-        app, ops = Application.open(self.context, url, ignored_messages)
+        app, ops = Application[AdministraciaStudiaDialogsType].open(self.context, url, ignored_messages)
         app.awaited_open_main_dialog(ops)
         return app
 
@@ -28,7 +74,7 @@ class WebuiStudiumMixin:
             raise
         return True
 
-    def get_studia(self):
+    def get_studia(self) -> list[Studium]:
         app = self._open_administracia_studia()
 
         result = [Studium(sp_skratka=row['studijnyProgramSkratka'],
@@ -43,7 +89,7 @@ class WebuiStudiumMixin:
                   for row in app.d.studiaTable.all_rows()]
         return result
 
-    def get_zapisne_listy(self, studium_key):
+    def get_zapisne_listy(self, studium_key: str) -> list[ZapisnyList]:
         app = self._open_administracia_studia()
 
         self.__vyber_studium(app, studium_key)
@@ -61,7 +107,7 @@ class WebuiStudiumMixin:
 
         return akademicky_rok
 
-    def __vyber_studium(self, app, studium_key):
+    def __vyber_studium(self, app: Application[AdministraciaStudiaDialogsType], studium_key: str) -> None:
         sp_skratka, zaciatok = decode_key(studium_key)
 
         # Najdeme studium.
@@ -83,7 +129,7 @@ class WebuiStudiumMixin:
             if ops:
                 app.awaited_refresh_dialog(ops)
 
-    def __vyber_zapisny_list(self, app, zapisny_list_key):
+    def __vyber_zapisny_list(self, app: Application[AdministraciaStudiaDialogsType], zapisny_list_key: str) -> None:
         studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
         # Ak este nie je vybrate spravne studium, vyberieme ho.
@@ -95,7 +141,7 @@ class WebuiStudiumMixin:
         app.d.zapisneListyTable.select(zapisny_list_index)
 
     @pooled_app
-    def _open_priebezne_hodnotenie_app(self, zapisny_list_key: str):
+    def _open_priebezne_hodnotenie_app(self, zapisny_list_key: str) -> Application[PriebezneHodnotenieDialogsType]:
         app = self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
@@ -113,7 +159,7 @@ class WebuiStudiumMixin:
         return new_app
 
     @pooled_app
-    def _open_zapis_predmetov_app(self, zapisny_list_key: str):
+    def _open_zapis_predmetov_app(self, zapisny_list_key: str) -> Application[ZapisPredmetovDialogsType]:
         app = self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
@@ -131,7 +177,7 @@ class WebuiStudiumMixin:
         return new_app
 
     @pooled_app
-    def _open_terminy_hodnotenia_app(self, zapisny_list_key: str):
+    def _open_terminy_hodnotenia_app(self, zapisny_list_key: str) -> Application[TerminyHodnoteniaDialogsType]:
         app = self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
@@ -149,7 +195,7 @@ class WebuiStudiumMixin:
         return new_app
 
     @pooled_app
-    def _open_hodnotenia_priemery_app(self, zapisny_list_key: str) -> Application:
+    def _open_hodnotenia_priemery_app(self, zapisny_list_key: str) -> Application[HodnoteniaPriemeryDialogsType]:
         app = self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
@@ -166,7 +212,7 @@ class WebuiStudiumMixin:
         new_app.awaited_open_main_dialog(new_ops)
         return new_app
 
-    def get_prehlad_kreditov(self, studium_key):
+    def get_prehlad_kreditov(self, studium_key: str) -> GetPrehladKreditovResult:
         app = self._open_administracia_studia()
 
         # Vyberieme spravne studium.
@@ -203,7 +249,7 @@ class WebuiStudiumMixin:
                              nahradeny=(row['nahradzaMa'] != ''),
                              poplatok=row['poplatok'],
                              zapisny_list_key=encode_key(
-                                (studium_key, row['akRok'])))
+                                (studium_key, ct(str, row['akRok']))))
                   for row in app.d.predmetyTable.all_rows()]
 
         kredity_ziskane, kredity_zapisane = self.__get_sucty_kreditov(app)
@@ -230,7 +276,7 @@ class WebuiStudiumMixin:
             priemer_vsetkych=priemer_vsetkych,
         )
 
-    def __get_sucty_kreditov(self, app):
+    def __get_sucty_kreditov(self, app: Application[AdministraciaStudiaDialogsType]) -> tuple[int | None, int | None]:
         # Najdeme v tabulke suctov kreditov posledny riadok. V prvom stlpci ("Popis") by malo byt "SPOLU".
         rows = app.d.kredityTable.all_rows()
         if not rows:
@@ -243,13 +289,13 @@ class WebuiStudiumMixin:
             return None, None
 
         # V poslednom stlpci "Spolu  (Zapísané/Získané + Uznané + Dovezené)" by mali byt dve cele cisla.
-        if not (m := re.fullmatch(r'(\d+) / (\d+)', last['spolus'])):
+        if not (m := re.fullmatch(r'(\d+) / (\d+)', ct(str, last['spolus']))):
             self.context.log('warning', 'kredityTable spolus is unexpected', last)
             return None, None
 
         return int(m.group(2)), int(m.group(1))
 
-    def __open_novy_zapisny_list_dialog(self, app, studium_key):
+    def __open_novy_zapisny_list_dialog(self, app: Application[AdministraciaStudiaDialogsType], studium_key: str) -> None:
         # Vyberieme studium.
         self.__vyber_studium(app, studium_key)
 
@@ -258,7 +304,7 @@ class WebuiStudiumMixin:
             app.d.pridatZapisnyListButton.click()
         app.awaited_open_dialog(ops)
 
-    def get_akademicke_roky_noveho_zapisneho_listu(self, studium_key):
+    def get_akademicke_roky_noveho_zapisneho_listu(self, studium_key: str) -> list[Option]:
         '''Gets available values for the academic year option when creating a
         new enrollment list.
 
@@ -279,7 +325,7 @@ class WebuiStudiumMixin:
 
         return options
 
-    def get_roky_studia_noveho_zapisneho_listu(self, studium_key):
+    def get_roky_studia_noveho_zapisneho_listu(self, studium_key: str) -> list[Option]:
         '''Gets available values for the study year option when creating a
         new enrollment list.
 
@@ -300,7 +346,7 @@ class WebuiStudiumMixin:
 
         return options
 
-    def create_zapisny_list(self, studium_key, akademicky_rok, rok_studia):
+    def create_zapisny_list(self, studium_key: str, akademicky_rok: str, rok_studia: str | None) -> str | None:
         '''Creates enrollment list.
 
         Args:
@@ -349,7 +395,7 @@ class WebuiStudiumMixin:
         return message
 
     # nepouzita funkcia
-    def delete_zapisny_list(self, zapisny_list_key):
+    def delete_zapisny_list(self, zapisny_list_key: str) -> None:
         '''Deletes enrollment list.
 
         Args:

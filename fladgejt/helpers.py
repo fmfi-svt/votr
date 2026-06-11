@@ -1,5 +1,4 @@
-
-from __future__ import annotations
+from aisikl.typeutils import ct
 from collections import namedtuple
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 from typing import TYPE_CHECKING
@@ -19,7 +18,7 @@ class CantOpenApplication(Exception):
     '''
 
 
-def find_row(objects: list[Row], **conditions) -> int:
+def find_row(objects: list[Row], **conditions: str) -> int:
     r'''Searches the list of objects for one that matches all given conditions.
 
     ``obj['foo'] == bar`` must be true for all ``foo=bar`` keyword arguments
@@ -39,16 +38,16 @@ def find_row(objects: list[Row], **conditions) -> int:
     raise KeyError("Object not found: {!r}".format(conditions))
 
 
-def find_row_insensitive(objects: list[Row], **conditions) -> int:
+def find_row_insensitive(objects: list[Row], **conditions: str) -> int:
     '''Same as :func:`find_row` but case insensitive.'''
     for index, obj in enumerate(objects):
-        if all(obj[key].lower() == value.lower()
+        if all(ct(str, obj[key]).lower() == value.lower()
                for key, value in conditions.items()):
             return index
     raise KeyError("Object not found: {!r}".format(conditions))
 
 
-def find_option(objects: list[Option], **conditions) -> int:
+def find_option(objects: list[Option], **conditions: object) -> int:
     r'''Searches the list of objects for one that matches all given conditions.
 
     ``obj.foo == bar`` must be true for all ``foo=bar`` keyword arguments for
@@ -80,7 +79,7 @@ _keyed_namedtuple_key_template = '''
 '''
 
 
-def keyed_namedtuple(typename, field_names, **key_fields):
+def keyed_namedtuple(typename: str, field_names: list[str], **key_fields: list[str]):
     '''A variant of namedtuple where some "key fields" have default values.
 
     The value of each "key field" is computed from some other fields by
@@ -108,6 +107,7 @@ def keyed_namedtuple(typename, field_names, **key_fields):
         if key_name not in field_names or set(key_args) - set(field_names):
             raise ValueError(typename)
 
+    # pyrefly: ignore [bad-class-definition] # dynamic type creation
     result_class = namedtuple(typename, field_names)
 
     # Add '=None' to the keys
@@ -128,7 +128,7 @@ def keyed_namedtuple(typename, field_names, **key_fields):
     return result_class
 
 
-def encode_key(tuple: tuple[str, str] | tuple[str]) -> str:
+def encode_key(tuple: tuple[str, ...]) -> str:
     '''Reversibly encode a tuple of strings into a single string.
 
     See :func:`keyed_namedtuple` for the rationale.
@@ -154,7 +154,7 @@ def encode_key(tuple: tuple[str, str] | tuple[str]) -> str:
     return '.'.join(result)
 
 
-def decode_key(string: str) -> tuple[str, str] | tuple[str]:
+def decode_key(string: str) -> tuple[str, ...]:
     '''Decode the output of :func:`encode_key` back into a tuple of strings.
 
     See :func:`keyed_namedtuple` for the rationale.

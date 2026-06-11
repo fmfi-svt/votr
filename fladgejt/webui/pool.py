@@ -1,16 +1,16 @@
-
-from __future__ import annotations
 from functools import wraps
-from typing import TYPE_CHECKING, Callable
+from typing import Any, TYPE_CHECKING, Unpack
 
 if TYPE_CHECKING:
+    from aisikl.app import Application
     from aisikl.context import Context
+    from collections.abc import Callable
 
 
 OPEN_APP_LIMIT = 10
 
 
-def pooled_app(original_method: Callable) -> Callable:
+def pooled_app[S, D, *A](original_method: Callable[[S, Unpack[A]], Application[D]]) -> Callable[[S, Unpack[A]], Application[D]]:
     '''Decorator for methods that return an :class:`~aisikl.app.Application`.
 
     Generally, we don't want to open an application if we've already opened it.
@@ -36,9 +36,9 @@ def pooled_app(original_method: Callable) -> Callable:
         The decorated method.
     '''
     @wraps(original_method)
-    def wrapper(self, *args):
-        open_apps = self.app_pool.open_apps
-        active_keys = self.app_pool.active_keys
+    def wrapper(self: Any, *args: Unpack[A]) -> Application[D]:
+        open_apps: dict[object, Application[D]] = self.app_pool.open_apps
+        active_keys: set[object] = self.app_pool.active_keys
         app_key = (original_method.__name__, args)
 
         if app_key in open_apps and not open_apps[app_key].is_still_open():
@@ -47,6 +47,7 @@ def pooled_app(original_method: Callable) -> Callable:
 
         if app_key not in open_apps:
             self.app_pool.reserve(1)
+            # pyrefly: ignore [bad-argument-type]
             open_apps[app_key] = original_method(self, *args)
 
         active_keys.add(app_key)

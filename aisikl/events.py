@@ -1,15 +1,8 @@
-
-from __future__ import annotations
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from aisikl.components.action import Action
-    from aisikl.components.button import Button
-    from aisikl.components.checkbox import CheckBox
-    from aisikl.components.combobox import ComboBox
     from aisikl.components.component import Component
-    from aisikl.components.dialogbody import DialogBody
-    from aisikl.components.table import Table
+
 
 class Event:
     '''A WebUI event that might be sent to the server.
@@ -35,9 +28,12 @@ class Event:
             xml)
 
 
-def _tag(name: str, value: str | None, optional: bool=False) -> str:
-    if optional and not value: return ''
+def _tag(name: str, value: str) -> str:
     return '<'+name+'>' + value + '</'+name+'>'
+
+def _maybetag(name: str, value: str | None) -> str:
+    if not value: return ''
+    return _tag(name, value)
 
 
 EVENT_INIT = 1
@@ -64,58 +60,58 @@ ComponentEventMethods = {
     'beforeclose': EVENT_BEFORECLOSE
 }
 
-def component_event(source: DialogBody, method: str, command: str | None=None) -> Event:
+def component_event(source: Component, method: str, command: str | None=None) -> Event:
     source.dialog.try_interactive(source, 'ComponentEvent')
     return Event(source, ComponentEventMethods[method],
         "<event class='avc.ui.event.AVCComponentEvent'>" +
-        _tag("command", command, True) +
+        _maybetag("command", command) +
         "</event>")
 
 # "focus" events are never sent, because webui's EventManager.createEvent()
 # checks that method != "focus".
 FocusEventMethods = { 'focus': 0, 'blur': EVENT_BLUR }
 
-def focus_event(source, method, state=None):
+def focus_event(source: Component, method: str, state: str | None=None) -> Event:
     source.dialog.try_interactive(source, 'FocusEvent')
     return Event(source, FocusEventMethods[method],
         "<event class='avc.ui.event.AVCFocusEvent'>" +
-        _tag("state", state, True) +
+        _maybetag("state", state) +
         "</event>")
 
-def change_action_event(source, index=-1):
+def change_action_event(source: Component, index: int=-1) -> Event:
     source.dialog.try_interactive(source, 'ChangeActionEvent')
     return Event(source, EVENT_STATECHANGE,
         "<event class='avc.ui.event.AVCChangeActionEvent'>" +
         _tag("command", "CHANGE") + _tag("tabIndex", str(index)) +
         "</event>")
 
-def cell_edited_event(source, command, alias, row_index):
+def cell_edited_event(source: Component, command: str, alias: str, row_index: int) -> Event:
     source.dialog.try_interactive(source, 'CellEditedEvent')
     return Event(source, EVENT_ACTION,
         "<event class='avc.ui.event.AVCCellEditedEvent'>" +
-        _tag("command", command, True) +
+        _maybetag("command", command) +
         _tag("alias", alias) + _tag("rowIndex", str(row_index)) +
         "</event>")
 
-def row_edited_event(source, command, row_index):
+def row_edited_event(source: Component, command: str, row_index: int) -> Event:
     source.dialog.try_interactive(source, 'RowEditedEvent')
     return Event(source, EVENT_ACTION,
         "<event class='avc.ui.event.AVCRowEditedEvent'>" +
-        _tag("command", command, True) + _tag("rowIndex", str(row_index)) +
+        _maybetag("command", command) + _tag("rowIndex", str(row_index)) +
         "</event>")
 
-def action_event(source: Button | Table | Action, command: str | None=None, original_source_name: str | None=None,
-                 params: None=None, cancel: bool=False) -> Event:
+def action_event(source: Component, command: str | None=None, original_source_name: str | None=None,
+                 params: str | None=None, cancel: bool=False) -> Event:
     source.dialog.try_interactive(source, 'ActionEvent')
     # Note that <origSrcName> goes outside of <event>.
     return Event(source, EVENT_CANCEL if cancel else EVENT_ACTION,
-        _tag("origSrcName", original_source_name, True) +
+        _maybetag("origSrcName", original_source_name) +
         "<event class='avc.ui.event.AVCActionEvent'>" +
-        _tag("command", command, True) +
+        _maybetag("command", command) +
         (f"<params><![CDATA[{params}]]></params>" if params else "") +
         "</event>")
 
-def selection_event(source: ComboBox | Table, index: int=-1, selected: bool=True) -> Event:
+def selection_event(source: Component, index: int=-1, selected: bool=True) -> Event:
     source.dialog.try_interactive(source, 'SelectionEvent')
     return Event(source, EVENT_SELCHANGE,
         "<event class='avc.ui.event.AVCSelectionActionEvent'>" +
@@ -123,7 +119,7 @@ def selection_event(source: ComboBox | Table, index: int=-1, selected: bool=True
         _tag("index", str(index)) +
         "</event>")
 
-def tree_expansion_event(source, path, expand):
+def tree_expansion_event(source: Component, path: str, expand: bool) -> Event:
     source.dialog.try_interactive(source, 'TreeExpansionEvent')
     return Event(source, EVENT_EXPAND_COLLAPSE,
         "<event class='avc.ui.tree.AVCTreeExpansionEvent'>" +
@@ -131,14 +127,14 @@ def tree_expansion_event(source, path, expand):
         _tag("fromViewer", "true") +
         "</event>")
 
-def tree_expansion_action_event(source, path):
+def tree_expansion_action_event(source: Component, path: str) -> Event:
     source.dialog.try_interactive(source, 'TreeExpansionActionEvent')
     return Event(source, EVENT_LOAD_CHILDREN,
         "<event class='avc.ui.tree.AVCTreeExpansionActionEvent'>" +
         _tag("command", "LOAD_CHILDREN") + _tag("path", path) +
         "</event>")
 
-def tree_selection_event(source, path, command):
+def tree_selection_event(source: Component, path: str, command: str) -> Event:
     source.dialog.try_interactive(source, 'TreeSelectionEvent')
     return Event(source, EVENT_TSELCHANGE,
         "<event class='avc.ui.tree.AVCTreeSelectionActionEvent'>" +
@@ -147,24 +143,24 @@ def tree_selection_event(source, path, command):
 
 CursorEventMethods = { 'pageup': EVENT_PAGEUP, 'pagedown': EVENT_PAGEDOWN }
 
-def cursor_event(source: Table, method: str, command: str | None=None) -> Event:
+def cursor_event(source: Component, method: str, command: str | None=None) -> Event:
     source.dialog.try_interactive(source, 'CursorEvent')
     return Event(source, CursorEventMethods[method],
         "<event class='avc.ui.event.AVCCursorEvent'>" +
-        _tag("command", command, True) +
+        _maybetag("command", command) +
         "</event>")
 
 def table_header_event(
-        source, column_alias, after_column_alias, modifiers, type):
+        source: Component, column_alias: str, after_column_alias: str | None, modifiers: str | None, type: str) -> Event:
     source.dialog.try_interactive(source, 'TableHeaderEvent')
     return Event(source, EVENT_HEADER,
         "<event class='avc.ui.table.AVCTableHeaderEvent'>" +
         _tag("type", type) + _tag("columnAlias", column_alias) +
-        _tag("afterColumnAlias", after_column_alias, True) +
-        _tag("modifiers", modifiers, True) +
+        _maybetag("afterColumnAlias", after_column_alias) +
+        _maybetag("modifiers", modifiers) +
         "</event>")
 
-def item_event(source: CheckBox) -> Event:
+def item_event(source: Component) -> Event:
     source.dialog.try_interactive(source, 'ItemEvent')
     return Event(source, EVENT_ITEMCHANGE,
         "<event class='avc.ui.event.AVCItemEvent'/>")

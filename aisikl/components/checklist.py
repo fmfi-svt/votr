@@ -1,8 +1,7 @@
-
-from __future__ import annotations
-from .component import is_true
-from .control import Control
-from typing import TYPE_CHECKING
+from aisikl.components.component import is_true
+from aisikl.components.control import Control
+from aisikl.typeutils import ct, nn
+from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
@@ -19,34 +18,35 @@ class Item:
         self.tool_tip_text = tool_tip_text
         self.checked = checked
 
-    def __repr__(self):
+    @override
+    def __repr__(self) -> str:
         return '<{} {}>'.format(self.__class__.__name__, repr(self.__dict__))
 
 
 class CheckList(Control):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, str | bool | int], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
-        self.up_down_enabled = properties.get('upDownEnabled', False)
-        self._parse_items(element)
+        self.up_down_enabled = ct(bool, properties.get('upDownEnabled', False))
+        self._parse_items(nn(element))
 
     def _parse_items(self, element: Tag) -> None:
         self.selected_index = -1
         self.items = []
         for index, tr in enumerate(element.find_all('tr')):
-            td = tr.td
+            td = nn(tr.td)
             self.items.append(Item(
                 title=tr.get_text(),
-                id=td['id'], sid=tr['sid'], rid=tr['rid'],
-                tool_tip_text=td['title'],
-                checked=tr.input.has_attr('checked'),
+                id=ct(str, td['id']), sid=ct(str, tr['sid']), rid=ct(str, tr['rid']),
+                tool_tip_text=ct(str, td['title']),
+                checked=nn(tr.input).has_attr('checked'),
             ))
-            if 'selectedListRow' in tr.get('class', []):
+            if 'selectedListRow' in (tr.get('class') or []):
                 self.selected_index = index
 
-    def up_down_row(self, command):
+    def up_down_row(self, command: str) -> None:
         raise Exception('up_down_row not yet implemented.')   # TODO
 
-    def select_unselect_all(self):
+    def select_unselect_all(self) -> None:
         if not self.items: return
         new_value = not self.items[0].checked
         self.log('action', '{} all items in {}'.format(
@@ -55,7 +55,7 @@ class CheckList(Control):
             item.checked = new_value
         self._mark_changed()
 
-    def select(self, index):
+    def select(self, index: int) -> None:
         self.log('action', 'Selecting item "{}" {}'.format(
             self.items[index].title, self.id))
         self.selected_index = index
@@ -68,15 +68,17 @@ class CheckList(Control):
         self.selected_index = index
         self._mark_changed()
 
-    def _ais_setUpDownEnabled(self, value):
+    def _ais_setUpDownEnabled(self, value: object) -> None:
         self.up_down_enabled = is_true(value)
-    def _ais_setDataView(self, id, body):
-        self._parse_items(body.find(id=id))
+    def _ais_setDataView(self, id: str, body: Tag) -> None:
+        self._parse_items(nn(body.find(id=id)))
+    # pyrefly: ignore [missing-attribute]
     _ais_setDataView.wants_body = True
 
     def _mark_changed(self) -> None:
         self.dialog.component_changes(self, False)
 
+    @override
     def changed_properties(self) -> str:
         selection = ','.join(
             ('' if item.checked else '-') + item.rid for item in self.items)

@@ -1,8 +1,7 @@
-from __future__ import annotations
 from aisikl.app import assert_ops
 from aisikl.exceptions import AISBehaviorError
 from fladgejt.helpers import find_row_insensitive
-from typing import TYPE_CHECKING
+from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.app import Application
@@ -10,7 +9,7 @@ if TYPE_CHECKING:
 
 
 class WebuiCommonUIMixin:
-    def _select_ciselnik(self, app: Application, text: str | None, select_button: str, compare_column: str) -> bool:
+    def _select_ciselnik(self, app: Application[Any], text: str | None, select_button: str, compare_column: str) -> bool:
         # Ciselnik typu SSSC001
         if text is not None:
             old_ignored_messages = app.ignored_messages
@@ -50,14 +49,14 @@ class WebuiCommonUIMixin:
 
         return True
 
-    def _select_text_ciselnik(self, app: Application, text: str | None, text_field: str, delete_button: str, select_button: str, compare_column: str) -> bool:
+    def _select_text_ciselnik(self, app: Application[Any], text: str | None, text_field: str, delete_button: str, select_button: str, compare_column: str) -> bool:
         if not app.d.components[text_field].is_editable():
             app.d.components[delete_button].click()
         app.d.components[text_field].write(text or '')
 
         return self._select_ciselnik(app, text, select_button, compare_column)
 
-    def _show_all_columns(self, app: Application, table: Table) -> None:
+    def _show_all_columns(self, app: Application[Any], table: Table) -> None:
         with app.collect_operations() as ops:
             table._control_button_columns()
 

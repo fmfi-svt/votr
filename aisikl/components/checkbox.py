@@ -1,9 +1,8 @@
-
-from __future__ import annotations
 from aisikl.events import item_event
-from .component import is_true
-from .control import Control
-from typing import TYPE_CHECKING
+from aisikl.components.component import is_true
+from aisikl.components.control import Control
+from aisikl.typeutils import ct_none, nn
+from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
@@ -11,16 +10,17 @@ if TYPE_CHECKING:
 
 
 class CheckBox(Control):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, str | bool | int], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
-        self.shortcut = properties.get('sc')
-        input = element.input
+        # We only ever saw shortcut==None, but webui calls toUpperCase().
+        self.shortcut = ct_none(str, properties.get('sc'))
+        input = nn(nn(element).input)
         self.smoked = input.get('smoked', 'false') == 'true'
         self.selected = input.has_attr('checked')
 
-    def _ais_setSmoked(self, value):
+    def _ais_setSmoked(self, value: object) -> None:
         self.smoked = is_true(value)
-    def _ais_setSelected(self, value):
+    def _ais_setSelected(self, value: object) -> None:
         self.selected = is_true(value)
         self.dialog.try_interactive(self, "ItemEvent")
 
@@ -29,11 +29,12 @@ class CheckBox(Control):
         ev = item_event(self)
         self.dialog.app.send_events(ev)
 
+    @override
     def changed_properties(self) -> str:
         return self._build_changed_properties(
             selected=self.selected, smoked=self.smoked)
 
-    def toggle(self):
+    def toggle(self) -> None:
         self.selected = not self.selected
         self.smoked = False
         self.log('action', '{} {}'.format(

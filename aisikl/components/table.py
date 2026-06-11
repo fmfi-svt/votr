@@ -1,18 +1,19 @@
-
-from __future__ import annotations
 import json
 from bs4 import BeautifulSoup
 from collections import namedtuple
-from .component import is_true
-from .control import Control
-from .combobox import Option
-from aisikl.events import (cell_edited_event, row_edited_event, action_event, selection_event, cursor_event, table_header_event)
+from aisikl.components.action import Action
+from aisikl.components.component import is_true
+from aisikl.components.control import Control
+from aisikl.components.combobox import Option
+from aisikl.events import cell_edited_event, row_edited_event, action_event, selection_event, cursor_event, table_header_event
 from aisikl.exceptions import AISParseError, AISBehaviorError
-from typing import TYPE_CHECKING, Any
+from aisikl.typeutils import ct, ct_none, nn, really_int
+from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
     from bs4.element import Tag
+    from collections.abc import Iterable
 
 
 Column = namedtuple('Column', [
@@ -38,10 +39,11 @@ class Row(object):
             return self.cells[name].value
         return self.cells[self.table.column_map[name].index].value
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.cells)
 
-    def __repr__(self):
+    @override
+    def __repr__(self) -> str:
         return '{}({})'.format(self.__class__.__name__, repr(self.cells)[1:-1])
 
 
@@ -54,35 +56,35 @@ def load_script_plain(data_view: Tag, id: str) -> str | None:
     return script_element.get_text()[4:-3]   # always "<!--" and "-->"
 
 
-def load_script(data_view: Tag, id: str) -> BeautifulSoup | None:
+def load_script(data_view: Tag, id: str) -> Tag | None:
     text = load_script_plain(data_view, id)
     if text is None: return None
     return BeautifulSoup(text, 'lxml')   # note: will be wrapped in <html> and <body>
 
 
 class Table(Control):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, str | bool | int], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
 
         # In the original JavaScript, these properties have default values, but
         # it seems the server always sets them. If it stops sending them, maybe
         # it's better to fail loudly. The original default value of each
         # property is written in the comment.
-        self.sortable = properties['sortable']  # True
-        self.always_selected = properties['allwaysSelected']  # True
-        self.fixed_columns = properties.get('fixedColumns', 0)
-        self.up_down_enabled = properties['upDownEnabled']  # False
-        self.user_add_remove_rows_enabled = properties['userAddRemoveRowsEnabled']  # False
-        self.supported_events = properties.get('se') or ''
-        self.multiple_selection = properties['multipleSelection']  # False
-        self.cell_selection_mode = properties['cellSelectionMode']  # False
-        self.scroll_bottom_enabled = properties['scrollBottomEnabled']  # False
-        self.select_all_enabled = properties['selectAllEnabled']  # False
-        self.row_numbers_visible = properties['rowNumbersVisible']  # False
+        self.sortable = ct(bool, properties['sortable'])  # True
+        self.always_selected = ct(bool, properties['allwaysSelected'])  # True
+        self.fixed_columns = ct(int, properties.get('fixedColumns', 0))
+        self.up_down_enabled = ct(bool, properties['upDownEnabled'])  # False
+        self.user_add_remove_rows_enabled = ct(bool, properties['userAddRemoveRowsEnabled'])  # False
+        self.supported_events = ct(str, properties.get('se') or '')
+        self.multiple_selection = ct(bool, properties['multipleSelection'])  # False
+        self.cell_selection_mode = ct(bool, properties['cellSelectionMode'])  # False
+        self.scroll_bottom_enabled = ct(bool, properties['scrollBottomEnabled'])  # False
+        self.select_all_enabled = ct(bool, properties['selectAllEnabled'])  # False
+        self.row_numbers_visible = ct(bool, properties['rowNumbersVisible'])  # False
         self.row_numbers_visible_changed = False
-        self.status_visible = properties['statusVisible']  # False
+        self.status_visible = ct(bool, properties['statusVisible'])  # False
         self.status_visible_changed = False
-        self.visible_status_buttons = properties['visibleStatusButtons']  # 0
+        self.visible_status_buttons = ct(int, properties['visibleStatusButtons'])  # 0
 
         self.is_end_of_data = False
         self.truncated = False
@@ -90,14 +92,14 @@ class Table(Control):
         self.declared_row_count = 0
         self.no_data_loaded = False
 
-        self.cursor_row_index = None
+        self.cursor_row_index: int | None = None
         self.selected_row_indexes = []
-        self.selected_column_alias = None
+        self.selected_column_alias: str | None = None
         self.inverted_selection = False
         self.selection_changed = False
         self.active_index_changed = False
 
-        self.buffer_size = properties.get('bufferSize', 50)
+        self.buffer_size = ct(int, properties.get('bufferSize', 50))
 
         self.headers_changed = False
         self.up_downed_rows = False
@@ -105,7 +107,7 @@ class Table(Control):
         self.edited_cells = False
         self.scrolled_vertically = False
 
-        self.action_name = properties.get('an')
+        self.action_name = ct_none(str, properties.get('an'))
 
         self.columns = []
         self.column_map = {}
@@ -114,9 +116,9 @@ class Table(Control):
         self.loaded_rows = []
         self.combobox_options = {}
         self.changed_cells = set()
-        self.last_changed_row_index = None
+        self.last_changed_row_index: int | None = None
 
-        self._init_from_data_view(element.find(id=self.id + '_dataView'))
+        self._init_from_data_view(nn(element).find(id=self.id + '_dataView'))
 
     def _init_from_data_view(self, data_view: Tag | None) -> None:
         if not data_view: return
@@ -125,7 +127,7 @@ class Table(Control):
         self._update_selection_model_properties(data_view)
         self._update_data_tab_bodies_properties(data_view)
 
-        properties = json.loads(load_script_plain(data_view, 'json'))
+        properties = json.loads(nn(load_script_plain(data_view, 'json')))
 
         self.columns = []
 
@@ -136,11 +138,11 @@ class Table(Control):
             colgroup = load_script(data_view, 'dataTabColGroup' + suffix)
             if not header_table: continue
             tds = { e['id']: e for e in header_table.find_all(id=True) }
-            for col in colgroup.find_all('col'):
-                alias = col['id']
+            for col in nn(colgroup).find_all('col'):
+                alias = ct(str, col['id'])
                 col_properties = properties['columns'][alias]
                 td = tds['hdr-' + alias]
-                width = int(col.get('width', '0').partition('px')[0])
+                width = int(ct(str, col.get('width', '0')).partition('px')[0])
                 self.columns.append(Column(
                     alias=alias, index=index, title=td.get('title'),
                     header=td.get('header'), edited_by=col.get('editedby'),
@@ -156,7 +158,7 @@ class Table(Control):
 
         self.log('table', 'Found {} columns in {}'.format(len(self.columns), self.id), self.columns)
 
-        self._load_rows(load_script(data_view, 'dataTabBodies'),
+        self._load_rows(nn(load_script(data_view, 'dataTabBodies')),
                         load_script(data_view, 'dataTabBodiesFixed'))
 
         self._load_edit_models(load_script(data_view, 'dataTabEditModels'))
@@ -166,21 +168,21 @@ class Table(Control):
         #self._table_model_update(-1, -1, False)
         # TODO remove me but document it
 
-    def _update_data_position_properties(self, data_view: Tag) -> None:
+    def _update_data_position_properties(self, data_view: Tag | None) -> None:
         if not data_view: return
         element = data_view.find(id='dataPositionSpan')
         if not element: return
         self.is_end_of_data = element.get('isend', 'false') == 'true'
         self.truncated = element.get('truncated', 'false') == 'true'
-        self.fixed_columns = int(element.get('fixedcolumns', '0'))
+        self.fixed_columns = int(ct(str, element.get('fixedcolumns', '0')))
 
-    def _update_data_tab_bodies_properties(self, data_view: Tag) -> None:
+    def _update_data_tab_bodies_properties(self, data_view: Tag | None) -> None:
         if not data_view: return
         element = data_view.find(id='dataTabBodies')
         if not element: return
-        self.buffer_size = int(element.get('buffersize'))   # I hope this won't break anything
+        self._ais_setBufferSize(element.get('buffersize'))
 
-    def _update_selection_model_properties(self, data_view: Tag) -> None:
+    def _update_selection_model_properties(self, data_view: Tag | None) -> None:
         if not data_view: return
         element = data_view.find(id='selectionModel')
         if not element: return
@@ -191,24 +193,26 @@ class Table(Control):
 
         was_multiple_selection = len(self.selected_row_indexes) > 1
 
-        selection = [int(id) for id in element.get('selection', '').split(',') if id]
+        selection = [int(id) for id in ct(str, element.get('selection', '')).split(',') if id]
         if self.cell_selection_mode:
             selection = selection[0:1] if selection else [0]
         self.selected_row_indexes = selection
 
         if self.cell_selection_mode:
-            self.selected_column_alias = element.get(
-                'cellselectionalias', self.selected_column_alias)
+            self.selected_column_alias = ct_none(str, element.get(
+                'cellselectionalias', self.selected_column_alias))
         else:
             self.selected_column_alias = None
 
-        self.row_count = int(element.get('rowcount'))
-        self.declared_row_count = int(element.get('declaredrowcount'))
+        self.row_count = int(ct(str, element['rowcount']))
+        self.declared_row_count = int(ct(str, element['declaredrowcount']))
         self.no_data_loaded = element.get('nodataloaded', 'false') == 'true'
 
         if selection:
-            self.cursor_row_index = int(element.get(
-                'activeindex', selection[0]))
+            if (activeindex := element.get('activeindex')) is not None:
+                self.cursor_row_index = int(ct(str, activeindex))
+            else:
+                self.cursor_row_index = selection[0]
         elif self.row_count or self.declared_row_count:
             self.cursor_row_index = 0
         else:
@@ -223,58 +227,58 @@ class Table(Control):
 
         self.selection_changed = True
 
-    def _ais_setSortable(self, value):
+    def _ais_setSortable(self, value: object) -> None:
         self.sortable = is_true(value)
         # TODO: this.tableService.updateStatusControlSortButton
-    def _ais_setAllwaysSelected(self, value):
+    def _ais_setAllwaysSelected(self, value: object) -> None:
         self.always_selected = is_true(value)
-    def _ais_setFixedColumns(self, value):
-        self.fixed_columns = int(value)
-    def _ais_setMinNoFixedColumnsWidth(self, value):
+    def _ais_setFixedColumns(self, value: object) -> None:
+        self.fixed_columns = really_int(value)
+    def _ais_setMinNoFixedColumnsWidth(self, value: object) -> None:
         pass   # getMinNoFixedColumnsWidth is unused in Votr
-    def _ais_setUpDownEnabled(self, value):
+    def _ais_setUpDownEnabled(self, value: object) -> None:
         self.up_down_enabled = is_true(value)
-    def _ais_setUserAddRemoveRowsEnabled(self, value):
+    def _ais_setUserAddRemoveRowsEnabled(self, value: object) -> None:
         self.user_add_remove_rows_enabled = is_true(value)
-    def _ais_setSupportedEvents(self, value):
-        self.supported_events = value
-    def _ais_setMultipleSelection(self, value):
+    def _ais_setSupportedEvents(self, value: object) -> None:
+        self.supported_events = ct(str, value)
+    def _ais_setMultipleSelection(self, value: object) -> None:
         self.multiple_selection = is_true(value)
-    def _ais_setCellSelectionMode(self, value):
+    def _ais_setCellSelectionMode(self, value: object) -> None:
         self.cell_selection_mode = is_true(value)
-    def _ais_setScrollBottomEnabled(self, value):
+    def _ais_setScrollBottomEnabled(self, value: object) -> None:
         self.scroll_bottom_enabled = is_true(value)
-    def _ais_setSelectAllEnabled(self, value):
+    def _ais_setSelectAllEnabled(self, value: object) -> None:
         self.select_all_enabled = is_true(value)
-    def _ais_setRowNumbersVisible(self, value):
+    def _ais_setRowNumbersVisible(self, value: object) -> None:
         self.row_numbers_visible = is_true(value)
-    def _ais_setStatusVisible(self, value):
+    def _ais_setStatusVisible(self, value: object) -> None:
         self.status_visible = is_true(value)
-    def _ais_setVisibleStatusButtons(self, value):
-        self.visible_status_buttons = int(value)
-    def _ais_setBufferSize(self, value):
-        self.buffer_size = int(value)
+    def _ais_setVisibleStatusButtons(self, value: object) -> None:
+        self.visible_status_buttons = really_int(value)
+    def _ais_setBufferSize(self, value: object) -> None:
+        self.buffer_size = 50 if value is None else really_int(value)
 
-    def switch_row_numbers_visible(self):
+    def switch_row_numbers_visible(self) -> None:
         self.log('action', 'Switching row numbers visibility in {}'.format(self.id))
         self.row_numbers_visible = not self.row_numbers_visible
         self.row_numbers_visible_changed = True
         self.dialog.component_changes(self, True)
 
-    def switch_status_visible(self):
+    def switch_status_visible(self) -> None:
         self.log('action', 'Switching status bar visibility in {}'.format(self.id))
         self.status_visible = not self.status_visible
         self.status_visible_changed = True
         self.dialog.component_changes(self, True)
 
-    def on_column_move(self, column_alias, after_column_alias): # TODO inline into actual column move fn
+    def on_column_move(self, column_alias: str, after_column_alias: str) -> None: # TODO inline into actual column move fn
         self.log('action', 'Moving {} to be after {} in {}'.format(
             column_alias, after_column_alias, self.id))
         ev = table_header_event(
             self, column_alias, after_column_alias, None, 'MOVE_COLUMN')
         self.dialog.app.send_events(ev)
 
-    def _on_edit_row(self, index):
+    def _on_edit_row(self, index: int) -> None:
         if not self.edited_cells: return
         self.dialog.component_changes(self, False)
         if 'EDITED_ROW|' in self.supported_events:
@@ -282,18 +286,18 @@ class Table(Control):
             ev = row_edited_event(self, 'EDITED_ROW', index)
             self.dialog.app.send_events(ev)
 
-    def sort(self, column_alias, modifiers):
+    def sort(self, column_alias: str, modifiers: str | None) -> None:
         # TODO: find out if this should be a public function
         ev = table_header_event(
             self, column_alias, None, modifiers, 'HEADER_CLICK')
         self.dialog.app.send_events(ev)
 
-    def _on_data_tab_dbl_click(self):
+    def _on_data_tab_dbl_click(self) -> None:
         # TODO: rename or inline this appropriately
         if self.action_name:
             action = self.dialog.components[self.action_name]
             if action:
-                action.on_execute(self.id)
+                ct(Action, action).execute(self.id)
                 return
         if 'EMPTY|' in self.supported_events:
             self.used_listeners_mask |= 64
@@ -306,15 +310,15 @@ class Table(Control):
             ev = action_event(self, command, self.id)
             self.dialog.app.send_events(ev)
 
-    def _delete_row(self):
+    def _delete_row(self) -> None:
         self.dialog.component_changes(self, False)
         self._fire_action_command('DELETE_ROW')
 
-    def _insert_row(self):
+    def _insert_row(self) -> None:
         self.dialog.component_changes(self, False)
         self._fire_action_command('INSERT_ROW')
 
-    def _control_button_row_count(self):
+    def _control_button_row_count(self) -> None:
         self.dialog.component_changes(self, True)
         self._fire_action_command('ROW_COUNT')
 
@@ -322,17 +326,17 @@ class Table(Control):
         self.dialog.component_changes(self, True)
         self._fire_action_command('SET_COLUMNS')
 
-    def _control_button_sort(self):
+    def _control_button_sort(self) -> None:
         self.dialog.component_changes(self, True)
         self._fire_action_command('SET_SORTING')
 
-    def _control_button_debug_info(self):
+    def _control_button_debug_info(self) -> None:
         self.dialog.component_changes(self, True)
         self._fire_action_command('DEBUG_INFO')
 
-    def up_down_row(self, command):
+    def up_down_row(self, command: str) -> None:
         if not self.up_down_enabled: return
-        if self._table_model_up_down(command):   # TODO
+        if self._table_model_up_down(command):   # TODO: not implemented yet # pyrefly: ignore [missing-attribute]
             self.up_downed_rows = True
             self.dialog.component_changes(self, False)
 
@@ -345,7 +349,7 @@ class Table(Control):
         ev = cell_edited_event(self, 'EDITED_CELL', alias, row_index)
         self.dialog.app.send_events(ev)
 
-    def button_num_code_click(self, alias, row_index, value):
+    def button_num_code_click(self, alias: str, row_index: int, value: str | bool) -> None:
         self.edit_cell(alias, row_index, value, _skip_event=True)
 
         self.edited_cells = True
@@ -355,6 +359,7 @@ class Table(Control):
         ev = cell_edited_event(self, 'BUTTON_NUM_CODE', alias, row_index)
         self.dialog.app.send_events(ev)
 
+    @override
     def changed_properties(self) -> str:
         cdata = ['<root>']
 
@@ -406,14 +411,14 @@ class Table(Control):
             self.edited_cells = False
 
         if self.deleted_rows or self.up_downed_rows:
-            cdata.append("<upDownedRows>{}</upDownedRows>".format(self._get_rows_ids()))   # TODO
-            self._table_model_reset_rows_ids()
+            cdata.append("<upDownedRows>{}</upDownedRows>".format(self._get_rows_ids()))   # TODO: not implemented yet # pyrefly: ignore [missing-attribute]
+            self._table_model_reset_rows_ids()   # TODO: not implemented yet # pyrefly: ignore [missing-attribute]
             self.deleted_rows = False
             self.up_downed_rows = False
 
         cdata.append("</root>")
 
-        properties = {}
+        properties: dict[str, tuple[bool, bool, str | bool]] = {}
         properties['dataView'] = (True, True, ''.join(cdata))
         properties['editMode'] = (False, False, False)
 
@@ -428,12 +433,13 @@ class Table(Control):
         return self._build_changed_properties(**properties)
 
     def _ais_setDataView(self, id: str, body: Tag) -> None:
-        data_view = body.find(id=id)
+        data_view = nn(body.find(id=id))
         if not data_view.contents: return
         if data_view.find(id='columnModel'):
             self._init_from_data_view(data_view)
         else:
             self._update_data(data_view)
+    # pyrefly: ignore [missing-attribute]
     _ais_setDataView.wants_body = True
 
     def _update_data(self, data_view: Tag) -> None:
@@ -461,7 +467,7 @@ class Table(Control):
 
         self._load_edit_models(data_view.find(id='dataTabEditModels'))
 
-    def _load_rows(self, data_tab_bodies: BeautifulSoup | Tag, data_tab_bodies_fixed: None, replace: bool=True) -> None:
+    def _load_rows(self, data_tab_bodies: Tag, data_tab_bodies_fixed: Tag | None, replace: bool=True) -> None:
         really_replaced = replace and self.loaded_rows
         if replace:
             self.loaded_buffers = set()
@@ -469,7 +475,7 @@ class Table(Control):
             self.num_visible_buffers = 0
 
         for tbody in data_tab_bodies.find_all('tbody'):
-            id = int(tbody['id'][len('dataTabBody'):])
+            id = int(ct(str, tbody['id'])[len('dataTabBody'):])
             self.loaded_buffers.add(id)
             if self.num_visible_buffers < id + 1:
                 self.num_visible_buffers = id + 1
@@ -485,8 +491,8 @@ class Table(Control):
             if tr['id'] == 'aria-columns-row':
                 continue
 
-            id = int(tr['id'][len('row_'):])
-            rid = tr['rid']
+            id = int(ct(str, tr['id'])[len('row_'):])
+            rid = ct(str, tr['rid'])
             tds = tr.find_all('td')
             if data_tab_bodies_fixed:
                 tds = fixed_trs[tr['id']].find_all('td') + tds
@@ -511,7 +517,7 @@ class Table(Control):
             value = bool(td.find(class_='booleanCellChecked'))
 
         if td.get('datatype') == 'image':
-            value = td.img['src']
+            value = nn(td.img)['src']
 
         checkbox = td.find('input', type='checkbox')
         if checkbox:
@@ -527,13 +533,14 @@ class Table(Control):
             send_edit_cell=td.get('sendeditcell', 'false') == 'true',
             disabled=td.get('disabled', 'false') == 'true')
 
-    def _load_edit_models(self, data_tab_edit_models: None) -> None:
+    def _load_edit_models(self, data_tab_edit_models: Tag | None) -> None:
         if not data_tab_edit_models: return
 
         self.combobox_options = {}
 
         for select in data_tab_edit_models.find_all('select'):
-            options = self.combobox_options[select['id']] = []
+            options: list[Option] = []
+            self.combobox_options[select['id']] = options
             for index, option in enumerate(select.find_all('option')):
                 options.append(Option(
                     title=option.get_text(),
@@ -550,7 +557,7 @@ class Table(Control):
         ev = cursor_event(self, 'pagedown', 'PAGEDOWN')
         self.dialog.app.send_events(ev)
 
-    def all_rows(self) -> list[Any | Row]:
+    def all_rows(self) -> list[Row]:
         if self.declared_row_count > 0:
             self.scroll_down(self.declared_row_count // self.buffer_size + 1)
 
@@ -560,7 +567,7 @@ class Table(Control):
             raise AISBehaviorError("AIS did not return all table rows")
         return self.loaded_rows
 
-    def select(self, indexes: int, cursor: None=None, inverted: bool=False, column_alias: None=None, *, _skip_event: bool=False) -> None:
+    def select(self, indexes: int | Iterable[int], cursor: int | None=None, inverted: bool=False, column_alias: str | None=None, *, _skip_event: bool=False) -> None:
         if isinstance(indexes, int):
             indexes = [indexes]
         else:
@@ -644,7 +651,7 @@ class Table(Control):
             evs.append(selection_event(self, cursor, cursor in indexes))
             self.dialog.app.send_events(*evs)
 
-    def edit_cell(self, alias: str, row_index: int, value: bool, *, _skip_event: bool=False) -> None:
+    def edit_cell(self, alias: str, row_index: int, value: str | bool, *, _skip_event: bool=False) -> None:
         column = self.column_map[alias]
         row = self.loaded_rows[row_index]
         cell = row.cells[column.index]

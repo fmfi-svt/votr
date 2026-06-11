@@ -1,6 +1,5 @@
-
-from __future__ import annotations
-from .control import Control
+from aisikl.components.control import Control
+from aisikl.typeutils import ct_none, nn
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -9,19 +8,15 @@ if TYPE_CHECKING:
 
 
 class Label(Control):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, str | bool | int], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
+        element = nn(element)
         self.shortcut = properties.get('sc')
-        self.title_like_text = element.get('titleliketext')
-        self.for_ = element.get('for')
+        self.title_like_text = ct_none(str, element.get('titleliketext'))
+        self.for_ = ct_none(str, element.get('for'))
         self.text = element.get_text()
 
-    def _ais_setTitleLikeText(self, value):
-        self.title_like_text = value
-    def _ais_setFor(self, value):
-        self.for_ = value
-
-    def _ais_setImage(self, value):
-        self.image = '/ais/images/' + value + '.png'
-    def _ais_setUrl(self, value):
-        self.image = value
+    def _ais_setTitleLikeText(self, value: object) -> None:
+        self.title_like_text = ct_none(str, value)
+    def _ais_setFor(self, value: object) -> None:
+        self.for_ = ct_none(str, value)

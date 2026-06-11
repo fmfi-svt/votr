@@ -2,7 +2,7 @@
 class AisiklError(Exception):
     '''The base class for AIS, REST-related exceptions.'''
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: object, **kwargs: object) -> None:
         super().__init__(*args)
         for key, value in kwargs.items():
             setattr(self, key, value)

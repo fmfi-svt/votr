@@ -1,17 +1,56 @@
-
-from __future__ import annotations
 import re
 from urllib.parse import urljoin
 from aisikl.context import Context, Logger
+from aisikl.typeutils import ct, nn
 from fladgejt.flashback import FlashbackClient
 from fladgejt.hybrid import HybridClient
 from fladgejt.rest import RestClient
 from fladgejt.webui import WebuiClient
-from typing import TYPE_CHECKING
+from typing import Literal, NotRequired, TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
+    from fladgejt.base import BaseClient
     from requests.models import Response
+
+
+class ServerDict(TypedDict):
+    login_types: tuple[str]
+    ais_url: NotRequired[str]
+    ais_cookie: NotRequired[str]
+    rest_url: NotRequired[str]
+    rest_cookie: NotRequired[str]
+    dns_overrides: NotRequired[dict[str, str]]
+    flashbacks_dir: NotRequired[str]
+    # usually also has `title: str` but fladgejt.login does not need it
+
+class ParamsDictSamlPassword(TypedDict):
+    type: Literal['saml_password']
+    username: str
+    password: str
+
+class ParamsDictSamlAndrvotr(TypedDict):
+    type: Literal['saml_andrvotr']
+    my_entity_id: str
+    andrvotr_api_key: str
+    andrvotr_authority_token: str
+
+class ParamsDictPlainPassword(TypedDict):
+    type: Literal['plain_password']
+    username: str
+    password: str
+
+class ParamsDictCookie(TypedDict):
+    type: Literal['cookie']
+    ais_cookie: NotRequired[str | None]
+    rest_cookie: NotRequired[str | None]
+
+class ParamsDictFlashback(TypedDict):
+    type: Literal['flashback']
+    file: str
+
+ParamsDict = ParamsDictSamlPassword | ParamsDictSamlAndrvotr | ParamsDictPlainPassword | ParamsDictCookie | ParamsDictFlashback
+# usually also has `server: str` but fladgejt.login does not need it
 
 
 # Known and somewhat expected errors.
@@ -88,15 +127,15 @@ def _parse_form(old_url: str, soup: BeautifulSoup) -> tuple[str, dict[str, str]]
     forms = soup.find_all('form')
     if len(forms) != 1:
         raise Exception(f'Unexpected number of form elements: {len(forms)}')
-    url = urljoin(old_url, forms[0]['action'])
+    url = urljoin(old_url, ct(str, forms[0]['action']))
     data = {}
     for elem in forms[0].find_all('input'):
         if elem.get('type') == 'hidden':
-            data[elem['name']] = elem.get('value', '')
+            data[ct(str, elem['name'])] = ct(str, elem.get('value', ''))
     for elem in forms[0].find_all('input') + forms[0].find_all('button'):
         if elem.get('type') == 'submit':
             if elem.get('name'):
-                data[elem['name']] = elem.get('value', '')
+                data[ct(str, elem['name'])] = ct(str, elem.get('value', ''))
             break
     return url, data
 
@@ -104,7 +143,7 @@ def _parse_form(old_url: str, soup: BeautifulSoup) -> tuple[str, dict[str, str]]
 _idp_profile_re = re.compile(r'^https://[^/]+/idp/profile/')
 
 
-def _send_request_chain(ctx: Context, params: dict[str, str], url: str, data: None) -> None:
+def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: dict[str, str] | None) -> None:
     count = 0
     tried_saml_password_login = False
     while True:
@@ -138,7 +177,7 @@ def _send_request_chain(ctx: Context, params: dict[str, str], url: str, data: No
         if response.is_redirect:
             # For simplicity we assume the next request is always GET.
             # HTTP 307 and 308 are not supported correctly.
-            url = response.next.url
+            url = nn(nn(response.next).url)
             data = None
             continue
 
@@ -224,13 +263,13 @@ def _send_request_chain(ctx: Context, params: dict[str, str], url: str, data: No
         raise Exception('Unrecognized response during login process')
 
 
-def _create_context(server: dict[str, tuple[str] | str], logger: Logger) -> Context:
+def _create_context(server: ServerDict, logger: Logger) -> Context:
     return Context(
         ais_url=server.get('ais_url'), rest_url=server.get('rest_url'),
         dns_overrides=server.get('dns_overrides'), logger=logger)
 
 
-def _create_normal_client(ctx: Context, server: dict[str, tuple[str] | str], logout_mode: str) -> WebuiClient:
+def _create_normal_client(ctx: Context, server: ServerDict, logout_mode: str) -> BaseClient:
     if 'ais_url' in server and 'rest_url' in server:
         return HybridClient(ctx, logout_mode=logout_mode)
     elif 'ais_url' in server:
@@ -241,7 +280,7 @@ def _create_normal_client(ctx: Context, server: dict[str, tuple[str] | str], log
         raise Exception('Neither ais_url nor rest_url is configured')
 
 
-def _login_with_saml(server: dict[str, tuple[str] | str], params: dict[str, str], logger: Logger) -> WebuiClient:
+def _login_with_saml(server: ServerDict, params: ParamsDict, logger: Logger) -> BaseClient:
     ctx = _create_context(server, logger)
 
     if 'ais_url' in server:
@@ -267,7 +306,7 @@ def _login_with_saml(server: dict[str, tuple[str] | str], params: dict[str, str]
     return _create_normal_client(ctx, server, logout_mode)
 
 
-def _login_with_plain_password(server, params, logger):
+def _login_with_plain_password(server: ServerDict, params: ParamsDictPlainPassword, logger: Logger) -> BaseClient:
     if 'rest_url' in server:
         raise Exception('plain_password type does not support rest_url')
 
@@ -283,7 +322,7 @@ def _login_with_plain_password(server, params, logger):
     return _create_normal_client(ctx, server, WebuiClient.LOGOUT_WITH_REDIRECTS)
 
 
-def _parse_cookie_string(ctx, base_url, default_name, cookie_string):
+def _parse_cookie_string(ctx: Context, base_url: str | None, default_name: str | None, cookie_string: str | None) -> None:
     # Accept either one or more ';'-separated key=value pairs, or just one
     # cookie value (assume default_name).
 
@@ -309,7 +348,7 @@ def _parse_cookie_string(ctx, base_url, default_name, cookie_string):
         ctx.requests_session.cookies.set(name, value, domain=domain)
 
 
-def _login_with_cookie(server, params, logger):
+def _login_with_cookie(server: ServerDict, params: ParamsDictCookie, logger: Logger) -> BaseClient:
     # If login type is "cookie", but we only know ais_cookie, skip REST login.
     if ('ais_url' in server and 'rest_url' in server and
             not (params.get('rest_cookie') or '').strip()):
@@ -331,7 +370,7 @@ def _login_with_cookie(server, params, logger):
     return _create_normal_client(ctx, server, WebuiClient.LOGOUT_NOTHING)
 
 
-def _login_with_flashback(server, params, logger):
+def _login_with_flashback(server: ServerDict, params: ParamsDictFlashback, logger: Logger) -> BaseClient:
     if 'ais_url' in server:
         raise Exception('flashback type does not support ais_url')
     if 'rest_url' in server:
@@ -350,30 +389,14 @@ _handlers = {
 }
 
 
-def create_client(server: dict[str, tuple[str] | str], params: dict[str, str], *, logger: None=None) -> WebuiClient:
-    # server should be:
-    #   { login_types: tuple[str],
-    #     ais_url?: str, ais_cookie?: str,
-    #     rest_url?: str, rest_cookie?: str,
-    #     dns_overrides?: dict[str, str],
-    #     flashbacks_dir?: str }
-    # (usually also has { title: str } but this function does not need it)
-    #
-    # params should be one of:
-    #   { type: "saml_password", username: str, password: str }
-    #   { type: "saml_andrvotr", my_entity_id: str, andrvotr_api_key: str,
-    #     andrvotr_authority_token: str }
-    #   { type: "plain_password", username: str, password: str }
-    #   { type: "cookie", ais_cookie?: str|None, rest_cookie?: str|None }
-    #   { type: "flashback", file: str }
-    # (usually also has { server: str } but this function does not need it)
-
+def create_client(server: ServerDict, params: ParamsDict, *, logger: Logger | None=None) -> BaseClient:
     logger = logger or Logger()
 
     if params['type'] not in server['login_types']:
         raise ValueError("Unsupported login type")
 
     handler = _handlers[params['type']]
+    # pyrefly: ignore [bad-argument-type]
     client = handler(server, params, logger)
 
     # Check that login was successful.

@@ -1,15 +1,15 @@
-
+from fladgejt.base import BaseClient
 from fladgejt.helpers import decode_key
 from fladgejt.structures import Studium, ZapisnyList
 
 
-def convert(rows):
+def convert(rows: list[dict[str, object]]) -> list[dict[str, str]]:
     # For now, votrfront expects all columns to be strings, not numbers or null.
     return [{ k: '' if v is None else str(v) for k, v in row.items() } for row in rows]
 
 
-class RestStudiumMixin:
-    def get_studia(self):
+class RestStudiumMixin(BaseClient):
+    def get_studia(self) -> list[Studium]:
         studia = convert(self.context.request_json('studium'))
 
         result = [Studium(sp_skratka=row['studijnyProgramSkratka'],
@@ -24,7 +24,7 @@ class RestStudiumMixin:
                   for row in studia]
         return result
 
-    def get_zapisne_listy(self, studium_key):
+    def get_zapisne_listy(self, studium_key: str) -> list[ZapisnyList]:
         sp_skratka, zaciatok = decode_key(studium_key)
 
         zapisne_listy = convert(self.context.request_json(

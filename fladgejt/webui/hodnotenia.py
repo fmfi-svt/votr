@@ -1,18 +1,38 @@
-
-from __future__ import annotations
 from fladgejt.helpers import CantOpenApplication, decode_key
 from fladgejt.structures import Hodnotenie, Priemer, PriebezneHodnotenie, PriebezneHodnoteniaPredmetu
+from fladgejt.webui.studium import WebuiStudiumMixin
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from aisikl.components.button import Button
+    from aisikl.components.table import Table
+    from aisikl.dialog import Dialog
+
+    class HodnoteniaPriemeryDialogsType(Dialog):
+        hodnoteniaTable: Table
+        priemeryTable: Table
+        refreshButton: Button
+
+    class PriebezneHodnotenieDialogsType(Dialog):
+        hodnotenieTable: Table
+        nacitatHodnotenieButton: Button
+        predmetySPriebeznymHodnotenimTable: Table
+        refreshButton: Button
+else:
+    HodnoteniaPriemeryDialogsType = None
+    PriebezneHodnotenieDialogsType = None
 
 
-class WebuiHodnoteniaMixin:
-    def get_hodnotenia(self, zapisny_list_key):
+class WebuiHodnoteniaMixin(WebuiStudiumMixin):
+    def get_hodnotenia(self, zapisny_list_key: str) -> tuple[list[Hodnotenie], str | None]:
         try:
             app = self._open_hodnotenia_priemery_app(zapisny_list_key)
         except CantOpenApplication:
-            return [[], "Predmety a hodnotenia pre tento zápisný list nie sú dostupné."]
+            return ([], "Predmety a hodnotenia pre tento zápisný list nie sú dostupné.")
 
         # Ak uz bola aplikacia otvorena pred tymto volanim, stlacime "Refresh".
         if getattr(app, 'freshly_opened', True):
+            # pyrefly: ignore [missing-attribute]
             app.freshly_opened = False
         else:
             app.d.refreshButton.click()
@@ -33,14 +53,15 @@ class WebuiHodnoteniaMixin:
                              poplatok=row['poplatok'],
                              zapisny_list_key=zapisny_list_key)
                   for row in app.d.hodnoteniaTable.all_rows()]
-        return [result, None]
+        return (result, None)
 
-    def get_priemery(self, zapisny_list_key: str) -> list[None]:
+    def get_priemery(self, zapisny_list_key: str) -> tuple[list[Priemer], str | None]:
         try:
             app = self._open_hodnotenia_priemery_app(zapisny_list_key)
         except CantOpenApplication:
-            return [[], "Priemery pre toto štúdium nie sú dostupné."]
+            return ([], "Priemery pre toto štúdium nie sú dostupné.")
 
+        # pyrefly: ignore [missing-attribute]
         app.freshly_opened = False
 
         result = [Priemer(akademicky_rok=row['priemerInfoPopisAkadRok'],
@@ -54,16 +75,17 @@ class WebuiHodnoteniaMixin:
                           pokusy_priemer=row['pokusyPriemer'],
                           datum_vypoctu=row['priemerInfoDatum'])
                   for row in app.d.priemeryTable.all_rows()]
-        return [result, None]
+        return (result, None)
 
-    def get_priebezne_hodnotenia(self, zapisny_list_key: str) -> list[str]:
+    def get_priebezne_hodnotenia(self, zapisny_list_key: str) -> tuple[list[PriebezneHodnoteniaPredmetu], str | None]:
         try:
             app = self._open_priebezne_hodnotenie_app(zapisny_list_key)
         except CantOpenApplication:
-            return [[], "Priebežné hodnotenia pre tento zápisný list nie sú dostupné."]
+            return ([], "Priebežné hodnotenia pre tento zápisný list nie sú dostupné.")
 
         # Ak uz bola aplikacia otvorena pred tymto volanim, stlacime "Refresh".
         if getattr(app, 'freshly_opened', True):
+            # pyrefly: ignore [missing-attribute]
             app.freshly_opened = False
         else:
             app.d.refreshButton.click()
@@ -95,4 +117,4 @@ class WebuiHodnoteniaMixin:
                                                       kredit=row['kredit'],
                                                       semester=row['semesterKodJ'],
                                                       zaznamy=records))
-        return [result, None]
+        return (result, None)

@@ -1,10 +1,10 @@
-
+from fladgejt.base import BaseClient
 from fladgejt.helpers import decode_key
 from fladgejt.structures import Predmet, Termin
 
 
-class RestTerminyMixin:
-    def get_predmety(self, zapisny_list_key):
+class RestTerminyMixin(BaseClient):
+    def get_predmety(self, zapisny_list_key: str) -> list[Predmet]:
         studium_key, akademicky_rok = decode_key(zapisny_list_key)
         sp_skratka, zaciatok = decode_key(studium_key)
 
@@ -22,7 +22,7 @@ class RestTerminyMixin:
                   for row in predmety]
         return result
 
-    def get_prihlasene_terminy(self, zapisny_list_key):
+    def get_prihlasene_terminy(self, zapisny_list_key: str) -> list[Termin]:
         studium_key, akademicky_rok = decode_key(zapisny_list_key)
         sp_skratka, zaciatok = decode_key(studium_key)
 
@@ -54,7 +54,7 @@ class RestTerminyMixin:
                   if not row['datumOdhlasenia']]
         return result
 
-    def get_vypisane_terminy(self, zapisny_list_key):
+    def get_vypisane_terminy(self, zapisny_list_key: str) -> list[Termin]:
         predmety = self.get_predmety(zapisny_list_key)
 
         result = []
@@ -65,7 +65,7 @@ class RestTerminyMixin:
 
         return result
 
-    def get_vypisane_terminy_predmetu(self, zapisny_list_key, predmet_key):
+    def get_vypisane_terminy_predmetu(self, zapisny_list_key: str, predmet_key: str) -> list[Termin]:
         studium_key, akademicky_rok = decode_key(zapisny_list_key)
         sp_skratka, zaciatok = decode_key(studium_key)
         (skratka,) = decode_key(predmet_key)

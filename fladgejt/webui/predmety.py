@@ -1,26 +1,73 @@
-# -*- coding: utf-8 -*-
-from __future__ import annotations
-import base64
-
 from aisikl.app import Application, assert_ops
+import base64
+from fladgejt.base import BaseClient
+from fladgejt.webui.commonui import WebuiCommonUIMixin
 from fladgejt.webui.pool import pooled_app
 from fladgejt.helpers import find_option, find_row, decode_key
 from fladgejt.structures import RegUcitelPredmetu, PrihlasenyStudent, RegPredmet
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
-    from aisikl.components.combobox import Option
+    from aisikl.app import Application
+    from aisikl.components.action import Action
+    from aisikl.components.button import Button
+    from aisikl.components.combobox import ComboBox, Option
+    from aisikl.components.menuitem import MenuItem
+    from aisikl.components.numbercontrol import NumberControl
+    from aisikl.components.table import Table
+    from aisikl.components.textfield import TextField
+    from aisikl.dialog import Dialog
+
+    class RegisterPredmetovDialogsType(Dialog):
+        akRokComboBox: ComboBox
+        cisloPredmetuNumberControl: NumberControl
+        closeButton: Button
+        enterButton: Button
+        fakultaUniverzitaComboBox: ComboBox
+        infListMenuItem: MenuItem
+        nazovPredmetuTextField: TextField
+        odobratVyucujucehoButton: Button
+        sablonyTable: Table
+        semesterComboBox: ComboBox
+        skratkaPredmetuTextField: TextField
+        stupenPredmetuComboBox: ComboBox
+        typPredmetuComboBox: ComboBox
+        vyucujuciTextField: TextField
+        zaradeniStudentiTable: Table
+        zobrazitLenComboBox: ComboBox
+        zobrazitPredmetyButton: Button
+        zoznamPredmetovTable: Table
+        zoznamStudentovAction: Action
+
+    class NastenkaPredmetuDialogsType(Dialog):
+        fakultaComboBox: ComboBox
+        nacitatPredmetyButton: Button
+        potvrditOrgJednotkuButton: Button
+        rokComboBox: ComboBox
+        semesterComboBox: ComboBox
+        skratkaTextField: TextField
+        skupinaPredmetovTable: Table
+        vyucujuciTable: Table
+        zobrazitComboBox: ComboBox
+
+    class GetStudentiZapisaniNaPredmetResult(TypedDict):
+        items: list[PrihlasenyStudent]
+        message: str | None
+        predmet: RegPredmet | None
+else:
+    RegisterPredmetovDialogsType = None
+    NastenkaPredmetuDialogsType = None
 
 
-class WebuiPredmetyMixin:
+class WebuiPredmetyMixin(WebuiCommonUIMixin, BaseClient):
     @pooled_app
-    def _open_register_predmetov(self) -> Application:
+    def _open_register_predmetov(self) -> Application[RegisterPredmetovDialogsType]:
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.st.VSST060App&kodAplikacie=VSST060&uiLang=SK'
-        app, ops = Application.open(self.context, url)
+        app, ops = Application[RegisterPredmetovDialogsType].open(self.context, url)
         app.awaited_open_main_dialog(ops)
         return app
 
-    def get_informacny_list(self, kod_predmetu: str, akademicky_rok: str) -> str:
+    def get_informacny_list(self, kod_predmetu: str, akademicky_rok: str) -> str | None:
         app = self._open_register_predmetov()
 
         stredisko, _, zvysok = decode_key(kod_predmetu)[0].partition('/')
@@ -63,12 +110,12 @@ class WebuiPredmetyMixin:
         url = app.awaited_shell_exec(ops2)
         return base64.b64encode(url.content).decode()
 
-    def __query_dialog(self, app, akademicky_rok, fakulta=None, semester=None,
-                       stupen_predmetu=None, typ_predmetu=None,
-                       zobrazit_len=None, skratka_predmetu=None,
-                       nazov_predmetu=None, cislo_predmetu=None,
-                       stredisko=None, skratka_sp=None):
-        message = []
+    def __query_dialog(self, app: Application[RegisterPredmetovDialogsType], akademicky_rok: str, fakulta: str | None=None, semester: str | None=None,
+                       stupen_predmetu: str | None=None, typ_predmetu: str | None=None,
+                       zobrazit_len: str | None=None, skratka_predmetu: str | None=None,
+                       nazov_predmetu: str | None=None, cislo_predmetu: str | None=None,
+                       stredisko: str | None=None, skratka_sp: str | None=None) -> str | None:
+        message: list[str] = []
 
         app.d.fakultaUniverzitaComboBox.select(find_option(app.d.fakultaUniverzitaComboBox.options, id=(fakulta or '')))
 
@@ -105,7 +152,7 @@ class WebuiPredmetyMixin:
 
         return ' '.join(message) or None
 
-    def get_studenti_zapisani_na_predmet(self, predmet_key, akademicky_rok):
+    def get_studenti_zapisani_na_predmet(self, predmet_key: str, akademicky_rok: str) -> GetStudentiZapisaniNaPredmetResult:
         (skratka_predmetu,) = decode_key(predmet_key)
         app = self._open_register_predmetov()
 
@@ -155,9 +202,9 @@ class WebuiPredmetyMixin:
         return dict(items=studenti, message=None, predmet=predmet)
 
     @pooled_app
-    def _open_nastenka_predmetu(self) -> Application:
+    def _open_nastenka_predmetu(self) -> Application[NastenkaPredmetuDialogsType]:
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.st.VSST157App&kodAplikacie=VSST157&uiLang=SK'
-        app, ops = Application.open(self.context, url)
+        app, ops = Application[NastenkaPredmetuDialogsType].open(self.context, url)
         app.awaited_open_main_dialog(ops)
         return app
 
@@ -203,8 +250,8 @@ class WebuiPredmetyMixin:
 
         return []
 
-    def vyhladaj_predmety(self, akademicky_rok: str, fakulta: str, stredisko: str, skratka_sp: str,
-                          skratka_predmetu: str, nazov_predmetu: str, semester: str, stupen: str) -> list[str]:
+    def vyhladaj_predmety(self, akademicky_rok: str, fakulta: str | None, stredisko: str | None, skratka_sp: str | None,
+                          skratka_predmetu: str | None, nazov_predmetu: str | None, semester: str | None, stupen: str | None) -> tuple[list[RegPredmet], str | None]:
         app = self._open_register_predmetov()
 
         message = None
@@ -221,7 +268,7 @@ class WebuiPredmetyMixin:
                                       skratka_sp=skratka_sp)
 
         if message:
-            return [predmety, message]
+            return (predmety, message)
 
         app.d.zobrazitPredmetyButton.click()
 
@@ -241,7 +288,7 @@ class WebuiPredmetyMixin:
                                kredit=row['kredit'])
                     for row in app.d.zoznamPredmetovTable.loaded_rows]
 
-        return [predmety, message]
+        return (predmety, message)
 
     def get_register_predmetov_fakulta_options(self) -> list[Option]:
         app = self._open_register_predmetov()

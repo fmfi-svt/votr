@@ -1,11 +1,11 @@
-
-from __future__ import annotations
 import json
 import re
-from .exceptions import AISParseError
-from .components import component_classes
+from aisikl.exceptions import AISParseError
+from aisikl.components import component_classes
+from aisikl.components.control import Control
 from aisikl.events import component_event
-from typing import TYPE_CHECKING
+from aisikl.typeutils import ct, nn
+from typing import Literal, TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from aisikl.app import Application
@@ -35,7 +35,7 @@ class Dialog:
     '''
 
     def __init__(self, name: str, title: str, code: str, parent_dialog_name: str | None, modal: bool,
-                 is_main_dialog: bool, closeable: bool, hide_title_bar: bool, app: Application) -> None:
+                 is_main_dialog: bool, closeable: bool, hide_title_bar: bool, app: Application[object]) -> None:
         self.name = name
         self.title = title
         self.code = code
@@ -46,8 +46,8 @@ class Dialog:
         self.hide_title_bar = hide_title_bar
         self.app = app
 
-        self.components = {}
-        self.changed_components = None
+        self.components: dict[str, Component] = {}
+        self.changed_components: dict[str, Literal[True]] | None = None
 
     def _init(self, url: str) -> None:
         '''Load the dialog body.
@@ -57,12 +57,12 @@ class Dialog:
         dialog_soup = self.app.ctx.request_html(url)
         self.app.ctx.log('benchmark', 'Begin dialog initialization')
 
-        body = dialog_soup.body
+        body = nn(dialog_soup.body)
         first_element_child = body.find(True)
         scripts = dialog_soup.find_all('script')
         if not (body.get('id') == self.name and
                 'jsct' not in body and
-                'dialogBody' in body.get('class', []) and
+                'dialogBody' in (body.get('class') or []) and
                 first_element_child and
                 first_element_child.get('id') == 'dialogComponentsArea' and
                 scripts):
@@ -71,7 +71,7 @@ class Dialog:
         self.components = {}
         self.changed_components = None
 
-        last_line = scripts[-1].string.strip().split('\n')[-1].strip()
+        last_line = nn(scripts[-1].string).strip().split('\n')[-1].strip()
         match = _properties_re.match(last_line)
         if not match:
             raise AISParseError("Couldn't find dialog componentProperties")
@@ -91,7 +91,7 @@ class Dialog:
                 parent = element.find_parent(
                     lambda p: p.get('id') in component_properties)
                 if parent:
-                    parent_id = parent['id']
+                    parent_id = ct(str, parent['id'])
 
             type = properties.get('t')
             if type not in component_classes:
@@ -105,13 +105,15 @@ class Dialog:
 
         self.app.ctx.log('benchmark', 'End dialog initialization')
 
-    def __getattr__(self, name: str) -> Component:
-        if 'components' in self.__dict__ and name in self.components:
-            return self.components[name]
-        raise AttributeError(name)
+    if not TYPE_CHECKING:
+        def __getattr__(self, name: str) -> Component:
+            if 'components' in self.__dict__ and name in self.components:
+                return self.components[name]
+            raise AttributeError(name)
 
-    def __dir__(self):
-        return super().__dir__() + list(self.components)
+    @override
+    def __dir__(self) -> list[str]:
+        return [*super().__dir__(), *self.components]
 
     def changed_properties(self) -> str:
         '''Return the <changedProperties> string for this dialog.'''
@@ -121,7 +123,7 @@ class Dialog:
         result = (
             '<changedProperties><objName>' + self.name + '</objName>\n' +
             '<embObjChProps>\n' +
-            ''.join(self.components[id].changed_properties()
+            ''.join(ct(Control, self.components[id]).changed_properties()
                     for id in self.changed_components) +
             '</embObjChProps>\n' +
             '</changedProperties>\n')

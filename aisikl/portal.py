@@ -1,13 +1,15 @@
-
+from aisikl.typeutils import ct, nn
 from collections import namedtuple
+from typing import TYPE_CHECKING
 
-__all__ = ['get_modules', 'get_apps']
+if TYPE_CHECKING:
+    from aisikl.context import Context
 
 
 PortalApp = namedtuple('PortalApp', ['id', 'title', 'url', 'description'])
 
 
-def get_modules(ctx):
+def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[PortalApp]]]]]:
     '''Downloads the main menu of AIS and return the list of modules.
 
     The separate pages of the main menu are called "modules", and the sections
@@ -27,8 +29,8 @@ def get_modules(ctx):
     results = []
 
     for menu_item in front_soup.find_all(class_='left-menu-item'):
-        menu_link = menu_item.find('a')
-        _, _, module = menu_link['href'].partition('changeModul.do?modul=')
+        menu_link = nn(menu_item.find('a'))
+        _, _, module = ct(str, menu_link['href']).partition('changeModul.do?modul=')
         if not module: continue
 
         ctx.log('portal', 'Opening section "{}"'.format(menu_link.get_text()))
@@ -39,15 +41,15 @@ def get_modules(ctx):
         for submodule in applist_soup.find_all(class_='submodul'):
             apps = []
             for app in submodule.find_all(class_='aplikacia'):
-                app_link = app.a
+                app_link = nn(app.a)
                 apps.append(PortalApp(
-                    id=app.find(class_='kod').get_text(),
+                    id=nn(app.find(class_='kod')).get_text(),
                     title=app_link['title'],
                     url=app_link['url'],
-                    description=app.find(class_='popis').get_text().strip(),
+                    description=nn(app.find(class_='popis')).get_text().strip(),
                 ))
 
-            submodule_name = submodule.find(class_='submodul-text').get_text()
+            submodule_name = nn(submodule.find(class_='submodul-text')).get_text()
             submodules.append((submodule_name, apps))
 
         results.append((menu_link.get_text(), submodules))
@@ -55,7 +57,7 @@ def get_modules(ctx):
     return results
 
 
-def get_apps(ctx):
+def get_apps(ctx: Context) -> dict[str, PortalApp]:
     '''Downloads the main menu of AIS and returns the visible applications.
 
     Args:

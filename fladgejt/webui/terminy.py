@@ -1,13 +1,41 @@
-
-from __future__ import annotations
 from aisikl.app import assert_ops
-from fladgejt.helpers import (
-    CantOpenApplication, find_row, find_option, encode_key, decode_key)
+from aisikl.typeutils import ct
+from fladgejt.helpers import CantOpenApplication, find_row, find_option, encode_key, decode_key
 from fladgejt.structures import Predmet, Termin, PrihlasenyStudent
+from fladgejt.webui.studium import WebuiStudiumMixin
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from aisikl.app import Application, Operation
+    from aisikl.components.action import Action
+    from aisikl.components.button import Button
+    from aisikl.components.checkbox import CheckBox
+    from aisikl.components.combobox import ComboBox
+    from aisikl.components.table import Row, Table
+    from aisikl.dialog import Dialog
+
+    class TerminyHodnoteniaDialogsType(Dialog):
+        aktualneTerminyCheckBox: CheckBox
+        enterButton: Button
+        filterAction: Action
+        odstranitButton: Button
+        predmetyTable: Table
+        pridatButton: Button
+        prihlaseniTable: Table
+        semesterComboBox: ComboBox
+        terminyTable: Table
+        zobrazitTerminyAction: Action
+        zobrazitTerminyComboBox: ComboBox
+        zobrazitZoznamPrihlasenychAction: Action
+        zoznamPrihlasenychStudentovAction: Action
+        zoznamTerminovTable: Table
+else:
+    TerminyHodnoteniaDialogsType = None
 
 
-class WebuiTerminyMixin:
-    def __vyber_oba_semestre(self, app):
+
+class WebuiTerminyMixin(WebuiStudiumMixin):
+    def __vyber_oba_semestre(self, app: Application[TerminyHodnoteniaDialogsType]) -> None:
         index = find_option(app.d.semesterComboBox.options, title='')
         if app.d.semesterComboBox.selected_index != index:
             app.d.semesterComboBox.select(index)
@@ -20,7 +48,7 @@ class WebuiTerminyMixin:
             return False
         return True
 
-    def get_predmety(self, zapisny_list_key):
+    def get_predmety(self, zapisny_list_key: str) -> list[Predmet]:
         app = self._open_terminy_hodnotenia_app(zapisny_list_key)
 
         self.__vyber_oba_semestre(app)
@@ -33,7 +61,7 @@ class WebuiTerminyMixin:
                   for row in app.d.predmetyTable.all_rows()]
         return result
 
-    def get_prihlasene_terminy(self, zapisny_list_key):
+    def get_prihlasene_terminy(self, zapisny_list_key: str) -> list[Termin]:
         app = self._open_terminy_hodnotenia_app(zapisny_list_key)
 
         # V dolnom combo boxe dame "Zobrazit terminy: Vsetkych predmetov".
@@ -67,7 +95,7 @@ class WebuiTerminyMixin:
                   if not row['datumOdhlas']]
         return result
 
-    def get_vypisane_terminy(self, zapisny_list_key):
+    def get_vypisane_terminy(self, zapisny_list_key: str) -> list[Termin]:
         app = self._open_terminy_hodnotenia_app(zapisny_list_key)
 
         self.__vyber_oba_semestre(app)
@@ -77,11 +105,11 @@ class WebuiTerminyMixin:
         for row in app.d.predmetyTable.all_rows():
             if row['pocetAktualnychTerminov'] == '0': continue
             result.extend(self.get_vypisane_terminy_predmetu(
-                zapisny_list_key, encode_key((row['skratka'],))))
+                zapisny_list_key, encode_key((ct(str, row['skratka']),))))
 
         return result
 
-    def __open_vyber_terminu_dialog(self, app):
+    def __open_vyber_terminu_dialog(self, app: Application[TerminyHodnoteniaDialogsType]) -> None:
         # Caller musi dialog potom zavriet, aby otvorena aplikacia bola zase
         # v konzistentnom stave pre dalsieho co ju pouzije.
 
@@ -92,7 +120,7 @@ class WebuiTerminyMixin:
         # Otvori sa novy dialog.
         app.awaited_open_dialog(ops)
 
-    def __select_predmet_row(self, app, predmet_key):
+    def __select_predmet_row(self, app: Application[TerminyHodnoteniaDialogsType], predmet_key: str) -> Row:
         self.__vyber_oba_semestre(app)
 
         (skratka,) = decode_key(predmet_key)
@@ -101,7 +129,7 @@ class WebuiTerminyMixin:
 
         return app.d.predmetyTable.all_rows()[index]
 
-    def get_vypisane_terminy_predmetu(self, zapisny_list_key, predmet_key):
+    def get_vypisane_terminy_predmetu(self, zapisny_list_key: str, predmet_key: str) -> list[Termin]:
         app = self._open_terminy_hodnotenia_app(zapisny_list_key)
 
         predmet_row = self.__select_predmet_row(app, predmet_key)
@@ -138,7 +166,7 @@ class WebuiTerminyMixin:
 
         return result
 
-    def get_prihlaseni_studenti(self, termin_key):
+    def get_prihlaseni_studenti(self, termin_key: str) -> list[PrihlasenyStudent]:
         zapisny_list_key, predmet_key, datum, cas, miestnost, poznamka = (
             decode_key(termin_key))
 
@@ -169,8 +197,8 @@ class WebuiTerminyMixin:
             return self.__get_prihlaseni_studenti_cez_vyber_terminu(app,
                 datum, cas, miestnost, poznamka)
 
-    def __get_prihlaseni_studenti_cez_vyber_terminu(self, app, datum, cas,
-                                                    miestnost, poznamka):
+    def __get_prihlaseni_studenti_cez_vyber_terminu(self, app: Application[TerminyHodnoteniaDialogsType], datum: str, cas: str,
+                                                    miestnost: str, poznamka: str) -> list[PrihlasenyStudent]:
         self.__open_vyber_terminu_dialog(app)
 
         # Vyberieme spravny riadok. Ak v tabulke nie je, vypneme "Zobrazit len
@@ -204,7 +232,7 @@ class WebuiTerminyMixin:
 
         return result
 
-    def __process_prihlaseni_studenti_list(self, app, ops):
+    def __process_prihlaseni_studenti_list(self, app: Application[TerminyHodnoteniaDialogsType], ops: list[Operation]) -> list[PrihlasenyStudent]:
         # Otvori sa zoznam prihlasenych.
         app.awaited_open_dialog(ops)
 
@@ -225,7 +253,7 @@ class WebuiTerminyMixin:
 
         return result
 
-    def prihlas_na_termin(self, termin_key):
+    def prihlas_na_termin(self, termin_key: str) -> str | None:
         zapisny_list_key, predmet_key, datum, cas, miestnost, poznamka = (
             decode_key(termin_key))
 
@@ -254,7 +282,7 @@ class WebuiTerminyMixin:
 
         return message
 
-    def odhlas_z_terminu(self, termin_key):
+    def odhlas_z_terminu(self, termin_key: str) -> str | None:
         zapisny_list_key, predmet_key, datum, cas, miestnost, poznamka = (
             decode_key(termin_key))
         (skratka_predmetu,) = decode_key(predmet_key)

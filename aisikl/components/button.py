@@ -1,7 +1,6 @@
-
-from __future__ import annotations
 from aisikl.events import action_event
-from .actionablecontrol import ActionableControl
+from aisikl.components.actionablecontrol import ActionableControl
+from aisikl.typeutils import ct_none, nn
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -10,21 +9,23 @@ if TYPE_CHECKING:
 
 
 class Button(ActionableControl):
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str, properties: dict[str, str | bool | int], element: Tag) -> None:
+    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
-        self.image = properties.get('img')
-        self.shortcut = properties.get('sc')
-        self.confirm_question = element.get('confirmquestion')
+        element = nn(element)
+        self.image = ct_none(str, properties.get('img'))
+        # We only ever saw shortcut==None, but webui calls toUpperCase().
+        self.shortcut = ct_none(str, properties.get('sc'))
+        self.confirm_question = ct_none(str, element.get('confirmquestion'))
         self.access_key = element.get('accesskey')
         if isinstance(self.access_key, list):
             self.access_key = ' '.join(self.access_key)  # BeautifulSoup :(
 
-    def _ais_setAccessKey(self, value):
-        self.access_key = value
-    def _ais_setImage(self, value: str) -> None:
-        self.image = value
-    def _ais_setConfirmQuestion(self, value):
-        self.confirm_question = value
+    def _ais_setAccessKey(self, value: object) -> None:
+        self.access_key = ct_none(str, value)
+    def _ais_setImage(self, value: object) -> None:
+        self.image = ct_none(str, value)
+    def _ais_setConfirmQuestion(self, value: object) -> None:
+        self.confirm_question = ct_none(str, value)
 
     def click(self) -> None:
         self.log('action', 'Clicking {}'.format(self.id))

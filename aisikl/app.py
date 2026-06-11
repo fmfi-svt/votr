@@ -1,5 +1,3 @@
-
-from __future__ import annotations
 from collections import namedtuple
 from contextlib import contextmanager
 import json
@@ -7,15 +5,17 @@ import re
 from requests import HTTPError
 import time
 import urllib.parse
-from .exceptions import (
-    AISParseError, AISBehaviorError, AISApplicationClosedError, LoggedOutError)
-from .dialog import Dialog
-from typing import TYPE_CHECKING, Any, Iterator
+from aisikl.exceptions import AISParseError, AISBehaviorError, AISApplicationClosedError, LoggedOutError
+from aisikl.dialog import Dialog
+from aisikl.typeutils import ct, ct_none, nn
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from aisikl.context import Context
     from aisikl.dialog import Dialog
+    from aisikl.events import Event
     from bs4 import BeautifulSoup
+    from collections.abc import Iterator
     from requests.models import Response
 
 
@@ -106,7 +106,7 @@ _dialog_update_re = re.compile(r'^(\w+)\.getDialogJSObject\(\)\.(\w+)\((.*)\)$')
 _access_token_re = re.compile(r'retrieveAccessToken\(\)\s*\{[^{}]*setRequestHeader\("([^\\"]+)",\s*"([^\\"]+)"\)')
 
 
-def _parse_args(args_str: str) -> list[str | int]:
+def _parse_args(args_str: str) -> list[object]:
     # args_str are WebUI's arguments for a JavaScript function call. We want to
     # parse it with our JSON parser. But WebUI needlessly escapes apostrophes,
     # and `\'` is not a valid escape in JSON. So we replace `\'` with `'`. But
@@ -120,7 +120,7 @@ def _parse_args(args_str: str) -> list[str | int]:
     return json.loads('[' + args_str + ']')
 
 
-def parse_response(soup: BeautifulSoup) -> tuple[list[Any], list[Any]] | tuple[list[Any], list[Update]] | tuple[list[Operation], list[Any]] | tuple[list[Operation], list[Update]]:
+def parse_response(soup: BeautifulSoup) -> tuple[list[Operation], list[Update]]:
     r'''Parses the resultFrame content (the response to a POST request).
 
     Args:
@@ -132,7 +132,7 @@ def parse_response(soup: BeautifulSoup) -> tuple[list[Any], list[Any]] | tuple[l
     operations = []
     updates = []
 
-    script_tag = soup.head.script
+    script_tag = nn(soup.head).script
     if not script_tag or script_tag.get('src'):
         raise AISParseError("Unexpected result frame response")
     script = script_tag.get_text()
@@ -222,7 +222,7 @@ def parse_response(soup: BeautifulSoup) -> tuple[list[Any], list[Any]] | tuple[l
     return (operations, updates)
 
 
-def assert_ops(operations: list[Operation], *expected_methods) -> None:
+def assert_ops(operations: list[Operation], *expected_methods: str) -> None:
     r'''Ensures the list of collected operations contains the methods we expect.
 
     This is a helper method you can use after calling
@@ -235,16 +235,16 @@ def assert_ops(operations: list[Operation], *expected_methods) -> None:
         ~aisikl.exceptions.AISBehaviorError: Raised if the methods don't match.
     '''
     real_methods = [op.method for op in operations]
-    expected_methods = list(expected_methods)
-    if real_methods != expected_methods:
+    expected_methods_list = list(expected_methods)
+    if real_methods != expected_methods_list:
         raise AISBehaviorError(
             "We expected %r but AIS did something different: %r" %
-                (expected_methods, operations),
-            expected_methods=expected_methods,
+                (expected_methods_list, operations),
+            expected_methods=expected_methods_list,
             operations=operations)
 
 
-class Application:
+class Application[D]:
     r'''An opened AIS application. (That is, a "browser window".)
 
     Instances cannot be created directly. Use :meth:`open` if you know the full
@@ -267,8 +267,15 @@ class Application:
             modified.
     '''
 
+    ctx: Context
+    dialogs: dict[str, Dialog]
+    dialog_stack: list[Dialog]
+    active_dialog: Dialog | None
+    last_response_time: float
+    ignored_messages: list[str]
+
     @classmethod
-    def open(cls, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> tuple[Application, list[Operation]]:
+    def open(cls, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> tuple[Application[D], list[Operation]]:
         '''Opens a new application.
 
         Returns an ``(app, ops)`` tuple containing the new Application instance
@@ -291,7 +298,7 @@ class Application:
         ops = app._open(ctx, url, ignored_messages)
         return app, ops
 
-    def __init__(self):
+    def __init__(self) -> None:
         # This is because open() needs to return two values, and __init__ can't
         # change the return value. __new__ could, but we want normal pickling.
         raise Exception(
@@ -304,8 +311,8 @@ class Application:
         self.req_index = 0
         self.dialogs = {}
         self.dialog_stack = []
-        self.active_dialog = self.d = None
-        self.collector = None
+        self.active_dialog = None
+        self.collector: list[Operation] | None = None
         self.ignored_messages = (
             ignored_messages or DEFAULT_IGNORED_MESSAGES).copy()
 
@@ -323,10 +330,10 @@ class Application:
                     alert_match.group(1))
             raise AISParseError("AIS2 application didn't open")
 
-        onload = app_soup.body['onload']
+        onload = nn(app_soup.body)['onload']
         if onload != 'window.setTimeout("WebUI_init()", 1)':
             raise AISParseError("Unexpected <body> onload")
-        first_script = app_soup.script.string if app_soup.script else ''
+        first_script = nn(app_soup.script.string) if app_soup.script else ''
         properties_match = _app_properties_re.search(first_script)
         if not properties_match:
             raise AISParseError("Couldn't get app ID from appProperties")
@@ -336,7 +343,7 @@ class Application:
             raise AISParseError("Unexpected values in appProperties")
         self.app_id = properties['appId']
 
-        if app_soup.find(id='initScript').get_text() != '<!---->':
+        if nn(app_soup.find(id='initScript')).get_text() != '<!---->':
             raise AISParseError("initScript is not supported")
 
         rq = ("<events><ev><event class='avc.ui.event.AVCComponentEvent'>"
@@ -352,7 +359,11 @@ class Application:
 
         return ops
 
-    def activate_dialog(self, name):
+    @property
+    def d(self) -> D:
+        return cast(D, nn(self.active_dialog))
+
+    def activate_dialog(self, name: str) -> None:
         '''Activates a dialog. This is like clicking a dialog in WebUI.
 
         Aisikl doesn't prevent you from accessing inactive dialogs, but it's
@@ -373,10 +384,10 @@ class Application:
         if any(d.modal for d in self.dialog_stack):
             raise ValueError(
                 "Cannot change active dialog while a modal dialog is open")
-        self.active_dialog = self.d = self.dialogs[name]
+        self.active_dialog = self.dialogs[name]
 
     @contextmanager
-    def collect_operations(self) -> Iterator[list[Any]]:
+    def collect_operations(self) -> Iterator[list[Operation]]:
         r'''Collects :class:`Operation`\ s done by AIS.
 
         Calling this function means that you are expecting an Operation to
@@ -406,7 +417,7 @@ class Application:
         finally:
             self.collector = None
 
-    def _prepare_url_base(self) -> dict[str, str | float | int]:
+    def _prepare_url_base(self) -> dict[str, object]:
         old_req_index = self.req_index
         self.req_index += 1
         return { 'appId': self.app_id, 'antiCache': time.time(),
@@ -436,7 +447,7 @@ class Application:
         return self.ctx.request_html('/ais/servlets/WebUIServlet',
             method='POST', params=params, data=data, headers=headers)
 
-    def _filter_operations(self, operations: list[Any | Operation]) -> list[Any | Operation]:
+    def _filter_operations(self, operations: list[Operation]) -> list[Operation]:
         return [operation for operation in operations
                 if not (operation.method == 'messageBox' and
                         any(pattern in operation.args[0]
@@ -495,7 +506,7 @@ class Application:
 
         self.ctx.log('benchmark', 'End response frame processing')
 
-    def send_events(self, *events) -> None:
+    def send_events(self, *events: Event) -> None:
         r'''Sends the given events to AIS, if AIS is listening to them.
 
         :param \*events: the events to send.
@@ -505,7 +516,7 @@ class Application:
         self._do_request('<events>' + body + '</events>' +
                          self.collect_component_changes())
 
-    def send_empty_request(self):
+    def send_empty_request(self) -> None:
         '''Sends a request without any events to AIS.'''
         self._do_request(self.collect_component_changes())
 
@@ -518,7 +529,7 @@ class Application:
             '<name>{}</name><value>{}</value>'.format(name, value) +
             '</nameValue></propertyValues></changedProperties></changedProps>')
 
-    def force_close(self):
+    def force_close(self) -> bool:
         '''Tells the server to close the application.
 
         Human users usually close applications with the exit button in the main
@@ -581,7 +592,7 @@ class Application:
                 return False
         return True
 
-    def start_app(self, url: str, params: str, *, ignored_messages: None=None) -> tuple[Application, list[Operation]]:
+    def start_app[D2](self, url: str, params: str, *, ignored_messages: list[str] | None=None) -> tuple[Application[D2], list[Operation]]:
         '''Opens a new application in response to the startApp
         :class:`Operation`.
 
@@ -590,9 +601,9 @@ class Application:
         '''
         url = ('/ais/servlets/WebUIServlet?appClassName={}{}&'
                'antiCache={}').format(url, params, time.time())
-        return self.open(self.ctx, url, ignored_messages)
+        return Application[D2].open(self.ctx, url, ignored_messages)
 
-    def open_main_dialog(self, props: dict[str, str | bool | int]) -> Dialog:
+    def open_main_dialog(self, props: dict[str, object]) -> Dialog:
         '''Opens the main dialog in response to the openMainDialog
         :class:`Operation`.
 
@@ -601,13 +612,13 @@ class Application:
         '''
         return self.open_dialog(props)
 
-    def open_dialog(self, props: dict[str, str | bool | int]) -> Dialog:
+    def open_dialog(self, props: dict[str, object]) -> Dialog:
         '''Opens a new dialog in response to the openDialog :class:`Operation`.
 
         Returns:
             The opened :class:`aisikl.dialog.Dialog`.
         '''
-        name = props['id']
+        name = ct(str, props['id'])
         self.ctx.log('operation', 'Opening dialog {} "{}"'.format(
             name, props['title']))
 
@@ -615,17 +626,17 @@ class Application:
         # isDlgDefaultStyleUsed, x, y, w, h, ra (resizeable), ma (minimizeable),
         # minWidth, minHeight, and forControlOfParent.
         dialog = Dialog(
-            name=name, title=props['title'], code=props['code'],
-            parent_dialog_name=props.get('parentDlgName'), modal=props['modal'],
-            is_main_dialog=props['isMain'], closeable=props['ca'],
-            hide_title_bar=props['htb'], app=self)
+            name=name, title=ct(str, props['title']), code=ct(str, props['code']),
+            parent_dialog_name=ct_none(str, props.get('parentDlgName')), modal=ct(bool, props['modal']),
+            is_main_dialog=ct(bool, props['isMain']), closeable=ct(bool, props['ca']),
+            hide_title_bar=ct(bool, props['htb']), app=self)
         self.dialog_stack.append(dialog)
         self.dialogs[name] = dialog
 
         # The topmost modal dialog will be active. If no modals exist, this
         # dialog will be active.
         modals = [d for d in self.dialog_stack if d.modal]
-        self.active_dialog = self.d = modals[-1] if modals else dialog
+        self.active_dialog = modals[-1] if modals else dialog
 
         url = '/ais/servlets/WebUIServlet?{}&form={}'.format(
             '&'.join('{}={}'.format(k, v)
@@ -665,7 +676,7 @@ class Application:
 
         if dialog == self.active_dialog or not self.active_dialog:
             modals = [d for d in self.dialog_stack if d.modal]
-            self.active_dialog = self.d = (
+            self.active_dialog = (
                 modals or self.dialog_stack or [None])[-1]
 
         # Just for completeness. In practice, WebUI has not been observed to
@@ -673,15 +684,15 @@ class Application:
         if not self.dialog_stack:
             self.force_close()
 
-    def close_all_dialogs(self):
+    def close_all_dialogs(self) -> None:
         '''Closes all dialogs after they have been closed on the server.'''
         if self.dialog_stack:
             self.ctx.log('operation', 'Closing all dialogs')
         self.dialogs.clear()
         self.dialog_stack.clear()
-        self.active_dialog = self.d = None
+        self.active_dialog = None
 
-    def confirm_box(self, option_index):
+    def confirm_box(self, option_index: int) -> None:
         '''Sends an answer after receiving the confirmBox :class:`~Operation`.
 
         Possible values of `option_index` are:
@@ -704,7 +715,7 @@ class Application:
             option_index))
         self._send_namevalue_request('confirmResult', option_index)
 
-    def abort_box(self, message: str, title: None=None) -> None:
+    def abort_box(self, message: str, title: object=None) -> None:
         '''Waits for AIS in response to the abortBox :class:`~Operation`.'''
         self.ctx.log('operation', 'Waiting for abort box')
         self._send_namevalue_request('confirmResult', -1)
@@ -746,7 +757,7 @@ class Application:
         '''
         self._send_namevalue_request('shellExecResult', shell_exec_result)
 
-    def awaited_start_app(self, ops: list[Operation], ignored_messages: None=None) -> tuple[Application, list[Operation]]:
+    def awaited_start_app[D2](self, ops: list[Operation], ignored_messages: list[str] | None=None) -> tuple[Application[D2], list[Operation]]:
         '''Combines :func:`assert_ops` and :meth:`start_app` in one step.
 
         If ``ops`` really contains a single startApp :class:`Operation` as
@@ -792,7 +803,7 @@ class Application:
         assert_ops(ops, 'closeDialog')
         return self.close_dialog(*ops[0].args)
 
-    def awaited_abort_box(self, ops):
+    def awaited_abort_box(self, ops: list[Operation]) -> None:
         '''Combines :func:`assert_ops` and :meth:`abort_box` in one step.
 
         If ``ops`` really contains a single abortBox :class:`Operation` as
@@ -810,7 +821,7 @@ class Application:
         assert_ops(ops, 'shellExec')
         return self.shell_exec(*ops[0].args)
 
-    def awaited_close_application(self, ops):
+    def awaited_close_application(self, ops: list[Operation]) -> None:
         '''Combines :func:`assert_ops` and :meth:`close_all_dialogs` in one
         step.
 

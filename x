@@ -221,6 +221,7 @@ lint)
   lint_run "Checking Prettier formatting. " "./x pnpm prettier --check ."
   lint_run "Checking TypeScript. " "./x pnpm tsc --noEmit"
   lint_run "Checking ESLint. " "./x pnpm eslint ."
+  lint_run "Checking Python types with Pyrefly. " "./x run pyrefly check"
   exit "$combined_status"
   ;;
 
@@ -291,8 +292,14 @@ install)
   if [[ -n $proddeps ]]; then
     uvsyncopts+=' --group prod'
   fi
-  if [[ -z $devdeps ]]; then
-    uvsyncopts+=' --no-dev'
+  if [[ -n $devdeps ]]; then
+    # It's better to use --dev than using --no-dev and putting "dev" in
+    # tool.uv.default-groups. `uv run` is asymmetric: it automatically installs
+    # packages it thinks are missing, but it won't uninstall packages that seem
+    # unnecessary. So this makes `uv run` obey the last `uv sync`.
+    # Related: https://github.com/astral-sh/uv/issues/12558
+    uvsyncopts+=' --dev'
+  else
     pnpmopts+=' --production'
   fi
 

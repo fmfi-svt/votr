@@ -1,20 +1,54 @@
-
-from __future__ import annotations
 from aisikl.app import assert_ops
-from fladgejt.helpers import (
-    CantOpenApplication, find_row, find_option, decode_key)
+from aisikl.typeutils import nn
+from fladgejt.base import BaseClient
+from fladgejt.helpers import CantOpenApplication, find_row, find_option, decode_key
 from fladgejt.structures import ZapisPredmet, ZapisVlastnost
+from fladgejt.webui.commonui import WebuiCommonUIMixin
+from fladgejt.webui.studium import WebuiStudiumMixin
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from aisikl.app import Application
+    from aisikl.components.action import Action
+    from aisikl.components.button import Button
+    from aisikl.components.combobox import ComboBox, Option
+    from aisikl.components.table import Table
+    from aisikl.components.textfield import TextField
+    from aisikl.components.tree import Tree
+    from aisikl.dialog import Dialog
+
+    class ZapisPredmetovDialogsType(Dialog):
+        castiZapisnehoListuTree: Tree
+        enterButton: Button
+        fakultaComboBox: ComboBox
+        odobratPredmetButton: Button
+        predmetNazovTextField: TextField
+        predmetSkratkaTextField: TextField
+        predmetyTable: Table
+        pridatPredmetAction: Action
+        pridatPredmetZPonukyAction: Action
+        rocnikComboBox: ComboBox
+        strediskoSkratkaTextField: TextField
+        strediskoTextTextField: TextField
+        typComboBox: ComboBox
+        vlastnostiStudProgramuTable: Table
+        vybratStrediskoAction: Action
+        zmazatStrediskoAction: Action
+        zobrazitPredmetyAction: Action
+        zobrazitPredmetyButton: Button
+else:
+    ZapisPredmetovDialogsType = None
 
 
 UNAVAILABLE = "Zápis predmetov pre tento zápisný list nie je dostupný."
 
 
-class WebuiZapisMixin:
-    def zapis_get_zapisane_predmety(self, zapisny_list_key: str, cast: str) -> list[str]:
+class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
+    def zapis_get_zapisane_predmety(self, zapisny_list_key: str, cast: str) -> tuple[list[ZapisPredmet], str | None]:
         try:
             app = self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
-            return [[], UNAVAILABLE]
+            return ([], UNAVAILABLE)
         self.__zatvor_ponuku_predmetov(app)
 
         # Oznacime vrchol pre celu cast, aby sme videli vsetky predmety.
@@ -38,13 +72,13 @@ class WebuiZapisMixin:
                                odporucany_rocnik=None,
                                cast=row['kodCastStPlanu'])
                   for row in app.d.predmetyTable.all_rows()]
-        return [result, None]
+        return (result, None)
 
-    def zapis_get_vlastnosti_programu(self, zapisny_list_key: str) -> list[str]:
+    def zapis_get_vlastnosti_programu(self, zapisny_list_key: str) -> tuple[list[ZapisVlastnost], str | None]:
         try:
             app = self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
-            return [[], UNAVAILABLE]
+            return ([], UNAVAILABLE)
         self.__zatvor_ponuku_predmetov(app)
 
         result = [ZapisVlastnost(skratka=row['skratka'],
@@ -52,13 +86,13 @@ class WebuiZapisMixin:
                                  minimalny_kredit=row['kredit'],
                                  poznamka=row['poznamky'])
                   for row in app.d.vlastnostiStudProgramuTable.all_rows()]
-        return [result, None]
+        return (result, None)
 
-    def zapis_plan_vyhladaj(self, zapisny_list_key: str, cast: str) -> list[str]:
+    def zapis_plan_vyhladaj(self, zapisny_list_key: str, cast: str) -> tuple[list[ZapisPredmet], str | None]:
         try:
             app = self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
-            return [[], UNAVAILABLE]
+            return ([], UNAVAILABLE)
         self.__zatvor_ponuku_predmetov(app)
 
         # AIS ponuka styri dialogy na pridavanie predmetov:
@@ -94,7 +128,7 @@ class WebuiZapisMixin:
 
             # Mozno vyskoci chyba.
             if len(ops) == 1 and ops[0].method == 'messageBox':
-                return [[], ops[0].args[0]]
+                return ([], ops[0].args[0])
 
             # Otvori sa novy dialog.
             app.awaited_open_dialog(ops)
@@ -140,10 +174,10 @@ class WebuiZapisMixin:
                 app.d.click_close_button()
             app.awaited_close_dialog(ops)
 
-        return [result, None]
+        return (result, None)
 
-    def zapis_plan_pridaj_predmety(self, zapisny_list_key, cast,
-                                   dvojice_typ_vyucby_skratka):
+    def zapis_plan_pridaj_predmety(self, zapisny_list_key: str, cast: str,
+                                   dvojice_typ_vyucby_skratka: list[tuple[str, str]]) -> str | None:
         try:
             app = self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
@@ -221,13 +255,13 @@ class WebuiZapisMixin:
 
         return None
 
-    def __zatvor_ponuku_predmetov(self, app):
+    def __zatvor_ponuku_predmetov(self, app: Application[ZapisPredmetovDialogsType]) -> None:
         if app.d.name == 'VSES260_PridaniePredmetuDlg1':
             with app.collect_operations() as ops:
                 app.d.click_close_button()
             app.awaited_close_dialog(ops)
 
-    def __otvor_ponuku_predmetov(self, app):
+    def __otvor_ponuku_predmetov(self, app: Application[ZapisPredmetovDialogsType]) -> str | None:
         if app.d.name != 'VSES260_PridaniePredmetuDlg1':
             # Oznacime vrchol SC - C. (V ponuke predmetov nezalezi, aky typ
             # vyucby zvolime, a zapise sa spravne.)
@@ -244,13 +278,13 @@ class WebuiZapisMixin:
             # Otvori sa novy dialog.
             app.awaited_open_dialog(ops)
 
-    def __query_ponuka_predmetov(self, app, fakulta, stredisko,
-                                 filter_skratka, filter_nazov):
+    def __query_ponuka_predmetov(self, app: Application[ZapisPredmetovDialogsType], fakulta: str | None, stredisko: str | None,
+                                 filter_skratka: str | None, filter_nazov: str | None) -> str | None:
         message = self.__otvor_ponuku_predmetov(app)
         if message:
             return message
 
-        if (app.d.fakultaComboBox.selected_option.id == (fakulta or '') and
+        if (nn(app.d.fakultaComboBox.selected_option).id == (fakulta or '') and
             app.d.predmetSkratkaTextField.value == (filter_skratka or '') and
             app.d.predmetNazovTextField.value == (filter_nazov or '') and
             app.d.strediskoSkratkaTextField.value == (stredisko or '') and
@@ -276,18 +310,18 @@ class WebuiZapisMixin:
 
         return None
 
-    def zapis_ponuka_vyhladaj(self, zapisny_list_key: str, fakulta: str, stredisko: str,
-                              filter_skratka: str, filter_nazov: str) -> list[str]:
+    def zapis_ponuka_vyhladaj(self, zapisny_list_key: str, fakulta: str | None, stredisko: str | None,
+                              filter_skratka: str | None, filter_nazov: str | None) -> tuple[list[ZapisPredmet], str | None]:
         try:
             app = self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
-            return [[], UNAVAILABLE]
+            return ([], UNAVAILABLE)
 
         # Otvorime ponuku predmetov a vyhladame predmety.
         message = self.__query_ponuka_predmetov(
             app, fakulta, stredisko, filter_skratka, filter_nazov)
         if message:
-            return [[], message]
+            return ([], message)
 
         if app.d.predmetyTable.truncated:
             message = "Neboli načítané všetky dáta. Upresnite kritériá vyhľadávania."
@@ -310,11 +344,11 @@ class WebuiZapisMixin:
                                odporucany_rocnik=None,
                                cast='SC')
                   for row in app.d.predmetyTable.loaded_rows]
-        return [result, message]
+        return (result, message)
 
-    def zapis_ponuka_pridaj_predmety(self, zapisny_list_key, fakulta, stredisko,
-                                     filter_skratka, filter_nazov,
-                                     zvolene_skratky):
+    def zapis_ponuka_pridaj_predmety(self, zapisny_list_key: str, fakulta: str | None, stredisko: str | None,
+                                     filter_skratka: str | None, filter_nazov: str | None,
+                                     zvolene_skratky: list[str]) -> str | None:
         try:
             app = self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
@@ -357,19 +391,19 @@ class WebuiZapisMixin:
 
         return None
 
-    def zapis_ponuka_options(self, zapisny_list_key: str) -> list[str]:
+    def zapis_ponuka_options(self, zapisny_list_key: str) -> tuple[list[Option], str | None]:
         try:
             app = self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
-            return [[], UNAVAILABLE]
+            return ([], UNAVAILABLE)
 
         message = self.__otvor_ponuku_predmetov(app)
         if message:
-            return [[], message]
+            return ([], message)
 
-        return [app.d.fakultaComboBox.options, None]
+        return (app.d.fakultaComboBox.options, None)
 
-    def zapis_odstran_predmety(self, zapisny_list_key, cast, predmet_key_list):
+    def zapis_odstran_predmety(self, zapisny_list_key: str, cast: str, predmet_key_list: list[str]) -> str | None:
         try:
             app = self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:

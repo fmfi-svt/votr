@@ -1,5 +1,3 @@
-
-from __future__ import annotations
 from bs4 import BeautifulSoup
 import sys
 import time
@@ -7,10 +5,12 @@ import json
 import requests
 from urllib.parse import urljoin
 from aisikl.exceptions import RESTServerError, LoggedOutError
-from typing import TYPE_CHECKING, Any
+from aisikl.typeutils import ct, nn
+from typing import Any, TYPE_CHECKING, TextIO, override
 
 if TYPE_CHECKING:
     from requests.models import Response
+    from collections.abc import Callable
 
 
 #: Set this to True (either in the source code, or with ``import aisikl.context;
@@ -32,7 +32,7 @@ class Context:
         logger: An optional :class:`Logger` instance to use.
     '''
 
-    def __init__(self, *, ais_url: str | None=None, rest_url: None=None, dns_overrides: None=None,
+    def __init__(self, *, ais_url: str | None=None, rest_url: str | None=None, dns_overrides: dict[str, str] | None=None,
                  logger: Logger | None=None) -> None:
         self.ais_url = ais_url
         self.rest_url = rest_url
@@ -44,7 +44,7 @@ class Context:
                     f'https://{old_hostname}/',
                     _DnsOverrideAdapter(old_hostname, new_hostname))
 
-    def request_ais(self, url: str, *, method: str='GET', **kwargs) -> Response:
+    def request_ais(self, url: str, *, method: str='GET', **kwargs: Any) -> Response:
         r'''Sends a request to AIS and returns the :class:`requests.Response`.
 
         :param url: the URL, either absolute or relative to the AIS server.
@@ -55,7 +55,7 @@ class Context:
         self.log('benchmark', 'Begin AIS network request')
         self.log('http', 'Requesting {} {}'.format(
             method, url.partition('?')[0]), [url, kwargs.get('data', None)])
-        url = urljoin(self.ais_url, url)
+        url = urljoin(nn(self.ais_url), url)
         response = self.requests_session.request(method, url, **kwargs)
         response.raise_for_status()
         if response.headers.get('content-type', '').startswith('text'):
@@ -65,7 +65,7 @@ class Context:
         self.log('benchmark', 'End AIS network request')
         return response
 
-    def request_html(self, url: str, *, method: str='GET', **kwargs) -> BeautifulSoup:
+    def request_html(self, url: str, *, method: str='GET', **kwargs: Any) -> BeautifulSoup:
         r'''Sends a request to AIS and parses the response as HTML.
 
         :param url: the URL, either absolute or relative to the AIS server.
@@ -81,7 +81,7 @@ class Context:
         self.log('benchmark', 'End HTML parsing')
         return soup
 
-    def request_json(self, url, **data):
+    def request_json(self, url: str, **data: object) -> Any:
         r'''Sends a request to REST API and parses the response as JSON.
 
         :param url: the URL, either absolute or relative to the AIS server.
@@ -92,13 +92,13 @@ class Context:
         self.log('benchmark', 'Begin REST network request')
         self.log('http', 'Requesting POST {}'.format(
             url.partition('?')[0]), [url, data])
-        url = urljoin(self.rest_url, url)
+        url = urljoin(nn(self.rest_url), url)
         response = self.requests_session.request("POST", url, data=data)
         response.raise_for_status()
         self.log('http', 'Received response', response.text)
         self.log('benchmark', 'End REST network request')
 
-        if not response.url.startswith(self.rest_url):
+        if not response.url.startswith(nn(self.rest_url)):
             raise LoggedOutError('REST login expired.')
         response = json.loads(response.text)
 
@@ -109,7 +109,7 @@ class Context:
         self.log('http', 'Parsed JSON data')
         return response['response']
 
-    def log(self, type: str, message: str, data: Any | None=None) -> None:
+    def log(self, type: str, message: str, data: object=None) -> None:
         '''Logs a message.
 
         Args:
@@ -125,17 +125,18 @@ class Logger:
 
     #: An open file to write log entries to. Votrfront sets it to a per-session
     #: log file on every request. The value is not preserved between requests.
-    log_file = None
+    log_file: TextIO | None = None
 
     #: A function that will be called with (timestamp, type, message, data) for
     #: every log entry. Votrfront uses it to send JSON logs to the client during
     #: a RPC request. The value is not preserved between requests.
-    send_log = None
+    send_log: Callable[[float, str, str, object], None] | None = None
 
-    def __getstate__(self):
+    @override
+    def __getstate__(self) -> dict[object, object]:
         return {}
 
-    def log(self, type: str, message: str, data: Any | None=None) -> None:
+    def log(self, type: str, message: str, data: object=None) -> None:
         timestamp = time.time()
 
         if self.log_file and type != 'benchmark':
@@ -157,12 +158,13 @@ class _DnsOverrideAdapter(requests.adapters.HTTPAdapter):
     '''A HTTPAdapter which overrides the DNS resolution (i.e. the socket
     connect() address) from old_hostname to new_hostname.'''
 
-    def __init__(self, old_hostname, new_hostname):
+    def __init__(self, old_hostname: str, new_hostname: str) -> None:
         super().__init__()
         self.old_hostname = old_hostname
         self.new_hostname = new_hostname
 
-    def build_connection_pool_key_attributes(self, *args, **kwargs):
+    @override
+    def build_connection_pool_key_attributes(self, *args: Any, **kwargs: Any) -> Any:
         host_params, pool_kwargs = (
             super().build_connection_pool_key_attributes(*args, **kwargs))
         if host_params['host'] != self.old_hostname:
@@ -175,7 +177,8 @@ class _DnsOverrideAdapter(requests.adapters.HTTPAdapter):
         pool_kwargs = { **pool_kwargs, 'server_hostname': self.old_hostname }
         return host_params, pool_kwargs
 
-    def add_headers(self, request, **kwargs):
+    @override
+    def add_headers(self, request: Any, **kwargs: object) -> None:
         # Explicitly set the Host header to old_hostname. FYI: It is usually
         # implicitly added by HTTPConnection.put_request() in http/client.py
         # using the value of HTTPConnection.host (not by requests or urllib3).
@@ -183,23 +186,26 @@ class _DnsOverrideAdapter(requests.adapters.HTTPAdapter):
             raise Exception('Requests with custom Host header are unsupported')
         request.headers['Host'] = self.old_hostname
 
-    def __getstate__(self):
+    @override
+    def __getstate__(self) -> object:
         return {
-            **super().__getstate__(),
+            **ct(dict, super().__getstate__()),
             'old_hostname': self.old_hostname,
             'new_hostname': self.new_hostname,
         }
 
 
 try:
+    # pyrefly: ignore [unknown-name]
     __IPYTHON__
 except NameError:
     pass
 else:
     from markupsafe import Markup
+    # pyrefly: ignore [missing-import]
     from IPython.display import display, HTML
 
-    def ipython_log(self, timestamp, type, message, data):
+    def ipython_log(self: object, timestamp: float, type: str, message: str, data: object) -> None:
         if type == 'benchmark': return
         content = Markup('<span style="background:#FF8"><b>{}</b> {}</span>').format(type, message)
         if data is not None:
@@ -208,5 +214,6 @@ else:
             content = Markup('<details><summary>{}</summary><pre>{}</pre></details>').format(content, data)
         display(HTML(content))
 
+    # pyrefly: ignore [bad-assignment] # pyrefly false positive
     Logger.send_log = ipython_log
     # TODO: Do not use HTML logs when running command line ipython.

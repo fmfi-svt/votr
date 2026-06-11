@@ -720,7 +720,7 @@ COMPLETE (removed)
     - IRRELEVANT, see DialogBody.keydownTryAction().
 - initActionForElement()
     - IRRELEVANT, because ensureJSO() is IRRELEVANT.
-- getActionListForAction() -> `action.parent`
+- getActionListForAction() -> `action.get_action_list()`
 - updateEnabilityForActionListByOwnerContainer()
     - IRRELEVANT, because realizeEnability() was removed.
 - tryExecuteActionForElement()
