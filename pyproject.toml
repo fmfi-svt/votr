@@ -6,7 +6,6 @@ requires-python = ">=3.12"
 dependencies = [
     "beautifulsoup4>=0",
     "lxml>=0",
-    "monkeytype",
     "requests>=0",
 ]
 
@@ -45,4 +44,3 @@ default-groups = ["votrfront"]
 
 [tool.uv.sources]
 gunicorn = { git = "https://github.com/TomiBelan/gunicorn" }
-monkeytype = { git = "https://github.com/jevinskie/MonkeyType", branch = "jev/orig/feat/py312" }
