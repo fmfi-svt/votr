@@ -18,11 +18,11 @@ class UpDown(Control):
         if command not in ('UP', 'DOWN', 'TOP', 'BOTTOM'):
             raise ValueError('wrong UpDown command')
         self.log('action', 'Clicking {} {}'.format(self.id, command.lower()))
-        # pyrefly: ignore [bad-argument-type] # None just means udc = None.
-        udc = self.dialog.components.get(self.up_downed_component)
-        if udc:
-            # pyrefly: ignore [missing-attribute] # If it's not Table|CheckList, this will raise.
-            udc.up_down_row(command)
+        if (
+            (udc_id := self.up_downed_component) is not None and
+            (udc := self.dialog.components.get(udc_id)) is not None
+        ):
+            udc.up_down_row(command)  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportUnknownMemberType, reportAttributeAccessIssue] # If it's not Table|CheckList, this will raise.
         else:
             ev = action_event(self, command, self.id)
             self.dialog.app.send_events(ev)

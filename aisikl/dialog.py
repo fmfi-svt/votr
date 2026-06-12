@@ -1,3 +1,5 @@
+# pyright: reportUninitializedInstanceVariable=none
+
 import json
 import re
 from aisikl.exceptions import AISParseError
@@ -75,7 +77,7 @@ class Dialog:
         match = _properties_re.match(last_line)
         if not match:
             raise AISParseError("Couldn't find dialog componentProperties")
-        component_properties = json.loads(match.group(1))
+        component_properties: dict[str, dict[str, object]] = json.loads(match.group(1))
 
         elements = { e['id']: e for e in dialog_soup.find_all(id=True) }
         if 'dt_selection' in elements or 'dt_selection_area' in elements:
@@ -93,7 +95,7 @@ class Dialog:
                 if parent:
                     parent_id = ct(str, parent['id'])
 
-            type = properties.get('t')
+            type = ct(str, properties.get('t'))
             if type not in component_classes:
                 raise AISParseError("Unsupported component type: %r" % type)
             component = component_classes[type](

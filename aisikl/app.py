@@ -1,4 +1,5 @@
-from collections import namedtuple
+# pyright: reportUninitializedInstanceVariable=none
+
 from contextlib import contextmanager
 import json
 import re
@@ -8,14 +9,14 @@ import urllib.parse
 from aisikl.exceptions import AISParseError, AISBehaviorError, AISApplicationClosedError, LoggedOutError
 from aisikl.dialog import Dialog
 from aisikl.typeutils import ct, ct_none, nn
-from typing import TYPE_CHECKING, cast
+from typing import Any, NamedTuple, TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from aisikl.context import Context
     from aisikl.dialog import Dialog
     from aisikl.events import Event
     from bs4 import BeautifulSoup
-    from collections.abc import Iterator
+    from collections.abc import Generator
     from requests.models import Response
 
 
@@ -41,7 +42,10 @@ if TYPE_CHECKING:
 #:     args: The list of attributes to the JavaScript method. Votr follows the
 #:         same signatures as WebUI. For example, if ``op.method ==
 #:         "openDialog"``, the Votr call is ``app.open_dialog(*op.args)``.
-Operation = namedtuple('Operation', ('target', 'method', 'args'))
+class Operation(NamedTuple):
+    target: str
+    method: str
+    args: list[Any]
 
 
 #: Record of AIS calling a setter on some component.
@@ -52,7 +56,11 @@ Operation = namedtuple('Operation', ('target', 'method', 'args'))
 #:     method: The setter method that is called. In Votr, this original
 #:         method name will be prefixed with ``_ais_``.
 #:     args: The list of setter arguments. (Usually a single string.)
-Update = namedtuple('Update', ('dialog', 'target', 'method', 'args'))
+class Update(NamedTuple):
+    dialog: str
+    target: str
+    method: str
+    args: list[object]
 
 
 #: The known :class:`Operation` methods.
@@ -129,8 +137,8 @@ def parse_response(soup: BeautifulSoup) -> tuple[list[Operation], list[Update]]:
         An ``(operations, updates)`` tuple. ``operations`` is a list of
         :class:`Operation`\ s. ``updates`` is a list of :class:`Update`\ s.
     '''
-    operations = []
-    updates = []
+    operations: list[Operation] = []
+    updates: list[Update] = []
 
     script_tag = nn(soup.head).script
     if not script_tag or script_tag.get('src'):
@@ -167,7 +175,7 @@ def parse_response(soup: BeautifulSoup) -> tuple[list[Operation], list[Update]]:
             if in_main: raise AISParseError("Bad script structure")
             if show_dlg_properties is not None:
                 raise AISParseError("Duplicate showDlgProperties")
-            show_dlg_properties = json.loads(line.partition('=')[2])
+            show_dlg_properties: list[dict[str, object]] | None = json.loads(line.partition('=')[2])
             continue
 
         if _main_re.match(line):
@@ -337,11 +345,11 @@ class Application[D]:
         properties_match = _app_properties_re.search(first_script)
         if not properties_match:
             raise AISParseError("Couldn't get app ID from appProperties")
-        properties = json.loads(properties_match.group(1))
+        properties: dict[str, object] = json.loads(properties_match.group(1))
         if not (properties.get('appContext') == 'ais' and
                 properties.get('webuiContext') == 'ais/webui2'):
             raise AISParseError("Unexpected values in appProperties")
-        self.app_id = properties['appId']
+        self.app_id = ct(str, properties['appId'])
 
         if nn(app_soup.find(id='initScript')).get_text() != '<!---->':
             raise AISParseError("initScript is not supported")
@@ -387,7 +395,7 @@ class Application[D]:
         self.active_dialog = self.dialogs[name]
 
     @contextmanager
-    def collect_operations(self) -> Iterator[list[Operation]]:
+    def collect_operations(self) -> Generator[list[Operation]]:
         r'''Collects :class:`Operation`\ s done by AIS.
 
         Calling this function means that you are expecting an Operation to
@@ -592,7 +600,7 @@ class Application[D]:
                 return False
         return True
 
-    def start_app[D2](self, url: str, params: str, *, ignored_messages: list[str] | None=None) -> tuple[Application[D2], list[Operation]]:
+    def start_app[D2](self, url: str, params: str, *, ignored_messages: list[str] | None=None, hint: type[D2] | None=None) -> tuple[Application[D2], list[Operation]]:
         '''Opens a new application in response to the startApp
         :class:`Operation`.
 
@@ -642,7 +650,7 @@ class Application[D]:
             '&'.join('{}={}'.format(k, v)
                      for k, v in self._prepare_url_base().items()),
             name)
-        dialog._init(url)
+        dialog._init(url)  # pyright: ignore [reportPrivateUsage]
 
         return dialog
 
@@ -657,7 +665,7 @@ class Application[D]:
 
         url = ('/ais/servlets/WebUIServlet?appId={}&form={}&antiCache={}'.
             format(self.app_id, dialog.name, time.time()))
-        dialog._init(url)
+        dialog._init(url)  # pyright: ignore [reportPrivateUsage]
 
     def close_dialog(self, name: str, is_native: bool=False) -> None:
         '''Closes a dialog in response to the closeDialog :class:`Operation`.
@@ -757,7 +765,7 @@ class Application[D]:
         '''
         self._send_namevalue_request('shellExecResult', shell_exec_result)
 
-    def awaited_start_app[D2](self, ops: list[Operation], ignored_messages: list[str] | None=None) -> tuple[Application[D2], list[Operation]]:
+    def awaited_start_app[D2](self, ops: list[Operation], ignored_messages: list[str] | None=None, hint: type[D2] | None=None) -> tuple[Application[D2], list[Operation]]:
         '''Combines :func:`assert_ops` and :meth:`start_app` in one step.
 
         If ``ops`` really contains a single startApp :class:`Operation` as

@@ -6,6 +6,7 @@ from fladgejt.webui.studium import WebuiStudiumMixin
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from abc import ABC
     from aisikl.app import Application, Operation
     from aisikl.components.action import Action
     from aisikl.components.button import Button
@@ -14,7 +15,7 @@ if TYPE_CHECKING:
     from aisikl.components.table import Row, Table
     from aisikl.dialog import Dialog
 
-    class TerminyHodnoteniaDialogsType(Dialog):
+    class TerminyHodnoteniaDialogsType(ABC, Dialog):
         aktualneTerminyCheckBox: CheckBox
         enterButton: Button
         filterAction: Action
@@ -70,7 +71,7 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
         # Stlacime button vedla combo boxu.
         app.d.zobrazitTerminyAction.execute()
 
-        studium_key, akademicky_rok = decode_key(zapisny_list_key)
+        _studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
         # Vytiahneme tabulku terminov.
         result = [Termin(datum=row['dat'],
@@ -100,7 +101,7 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
 
         self.__vyber_oba_semestre(app)
 
-        result = []
+        result: list[Termin] = []
 
         for row in app.d.predmetyTable.all_rows():
             if row['pocetAktualnychTerminov'] == '0': continue
@@ -135,7 +136,7 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
         predmet_row = self.__select_predmet_row(app, predmet_key)
         self.__open_vyber_terminu_dialog(app)
 
-        studium_key, akademicky_rok = decode_key(zapisny_list_key)
+        _studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
         result = [Termin(datum=row['dat'],
                          cas=row['cas'],

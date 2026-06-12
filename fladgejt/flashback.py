@@ -22,7 +22,7 @@ _STATEFUL = {
 
 def _tuplify(obj: object) -> object:
     if isinstance(obj, (list, tuple)):
-        return tuple(_tuplify(mem) for mem in obj)
+        return tuple(_tuplify(mem) for mem in obj)  # pyright: ignore [reportUnknownArgumentType, reportUnknownVariableType]
     return obj
 
 def _load_log(filename: str) -> tuple[int | None, dict[tuple[str, object], list[tuple[tuple[str, object] | None, tuple[bool, object]]]]]:
@@ -32,8 +32,8 @@ def _load_log(filename: str) -> tuple[int | None, dict[tuple[str, object], list[
     fake_time_msec: int | None = None
 
     with (gzip.open(filename) if filename.endswith('.gz') else open(filename, 'rb')) as f:
-        for line in f:
-            line = json.loads(line)
+        for linebytes in f:
+            line: tuple[float, str, str, object] = json.loads(linebytes)
             if line[1] == "rpc":
                 if fake_time_msec is None:
                     fake_time_msec = int(line[0] * 1000)
@@ -94,7 +94,7 @@ class FlashbackClient(BaseClient):
             raise Exception("%r does not exist" % filename)
 
         self.fake_time_msec, self._rpcs = _load_log(filename)
-        self._did = set()
+        self._did: set[object] = set()
 
     def __getattr__(self, name: str) -> object:
         if name.startswith('_'):

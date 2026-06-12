@@ -1,16 +1,17 @@
-from collections import namedtuple
 from aisikl.components.control import Control
 from aisikl.events import selection_event
 from aisikl.exceptions import AISParseError
-from aisikl.typeutils import ct, nn
-from typing import TYPE_CHECKING, override
+from aisikl.typeutils import ct, ct_none, nn
+from typing import NamedTuple, TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
     from bs4.element import Tag
 
 
-Option = namedtuple('Option', ['title', 'id'])
+class Option(NamedTuple):
+    title: str
+    id: str | None
 
 
 class RadioBox(Control):
@@ -24,7 +25,7 @@ class RadioBox(Control):
 
     def _parse_options(self, items: Tag) -> None:
         self.selected_index = -1
-        self.options = []
+        self.options: list[Option] = []
         for index, td in enumerate(items.find_all('td')):
             if self.enabled and td['index'] != str(index):
                 raise AISParseError(
@@ -32,7 +33,7 @@ class RadioBox(Control):
                     "has unexpected index attribute.".format(self.id, index))
             self.options.append(Option(
                 title=nn(td.label).get_text(),
-                id=nn(td.input).get('sid'),
+                id=ct_none(str, nn(td.input).get('sid')),
             ))
             if nn(td.input).has_attr('checked'):
                 self.selected_index = index
@@ -72,5 +73,4 @@ class RadioBox(Control):
             self.selected_index = int(ct(str, container['selectedindex']))
         else:
             self._parse_options(nn(container.find(id='radioBox_items')))
-    # pyrefly: ignore [missing-attribute]
-    _ais_setDataView.wants_body = True
+    _ais_setDataView.wants_body = True  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportFunctionMemberAccess]

@@ -128,7 +128,7 @@ def _parse_form(old_url: str, soup: BeautifulSoup) -> tuple[str, dict[str, str]]
     if len(forms) != 1:
         raise Exception(f'Unexpected number of form elements: {len(forms)}')
     url = urljoin(old_url, ct(str, forms[0]['action']))
-    data = {}
+    data: dict[str, str] = {}
     for elem in forms[0].find_all('input'):
         if elem.get('type') == 'hidden':
             data[ct(str, elem['name'])] = ct(str, elem.get('value', ''))
@@ -315,7 +315,7 @@ def _login_with_plain_password(server: ServerDict, params: ParamsDictPlainPasswo
     # Submit the login form. It has action="/ais/login.do".
     # On both success and failure, it will respond with 302 to ais/start.do.
     # start.do will contain either an error message or the signed in view.
-    login_url = server['ais_url'] + 'ais/login.do'
+    login_url = server['ais_url'] + 'ais/login.do'  # pyright: ignore [reportTypedDictNotRequiredAccess]
     login_data = { 'login': params['username'], 'password': params['password'] }
     _send_request_chain(ctx, params, login_url, login_data)
 
@@ -377,7 +377,7 @@ def _login_with_flashback(server: ServerDict, params: ParamsDictFlashback, logge
         raise Exception('flashback type does not support rest_url')
 
     ctx = _create_context(server, logger)
-    return FlashbackClient(ctx, server['flashbacks_dir'], params['file'])
+    return FlashbackClient(ctx, server['flashbacks_dir'], params['file'])  # pyright: ignore [reportTypedDictNotRequiredAccess]
 
 
 _handlers = {
@@ -397,7 +397,7 @@ def create_client(server: ServerDict, params: ParamsDict, *, logger: Logger | No
 
     handler = _handlers[params['type']]
     # pyrefly: ignore [bad-argument-type]
-    client = handler(server, params, logger)
+    client = handler(server, params, logger)  # pyright: ignore [reportArgumentType]
 
     # Check that login was successful.
     try:

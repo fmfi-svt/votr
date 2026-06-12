@@ -73,10 +73,10 @@ class Action(Component):
     def _ais_setToolTipText(self, value: object) -> None:
         for o in self.get_buttons_and_menu_items():
             if o.tool_tip_text == self.tool_tip_text:
-                o._ais_setToolTipText(value)
+                o._ais_setToolTipText(value)  # pyright: ignore [reportPrivateUsage]
         self.tool_tip_text = ct_none(str, value)
     def _ais_setConfirmQuestion(self, value: object) -> None:
         for o in self.get_buttons_and_menu_items():
             if o.confirm_question == self.confirm_question:
-                o._ais_setConfirmQuestion(value)
+                o._ais_setConfirmQuestion(value)  # pyright: ignore [reportPrivateUsage]
         self.confirm_question = ct_none(str, value)

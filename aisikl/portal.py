@@ -1,12 +1,15 @@
 from aisikl.typeutils import ct, nn
-from collections import namedtuple
-from typing import TYPE_CHECKING
+from typing import NamedTuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.context import Context
 
 
-PortalApp = namedtuple('PortalApp', ['id', 'title', 'url', 'description'])
+class PortalApp(NamedTuple):
+    id: str
+    title: str
+    url: str
+    description: str
 
 
 def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[PortalApp]]]]]:
@@ -26,7 +29,7 @@ def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[PortalApp]
     ctx.log('portal', 'Opening main menu')
     front_soup = ctx.request_html('/ais/portal/changeTab.do?tab=0')
 
-    results = []
+    results: list[tuple[str, list[tuple[str, list[PortalApp]]]]] = []
 
     for menu_item in front_soup.find_all(class_='left-menu-item'):
         menu_link = nn(menu_item.find('a'))
@@ -37,15 +40,15 @@ def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[PortalApp]
         applist_soup = ctx.request_html(
             '/ais/portal/changeModul.do?modul=' + module)
 
-        submodules = []
+        submodules: list[tuple[str, list[PortalApp]]] = []
         for submodule in applist_soup.find_all(class_='submodul'):
-            apps = []
+            apps: list[PortalApp] = []
             for app in submodule.find_all(class_='aplikacia'):
                 app_link = nn(app.a)
                 apps.append(PortalApp(
                     id=nn(app.find(class_='kod')).get_text(),
-                    title=app_link['title'],
-                    url=app_link['url'],
+                    title=ct(str, app_link['title']),
+                    url=ct(str, app_link['url']),
                     description=nn(app.find(class_='popis')).get_text().strip(),
                 ))
 
@@ -67,10 +70,10 @@ def get_apps(ctx: Context) -> dict[str, PortalApp]:
         objects with ``id``, ``url``, ``title`` and ``description``. The menu
         structure is not preserved.
     '''
-    result = {}
+    result: dict[str, PortalApp] = {}
     modules = get_modules(ctx)
-    for module_name, submodules in modules:
-        for submodule_name, apps in submodules:
+    for _module_name, submodules in modules:
+        for _submodule_name, apps in submodules:
             for app in apps:
                 result[app.id] = app
     return result

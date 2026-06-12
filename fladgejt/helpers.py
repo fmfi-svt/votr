@@ -107,8 +107,7 @@ def keyed_namedtuple(typename: str, field_names: list[str], **key_fields: list[s
         if key_name not in field_names or set(key_args) - set(field_names):
             raise ValueError(typename)
 
-    # pyrefly: ignore [bad-class-definition] # dynamic type creation
-    result_class = namedtuple(typename, field_names)
+    result_class = namedtuple(typename, field_names)  # pyrefly: ignore [bad-class-definition] # pyright: ignore [reportUntypedNamedTuple] # dynamic type creation
 
     # Add '=None' to the keys
     field_names_none = [name + ("=None" if name in key_fields else "")
@@ -144,7 +143,7 @@ def encode_key(tuple: tuple[str, ...]) -> str:
     Returns:
         A string ``s`` such that ``decode_key(s)`` produces the original tuple.
     '''
-    result = []
+    result: list[str] = []
     for part in tuple:
         part = part.encode('utf8')
         part = urlsafe_b64encode(part)
@@ -164,7 +163,7 @@ def decode_key(string: str) -> tuple[str, ...]:
     Returns:
         The tuple of strings that was originally given to :func:`encode_key`.
     '''
-    result = []
+    result: list[str] = []
     for part in string.split('.'):
         part = part.encode('ascii')
         part += b'=' * (-len(part) % 4)

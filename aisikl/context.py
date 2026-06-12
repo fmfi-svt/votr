@@ -5,8 +5,8 @@ import json
 import requests
 from urllib.parse import urljoin
 from aisikl.exceptions import RESTServerError, LoggedOutError
-from aisikl.typeutils import ct, nn
-from typing import Any, TYPE_CHECKING, TextIO, override
+from aisikl.typeutils import nn
+from typing import Any, TYPE_CHECKING, TextIO, cast, override
 
 if TYPE_CHECKING:
     from requests.models import Response
@@ -154,31 +154,31 @@ class Logger:
     log.__doc__ = Context.log.__doc__
 
 
-class _DnsOverrideAdapter(requests.adapters.HTTPAdapter):
+class _DnsOverrideAdapter(requests.adapters.HTTPAdapter):  # pyright: ignore [reportUnknownMemberType, reportUntypedBaseClass, reportAttributeAccessIssue]
     '''A HTTPAdapter which overrides the DNS resolution (i.e. the socket
     connect() address) from old_hostname to new_hostname.'''
 
     def __init__(self, old_hostname: str, new_hostname: str) -> None:
-        super().__init__()
+        super().__init__()  # pyright: ignore [reportUnknownMemberType]
         self.old_hostname = old_hostname
         self.new_hostname = new_hostname
 
     @override
-    def build_connection_pool_key_attributes(self, *args: Any, **kwargs: Any) -> Any:
-        host_params, pool_kwargs = (
-            super().build_connection_pool_key_attributes(*args, **kwargs))
+    def build_connection_pool_key_attributes(self, *args: Any, **kwargs: Any) -> Any:  # pyright: ignore [reportGeneralTypeIssues]
+        host_params, pool_kwargs = (  # pyright: ignore [reportUnknownVariableType]
+            super().build_connection_pool_key_attributes(*args, **kwargs))  # pyright: ignore [reportUnknownMemberType]
         if host_params['host'] != self.old_hostname:
             raise Exception(f'{host_params["host"]!r} != {self.old_hostname!r}')
         # Modifying this field changes the connect() address, SNI, expected cert
         # SAN, and default Host header. We only want to change the connect()
         # address, so we must change the rest back to old_hostname.
-        host_params = { **host_params, 'host': self.new_hostname }
+        host_params = { **host_params, 'host': self.new_hostname }  # pyright: ignore [reportUnknownVariableType]
         # Change SNI and expected cert SAN back to old_hostname.
-        pool_kwargs = { **pool_kwargs, 'server_hostname': self.old_hostname }
+        pool_kwargs = { **pool_kwargs, 'server_hostname': self.old_hostname }  # pyright: ignore [reportUnknownVariableType]
         return host_params, pool_kwargs
 
     @override
-    def add_headers(self, request: Any, **kwargs: object) -> None:
+    def add_headers(self, request: Any, **kwargs: object) -> None:  # pyright: ignore [reportGeneralTypeIssues]
         # Explicitly set the Host header to old_hostname. FYI: It is usually
         # implicitly added by HTTPConnection.put_request() in http/client.py
         # using the value of HTTPConnection.host (not by requests or urllib3).
@@ -189,21 +189,19 @@ class _DnsOverrideAdapter(requests.adapters.HTTPAdapter):
     @override
     def __getstate__(self) -> object:
         return {
-            **ct(dict, super().__getstate__()),
+            **cast(Any, super().__getstate__()),  # pyright: ignore [reportUnknownMemberType]
             'old_hostname': self.old_hostname,
             'new_hostname': self.new_hostname,
         }
 
 
 try:
-    # pyrefly: ignore [unknown-name]
-    __IPYTHON__
+    __IPYTHON__  # pyrefly: ignore [unknown-name] # pyright: ignore [reportUndefinedVariable, reportUnusedExpression]
 except NameError:
     pass
 else:
     from markupsafe import Markup
-    # pyrefly: ignore [missing-import]
-    from IPython.display import display, HTML
+    from IPython.display import display, HTML  # pyrefly: ignore [missing-import] # pyright: ignore [reportMissingImports, reportUnknownVariableType]
 
     def ipython_log(self: object, timestamp: float, type: str, message: str, data: object) -> None:
         if type == 'benchmark': return
@@ -214,6 +212,5 @@ else:
             content = Markup('<details><summary>{}</summary><pre>{}</pre></details>').format(content, data)
         display(HTML(content))
 
-    # pyrefly: ignore [bad-assignment] # pyrefly false positive
-    Logger.send_log = ipython_log
+    Logger.send_log = ipython_log  # pyrefly: ignore [bad-assignment] # pyright: ignore [reportAttributeAccessIssue] # false positive because of `self`
     # TODO: Do not use HTML logs when running command line ipython.

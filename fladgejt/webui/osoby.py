@@ -8,6 +8,7 @@ from fladgejt.structures import RegOsoba
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from abc import ABC
     from aisikl.app import Application
     from aisikl.components.action import Action
     from aisikl.components.button import Button
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
     from aisikl.components.textfield import TextField
     from aisikl.dialog import Dialog
 
-    class RegisterOsobDialogsType(Dialog):
+    class RegisterOsobDialogsType(ABC, Dialog):
         VyberFakultaButton: Button
         absolventCheckBox: CheckBox
         akademickyRokComboBox: ComboBox

@@ -15,10 +15,10 @@ class TabbedPane(Control):
         element = nn(element)
         self.selected_index = ct(int, properties.get('selectedIndex', 0))
 
-        self.panel_ids = []
+        self.panel_ids: list[str] = []
         arena = nn(element.find(id=ct(str, element['id']) + 'Arena', recursive=False))
         for panel in arena.find_all(id=True, recursive=False):
-            self.panel_ids.append(panel['id'])
+            self.panel_ids.append(ct(str, panel['id']))
 
     def _ais_setSelectedIndex(self, value: object) -> None:
         self.selected_index = really_int(value)

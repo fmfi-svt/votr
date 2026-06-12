@@ -222,6 +222,7 @@ lint)
   lint_run "Checking TypeScript. " "./x pnpm tsc --noEmit"
   lint_run "Checking ESLint. " "./x pnpm eslint ."
   lint_run "Checking Python types with Pyrefly. " "./x run pyrefly check"
+  lint_run "Checking Python types with basedpyright. " "./x pnpm basedpyright"
   exit "$combined_status"
   ;;
 

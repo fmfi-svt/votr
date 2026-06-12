@@ -8,6 +8,7 @@ from fladgejt.webui.studium import WebuiStudiumMixin
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from abc import ABC
     from aisikl.app import Application
     from aisikl.components.action import Action
     from aisikl.components.button import Button
@@ -17,7 +18,7 @@ if TYPE_CHECKING:
     from aisikl.components.tree import Tree
     from aisikl.dialog import Dialog
 
-    class ZapisPredmetovDialogsType(Dialog):
+    class ZapisPredmetovDialogsType(ABC, Dialog):
         castiZapisnehoListuTree: Tree
         enterButton: Button
         fakultaComboBox: ComboBox
@@ -111,7 +112,7 @@ class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
         # A a B. Ale nesmieme ich tak zapisovat, lebo AIS ich zapise ako C, co
         # na studijnom nemaju radi.
 
-        result = []
+        result: list[ZapisPredmet] = []
 
         # Skusime kazdy vrchol stromu, co nas zaujima.
         for id, node in app.d.castiZapisnehoListuTree.nodes.items():
@@ -186,7 +187,7 @@ class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
 
         # Zistime, ake vsetky typy vyucby chceme zapisat.
         typy_vyucby = sorted(set(
-            typ_vyucby for typ_vyucby, skratka in dvojice_typ_vyucby_skratka))
+            typ_vyucby for typ_vyucby, _skratka in dvojice_typ_vyucby_skratka))
 
         for typ_vyucby in typy_vyucby:
             # Oznacime dany vrchol stromu.
@@ -414,7 +415,7 @@ class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
         app.d.castiZapisnehoListuTree.select('nR/' + cast)
 
         # Vyberieme v tabulke dane predmety.
-        indexes = []
+        indexes: list[int] = []
         for predmet_key in predmet_key_list:
             (skratka_predmetu,) = decode_key(predmet_key)
             indexes.append(find_row(

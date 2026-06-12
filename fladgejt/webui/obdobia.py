@@ -6,11 +6,12 @@ from fladgejt.webui.pool import pooled_app
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from abc import ABC
     from aisikl.app import Application
     from aisikl.components.table import Table
     from aisikl.dialog import Dialog
 
-    class SpravaDatumovDialogsType(Dialog):
+    class SpravaDatumovDialogsType(ABC, Dialog):
         akcieTable: Table
         detailAkcieTable: Table
 else:
@@ -24,8 +25,7 @@ class WebuiObdobiaMixin(BaseClient):
 
         :return: a :class:`~Application` object.
         '''
-        url = '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST010App' \
-              '&fajr=A&kodAplikacie=VSST010&uiLang=SK'
+        url = '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST010App&fajr=A&kodAplikacie=VSST010&uiLang=SK'
         app, ops = Application[SpravaDatumovDialogsType].open(self.context, url)
         app.awaited_open_main_dialog(ops)
         return app

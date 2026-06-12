@@ -57,7 +57,7 @@ class RestTerminyMixin(BaseClient):
     def get_vypisane_terminy(self, zapisny_list_key: str) -> list[Termin]:
         predmety = self.get_predmety(zapisny_list_key)
 
-        result = []
+        result: list[Termin] = []
 
         for row in predmety:
             result.extend(self.get_vypisane_terminy_predmetu(

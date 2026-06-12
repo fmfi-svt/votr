@@ -1,3 +1,4 @@
+# pyright: reportUntypedNamedTuple=none
 
 from collections import namedtuple
 from .helpers import keyed_namedtuple

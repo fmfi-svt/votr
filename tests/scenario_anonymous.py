@@ -30,7 +30,7 @@ def run(client):
     app.awaited_shell_exec(ops2)
 
     with app.collect_operations() as ops:
-        app.d.studijneProgramyTable._control_button_columns()
+        app.d.studijneProgramyTable.control_button_columns()
     app.awaited_open_dialog(ops)
 
     app.d.oznacitInverzneButton.click()
@@ -41,7 +41,7 @@ def run(client):
     app.awaited_close_dialog(ops)
 
     with app.collect_operations() as ops:
-        app.d.studijneProgramyTable._control_button_sort()
+        app.d.studijneProgramyTable.control_button_sort()
     app.awaited_open_dialog(ops)
 
     app.d.resetButton.click()

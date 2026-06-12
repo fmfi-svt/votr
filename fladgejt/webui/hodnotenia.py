@@ -4,16 +4,17 @@ from fladgejt.webui.studium import WebuiStudiumMixin
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
+    from abc import ABC
     from aisikl.components.button import Button
     from aisikl.components.table import Table
     from aisikl.dialog import Dialog
 
-    class HodnoteniaPriemeryDialogsType(Dialog):
+    class HodnoteniaPriemeryDialogsType(ABC, Dialog):
         hodnoteniaTable: Table
         priemeryTable: Table
         refreshButton: Button
 
-    class PriebezneHodnotenieDialogsType(Dialog):
+    class PriebezneHodnotenieDialogsType(ABC, Dialog):
         hodnotenieTable: Table
         nacitatHodnotenieButton: Button
         predmetySPriebeznymHodnotenimTable: Table
@@ -32,12 +33,11 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
 
         # Ak uz bola aplikacia otvorena pred tymto volanim, stlacime "Refresh".
         if getattr(app, 'freshly_opened', True):
-            # pyrefly: ignore [missing-attribute]
-            app.freshly_opened = False
+            app.freshly_opened = False  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue]
         else:
             app.d.refreshButton.click()
 
-        studium_key, akademicky_rok = decode_key(zapisny_list_key)
+        _studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
         result = [Hodnotenie(akademicky_rok=akademicky_rok,
                              skratka=row['skratka'],
@@ -61,8 +61,7 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
         except CantOpenApplication:
             return ([], "Priemery pre toto štúdium nie sú dostupné.")
 
-        # pyrefly: ignore [missing-attribute]
-        app.freshly_opened = False
+        app.freshly_opened = False  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue]
 
         result = [Priemer(akademicky_rok=row['priemerInfoPopisAkadRok'],
                           nazov=row['priemerNazov'],
@@ -85,14 +84,13 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
 
         # Ak uz bola aplikacia otvorena pred tymto volanim, stlacime "Refresh".
         if getattr(app, 'freshly_opened', True):
-            # pyrefly: ignore [missing-attribute]
-            app.freshly_opened = False
+            app.freshly_opened = False  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue]
         else:
             app.d.refreshButton.click()
 
-        studium_key, akademicky_rok = decode_key(zapisny_list_key)
+        _studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
-        result = []
+        result: list[PriebezneHodnoteniaPredmetu] = []
         for i, row in enumerate(app.d.predmetySPriebeznymHodnotenimTable.all_rows()):
             # Klikneme na predmet s priebeznym hodnotenim a pockame na nacitanie
             with app.collect_operations() as ops:

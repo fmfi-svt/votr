@@ -47,7 +47,7 @@ class TextField(TextInput):
         self.dialog.component_changes(self, False)
         if self.tool_tip_like_text:
             self.tool_tip_changed = True
-            self.tool_tip_text = ''
+            self.tool_tip_text: str | None = ''
 
     def write(self, value: str) -> None:
         self.log('action', 'Writing {} in {}'.format(repr(value), self.id))

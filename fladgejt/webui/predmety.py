@@ -8,6 +8,7 @@ from fladgejt.structures import RegUcitelPredmetu, PrihlasenyStudent, RegPredmet
 from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
+    from abc import ABC
     from aisikl.app import Application
     from aisikl.components.action import Action
     from aisikl.components.button import Button
@@ -18,7 +19,7 @@ if TYPE_CHECKING:
     from aisikl.components.textfield import TextField
     from aisikl.dialog import Dialog
 
-    class RegisterPredmetovDialogsType(Dialog):
+    class RegisterPredmetovDialogsType(ABC, Dialog):
         akRokComboBox: ComboBox
         cisloPredmetuNumberControl: NumberControl
         closeButton: Button
@@ -39,7 +40,7 @@ if TYPE_CHECKING:
         zoznamPredmetovTable: Table
         zoznamStudentovAction: Action
 
-    class NastenkaPredmetuDialogsType(Dialog):
+    class NastenkaPredmetuDialogsType(ABC, Dialog):
         fakultaComboBox: ComboBox
         nacitatPredmetyButton: Button
         potvrditOrgJednotkuButton: Button
@@ -49,14 +50,14 @@ if TYPE_CHECKING:
         skupinaPredmetovTable: Table
         vyucujuciTable: Table
         zobrazitComboBox: ComboBox
-
-    class GetStudentiZapisaniNaPredmetResult(TypedDict):
-        items: list[PrihlasenyStudent]
-        message: str | None
-        predmet: RegPredmet | None
 else:
     RegisterPredmetovDialogsType = None
     NastenkaPredmetuDialogsType = None
+
+class GetStudentiZapisaniNaPredmetResult(TypedDict):
+    items: list[PrihlasenyStudent]
+    message: str | None
+    predmet: RegPredmet | None
 
 
 class WebuiPredmetyMixin(WebuiCommonUIMixin, BaseClient):
@@ -163,7 +164,7 @@ class WebuiPredmetyMixin(WebuiCommonUIMixin, BaseClient):
         if not app.d.zoznamPredmetovTable.all_rows():
             # predmet nebol najdeny (napriklad uz je prilis stary ale napriek
             # tomu ho mam v mojom hodnoteni)
-            return dict(items=[], message=None, predmet=None)
+            return GetStudentiZapisaniNaPredmetResult(items=[], message=None, predmet=None)
 
         predmet_index = find_row(app.d.zoznamPredmetovTable.all_rows(), skratka=skratka_predmetu)
         app.d.zoznamPredmetovTable.select(predmet_index)
@@ -182,7 +183,7 @@ class WebuiPredmetyMixin(WebuiCommonUIMixin, BaseClient):
             app.d.zoznamStudentovAction.execute()
 
         if len(ops) == 1 and ops[0].method == 'messageBox':
-            return dict(items=[], message=ops[0].args[0], predmet=predmet)
+            return GetStudentiZapisaniNaPredmetResult(items=[], message=ops[0].args[0], predmet=predmet)
 
         app.awaited_open_dialog(ops)
 
@@ -199,7 +200,7 @@ class WebuiPredmetyMixin(WebuiCommonUIMixin, BaseClient):
 
         app.awaited_close_dialog(ops)
 
-        return dict(items=studenti, message=None, predmet=predmet)
+        return GetStudentiZapisaniNaPredmetResult(items=studenti, message=None, predmet=predmet)
 
     @pooled_app
     def _open_nastenka_predmetu(self) -> Application[NastenkaPredmetuDialogsType]:
@@ -254,9 +255,6 @@ class WebuiPredmetyMixin(WebuiCommonUIMixin, BaseClient):
                           skratka_predmetu: str | None, nazov_predmetu: str | None, semester: str | None, stupen: str | None) -> tuple[list[RegPredmet], str | None]:
         app = self._open_register_predmetov()
 
-        message = None
-        predmety = []
-
         message = self.__query_dialog(app,
                                       akademicky_rok,
                                       fakulta=fakulta,
@@ -268,7 +266,7 @@ class WebuiPredmetyMixin(WebuiCommonUIMixin, BaseClient):
                                       skratka_sp=skratka_sp)
 
         if message:
-            return (predmety, message)
+            return ([], message)
 
         app.d.zobrazitPredmetyButton.click()
 

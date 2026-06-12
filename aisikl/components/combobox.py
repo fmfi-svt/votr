@@ -1,15 +1,17 @@
-from collections import namedtuple
 from aisikl.components.control import Control
 from aisikl.events import selection_event
 from aisikl.typeutils import ct, nn
-from typing import TYPE_CHECKING, override
+from typing import NamedTuple, TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
     from bs4.element import Tag
 
 
-Option = namedtuple('Option', ['title', 'id', 'tool_tip_text'])
+class Option(NamedTuple):
+    title: str
+    id: str
+    tool_tip_text: str
 
 
 class ComboBox(Control):
@@ -20,12 +22,12 @@ class ComboBox(Control):
 
     def _parse_options(self, element: Tag) -> None:
         self.selected_index = -1
-        self.options = []
+        self.options: list[Option] = []
         for index, option in enumerate(element.find_all('option')):
             self.options.append(Option(
                 title=option.get_text(),
-                id=option.get('sid', ''),
-                tool_tip_text=option.get('title', ''),
+                id=ct(str, option.get('sid', '')),
+                tool_tip_text=ct(str, option.get('title', '')),
             ))
             if option.has_attr('selected'):
                 self.selected_index = index
@@ -61,5 +63,4 @@ class ComboBox(Control):
         else:
             self._parse_options(combo_box_list)
         self.dialog.try_interactive(self, 'SelectionEvent')
-    # pyrefly: ignore [missing-attribute]
-    _ais_setDataView.wants_body = True
+    _ais_setDataView.wants_body = True  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportFunctionMemberAccess]

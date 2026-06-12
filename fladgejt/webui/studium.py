@@ -9,6 +9,7 @@ from fladgejt.webui.pool import pooled_app
 from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
+    from abc import ABC
     from aisikl.components.button import Button
     from aisikl.components.label import Label
     from aisikl.components.menuitem import MenuItem
@@ -20,7 +21,7 @@ if TYPE_CHECKING:
     from fladgejt.webui.terminy import TerminyHodnoteniaDialogsType
     from fladgejt.webui.zapis import ZapisPredmetovDialogsType
 
-    class AdministraciaStudiaDialogsType(Dialog):
+    class AdministraciaStudiaDialogsType(ABC, Dialog):
         studiaTable: Table
         zapisneListyTable: Table
         nacitatButton: Button
@@ -103,7 +104,7 @@ class WebuiStudiumMixin(BaseClient):
         return result
 
     def zapisny_list_key_to_akademicky_rok(self, zapisny_list_key: str) -> str:
-        studium_key, akademicky_rok = decode_key(zapisny_list_key)
+        _studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
         return akademicky_rok
 
@@ -154,7 +155,7 @@ class WebuiStudiumMixin(BaseClient):
         if not ops: raise CantOpenApplication()
 
         # Otvori sa nove okno a v nom hlavny dialog.
-        new_app, new_ops = app.awaited_start_app(ops)
+        new_app, new_ops = app.awaited_start_app(ops, hint=PriebezneHodnotenieDialogsType)
         new_app.awaited_open_main_dialog(new_ops)
         return new_app
 
@@ -172,7 +173,7 @@ class WebuiStudiumMixin(BaseClient):
         if not ops: raise CantOpenApplication()
 
         # Otvori sa nove okno a v nom hlavny dialog.
-        new_app, new_ops = app.awaited_start_app(ops)
+        new_app, new_ops = app.awaited_start_app(ops, hint=ZapisPredmetovDialogsType)
         new_app.awaited_open_main_dialog(new_ops)
         return new_app
 
@@ -190,7 +191,7 @@ class WebuiStudiumMixin(BaseClient):
         if not ops: raise CantOpenApplication()
 
         # Otvori sa nove okno a v nom hlavny dialog.
-        new_app, new_ops = app.awaited_start_app(ops)
+        new_app, new_ops = app.awaited_start_app(ops, hint=TerminyHodnoteniaDialogsType)
         new_app.awaited_open_main_dialog(new_ops)
         return new_app
 
@@ -208,7 +209,7 @@ class WebuiStudiumMixin(BaseClient):
         if not ops: raise CantOpenApplication()
 
         # Otvori sa nove okno a v nom hlavny dialog.
-        new_app, new_ops = app.awaited_start_app(ops)
+        new_app, new_ops = app.awaited_start_app(ops, hint=HodnoteniaPriemeryDialogsType)
         new_app.awaited_open_main_dialog(new_ops)
         return new_app
 
@@ -223,7 +224,7 @@ class WebuiStudiumMixin(BaseClient):
             app.d.ziskaneMenuItem.click()
 
         if not ops:
-            return dict(
+            return GetPrehladKreditovResult(
                 items=[],
                 message="Prehľad hodnotenia pre toto štúdium nie je dostupný.",
                 kredity_ziskane=None,
@@ -267,7 +268,7 @@ class WebuiStudiumMixin(BaseClient):
         # Dialog sa zavrie.
         app.awaited_close_dialog(ops)
 
-        return dict(
+        return GetPrehladKreditovResult(
             items=result,
             message=None,
             kredity_ziskane=kredity_ziskane,
@@ -346,7 +347,7 @@ class WebuiStudiumMixin(BaseClient):
 
         return options
 
-    def create_zapisny_list(self, studium_key: str, akademicky_rok: str, rok_studia: str | None) -> str | None:
+    def create_zapisny_list(self, studium_key: str, akademicky_rok: str | None, rok_studia: str | None) -> str | None:
         '''Creates enrollment list.
 
         Args:

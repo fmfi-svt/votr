@@ -101,6 +101,9 @@ importers:
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.3.0)
+      basedpyright:
+        specifier: ^1.39.7
+        version: 1.39.7
       eslint:
         specifier: ^10.3.0
         version: 10.3.0
@@ -480,6 +483,11 @@ packages:
     resolution: {integrity: sha512-BLrgEcRTwX2o6gGxGOCNyMvGSp35YofuYzw9h1IMTRmKqttAZZVU67bdb9Pr2vUHA8+j3i2tJfjO6C6+4myGTA==}
     engines: {node: 18 || 20 || >=22}
 
+  basedpyright@1.39.7:
+    resolution: {integrity: sha512-56DuO5nQ9EEIsWd/LoGgXjqWRSUeRWF6i9z7dxTWwUzpza0W7/4+QXJrZuJYHEyiXpgXeaf5P7W0j+ItB+WCLQ==}
+    engines: {node: '>=14.0.0'}
+    hasBin: true
+
   baseline-browser-mapping@2.10.29:
     resolution: {integrity: sha512-Asa2krT+XTPZINCS+2QcyS8WTkObE77RwkydwF7h6DmnKqbvlalz93m/dnphUyCa6SWSP51VgtEUf2FN+gelFQ==}
     engines: {node: '>=6.0.0'}
@@ -787,6 +795,11 @@ packages:
 
   flatted@3.4.2:
     resolution: {integrity: sha512-PjDse7RzhcPkIJwy5t7KPWQSZ9cAbzQXcafsetQoD7sOJRQlGikNbx7yZp2OotDnJyrDcbyRq3Ttb18iYOqkxA==}
+
+  fsevents@2.3.3:
+    resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
+    engines: {node: ^8.16.0 || ^10.6.0 || >=11.0.0}
+    os: [darwin]
 
   function-bind@1.1.2:
     resolution: {integrity: sha512-7XHNxH7qX9xG5mIwxkhumTox/MIRNcOgDrxWsMt2pAr23WHp6MrRlN7FBSFpCpr+oVO0F744iUgR82nJMfG2SA==}
@@ -1843,6 +1856,10 @@ snapshots:
 
   balanced-match@4.0.4: {}
 
+  basedpyright@1.39.7:
+    optionalDependencies:
+      fsevents: 2.3.3
+
   baseline-browser-mapping@2.10.29: {}
 
   birecord@0.1.1: {}
@@ -2184,6 +2201,9 @@ snapshots:
   flat@5.0.2: {}
 
   flatted@3.4.2: {}
+
+  fsevents@2.3.3:
+    optional: true
 
   function-bind@1.1.2: {}
 

@@ -31,7 +31,7 @@ class CheckList(Control):
 
     def _parse_items(self, element: Tag) -> None:
         self.selected_index = -1
-        self.items = []
+        self.items: list[Item] = []
         for index, tr in enumerate(element.find_all('tr')):
             td = nn(tr.td)
             self.items.append(Item(
@@ -72,8 +72,7 @@ class CheckList(Control):
         self.up_down_enabled = is_true(value)
     def _ais_setDataView(self, id: str, body: Tag) -> None:
         self._parse_items(nn(body.find(id=id)))
-    # pyrefly: ignore [missing-attribute]
-    _ais_setDataView.wants_body = True
+    _ais_setDataView.wants_body = True  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportFunctionMemberAccess]
 
     def _mark_changed(self) -> None:
         self.dialog.component_changes(self, False)

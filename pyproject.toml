@@ -29,6 +29,26 @@ votrfront = [
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.basedpyright]
+include = ["aisikl", "fladgejt"]
+# Disabled for being too annoying.
+reportExplicitAny = "none"
+reportImportCycles = "none"
+reportUnusedParameter = "hint"
+# Would be good if you could mark functions where it's ok.
+reportUnusedCallResult = "none"
+# Has some value, but too verbose. Maybe worth checking once in a while.
+reportAny = "none"
+# Maybe later?
+reportImplicitStringConcatenation = "none"
+# Docs recommend one or the other. reportUnannotatedClassAttribute is enabled by
+# default, for performance reasons, but they're equally fast/slow on our code.
+# reportIncompatibleUnannotatedOverride is less annoying.
+# See https://docs.basedpyright.com/latest/benefits-over-pyright/new-diagnostic-rules/#reportunannotatedclassattribute
+# and https://docs.basedpyright.com/latest/benefits-over-pyright/new-diagnostic-rules/#reportincompatibleunannotatedoverride
+reportUnannotatedClassAttribute = "none"
+reportIncompatibleUnannotatedOverride = "warning"
+
 [tool.coverage.run]
 branch = true
 parallel = true

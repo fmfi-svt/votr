@@ -317,7 +317,7 @@ export interface Rpcs {
   get_roky_studia_noveho_zapisneho_listu(studium_key: string): ComboBoxOption[];
   create_zapisny_list(
     studium_key: string,
-    akademicky_rok: string,
+    akademicky_rok: string | null,
     rok_studia: string | null,
   ): string | null;
   delete_zapisny_list(zapisny_list_key: string): null;

@@ -60,13 +60,13 @@ class Tree(Control):
         self.selection = selection.split(',') if selection else []
         self.active_id = ct(str, element['activepath']) or None
 
-        properties = json.loads(nn(load_script_plain(data_view, 'json')))
+        properties: dict[str, list[str]] = json.loads(nn(load_script_plain(data_view, 'json')))
 
         if updating:
             nodes = element
         else:
             nodes = nn(load_script(data_view, 'nodes'))
-            self.nodes = {}
+            self.nodes: dict[str, Node] = {}
 
         if nodes.find(nofilled=True):
             # It shouldn't be too hard to add, but we've never seen it.
@@ -107,8 +107,7 @@ class Tree(Control):
             self._init_from_data_view(data_view)
         else:
             self._init_from_data_view(data_view, updating=True)
-    # pyrefly: ignore [missing-attribute]
-    _ais_setDataView.wants_body = True
+    _ais_setDataView.wants_body = True  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportFunctionMemberAccess]
 
     @override
     def changed_properties(self) -> str:

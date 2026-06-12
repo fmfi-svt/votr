@@ -1741,12 +1741,12 @@ stores everything once, directly in Table.
 - fireActionCommand() -> self._fire_action_command()
 - onDataTabActiveIndexChange()
     - Inlined into select() under "if active_index_changed".
-- deleteRow() -> self._delete_row() [TODO?]
-- insertRow() -> self._insert_row() [TODO?]
-- controlButtonRowCount() -> self._control_button_row_count() [TODO?]
-- controlButtonColumns() -> self._control_button_columns() [TODO?]
-- controlButtonSort() -> self._control_button_sort() [TODO?]
-- controlButtonDebugInfo() -> self._control_button_debug_info() [TODO?]
+- deleteRow() -> self.delete_row() [TODO?]
+- insertRow() -> self.insert_row() [TODO?]
+- controlButtonRowCount() -> self.control_button_row_count() [TODO?]
+- controlButtonColumns() -> self.control_button_columns() [TODO?]
+- controlButtonSort() -> self.control_button_sort() [TODO?]
+- controlButtonDebugInfo() -> self.control_button_debug_info() [TODO?]
 , upDownRow() -> self.up_down_row()
 - onUpDownRow() ->
   `self.up_downed_rows = True; self.dialog.component_changes(self, False)`

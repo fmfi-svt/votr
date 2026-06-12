@@ -37,8 +37,9 @@ def pooled_app[S, D, *A](original_method: Callable[[S, Unpack[A]], Application[D
     '''
     @wraps(original_method)
     def wrapper(self: Any, *args: Unpack[A]) -> Application[D]:
-        open_apps: dict[object, Application[D]] = self.app_pool.open_apps
-        active_keys: set[object] = self.app_pool.active_keys
+        app_pool: Pool = self.app_pool
+        open_apps: dict[object, Application[object]] = app_pool.open_apps
+        active_keys: set[object] = app_pool.active_keys
         app_key = (original_method.__name__, args)
 
         if app_key in open_apps and not open_apps[app_key].is_still_open():
@@ -46,12 +47,12 @@ def pooled_app[S, D, *A](original_method: Callable[[S, Unpack[A]], Application[D
             active_keys.discard(app_key)
 
         if app_key not in open_apps:
-            self.app_pool.reserve(1)
+            app_pool.reserve(1)
             # pyrefly: ignore [bad-argument-type]
             open_apps[app_key] = original_method(self, *args)
 
         active_keys.add(app_key)
-        return open_apps[app_key]
+        return open_apps[app_key]  # pyrefly: ignore [bad-return] # pyright: ignore [reportReturnType]
 
     return wrapper
 
@@ -59,8 +60,8 @@ def pooled_app[S, D, *A](original_method: Callable[[S, Unpack[A]], Application[D
 class Pool:
     def __init__(self, context: Context) -> None:
         self.context = context
-        self.open_apps = {}
-        self.active_keys = set()
+        self.open_apps: dict[object, Application[object]] = {}
+        self.active_keys: set[object] = set()
 
     def reserve(self, count: int) -> None:
         sorted_keys = sorted(

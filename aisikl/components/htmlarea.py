@@ -20,8 +20,7 @@ class HtmlArea(ActionableControl):
 
     def _ais_setHtml(self, id: str, body: Tag) -> None:
         self._parse_content(nn(body.find(id=id)))
-    # pyrefly: ignore [missing-attribute]
-    _ais_setHtml.wants_body = True
+    _ais_setHtml.wants_body = True  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportFunctionMemberAccess]
 
     @override
     def changed_properties(self) -> str:
