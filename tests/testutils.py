@@ -301,6 +301,19 @@ def _prepare_http_response(request_entry, response_entry, final_entry):
     # Match successful binary responses for aisikl.app.check_connection().
     if (
         request_entry.type == 'http' and
+        request_entry.message ==
+            'Requesting GET /ais/apps/student/sk/main.js' and
+        response_entry.type == 'http' and
+        response_entry.message == 'Received response (binary data)'
+    ):
+        return lambda: SimpleNamespace(
+            headers={},
+            text='retrieveAccessToken() { setRequestHeader("foo", "bar"); }',
+            raise_for_status=lambda: None,
+            # check_connection() does not try to read `content`.
+        )
+    if (
+        request_entry.type == 'http' and
         request_entry.message in (
             'Requesting GET /ais/rest/apps/get-access-token',
             'Requesting GET /ais/rest/apps/check-session/check-light',
