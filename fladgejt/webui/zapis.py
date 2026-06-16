@@ -363,7 +363,7 @@ class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
 
         # Odznacime vsetky vyznacene predmety (nemalo by sa stat).
         for row in app.d.predmetyTable.loaded_rows:
-            if row['p'] == True:
+            if row.cell('p').value == True:
                 app.d.predmetyTable.edit_cell('p', row.id, False)
 
         # Vyznacime predmety, co si chceme zapisat.

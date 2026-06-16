@@ -50,17 +50,20 @@ class Row(object):
         self.cells = cells
         self.table = table
 
-    def __getitem__(self, name: str) -> str | bool:
-        if isinstance(name, int):
-            return self.cells[name].value
-        return self.cells[self.table.column_map[name].index].value
+    def cell(self, column_name: str) -> Cell:
+        '''Returns the cell in this row and ``column_name``.'''
+        return self.cells[self.table.column_map[column_name].index]
 
-    def __len__(self) -> int:
-        return len(self.cells)
+    def __getitem__(self, column_name: str) -> str:
+        r'''Returns the string cell value in this row and ``column_name``.
+        Raises if the cell contains a checkbox instead of a string (checkboxes
+        can be read with ``row.cell(name).value``).
+        '''
+        return ct(str, self.cell(column_name).value)
 
     @override
     def __repr__(self) -> str:
-        return '{}({})'.format(self.__class__.__name__, repr(self.cells)[1:-1])
+        return f'Row({self.id!r}, {self.rid!r}, {self.cells!r})'
 
 
 def load_script_plain(data_view: Tag, id: str) -> str | None:

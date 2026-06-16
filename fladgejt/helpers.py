@@ -18,10 +18,10 @@ class CantOpenApplication(Exception):
     '''
 
 
-def find_row(objects: list[Row], **conditions: str) -> int:
+def find_row(objects: list[Row], **conditions: str | bool) -> int:
     r'''Searches the list of objects for one that matches all given conditions.
 
-    ``obj['foo'] == bar`` must be true for all ``foo=bar`` keyword arguments
+    ``obj.cell('foo').value == bar`` must be true for all ``foo=bar`` keyword arguments
     for ``obj`` to match. The index of the first matching object is returned.
     This is useful for table rows and similar mapping-like objects.
 
@@ -33,7 +33,8 @@ def find_row(objects: list[Row], **conditions: str) -> int:
         KeyError: Raised if no such object is found.
     '''
     for index, obj in enumerate(objects):
-        if all(obj[key] == value for key, value in conditions.items()):
+        if all(obj.cell(key).value == value
+                for key, value in conditions.items()):
             return index
     raise KeyError("Object not found: {!r}".format(conditions))
 
@@ -41,7 +42,7 @@ def find_row(objects: list[Row], **conditions: str) -> int:
 def find_row_insensitive(objects: list[Row], **conditions: str) -> int:
     '''Same as :func:`find_row` but case insensitive.'''
     for index, obj in enumerate(objects):
-        if all(ct(str, obj[key]).lower() == value.lower()
+        if all(ct(str, obj.cell(key).value).lower() == value.lower()
                for key, value in conditions.items()):
             return index
     raise KeyError("Object not found: {!r}".format(conditions))

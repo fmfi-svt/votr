@@ -1,7 +1,6 @@
 import re
 from aisikl.app import Application, assert_ops, DEFAULT_IGNORED_MESSAGES
 from aisikl.exceptions import AISBehaviorError
-from aisikl.typeutils import ct
 from fladgejt.base import BaseClient
 from fladgejt.helpers import CantOpenApplication, find_row, find_option, encode_key, decode_key
 from fladgejt.structures import Studium, ZapisnyList, Hodnotenie
@@ -250,7 +249,7 @@ class WebuiStudiumMixin(BaseClient):
                              nahradeny=(row['nahradzaMa'] != ''),
                              poplatok=row['poplatok'],
                              zapisny_list_key=encode_key(
-                                (studium_key, ct(str, row['akRok']))))
+                                (studium_key, row['akRok'])))
                   for row in app.d.predmetyTable.all_rows()]
 
         kredity_ziskane, kredity_zapisane = self.__get_sucty_kreditov(app)
@@ -290,7 +289,7 @@ class WebuiStudiumMixin(BaseClient):
             return None, None
 
         # V poslednom stlpci "Spolu  (Zapísané/Získané + Uznané + Dovezené)" by mali byt dve cele cisla.
-        if not (m := re.fullmatch(r'(\d+) / (\d+)', ct(str, last['spolus']))):
+        if not (m := re.fullmatch(r'(\d+) / (\d+)', last['spolus'])):
             self.context.log('warning', 'kredityTable spolus is unexpected', last)
             return None, None
 

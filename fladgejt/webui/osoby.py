@@ -1,5 +1,4 @@
 from aisikl.app import Application, assert_ops
-from aisikl.typeutils import ct
 from fladgejt.base import BaseClient
 from fladgejt.webui.commonui import WebuiCommonUIMixin
 from fladgejt.webui.pool import pooled_app
@@ -158,7 +157,7 @@ class WebuiOsobyMixin(WebuiCommonUIMixin, BaseClient):
 
         app.awaited_open_dialog(ops)
 
-        fakulty = [{'id': ct(str, row['skratka']), 'title': ct(str, row['popis'])}
+        fakulty = [{'id': row['skratka'], 'title': row['popis']}
                    for row in app.d.table.all_rows()]
 
         fakulty.insert(0, {'id': '', 'title': ''})

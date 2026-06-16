@@ -1,5 +1,4 @@
 from aisikl.app import assert_ops
-from aisikl.typeutils import ct
 from fladgejt.helpers import CantOpenApplication, find_row, find_option, encode_key, decode_key
 from fladgejt.structures import Predmet, Termin, PrihlasenyStudent
 from fladgejt.webui.studium import WebuiStudiumMixin
@@ -106,7 +105,7 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
         for row in app.d.predmetyTable.all_rows():
             if row['pocetAktualnychTerminov'] == '0': continue
             result.extend(self.get_vypisane_terminy_predmetu(
-                zapisny_list_key, encode_key((ct(str, row['skratka']),))))
+                zapisny_list_key, encode_key((row['skratka'],))))
 
         return result
 
