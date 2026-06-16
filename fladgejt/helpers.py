@@ -1,11 +1,11 @@
 from aisikl.typeutils import ct
-from collections import namedtuple
 from base64 import urlsafe_b64encode, urlsafe_b64decode
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from aisikl.components.combobox import Option
     from aisikl.components.table import Row
+    from collections.abc import Callable
 
 
 class CantOpenApplication(Exception):
@@ -68,73 +68,58 @@ def find_option(objects: list[Option], **conditions: object) -> int:
     raise KeyError("Object not found: {!r}".format(conditions))
 
 
-_keyed_namedtuple_template = '''
-def __new__(_cls, {args_none}):
-    {keys}
-    return tuple.__new__(_cls, ({args},))
-result_class.__new__ = __new__
-'''
+def with_key_fields[T](**key_fields: list[str]) -> Callable[[T], T]:
+    '''Adds special "key fields" to a TypedDict.
 
-_keyed_namedtuple_key_template = '''
-    if {key_name} is None: {key_name} = encode_key(({key_args},))
-'''
-
-
-def keyed_namedtuple(typename: str, field_names: list[str], **key_fields: list[str]):
-    '''A variant of namedtuple where some "key fields" have default values.
-
-    The value of each "key field" is computed from some other fields by
+    "Key fields" are additional fields automatically added to the dict. Their
+    value is automatically computed using :func:`encode_key` from other fields,
     combining their values into an encoded string. The key field acts as a
     shorthand for the original fields in situations where a single string is
-    easier to work with than multiple values. It can be decoded back when
-    needed::
+    easier to work with than multiple values -- notably, to persistently
+    identify a row, and roundtrip this identifier between client and server. It
+    can be decoded back when needed::
 
-        T = keyed_namedtuple('T', ['a', 'b', 'c', 'k'], k=['a', 'c'])
-        t = T(a="foo", b="bar", c="baz")
-        assert t.k == encode_key((t.a, t.c))
-        assert decode_key(t.k) == (t.a, t.c)
+        @with_key_fields(k=['a', 'c'])
+        class MyDict(TypedDict):
+            a: str
+            b: str
+            c: str
 
-    Args:
-        typename: The class name, like in namedtuple.
-        field_names: The list of fields, like in namedtuple. Key fields have
-            to be at the end, after normal fields.
-        key_fields: Keyword arguments of key names and their associated lists
-            of field names, which will be used to compute its default value.
-    Returns:
-        A new class, like returned by namedtuple.
+        my_dict = MyDict(a='Aaaa', b='Bbbb', c='Cccc')
+        assert my_dict['k'] == encode_key(('Aaaa', 'Cccc'))
+        assert decode_key(my_dict['k']) == ('Aaaa', 'Cccc')
+
+    Limitations:
+
+    - Static type checkers don't know about key fields. Accessing them on a dict
+      instance is a static type error.
+    - Similarly to normal TypedDict classes and unlike e.g. NamedTuple, argument
+      names are not runtime checked. So be very careful if constructing it from
+      untyped code.
+    - The decorated result is actually implemented as a plain function, not a
+      class. You can't use it in any way except calling (constructing) it. It's
+      even more fake than normal TypedDict classes, whose instances at runtime
+      are plain dicts, but they can at least inherit from each other as classes.
     '''
-    # Key names have to be in field_names and key args have to exist
-    for key_name, key_args in key_fields.items():
-        if key_name not in field_names or set(key_args) - set(field_names):
-            raise ValueError(typename)
+    def decorator(original_class: T) -> T:
+        def dict_maker(**kwargs: str) -> dict[str, str]:
+            for output_name, input_names in key_fields.items():
+                input_values = tuple(kwargs[name] for name in input_names)
+                kwargs[output_name] = encode_key(input_values)
 
-    result_class = namedtuple(typename, field_names)  # pyrefly: ignore [bad-class-definition] # pyright: ignore [reportUntypedNamedTuple] # dynamic type creation
+            return kwargs
 
-    # Add '=None' to the keys
-    field_names_none = [name + ("=None" if name in key_fields else "")
-                        for name in field_names]
+        return cast(T, dict_maker)
 
-    # Create code for computing the default values of key_fields
-    key_defs = [_keyed_namedtuple_key_template.format(
-                    key_name=key_name, key_args=', '.join(key_fields[key_name]))
-                for key_name in field_names if key_name in key_fields]
-
-    # Create custom __new__ method
-    exec(_keyed_namedtuple_template.format(
-        args_none=', '.join(field_names_none),
-        args=', '.join(field_names),
-        keys=''.join(key_defs)))
-
-    return result_class
+    return decorator
 
 
 def encode_key(tuple: tuple[str, ...]) -> str:
     '''Reversibly encode a tuple of strings into a single string.
 
-    See :func:`keyed_namedtuple` for the rationale.
+    See :func:`with_key_fields` for the rationale.
 
-    Empty tuples may be decoded incorrectly. But :func:`keyed_namedtuple`
-    doesn't support empty keys anyway.
+    Empty tuples may be decoded incorrectly. Do not use them.
 
     The current encoding additionally always outputs URL-safe strings. But its
     reversibility is the more important property.
@@ -157,7 +142,7 @@ def encode_key(tuple: tuple[str, ...]) -> str:
 def decode_key(string: str) -> tuple[str, ...]:
     '''Decode the output of :func:`encode_key` back into a tuple of strings.
 
-    See :func:`keyed_namedtuple` for the rationale.
+    See :func:`with_key_fields` for the rationale.
 
     Args:
         string: A string created with :func:`encode_key`.

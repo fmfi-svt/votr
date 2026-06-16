@@ -1,74 +1,161 @@
-# pyright: reportUntypedNamedTuple=none
-
-from collections import namedtuple
-from .helpers import keyed_namedtuple
+from fladgejt.helpers import with_key_fields
+from typing import TypedDict
 
 
-Studium = keyed_namedtuple('Studium', [
-    'sp_skratka', 'sp_popis', 'sp_doplnujuce_udaje', 'zaciatok', 'koniec',
-    'sp_dlzka', 'sp_cislo', 'rok_studia', 'organizacna_jednotka',
-    'studium_key'],
-    studium_key=['sp_skratka', 'zaciatok'])
+@with_key_fields(studium_key=['sp_skratka', 'zaciatok'])
+class Studium(TypedDict):
+    sp_skratka: str
+    sp_popis: str
+    sp_doplnujuce_udaje: str
+    zaciatok: str
+    koniec: str
+    sp_dlzka: str
+    sp_cislo: str
+    rok_studia: str
+    organizacna_jednotka: str
 
-ZapisnyList = keyed_namedtuple('ZapisnyList', [
-    'akademicky_rok', 'rocnik', 'sp_skratka', 'sp_popis', 'datum_zapisu',
-    'studium_key', 'zapisny_list_key'],
-    zapisny_list_key=['studium_key', 'akademicky_rok'])
+@with_key_fields(zapisny_list_key=['studium_key', 'akademicky_rok'])
+class ZapisnyList(TypedDict):
+    akademicky_rok: str
+    rocnik: str
+    sp_skratka: str
+    sp_popis: str
+    datum_zapisu: str
+    studium_key: str
 
-Predmet = keyed_namedtuple('Predmet', [
-    'skratka', 'nazov', 'typ_vyucby', 'semester', 'kredit', 'predmet_key'],
-    predmet_key=['skratka'])
+@with_key_fields(predmet_key=['skratka'])
+class Predmet(TypedDict):
+    skratka: str
+    nazov: str
+    typ_vyucby: str
+    semester: str
+    kredit: str
 
-RegPredmet = keyed_namedtuple('RegPredmet', [
-    'skratka', 'nazov', 'konanie', 'stredisko', 'fakulta', 'cudzi_nazov',
-    'rozsah_vyucby', 'semester', 'kredit', 'predmet_key'],
-    predmet_key=['skratka'])
+@with_key_fields(predmet_key=['skratka'])
+class RegPredmet(TypedDict):
+    skratka: str
+    nazov: str
+    konanie: str
+    stredisko: str
+    fakulta: str
+    cudzi_nazov: str
+    rozsah_vyucby: str
+    semester: str
+    kredit: str
 
-ZapisPredmet = keyed_namedtuple('ZapisPredmet', [
-    'skratka', 'nazov', 'typ_vyucby', 'semester', 'kredit', 'rozsah_vyucby',
-    'jazyk', 'datum_zapisu', 'aktualnost', 'pocet_prihlasenych',
-    'maximalne_prihlasenych', 'blok_skratka', 'blok_nazov', 'blok_index',
-    'v_bloku_index', 'odporucany_rocnik', 'cast', 'predmet_key'],
-    predmet_key=['skratka'])
+@with_key_fields(predmet_key=['skratka'])
+class ZapisPredmet(TypedDict):
+    skratka: str
+    nazov: str
+    typ_vyucby: str
+    semester: str
+    kredit: str
+    rozsah_vyucby: str
+    jazyk: str
+    datum_zapisu: str | None
+    aktualnost: str
+    pocet_prihlasenych: str | None
+    maximalne_prihlasenych: str | None
+    blok_skratka: str | None
+    blok_nazov: str | None
+    blok_index: str | None
+    v_bloku_index: str | None
+    odporucany_rocnik: str | None
+    cast: str
 
-ZapisVlastnost = namedtuple('ZapisVlastnost', [
-    'skratka', 'nazov', 'minimalny_kredit', 'poznamka'])
+class ZapisVlastnost(TypedDict):
+    skratka: str
+    nazov: str
+    minimalny_kredit: str
+    poznamka: str
 
-Hodnotenie = keyed_namedtuple('Hodnotenie', [
-    'akademicky_rok', 'skratka', 'nazov', 'typ_vyucby', 'semester', 'kredit',
-    'hodn_znamka', 'hodn_termin', 'hodn_datum', 'hodn_znamka_popis',
-    'nahradeny', 'poplatok', 'zapisny_list_key', 'predmet_key'],
-    predmet_key=['skratka'])
+@with_key_fields(predmet_key=['skratka'])
+class Hodnotenie(TypedDict):
+    akademicky_rok: str
+    skratka: str
+    nazov: str
+    typ_vyucby: str
+    semester: str
+    kredit: str
+    hodn_znamka: str
+    hodn_termin: str
+    hodn_datum: str
+    hodn_znamka_popis: str
+    nahradeny: bool
+    poplatok: str
+    zapisny_list_key: str
 
-PriebezneHodnotenie = namedtuple('PriebezneHodnotenie', [
-    'dovod', 'poc_bodov', 'maximum', 'zaevidoval', 'zapocitavat', 'minimum'])
+class PriebezneHodnotenie(TypedDict):
+    dovod: str
+    poc_bodov: str
+    maximum: str
+    zaevidoval: str
+    zapocitavat: str
+    minimum: str
 
-PriebezneHodnoteniaPredmetu = keyed_namedtuple('PriebezneHodnoteniaPredmetu', [
-    'akademicky_rok', 'skratka', 'nazov', 'semester', 'kredit', 'zaznamy',
-    'predmet_key'],
-    predmet_key=['skratka'])
+@with_key_fields(predmet_key=['skratka'])
+class PriebezneHodnoteniaPredmetu(TypedDict):
+    akademicky_rok: str
+    skratka: str
+    nazov: str
+    semester: str
+    kredit: str
+    zaznamy: list[PriebezneHodnotenie]
 
-Priemer = namedtuple('Priemer', [
-    'akademicky_rok', 'nazov', 'semester', 'ziskany_kredit', 'predmetov',
-    'neabsolvovanych', 'studijny_priemer', 'vazeny_priemer', 'pokusy_priemer',
-    'datum_vypoctu'])
+class Priemer(TypedDict):
+    akademicky_rok: str
+    nazov: str
+    semester: str
+    ziskany_kredit: str
+    predmetov: str
+    neabsolvovanych: str
+    studijny_priemer: str
+    vazeny_priemer: str
+    pokusy_priemer: str
+    datum_vypoctu: str
 
-Termin = keyed_namedtuple('Termin', [
-    'datum', 'cas', 'miestnost', 'pocet_prihlasenych',
-    'maximalne_prihlasenych', 'hodnotiaci', 'prihlasovanie', 'odhlasovanie',
-    'poznamka', 'akademicky_rok', 'nazov_predmetu', 'skratka_predmetu',
-    'moznost_prihlasit', 'datum_prihlasenia', 'datum_odhlasenia',
-    'hodnotenie_terminu', 'hodnotenie_predmetu', 'zapisny_list_key',
-    'predmet_key', 'termin_key'],
+@with_key_fields(
     predmet_key=['skratka_predmetu'],
-    termin_key=['zapisny_list_key', 'predmet_key', 'datum', 'cas', 'miestnost',
-        'poznamka'])
+    termin_key=['zapisny_list_key', 'predmet_key', 'datum', 'cas', 'miestnost', 'poznamka'],
+)
+class Termin(TypedDict):
+    datum: str
+    cas: str
+    miestnost: str
+    pocet_prihlasenych: str
+    maximalne_prihlasenych: str
+    hodnotiaci: str
+    prihlasovanie: str
+    odhlasovanie: str
+    poznamka: str
+    akademicky_rok: str
+    nazov_predmetu: str
+    skratka_predmetu: str
+    moznost_prihlasit: str
+    datum_prihlasenia: str
+    datum_odhlasenia: str
+    hodnotenie_terminu: str
+    hodnotenie_predmetu: str
+    zapisny_list_key: str
 
-PrihlasenyStudent = namedtuple('PrihlasenyStudent', [
-    'sp_skratka', 'datum_prihlasenia', 'plne_meno', 'rocnik', 'email'])
+class PrihlasenyStudent(TypedDict):
+    sp_skratka: str
+    datum_prihlasenia: str
+    plne_meno: str
+    rocnik: str
+    email: str
 
-Obdobie = namedtuple('Obdobie', ['obdobie_od', 'obdobie_do', 'id_akcie'])
+class Obdobie(TypedDict):
+    obdobie_od: str
+    obdobie_do: str
+    id_akcie: str
 
-RegUcitelPredmetu = namedtuple('RegUcitelPredmetu', ['plne_meno', 'typ'])
+class RegUcitelPredmetu(TypedDict):
+    plne_meno: str
+    typ: str
 
-RegOsoba = namedtuple('RegOsoba', ['meno', 'priezvisko', 'plne_meno', 'email'])
+class RegOsoba(TypedDict):
+    meno: str
+    priezvisko: str
+    plne_meno: str
+    email: str

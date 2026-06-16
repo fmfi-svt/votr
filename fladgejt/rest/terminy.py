@@ -1,6 +1,7 @@
 from fladgejt.base import BaseClient
 from fladgejt.helpers import decode_key
 from fladgejt.structures import Predmet, Termin
+from typing import Any, cast
 
 
 class RestTerminyMixin(BaseClient):
@@ -61,7 +62,7 @@ class RestTerminyMixin(BaseClient):
 
         for row in predmety:
             result.extend(self.get_vypisane_terminy_predmetu(
-                zapisny_list_key, row.predmet_key))
+                zapisny_list_key, cast(Any, row)['predmet_key']))
 
         return result
 
