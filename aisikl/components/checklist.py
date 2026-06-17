@@ -20,7 +20,7 @@ class Item:
 
     @override
     def __repr__(self) -> str:
-        return '<{} {}>'.format(self.__class__.__name__, repr(self.__dict__))
+        return f'<{self.__class__.__name__} {self.__dict__!r}>'
 
 
 class CheckList(Control):
@@ -56,8 +56,8 @@ class CheckList(Control):
         self._mark_changed()
 
     def select(self, index: int) -> None:
-        self.log('action', 'Selecting item "{}" {}'.format(
-            self.items[index].title, self.id))
+        self.log('action',
+            f'Selecting item "{self.items[index].title}" {self.id}')
         self.selected_index = index
 
     def toggle(self, index: int) -> None:
@@ -86,6 +86,6 @@ class CheckList(Control):
             item.rid = str(index)
 
         cdata = ('<root><selection>'
-            '<selectedIndexes>{}</selectedIndexes>'
-            '</selection></root>').format(selection)
+            f'<selectedIndexes>{selection}</selectedIndexes>'
+            '</selection></root>')
         return self._build_changed_properties(dataView=(True, True, cdata))

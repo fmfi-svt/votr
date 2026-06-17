@@ -24,7 +24,7 @@ class TabbedPane(Control):
         self.selected_index = really_int(value)
 
     def select(self, index: int) -> None:
-        self.log('action', 'Switching {} to tab {}'.format(self.id, index))
+        self.log('action', f'Switching {self.id} to tab {index}')
         self.selected_index = index
         self._fire_event()
 

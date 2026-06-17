@@ -50,7 +50,7 @@ class TextField(TextInput):
             self.tool_tip_text: str | None = ''
 
     def write(self, value: str) -> None:
-        self.log('action', 'Writing {} in {}'.format(repr(value), self.id))
+        self.log('action', f'Writing {value!r} in {self.id}')
         self.value = value
         self._mark_changed()
 

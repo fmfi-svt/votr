@@ -70,7 +70,7 @@ class NumberControl(TextInput):
         self.bdvalue = value.replace(self.decimal_point, '.')
 
     def write(self, bdvalue: str) -> None:
-        self.log('action', 'Writing {} in {}'.format(repr(bdvalue), self.id))
+        self.log('action', f'Writing {bdvalue!r} in {self.id}')
         self.bdvalue = bdvalue
         self.dialog.component_changes(self, False)
 

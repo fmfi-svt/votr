@@ -36,7 +36,7 @@ def find_row(objects: list[Row], **conditions: str | bool) -> int:
         if all(obj.cell(key).value == value
                 for key, value in conditions.items()):
             return index
-    raise KeyError("Object not found: {!r}".format(conditions))
+    raise KeyError(f"Object not found: {conditions!r}")
 
 
 def find_row_insensitive(objects: list[Row], **conditions: str) -> int:
@@ -45,7 +45,7 @@ def find_row_insensitive(objects: list[Row], **conditions: str) -> int:
         if all(ct(str, obj.cell(key).value).lower() == value.lower()
                for key, value in conditions.items()):
             return index
-    raise KeyError("Object not found: {!r}".format(conditions))
+    raise KeyError(f"Object not found: {conditions!r}")
 
 
 def find_option(objects: list[Option], **conditions: object) -> int:
@@ -65,7 +65,7 @@ def find_option(objects: list[Option], **conditions: object) -> int:
     for index, obj in enumerate(objects):
         if all(getattr(obj, key) == value for key, value in conditions.items()):
             return index
-    raise KeyError("Object not found: {!r}".format(conditions))
+    raise KeyError(f"Object not found: {conditions!r}")
 
 
 def with_key_fields[T](**key_fields: list[str]) -> Callable[[T], T]:

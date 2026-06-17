@@ -43,7 +43,7 @@ class Cell(NamedTuple):
     disabled: bool
 
 
-class Row(object):
+class Row:
     def __init__(self, id: int, rid: str, cells: list[Cell], table: Table) -> None:
         self.id = id
         self.rid = rid
@@ -70,8 +70,7 @@ def load_script_plain(data_view: Tag, id: str) -> str | None:
     script_element = data_view.find(id=id)
     if not script_element: return None
     if script_element.name != 'script':
-        raise AISParseError('Expected {} to be script instead of {}'.format(
-            id, script_element.name))
+        raise AISParseError(f'Expected {id} to be script instead of {script_element.name}')
     return script_element.get_text()[4:-3]   # always "<!--" and "-->"
 
 
@@ -182,7 +181,7 @@ class Table(Control):
 
         self.column_map = { col.alias: col for col in self.columns }
 
-        self.log('table', 'Found {} columns in {}'.format(len(self.columns), self.id), self.columns)
+        self.log('table', f'Found {len(self.columns)} columns in {self.id}', self.columns)
 
         self._load_rows(nn(load_script(data_view, 'dataTabBodies')),
                         load_script(data_view, 'dataTabBodiesFixed'))
@@ -286,20 +285,19 @@ class Table(Control):
         self.buffer_size = 50 if value is None else really_int(value)
 
     def switch_row_numbers_visible(self) -> None:
-        self.log('action', 'Switching row numbers visibility in {}'.format(self.id))
+        self.log('action', f'Switching row numbers visibility in {self.id}')
         self.row_numbers_visible = not self.row_numbers_visible
         self.row_numbers_visible_changed = True
         self.dialog.component_changes(self, True)
 
     def switch_status_visible(self) -> None:
-        self.log('action', 'Switching status bar visibility in {}'.format(self.id))
+        self.log('action', f'Switching status bar visibility in {self.id}')
         self.status_visible = not self.status_visible
         self.status_visible_changed = True
         self.dialog.component_changes(self, True)
 
     def on_column_move(self, column_alias: str, after_column_alias: str) -> None: # TODO inline into actual column move fn
-        self.log('action', 'Moving {} to be after {} in {}'.format(
-            column_alias, after_column_alias, self.id))
+        self.log('action', f'Moving {column_alias} to be after {after_column_alias} in {self.id}')
         ev = table_header_event(
             self, column_alias, after_column_alias, None, 'MOVE_COLUMN')
         self.dialog.app.send_events(ev)
@@ -391,12 +389,11 @@ class Table(Control):
 
         if self.selection_changed or self.active_index_changed:
             cdata.append("<selection{}>".format(" invertedSelection='true'" if self.inverted_selection else ""))
-            cdata.append("<activeIndex>{}</activeIndex>".format(
-                -1 if self.cursor_row_index is None else self.cursor_row_index))
+            cdata.append(f"<activeIndex>{-1 if self.cursor_row_index is None else self.cursor_row_index}</activeIndex>")
             cdata.append("<selectedIndexes>{}</selectedIndexes>".format(','.join(map(str, self.selected_row_indexes))))
             cdata.append("</selection>")
             if self.selected_column_alias:
-                cdata.append("<selectedColumnAlias>{}</selectedColumnAlias>".format(self.selected_column_alias))
+                cdata.append(f"<selectedColumnAlias>{self.selected_column_alias}</selectedColumnAlias>")
             self.selection_changed = False
             # TODO: AIS doesn't do it, but we should probably unset active_index_changed too
 
@@ -430,14 +427,14 @@ class Table(Control):
                     type = 'number'
                 else:
                     type = 'string'
-                cdata.append("<cell row='{}' alias='{}' type='{}'>{}</cell>".format(row_index, alias, type, value))
+                cdata.append(f"<cell row='{row_index}' alias='{alias}' type='{type}'>{value}</cell>")
             cdata.append("</editedCells>")
             self.changed_cells.clear()
             self.last_changed_row_index = None
             self.edited_cells = False
 
         if self.deleted_rows or self.up_downed_rows:
-            cdata.append("<upDownedRows>{}</upDownedRows>".format(self._get_rows_ids()))   # TODO: not implemented yet # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue, reportUnknownArgumentType, reportUnknownMemberType]
+            cdata.append(f"<upDownedRows>{self._get_rows_ids()}</upDownedRows>")   # TODO: not implemented yet # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue, reportUnknownArgumentType, reportUnknownMemberType]
             self._table_model_reset_rows_ids()   # TODO: not implemented yet # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType]
             self.deleted_rows = False
             self.up_downed_rows = False
@@ -479,7 +476,7 @@ class Table(Control):
 
         data_send_type = data_tab_bodies.get('datasendtype', 'update')
         if data_send_type == 'info':
-            self.log('table', 'Updating info in {}'.format(self.id))
+            self.log('table', f'Updating info in {self.id}')
             return
 
         if data_tab_bodies.find(id='dataTabTmp'):
@@ -583,7 +580,7 @@ class Table(Control):
 
     def scroll_down(self, buffers: int=1) -> None:
         if self.is_end_of_data: return
-        self.log('action', 'Scrolling down in {}'.format(self.id))
+        self.log('action', f'Scrolling down in {self.id}')
         self.num_visible_buffers += buffers
         self.scrolled_vertically = True
         self.dialog.component_changes(self, True)
@@ -637,11 +634,11 @@ class Table(Control):
             raise AISBehaviorError('empty selection not supported for this table')
 
         self.log('action', 'Selecting {}{}{} {}{} in {}'.format(
-            'column {} of '.format(column_alias) if column_alias else '',
+            f'column {column_alias} of ' if column_alias else '',
             'inverted ' if inverted else '',
             'rows' if len(indexes) > 1 else 'row',
             ', '.join(map(str, indexes)),
-            ' with cursor at {}'.format(cursor) if indexes != [cursor] else '',
+            f' with cursor at {cursor}' if indexes != [cursor] else '',
             self.id))
 
         was_multiple_selection = len(self.selected_row_indexes) > 1
@@ -701,8 +698,7 @@ class Table(Control):
             column_alias=(alias if self.cell_selection_mode else None),
             _skip_event=(is_checkbox and send_edit_cell))
 
-        self.log('action', 'Setting cell {} of row {} in {} to {!r}'.format(
-            alias, row_index, self.id, value))
+        self.log('action', f'Setting cell {alias} of row {row_index} in {self.id} to {value!r}')
 
         cell = row.cells[column.index] = cell._replace(value=value)
 

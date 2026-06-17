@@ -508,9 +508,10 @@ def _canonicalize(jsonstr, old_log):
 
 
 def _sort_xml(xml_spec, parent, item):
-    pattern1 = r'(<{p}>\n*)(<{i}[ >].*</{i}>)(\n*</{p}>)'.format(
-        p=re.escape(parent), i=re.escape(item))
-    pattern2 = r'(?=<{i}[ >])'.format(i=re.escape(item))
+    p = re.escape(parent)
+    i = re.escape(item)
+    pattern1 = rf'(<{p}>\n*)(<{i}[ >].*</{i}>)(\n*</{p}>)'
+    pattern2 = rf'(?=<{i}[ >])'
     def replacer(m):
         group2 = ''.join(sorted(re.split(pattern2, m.group(2))))
         return f'{m.group(1)}[xml sorted]{group2}[/xml sorted]{m.group(3)}'

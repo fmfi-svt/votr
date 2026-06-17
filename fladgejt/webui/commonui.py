@@ -42,7 +42,7 @@ class WebuiCommonUIMixin:
                 assert_ops(ops, 'openDialog')
 
                 if ops[0].args[0]['code'] != 'SSSC001':
-                    raise AISBehaviorError("AIS opened an unexpected dialog: {}".format(ops))
+                    raise AISBehaviorError(f"AIS opened an unexpected dialog: {ops}")
 
                 app.awaited_open_dialog(ops)
                 try:

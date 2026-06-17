@@ -206,8 +206,7 @@ def parse_response(soup: BeautifulSoup) -> tuple[list[Operation], list[Update]]:
             target, method, args_str = match.groups()
             args = _parse_args(args_str)
             if method not in known_operations[target]:
-                raise AISParseError("Unknown method {}().{}()".format(
-                    target, method))
+                raise AISParseError(f"Unknown method {target}().{method}()")
             operations.append(Operation(target, method, args))
             continue
 
@@ -225,7 +224,7 @@ def parse_response(soup: BeautifulSoup) -> tuple[list[Operation], list[Update]]:
             updates.append(Update(target, target, method, args))
             continue
 
-        raise AISParseError("Couldn't parse script line: {}".format(line))
+        raise AISParseError(f"Couldn't parse script line: {line}")
 
     return (operations, updates)
 
@@ -326,8 +325,7 @@ class Application[D]:
 
         match = re.search(r'appClassName=([a-zA-Z0-9_\.]*)', url)
         self.class_name = match.group(1) if match else None
-        self.ctx.log('operation', 'Opening application {}'.format(
-            self.class_name), url)
+        self.ctx.log('operation', f'Opening application {self.class_name}', url)
 
         app_soup = self.ctx.request_html(url)
         if not app_soup.find(id='webuiProperties'):
@@ -440,8 +438,7 @@ class Application[D]:
         self._process_response(soup)
 
     def _send_request(self, body: str) -> BeautifulSoup:
-        xml_spec = '<request> <serial>{}</serial>\n{}</request>\n'.format(
-            self.serial, body)
+        xml_spec = f'<request> <serial>{self.serial}</serial>\n{body}</request>\n'
         self.serial += 1
 
         params = self._prepare_url_base()
@@ -469,21 +466,21 @@ class Application[D]:
 
         for operation in operations:
             self.ctx.log('operation',
-                'Received operation {}'.format(operation.method), operation)
+                f'Received operation {operation.method}', operation)
 
         operations = self._filter_operations(operations)
 
         if operations:
             if self.collector is None:
                 raise AISBehaviorError(
-                    "AIS did an unexpected operation: {}".format(operations),
+                    f"AIS did an unexpected operation: {operations}",
                     operations=operations)
 
             self.collector.extend(operations)
 
         if updates:
             self.ctx.log('update',
-                'Updating {} components'.format(len(updates)), updates)
+                f'Updating {len(updates)} components', updates)
 
         for update in updates:
             try:
@@ -534,7 +531,7 @@ class Application[D]:
         '''
         self._do_request(
             '<changedProps><changedProperties><propertyValues><nameValue>' +
-            '<name>{}</name><value>{}</value>'.format(name, value) +
+            f'<name>{name}</name><value>{value}</value>' +
             '</nameValue></propertyValues></changedProperties></changedProps>')
 
     def force_close(self) -> bool:
@@ -552,7 +549,7 @@ class Application[D]:
         '''
         self.close_all_dialogs()
         self.ctx.log('operation',
-            'Sending WebUIKillEvent to {}'.format(self.class_name))
+            f'Sending WebUIKillEvent to {self.class_name}')
         soup = self._send_request(
             "<events><ev><event class='avc.framework.webui.WebUIKillEvent'/>"
             "</ev></events>\n")
@@ -590,13 +587,13 @@ class Application[D]:
         if not self.dialog_stack: return False
         THRESHOLD = 5 * 60
         if time.time() - self.last_response_time > THRESHOLD:
-            self.ctx.log('operation', 'Checking if {} is still open'.format(
-                self.class_name))
+            self.ctx.log('operation',
+                f'Checking if {self.class_name} is still open')
             try:
                 self.send_empty_request()
             except AISApplicationClosedError:
-                self.ctx.log('operation', 'Server already closed {}'.format(
-                    self.class_name))
+                self.ctx.log('operation',
+                    f'Server already closed {self.class_name}')
                 return False
         return True
 
@@ -607,8 +604,7 @@ class Application[D]:
         Returns:
             An `(app, ops)` tuple, just like :meth:`open`.
         '''
-        url = ('/ais/servlets/WebUIServlet?appClassName={}{}&'
-               'antiCache={}').format(url, params, time.time())
+        url = f'/ais/servlets/WebUIServlet?appClassName={url}{params}&antiCache={time.time()}'
         return Application[D2].open(self.ctx, url, ignored_messages)
 
     def open_main_dialog(self, props: dict[str, object]) -> Dialog:
@@ -646,10 +642,9 @@ class Application[D]:
         modals = [d for d in self.dialog_stack if d.modal]
         self.active_dialog = modals[-1] if modals else dialog
 
-        url = '/ais/servlets/WebUIServlet?{}&form={}'.format(
-            '&'.join('{}={}'.format(k, v)
-                     for k, v in self._prepare_url_base().items()),
-            name)
+        url_params = '&'.join(
+            f'{k}={v}' for k, v in self._prepare_url_base().items())
+        url = f'/ais/servlets/WebUIServlet?{url_params}&form={name}'
         dialog._init(url)  # pyright: ignore [reportPrivateUsage]
 
         return dialog
@@ -660,11 +655,10 @@ class Application[D]:
         '''
         dialog = self.dialogs[name]
 
-        self.ctx.log('operation', 'Refreshing dialog {} "{}"'.format(
-            dialog.name, dialog.title))
+        self.ctx.log('operation',
+            f'Refreshing dialog {dialog.name} "{dialog.title}"')
 
-        url = ('/ais/servlets/WebUIServlet?appId={}&form={}&antiCache={}'.
-            format(self.app_id, dialog.name, time.time()))
+        url = f'/ais/servlets/WebUIServlet?appId={self.app_id}&form={dialog.name}&antiCache={time.time()}'
         dialog._init(url)  # pyright: ignore [reportPrivateUsage]
 
     def close_dialog(self, name: str, is_native: bool=False) -> None:
@@ -677,7 +671,7 @@ class Application[D]:
         if not dialog:
             return
 
-        self.ctx.log('operation', 'Closing dialog {}'.format(name))
+        self.ctx.log('operation', f'Closing dialog {name}')
 
         self.dialog_stack.remove(dialog)
         del self.dialogs[name]
@@ -719,8 +713,8 @@ class Application[D]:
         Args:
             option_index: webui index of the button to be clicked
         '''
-        self.ctx.log('operation', 'Selecting button {} in confirm box'.format(
-            option_index))
+        self.ctx.log('operation',
+            f'Selecting button {option_index} in confirm box')
         self._send_namevalue_request('confirmResult', option_index)
 
     def abort_box(self, message: str, title: object=None) -> None:
@@ -745,11 +739,13 @@ class Application[D]:
             raise AISParseError("webui/execCustomFunction is not supported")
 
         file_name = file_name.rpartition('/')[2]
-        url = ('/ais/files/{}?appId={}&contentType={}&antiCache={}&file={}'
-            .format(urllib.parse.quote(file_name), self.app_id, content_type,
-                    time.time(), urllib.parse.quote(file_name)))
+        url = (
+            f'/ais/files/{urllib.parse.quote(file_name)}'
+            f'?appId={self.app_id}&contentType={content_type}'
+            f'&antiCache={time.time()}&file={urllib.parse.quote(file_name)}'
+        )
 
-        self.ctx.log('operation', 'Downloading "{}"'.format(file_name))
+        self.ctx.log('operation', f'Downloading "{file_name}"')
 
         response = self.ctx.request_ais(url)
 

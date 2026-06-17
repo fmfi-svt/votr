@@ -160,10 +160,10 @@ class Dialog:
 
     def click_close_button(self) -> None:
         if not self.closeable:
-            raise ValueError("Dialog {} has no close button".format(self.name))
+            raise ValueError(f"Dialog {self.name} has no close button")
         # TODO: Return unless "self.enabled" is True.
 
         self.app.ctx.log('action',
-            'Pressing close button of {}'.format(self.name))
+            f'Pressing close button of {self.name}')
         ev = component_event(self.body, 'close', 'CLOSE')
         self.app.send_events(ev)

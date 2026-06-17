@@ -45,7 +45,7 @@ class Action(Component):
             pass
 
         if not original_source_name:
-            self.log('action', 'Executing {}'.format(self.id))
+            self.log('action', f'Executing {self.id}')
 
         ev = action_event(self, None, original_source_name or self.id, params)
         # TODO: We should technically ask confirm_question before firing

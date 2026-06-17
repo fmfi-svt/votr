@@ -160,11 +160,11 @@ def process_logfiles(app, files):
     _connect(app).commit()
 
     if errors:
-        msgs = ['{} errors occurred while processing logs:'.format(len(errors))]
+        msgs = [f'{len(errors)} errors occurred while processing logs:']
         for filename, exc_info in errors:
             errmsg = ''.join(traceback.format_exception(*exc_info))
             msgs.append(
-                '{}:\n'.format(filename) +
+                f'{filename}:\n' +
                 '\n'.join('    ' + line for line in errmsg.split('\n')))
         raise Exception('\n\n'.join(msgs))
 

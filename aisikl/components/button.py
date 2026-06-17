@@ -28,7 +28,7 @@ class Button(ActionableControl):
         self.confirm_question = ct_none(str, value)
 
     def click(self) -> None:
-        self.log('action', 'Clicking {}'.format(self.id))
+        self.log('action', f'Clicking {self.id}')
 
         if self.try_execute_action(): return
 

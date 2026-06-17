@@ -13,7 +13,7 @@ class TextArea(TextControl):
         self.value = nn(element).get_text()
 
     def write(self, value: str) -> None:
-        self.log('action', 'Writing {} in {}'.format(repr(value), self.id))
+        self.log('action', f'Writing {value!r} in {self.id}')
         self.value = value
         self.dialog.component_changes(self, False)
 

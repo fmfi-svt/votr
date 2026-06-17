@@ -17,7 +17,7 @@ class UpDown(Control):
     def click(self, command: str) -> None:
         if command not in ('UP', 'DOWN', 'TOP', 'BOTTOM'):
             raise ValueError('wrong UpDown command')
-        self.log('action', 'Clicking {} {}'.format(self.id, command.lower()))
+        self.log('action', f'Clicking {self.id} {command.lower()}')
         if (
             (udc_id := self.up_downed_component) is not None and
             (udc := self.dialog.components.get(udc_id)) is not None

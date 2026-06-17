@@ -23,7 +23,7 @@ class MenuItem(ActionableControl):
         self.image = ct_none(str, value)
 
     def click(self, params: str | None=None) -> None:
-        self.log('action', 'Clicking {}'.format(self.id))
+        self.log('action', f'Clicking {self.id}')
 
         if self.try_execute_action(params): return
 

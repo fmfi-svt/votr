@@ -38,8 +38,8 @@ class ComboBox(Control):
         return self.options[self.selected_index]
 
     def select(self, index: int) -> None:
-        self.log('action', 'Selecting "{}" in {}'.format(
-            self.options[index].title, self.id))
+        self.log('action',
+            f'Selecting "{self.options[index].title}" in {self.id}')
         self.selected_index = index
         self._fire_event()
 
@@ -51,8 +51,8 @@ class ComboBox(Control):
     @override
     def changed_properties(self) -> str:
         cdata = ('<root><selection>'
-            '<selectedIndexes>{}</selectedIndexes>'
-            '</selection></root>').format(self.selected_index)
+            f'<selectedIndexes>{self.selected_index}</selectedIndexes>'
+            '</selection></root>')
         return self._build_changed_properties(dataView=(True, True, cdata))
 
     def _ais_setDataView(self, id: str, body: Tag) -> None:

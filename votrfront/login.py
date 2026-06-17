@@ -196,7 +196,7 @@ def do_logout(request):
                 session['client'].logout()
             except Exception as e:
                 log('logout',
-                    'Logout failed with {}'.format(type(e).__name__),
+                    f'Logout failed with {type(e).__name__}',
                     traceback.format_exc())
                 # But delete the session anyway.
             else:
@@ -247,7 +247,7 @@ def finish_login(request, get_params):
         except Exception as e:
             error = traceback.format_exc()
             logger.log('login',
-                'Login failed with {}'.format(type(e).__name__), error)
+                f'Login failed with {type(e).__name__}', error)
             app_kwargs = { 'error': error, 'destination': destination or '' }
             if server:
                 app_kwargs['server'] = params['server']

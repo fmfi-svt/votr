@@ -79,7 +79,7 @@ class WebuiObdobiaMixin(BaseClient):
         elif semester == "Z":
             return self.get_obdobie('05', akademicky_rok)
         else:
-            raise ValueError('Wrong type of semester "{0}"'.format(semester))
+            raise ValueError(f'Wrong type of semester "{semester}"')
 
     def get_skuskove_obdobie(self, semester: str, akademicky_rok: str | None=None) -> Obdobie:
         '''Returns a time range of a given examination period.
@@ -97,4 +97,4 @@ class WebuiObdobiaMixin(BaseClient):
         elif semester == "Z":
             return self.get_obdobie('06', akademicky_rok)
         else:
-            raise ValueError('Wrong type of semester "{0}"'.format(semester))
+            raise ValueError(f'Wrong type of semester "{semester}"')

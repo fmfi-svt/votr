@@ -36,7 +36,7 @@ def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[PortalApp]
         _, _, module = ct(str, menu_link['href']).partition('changeModul.do?modul=')
         if not module: continue
 
-        ctx.log('portal', 'Opening section "{}"'.format(menu_link.get_text()))
+        ctx.log('portal', f'Opening section "{menu_link.get_text()}"')
         applist_soup = ctx.request_html(
             '/ais/portal/changeModul.do?modul=' + module)
 

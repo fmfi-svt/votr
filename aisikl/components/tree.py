@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 
 # Not a namedtuple, because 'expanded' and 'checked' can change.
-class Node(object):
+class Node:
     def __init__(self, id: str, is_leaf: bool, type: str, expanded: bool | None, checked: bool | None, title: str) -> None:
         self.id = id
         self.is_leaf = is_leaf
@@ -25,7 +25,7 @@ class Node(object):
 
     @override
     def __repr__(self) -> str:
-        return '<{} {}>'.format(self.__class__.__name__, repr(self.__dict__))
+        return f'<{self.__class__.__name__} {self.__dict__!r}>'
 
 
 def _synchronizer_to_cdata(sync: dict[str, bool], true_name: str, false_name: str) -> str:
@@ -33,8 +33,7 @@ def _synchronizer_to_cdata(sync: dict[str, bool], true_name: str, false_name: st
     if true_keys: true_keys = "|" + true_keys + "|"
     false_keys = "|".join(k for k in sync if not sync[k])
     if false_keys: false_keys = "|" + false_keys + "|"
-    return "<{}>{}</{}><{}>{}</{}>".format(
-        true_name, true_keys, true_name, false_name, false_keys, false_name)
+    return f"<{true_name}>{true_keys}</{true_name}><{false_name}>{false_keys}</{false_name}>"
 
 
 class Tree(Control):
@@ -115,11 +114,11 @@ class Tree(Control):
 
         if self.selection_changed:
             selected_paths = '|'.join(id[1:] for id in self.selection)
-            cdata.append("<selectedPaths>{}</selectedPaths>".format(selected_paths))
+            cdata.append(f"<selectedPaths>{selected_paths}</selectedPaths>")
             self.selection_changed = False
 
         if self.active_id:
-            cdata.append("<activePath>{}</activePath>".format(self.active_id[1:]))
+            cdata.append(f"<activePath>{self.active_id[1:]}</activePath>")
 
         if self.expansion_changed and self.expansion_synchronizer:
             cdata.append(_synchronizer_to_cdata(

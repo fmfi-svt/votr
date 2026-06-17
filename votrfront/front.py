@@ -61,7 +61,7 @@ static_path = os.path.join(os.path.dirname(__file__), 'static/')
 
 def static_url(filename):
     mtime = int(os.path.getmtime(static_path + filename))
-    return 'static/{}?v={}'.format(filename, mtime)
+    return f'static/{filename}?v={mtime}'
 
 
 def process_server(server):
@@ -182,8 +182,7 @@ def front(request):
                 session['client'].check_connection()
             except Exception as e:
                 log('front',
-                    'Front session check failed with {}'.format(
-                        type(e).__name__),
+                    f'Front session check failed with {type(e).__name__}',
                     traceback.format_exc())
                 raise
             log('front', 'Front session check finished')
