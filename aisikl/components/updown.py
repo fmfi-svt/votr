@@ -14,27 +14,27 @@ class UpDown(Control):
         self.up_downed_component = ct_none(str, properties.get('upDownedComponent'))
         self.top_bottom_enabled = ct(bool, properties.get('topBottomEnabled', False))
 
-    def click(self, command: str) -> None:
+    async def click(self, command: str) -> None:
         if command not in ('UP', 'DOWN', 'TOP', 'BOTTOM'):
             raise ValueError('wrong UpDown command')
-        self.log('action', f'Clicking {self.id} {command.lower()}')
+        await self.log('action', f'Clicking {self.id} {command.lower()}')
         if (
             (udc_id := self.up_downed_component) is not None and
             (udc := self.dialog.components.get(udc_id)) is not None
         ):
-            udc.up_down_row(command)  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportUnknownMemberType, reportAttributeAccessIssue] # If it's not Table|CheckList, this will raise.
+            await udc.up_down_row(command)  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportUnknownMemberType, reportAttributeAccessIssue] # If it's not Table|CheckList, this will raise.
         else:
             ev = action_event(self, command, self.id)
-            self.dialog.app.send_events(ev)
+            await self.dialog.app.send_events(ev)
 
-    def click_up(self) -> None:
-        self.click('UP')
+    async def click_up(self) -> None:
+        await self.click('UP')
 
-    def click_down(self) -> None:
-        self.click('DOWN')
+    async def click_down(self) -> None:
+        await self.click('DOWN')
 
-    def click_top(self) -> None:
-        self.click('TOP')
+    async def click_top(self) -> None:
+        await self.click('TOP')
 
-    def click_bottom(self) -> None:
-        self.click('BOTTOM')
+    async def click_bottom(self) -> None:
+        await self.click('BOTTOM')

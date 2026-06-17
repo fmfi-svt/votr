@@ -51,13 +51,13 @@ class Dialog:
         self.components: dict[str, Component] = {}
         self.changed_components: dict[str, Literal[True]] | None = None
 
-    def _init(self, url: str) -> None:
+    async def _init(self, url: str) -> None:
         '''Load the dialog body.
 
         Called from :meth:`aisikl.app.Application.open_dialog`.
         '''
-        dialog_soup = self.app.ctx.request_html(url)
-        self.app.ctx.log('benchmark', 'Begin dialog initialization')
+        dialog_soup = await self.app.ctx.request_html(url)
+        await self.app.ctx.log('benchmark', 'Begin dialog initialization')
 
         body = nn(dialog_soup.body)
         first_element_child = body.find(True)
@@ -100,12 +100,13 @@ class Dialog:
                 raise AISParseError("Unsupported component type: %r" % type)
             component = component_classes[type](
                 self, id, type, parent_id, properties, element)
+            await component.async_init(element)
 
             self.components[id] = component
 
         self.body = self.components[self.name]
 
-        self.app.ctx.log('benchmark', 'End dialog initialization')
+        await self.app.ctx.log('benchmark', 'End dialog initialization')
 
     if not TYPE_CHECKING:
         def __getattr__(self, name: str) -> Component:
@@ -158,12 +159,12 @@ class Dialog:
             self.changed_components[component.id] = True
             self.try_interactive(component, 'change')
 
-    def click_close_button(self) -> None:
+    async def click_close_button(self) -> None:
         if not self.closeable:
             raise ValueError(f"Dialog {self.name} has no close button")
         # TODO: Return unless "self.enabled" is True.
 
-        self.app.ctx.log('action',
+        await self.app.ctx.log('action',
             f'Pressing close button of {self.name}')
         ev = component_event(self.body, 'close', 'CLOSE')
-        self.app.send_events(ev)
+        await self.app.send_events(ev)

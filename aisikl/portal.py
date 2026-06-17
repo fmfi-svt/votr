@@ -12,7 +12,7 @@ class PortalApp(NamedTuple):
     description: str
 
 
-def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[PortalApp]]]]]:
+async def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[PortalApp]]]]]:
     '''Downloads the main menu of AIS and return the list of modules.
 
     The separate pages of the main menu are called "modules", and the sections
@@ -26,8 +26,8 @@ def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[PortalApp]
         ``(name, apps)`` tuple, and every app is an object with ``id``,
         ``url``, ``title`` and ``description``.
     '''
-    ctx.log('portal', 'Opening main menu')
-    front_soup = ctx.request_html('/ais/portal/changeTab.do?tab=0')
+    await ctx.log('portal', 'Opening main menu')
+    front_soup = await ctx.request_html('/ais/portal/changeTab.do?tab=0')
 
     results: list[tuple[str, list[tuple[str, list[PortalApp]]]]] = []
 
@@ -36,8 +36,8 @@ def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[PortalApp]
         _, _, module = ct(str, menu_link['href']).partition('changeModul.do?modul=')
         if not module: continue
 
-        ctx.log('portal', f'Opening section "{menu_link.get_text()}"')
-        applist_soup = ctx.request_html(
+        await ctx.log('portal', f'Opening section "{menu_link.get_text()}"')
+        applist_soup = await ctx.request_html(
             '/ais/portal/changeModul.do?modul=' + module)
 
         submodules: list[tuple[str, list[PortalApp]]] = []
@@ -60,7 +60,7 @@ def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[PortalApp]
     return results
 
 
-def get_apps(ctx: Context) -> dict[str, PortalApp]:
+async def get_apps(ctx: Context) -> dict[str, PortalApp]:
     '''Downloads the main menu of AIS and returns the visible applications.
 
     Args:
@@ -71,7 +71,7 @@ def get_apps(ctx: Context) -> dict[str, PortalApp]:
         structure is not preserved.
     '''
     result: dict[str, PortalApp] = {}
-    modules = get_modules(ctx)
+    modules = await get_modules(ctx)
     for _module_name, submodules in modules:
         for _submodule_name, apps in submodules:
             for app in apps:

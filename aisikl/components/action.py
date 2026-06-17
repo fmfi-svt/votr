@@ -36,7 +36,7 @@ class Action(Component):
         return [cast('Button | MenuItem', o) for o in self.get_components()
                 if o.component_type in ('button', 'menuItem')]
 
-    def execute(self, original_source_name: str | None=None, params: str | None=None) -> None:
+    async def execute(self, original_source_name: str | None=None, params: str | None=None) -> None:
         '''Executes the action and emits the appropriate event.'''
         if not (self.accessible and self.enabled and self.enabled_in_ui and
                 self.visible and self.visible_in_ui):
@@ -45,12 +45,12 @@ class Action(Component):
             pass
 
         if not original_source_name:
-            self.log('action', f'Executing {self.id}')
+            await self.log('action', f'Executing {self.id}')
 
         ev = action_event(self, None, original_source_name or self.id, params)
         # TODO: We should technically ask confirm_question before firing
         # (if ev.listening is True), but we probably don't care.
-        self.dialog.app.send_events(ev)
+        await self.dialog.app.send_events(ev)
 
     def _ais_setAccessible(self, value: object) -> None:
         self.accessible = is_true(value)

@@ -71,6 +71,7 @@ is not much variety. Most happen in Context.request_ais() while waiting for AIS.
 See also: https://docs.python.org/3/library/signal.html#handlers-and-exceptions
 """
 
+import asyncio
 import json
 import traceback
 from werkzeug.routing import Rule
@@ -191,30 +192,30 @@ class RpcHandler:
                     # fails, don't write "RPC failed". If sending "RPC started"
                     # to the client fails, log "RPC failed" to log_file.
                     self.capture_log = True
-                    session['client'].context.log(
-                        'rpc', f'RPC {name} started', args)
+                    asyncio.run(session['client'].context.log(
+                        'rpc', f'RPC {name} started', args))
 
                     try:
                         self.send_json(self.captured_log)
-                        session['client'].prepare_for_rpc()
+                        asyncio.run(session['client'].prepare_for_rpc())
                         method = getattr(session['client'], name)
-                        result = encode_result(method(*args))
+                        result = encode_result(asyncio.run(method(*args)))
                     except BaseException as e:
                         # See the file comment about catching BaseException too.
                         self.seen_error(e)
                         session['client'].last_rpc_failed = True
-                        session['client'].context.log(
+                        asyncio.run(session['client'].context.log(
                             'rpc',
                             f'RPC {name} failed with {type(e).__name__}',
-                            traceback.format_exc())
+                            traceback.format_exc()))
                         e.votr_rpc_dont_log_to_wsgi_errors = True
                         raise
 
                     # If writing this to log_file fails, we'll end up with an
                     # unmatched "RPC started". And if this send_json fails,
                     # log_file will look like a complete success. But oh well.
-                    session['client'].context.log(
-                        'rpc', f'RPC {name} finished', result)
+                    asyncio.run(session['client'].context.log(
+                        'rpc', f'RPC {name} finished', result))
 
                     self.send_json({ 'result': result })
 

@@ -1,4 +1,5 @@
 import argparse
+import asyncio
 import base64
 from collections import deque, namedtuple
 import contextlib
@@ -27,7 +28,7 @@ class MockRunner:
     FAKE_AIS_URL = 'https://ais.invalid/'
     FAKE_REST_URL = 'https://rest.invalid/'
 
-    def run(self, body, expected_logs, *, print, old_log, fail_fast):
+    async def run(self, body, expected_logs, *, print, old_log, fail_fast):
         self.expected_logs = deque(_preprocess_expected_logs(
             expected_logs, old_log))
         self.responses = deque(_prepare_http_responses(self.expected_logs))
@@ -46,7 +47,7 @@ class MockRunner:
             time.time = self._mock_time
             Logger.send_log = self._mock_send_log
             Session.request = self._mock_request
-            body()
+            await body()
         except _FailFast:
             count = len(self.expected_logs)
             if count:
@@ -523,7 +524,7 @@ class ConnectionError(Exception): pass
 class _FailFast(BaseException): pass
 
 
-def scenario_main(run, *, anonymous=False):
+async def _scenario_main_async(run, anonymous):
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--save', type=pathlib.Path, metavar='FILENAME',
@@ -548,13 +549,13 @@ def scenario_main(run, *, anonymous=False):
 
     options = parser.parse_args()
 
-    def body():
-        client.context.log('scenario', 'Scenario started')
+    async def body():
+        await client.context.log('scenario', 'Scenario started')
         try:
-            result = run(client)
-            client.context.log('scenario', 'Scenario finished', result)
+            result = await run(client)
+            await client.context.log('scenario', 'Scenario finished', result)
         except Exception as e:
-            client.context.log('scenario',
+            await client.context.log('scenario',
                 f'Scenario failed with {type(e).__name__}',
                 traceback.format_exc())
 
@@ -578,7 +579,7 @@ def scenario_main(run, *, anonymous=False):
                 client.context.logger.log_file = es.enter_context(
                     options.save.open('w'))
 
-            ok = MockRunner().run(
+            ok = await MockRunner().run(
                 body, entries, print=print,
                 old_log=False, fail_fast=options.fail_fast)
 
@@ -617,7 +618,7 @@ def scenario_main(run, *, anonymous=False):
                     ais_url=ais_url,
                     ais_cookie='JSESSIONID',
                 )
-                client = create_client(server, params)
+                client = await create_client(server, params)
 
             if options.save:
                 client.context.logger.log_file = es.enter_context(
@@ -627,4 +628,8 @@ def scenario_main(run, *, anonymous=False):
 
             time.time = lambda: 0.0
 
-            body()
+            await body()
+
+
+def scenario_main(run, *, anonymous=False):
+    asyncio.run(_scenario_main_async(run, anonymous))

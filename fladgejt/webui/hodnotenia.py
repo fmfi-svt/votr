@@ -25,9 +25,9 @@ else:
 
 
 class WebuiHodnoteniaMixin(WebuiStudiumMixin):
-    def get_hodnotenia(self, zapisny_list_key: str) -> tuple[list[Hodnotenie], str | None]:
+    async def get_hodnotenia(self, zapisny_list_key: str) -> tuple[list[Hodnotenie], str | None]:
         try:
-            app = self._open_hodnotenia_priemery_app(zapisny_list_key)
+            app = await self._open_hodnotenia_priemery_app(zapisny_list_key)
         except CantOpenApplication:
             return ([], "Predmety a hodnotenia pre tento zápisný list nie sú dostupné.")
 
@@ -35,7 +35,7 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
         if getattr(app, 'freshly_opened', True):
             app.freshly_opened = False  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue]
         else:
-            app.d.refreshButton.click()
+            await app.d.refreshButton.click()
 
         _studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
@@ -52,12 +52,12 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
                              nahradeny=(row['nahradzaMa'] != ''),
                              poplatok=row['poplatok'],
                              zapisny_list_key=zapisny_list_key)
-                  for row in app.d.hodnoteniaTable.all_rows()]
+                  for row in await app.d.hodnoteniaTable.all_rows()]
         return (result, None)
 
-    def get_priemery(self, zapisny_list_key: str) -> tuple[list[Priemer], str | None]:
+    async def get_priemery(self, zapisny_list_key: str) -> tuple[list[Priemer], str | None]:
         try:
-            app = self._open_hodnotenia_priemery_app(zapisny_list_key)
+            app = await self._open_hodnotenia_priemery_app(zapisny_list_key)
         except CantOpenApplication:
             return ([], "Priemery pre toto štúdium nie sú dostupné.")
 
@@ -73,12 +73,12 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
                           vazeny_priemer=row['vazPriemer'],
                           pokusy_priemer=row['pokusyPriemer'],
                           datum_vypoctu=row['priemerInfoDatum'])
-                  for row in app.d.priemeryTable.all_rows()]
+                  for row in await app.d.priemeryTable.all_rows()]
         return (result, None)
 
-    def get_priebezne_hodnotenia(self, zapisny_list_key: str) -> tuple[list[PriebezneHodnoteniaPredmetu], str | None]:
+    async def get_priebezne_hodnotenia(self, zapisny_list_key: str) -> tuple[list[PriebezneHodnoteniaPredmetu], str | None]:
         try:
-            app = self._open_priebezne_hodnotenie_app(zapisny_list_key)
+            app = await self._open_priebezne_hodnotenie_app(zapisny_list_key)
         except CantOpenApplication:
             return ([], "Priebežné hodnotenia pre tento zápisný list nie sú dostupné.")
 
@@ -86,20 +86,20 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
         if getattr(app, 'freshly_opened', True):
             app.freshly_opened = False  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue]
         else:
-            app.d.refreshButton.click()
+            await app.d.refreshButton.click()
 
         _studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
         result: list[PriebezneHodnoteniaPredmetu] = []
-        for i, row in enumerate(app.d.predmetySPriebeznymHodnotenimTable.all_rows()):
+        for i, row in enumerate(await app.d.predmetySPriebeznymHodnotenimTable.all_rows()):
             # Klikneme na predmet s priebeznym hodnotenim a pockame na nacitanie
             with app.collect_operations() as ops:
-                app.d.predmetySPriebeznymHodnotenimTable.select(i)
+                await app.d.predmetySPriebeznymHodnotenimTable.select(i)
             if ops:
-                app.awaited_refresh_dialog(ops)
+                await app.awaited_refresh_dialog(ops)
 
             # Klikneme na button nacitatHodnotenie
-            app.d.nacitatHodnotenieButton.click()
+            await app.d.nacitatHodnotenieButton.click()
 
             records = [PriebezneHodnotenie(dovod=prow['dovod'],
                                            poc_bodov=prow['pocetBodov'],
@@ -107,7 +107,7 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
                                            zaevidoval=prow['zapisalPlneMeno'],
                                            zapocitavat=prow['zapocitat'],
                                            minimum=prow['dovodPriebHodMinHranica'])
-                       for prow in app.d.hodnotenieTable.all_rows()]
+                       for prow in await app.d.hodnotenieTable.all_rows()]
 
             result.append(PriebezneHodnoteniaPredmetu(akademicky_rok=akademicky_rok,
                                                       skratka=row['skratka'],

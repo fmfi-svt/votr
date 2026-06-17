@@ -23,10 +23,10 @@ class TabbedPane(Control):
     def _ais_setSelectedIndex(self, value: object) -> None:
         self.selected_index = really_int(value)
 
-    def select(self, index: int) -> None:
-        self.log('action', f'Switching {self.id} to tab {index}')
+    async def select(self, index: int) -> None:
+        await self.log('action', f'Switching {self.id} to tab {index}')
         self.selected_index = index
-        self._fire_event()
+        await self._fire_event()
 
     def get_panel(self, index: int) -> Panel:
         return ct(Panel, self.dialog.components[self.panel_ids[index]])
@@ -38,7 +38,7 @@ class TabbedPane(Control):
         return self._build_changed_properties(
             selectedIndex=str(self.selected_index))
 
-    def _fire_event(self) -> None:
+    async def _fire_event(self) -> None:
         self.dialog.component_changes(self, False)
         ev = change_action_event(self, self.selected_index)
-        self.dialog.app.send_events(ev)
+        await self.dialog.app.send_events(ev)

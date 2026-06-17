@@ -12,8 +12,8 @@ class TextArea(TextControl):
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.value = nn(element).get_text()
 
-    def write(self, value: str) -> None:
-        self.log('action', f'Writing {value!r} in {self.id}')
+    async def write(self, value: str) -> None:
+        await self.log('action', f'Writing {value!r} in {self.id}')
         self.value = value
         self.dialog.component_changes(self, False)
 

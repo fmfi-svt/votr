@@ -3,8 +3,8 @@
 Usage example:
 
     from nbenv import *
-    client = create_client(ais, get_login_params())
-    app = client._open_administracia_studia()
+    client = await create_client(ais, get_login_params())
+    app = await client._open_administracia_studia()
     ...
 
 More information: https://github.com/fmfi-svt/votr/wiki/Praca-s-ipythonom-(sk)

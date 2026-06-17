@@ -1,4 +1,4 @@
-
+import asyncio
 import base64
 import datetime
 import os
@@ -175,17 +175,17 @@ def front(request):
         with sessions.logged_transaction(request) as session:
             log = session['client'].context.log
             try:
-                log('front', 'Front session check started',
-                    request.full_path)
+                asyncio.run(log('front', 'Front session check started',
+                    request.full_path))
                 csrf_token = session['csrf_token']
                 fake_time_msec = session['client'].fake_time_msec
-                session['client'].check_connection()
+                asyncio.run(session['client'].check_connection())
             except Exception as e:
-                log('front',
+                asyncio.run(log('front',
                     f'Front session check failed with {type(e).__name__}',
-                    traceback.format_exc())
+                    traceback.format_exc()))
                 raise
-            log('front', 'Front session check finished')
+            asyncio.run(log('front', 'Front session check finished'))
     except Exception:
         connection_error = traceback.format_exc()
 

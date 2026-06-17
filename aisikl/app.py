@@ -1,6 +1,7 @@
 # pyright: reportUninitializedInstanceVariable=none
 
 from contextlib import contextmanager
+from inspect import iscoroutinefunction
 import json
 import re
 from requests import HTTPError
@@ -282,7 +283,7 @@ class Application[D]:
     ignored_messages: list[str]
 
     @classmethod
-    def open(cls, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> tuple[Application[D], list[Operation]]:
+    async def open(cls, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> tuple[Application[D], list[Operation]]:
         '''Opens a new application.
 
         Returns an ``(app, ops)`` tuple containing the new Application instance
@@ -302,7 +303,7 @@ class Application[D]:
             operations.
         '''
         app = super().__new__(cls)
-        ops = app._open(ctx, url, ignored_messages)
+        ops = await app._open(ctx, url, ignored_messages)
         return app, ops
 
     def __init__(self) -> None:
@@ -311,7 +312,7 @@ class Application[D]:
         raise Exception(
             "The Application constructor is private, use open() instead")
 
-    def _open(self, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> list[Operation]:
+    async def _open(self, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> list[Operation]:
         '''Actually opens the new instance created by :meth:`open`.'''
         self.ctx = ctx
         self.serial = 0
@@ -325,9 +326,9 @@ class Application[D]:
 
         match = re.search(r'appClassName=([a-zA-Z0-9_\.]*)', url)
         self.class_name = match.group(1) if match else None
-        self.ctx.log('operation', f'Opening application {self.class_name}', url)
+        await self.ctx.log('operation', f'Opening application {self.class_name}', url)
 
-        app_soup = self.ctx.request_html(url)
+        app_soup = await self.ctx.request_html(url)
         if not app_soup.find(id='webuiProperties'):
             alert_match = _alert_re.match(
                 app_soup.script.get_text().strip() if app_soup.script else '')
@@ -356,12 +357,12 @@ class Application[D]:
               "<command>INIT</command></event></ev></events>\n" +
               self.collect_component_changes())
         with self.collect_operations() as ops:
-            self._do_request(rq)
+            await self._do_request(rq)
 
         methods = [op.method for op in ops]
         if (methods == ['serverCloseApplication', 'messageBox', 'closeApplication'] and
             ops[1].args[0] == 'Neautorizovaný prístup!'):
-            check_connection(self.ctx)
+            await check_connection(self.ctx)
 
         return ops
 
@@ -429,15 +430,15 @@ class Application[D]:
         return { 'appId': self.app_id, 'antiCache': time.time(),
                  'reqIndex': old_req_index, 'viewer': 'web' }
 
-    def _do_request(self, body: str) -> None:
+    async def _do_request(self, body: str) -> None:
         '''Sends a POST request to AIS and process the response.
 
         Usually called from :meth:`send_events`.
         '''
-        soup = self._send_request(body)
-        self._process_response(soup)
+        soup = await self._send_request(body)
+        await self._process_response(soup)
 
-    def _send_request(self, body: str) -> BeautifulSoup:
+    async def _send_request(self, body: str) -> BeautifulSoup:
         xml_spec = f'<request> <serial>{self.serial}</serial>\n{body}</request>\n'
         self.serial += 1
 
@@ -449,7 +450,7 @@ class Application[D]:
         # don't have it, but sendRequestEvent manually sets it, so we do the
         # same.
         headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
-        return self.ctx.request_html('/ais/servlets/WebUIServlet',
+        return await self.ctx.request_html('/ais/servlets/WebUIServlet',
             method='POST', params=params, data=data, headers=headers)
 
     def _filter_operations(self, operations: list[Operation]) -> list[Operation]:
@@ -458,14 +459,14 @@ class Application[D]:
                         any(pattern in operation.args[0]
                             for pattern in self.ignored_messages))]
 
-    def _process_response(self, soup: BeautifulSoup) -> None:
-        self.ctx.log('benchmark', 'Begin response frame processing')
+    async def _process_response(self, soup: BeautifulSoup) -> None:
+        await self.ctx.log('benchmark', 'Begin response frame processing')
         self.last_response_time = time.time()
         operations, updates = parse_response(soup)
         body = soup.body
 
         for operation in operations:
-            self.ctx.log('operation',
+            await self.ctx.log('operation',
                 f'Received operation {operation.method}', operation)
 
         operations = self._filter_operations(operations)
@@ -479,7 +480,7 @@ class Application[D]:
             self.collector.extend(operations)
 
         if updates:
-            self.ctx.log('update',
+            await self.ctx.log('update',
                 f'Updating {len(updates)} components', updates)
 
         for update in updates:
@@ -507,34 +508,37 @@ class Application[D]:
             if getattr(method, 'wants_body', False):
                 args = args + [body]
 
-            method(*args)
+            if iscoroutinefunction(method):
+                await method(*args)
+            else:
+                method(*args)
 
-        self.ctx.log('benchmark', 'End response frame processing')
+        await self.ctx.log('benchmark', 'End response frame processing')
 
-    def send_events(self, *events: Event) -> None:
+    async def send_events(self, *events: Event) -> None:
         r'''Sends the given events to AIS, if AIS is listening to them.
 
         :param \*events: the events to send.
         '''
         body = ''.join(e.xml for e in events if e.listening)
         if not body: return
-        self._do_request('<events>' + body + '</events>' +
+        await self._do_request('<events>' + body + '</events>' +
                          self.collect_component_changes())
 
-    def send_empty_request(self) -> None:
+    async def send_empty_request(self) -> None:
         '''Sends a request without any events to AIS.'''
-        self._do_request(self.collect_component_changes())
+        await self._do_request(self.collect_component_changes())
 
-    def _send_namevalue_request(self, name: str, value: int | str) -> None:
+    async def _send_namevalue_request(self, name: str, value: int | str) -> None:
         '''Helper function for small requests sent by some operations.
         These requests don't contain any events or component changes.
         '''
-        self._do_request(
+        await self._do_request(
             '<changedProps><changedProperties><propertyValues><nameValue>' +
             f'<name>{name}</name><value>{value}</value>' +
             '</nameValue></propertyValues></changedProperties></changedProps>')
 
-    def force_close(self) -> bool:
+    async def force_close(self) -> bool:
         '''Tells the server to close the application.
 
         Human users usually close applications with the exit button in the main
@@ -547,10 +551,10 @@ class Application[D]:
             False if there was an error, e.g. when the server is still busy with
             an earlier HTTP request.
         '''
-        self.close_all_dialogs()
-        self.ctx.log('operation',
+        await self.close_all_dialogs()
+        await self.ctx.log('operation',
             f'Sending WebUIKillEvent to {self.class_name}')
-        soup = self._send_request(
+        soup = await self._send_request(
             "<events><ev><event class='avc.framework.webui.WebUIKillEvent'/>"
             "</ev></events>\n")
         return not soup.script
@@ -571,7 +575,7 @@ class Application[D]:
             ''.join(d.changed_properties() for d in self.dialog_stack) +
             '</changedProps>\n')
 
-    def is_still_open(self) -> bool:
+    async def is_still_open(self) -> bool:
         '''Checks whether this application is still open.
 
         The AIS server forgets about open applications after a short period of
@@ -587,17 +591,17 @@ class Application[D]:
         if not self.dialog_stack: return False
         THRESHOLD = 5 * 60
         if time.time() - self.last_response_time > THRESHOLD:
-            self.ctx.log('operation',
+            await self.ctx.log('operation',
                 f'Checking if {self.class_name} is still open')
             try:
-                self.send_empty_request()
+                await self.send_empty_request()
             except AISApplicationClosedError:
-                self.ctx.log('operation',
+                await self.ctx.log('operation',
                     f'Server already closed {self.class_name}')
                 return False
         return True
 
-    def start_app[D2](self, url: str, params: str, *, ignored_messages: list[str] | None=None, hint: type[D2] | None=None) -> tuple[Application[D2], list[Operation]]:
+    async def start_app[D2](self, url: str, params: str, *, ignored_messages: list[str] | None=None, hint: type[D2] | None=None) -> tuple[Application[D2], list[Operation]]:
         '''Opens a new application in response to the startApp
         :class:`Operation`.
 
@@ -605,25 +609,25 @@ class Application[D]:
             An `(app, ops)` tuple, just like :meth:`open`.
         '''
         url = f'/ais/servlets/WebUIServlet?appClassName={url}{params}&antiCache={time.time()}'
-        return Application[D2].open(self.ctx, url, ignored_messages)
+        return await Application[D2].open(self.ctx, url, ignored_messages)
 
-    def open_main_dialog(self, props: dict[str, object]) -> Dialog:
+    async def open_main_dialog(self, props: dict[str, object]) -> Dialog:
         '''Opens the main dialog in response to the openMainDialog
         :class:`Operation`.
 
         Returns:
             The opened :class:`aisikl.dialog.Dialog`.
         '''
-        return self.open_dialog(props)
+        return await self.open_dialog(props)
 
-    def open_dialog(self, props: dict[str, object]) -> Dialog:
+    async def open_dialog(self, props: dict[str, object]) -> Dialog:
         '''Opens a new dialog in response to the openDialog :class:`Operation`.
 
         Returns:
             The opened :class:`aisikl.dialog.Dialog`.
         '''
         name = ct(str, props['id'])
-        self.ctx.log('operation', 'Opening dialog {} "{}"'.format(
+        await self.ctx.log('operation', 'Opening dialog {} "{}"'.format(
             name, props['title']))
 
         # Ignore properties that only affect visuals: basedOnTheme, style,
@@ -645,23 +649,23 @@ class Application[D]:
         url_params = '&'.join(
             f'{k}={v}' for k, v in self._prepare_url_base().items())
         url = f'/ais/servlets/WebUIServlet?{url_params}&form={name}'
-        dialog._init(url)  # pyright: ignore [reportPrivateUsage]
+        await dialog._init(url)  # pyright: ignore [reportPrivateUsage]
 
         return dialog
 
-    def refresh_dialog(self, name: str) -> None:
+    async def refresh_dialog(self, name: str) -> None:
         '''Refreshes a dialog in response to the refreshDialog
         :class:`Operation`.
         '''
         dialog = self.dialogs[name]
 
-        self.ctx.log('operation',
+        await self.ctx.log('operation',
             f'Refreshing dialog {dialog.name} "{dialog.title}"')
 
         url = f'/ais/servlets/WebUIServlet?appId={self.app_id}&form={dialog.name}&antiCache={time.time()}'
-        dialog._init(url)  # pyright: ignore [reportPrivateUsage]
+        await dialog._init(url)  # pyright: ignore [reportPrivateUsage]
 
-    def close_dialog(self, name: str, is_native: bool=False) -> None:
+    async def close_dialog(self, name: str, is_native: bool=False) -> None:
         '''Closes a dialog in response to the closeDialog :class:`Operation`.
         '''
         if is_native:
@@ -671,7 +675,7 @@ class Application[D]:
         if not dialog:
             return
 
-        self.ctx.log('operation', f'Closing dialog {name}')
+        await self.ctx.log('operation', f'Closing dialog {name}')
 
         self.dialog_stack.remove(dialog)
         del self.dialogs[name]
@@ -684,17 +688,17 @@ class Application[D]:
         # Just for completeness. In practice, WebUI has not been observed to
         # call closeDialog on the last dialog.
         if not self.dialog_stack:
-            self.force_close()
+            await self.force_close()
 
-    def close_all_dialogs(self) -> None:
+    async def close_all_dialogs(self) -> None:
         '''Closes all dialogs after they have been closed on the server.'''
         if self.dialog_stack:
-            self.ctx.log('operation', 'Closing all dialogs')
+            await self.ctx.log('operation', 'Closing all dialogs')
         self.dialogs.clear()
         self.dialog_stack.clear()
         self.active_dialog = None
 
-    def confirm_box(self, option_index: int) -> None:
+    async def confirm_box(self, option_index: int) -> None:
         '''Sends an answer after receiving the confirmBox :class:`~Operation`.
 
         Possible values of `option_index` are:
@@ -713,16 +717,16 @@ class Application[D]:
         Args:
             option_index: webui index of the button to be clicked
         '''
-        self.ctx.log('operation',
+        await self.ctx.log('operation',
             f'Selecting button {option_index} in confirm box')
-        self._send_namevalue_request('confirmResult', option_index)
+        await self._send_namevalue_request('confirmResult', option_index)
 
-    def abort_box(self, message: str, title: object=None) -> None:
+    async def abort_box(self, message: str, title: object=None) -> None:
         '''Waits for AIS in response to the abortBox :class:`~Operation`.'''
-        self.ctx.log('operation', 'Waiting for abort box')
-        self._send_namevalue_request('confirmResult', -1)
+        await self.ctx.log('operation', 'Waiting for abort box')
+        await self._send_namevalue_request('confirmResult', -1)
 
-    def shell_exec(self, content_type: str, file_name: str, new_window_name: str, width: int,
+    async def shell_exec(self, content_type: str, file_name: str, new_window_name: str, width: int,
                    height: int) -> Response:
         '''Downloads a file in response to the shellExec :class:`Operation`.
         Then sends a request to AIS saying that the shellExec was executed.
@@ -745,41 +749,41 @@ class Application[D]:
             f'&antiCache={time.time()}&file={urllib.parse.quote(file_name)}'
         )
 
-        self.ctx.log('operation', f'Downloading "{file_name}"')
+        await self.ctx.log('operation', f'Downloading "{file_name}"')
 
-        response = self.ctx.request_ais(url)
+        response = await self.ctx.request_ais(url)
 
-        self.send_shell_exec_result('')
+        await self.send_shell_exec_result('')
 
         return response
 
-    def send_shell_exec_result(self, shell_exec_result: str) -> None:
+    async def send_shell_exec_result(self, shell_exec_result: str) -> None:
         '''Informs AIS that a shellExec operation was executed.
 
         Args:
             shell_exec_result: The string value of ``shellExecResult``.
         '''
-        self._send_namevalue_request('shellExecResult', shell_exec_result)
+        await self._send_namevalue_request('shellExecResult', shell_exec_result)
 
-    def awaited_start_app[D2](self, ops: list[Operation], ignored_messages: list[str] | None=None, hint: type[D2] | None=None) -> tuple[Application[D2], list[Operation]]:
+    async def awaited_start_app[D2](self, ops: list[Operation], ignored_messages: list[str] | None=None, hint: type[D2] | None=None) -> tuple[Application[D2], list[Operation]]:
         '''Combines :func:`assert_ops` and :meth:`start_app` in one step.
 
         If ``ops`` really contains a single startApp :class:`Operation` as
         expected, opens the application. Throws otherwise.
         '''
         assert_ops(ops, 'startApp')
-        return self.start_app(*ops[0].args, ignored_messages=ignored_messages)
+        return await self.start_app(*ops[0].args, ignored_messages=ignored_messages)
 
-    def awaited_open_dialog(self, ops: list[Operation]) -> Dialog:
+    async def awaited_open_dialog(self, ops: list[Operation]) -> Dialog:
         '''Combines :func:`assert_ops` and :meth:`open_dialog` in one step.
 
         If ``ops`` really contains a single openDialog :class:`Operation` as
         expected, opens the new dialog. Throws otherwise.
         '''
         assert_ops(ops, 'openDialog')
-        return self.open_dialog(*ops[0].args)
+        return await self.open_dialog(*ops[0].args)
 
-    def awaited_open_main_dialog(self, ops: list[Operation]) -> Dialog:
+    async def awaited_open_main_dialog(self, ops: list[Operation]) -> Dialog:
         '''Combines :func:`assert_ops` and :meth:`open_main_dialog` in one
         step.
 
@@ -787,45 +791,45 @@ class Application[D]:
         as expected, opens the main dialog. Throws otherwise.
         '''
         assert_ops(ops, 'openMainDialog')
-        return self.open_main_dialog(*ops[0].args)
+        return await self.open_main_dialog(*ops[0].args)
 
-    def awaited_refresh_dialog(self, ops: list[Operation]) -> None:
+    async def awaited_refresh_dialog(self, ops: list[Operation]) -> None:
         '''Combines :func:`assert_ops` and :meth:`refresh_dialog` in one step.
 
         If ``ops`` really contains a single refreshDialog :class:`Operation` as
         expected, refreshes the dialog. Throws otherwise.
         '''
         assert_ops(ops, 'refreshDialog')
-        return self.refresh_dialog(*ops[0].args)
+        return await self.refresh_dialog(*ops[0].args)
 
-    def awaited_close_dialog(self, ops: list[Operation]) -> None:
+    async def awaited_close_dialog(self, ops: list[Operation]) -> None:
         '''Combines :func:`assert_ops` and :meth:`close_dialog` in one step.
 
         If ``ops`` really contains a single closeDialog :class:`Operation` as
         expected, closes the dialog. Throws otherwise.
         '''
         assert_ops(ops, 'closeDialog')
-        return self.close_dialog(*ops[0].args)
+        return await self.close_dialog(*ops[0].args)
 
-    def awaited_abort_box(self, ops: list[Operation]) -> None:
+    async def awaited_abort_box(self, ops: list[Operation]) -> None:
         '''Combines :func:`assert_ops` and :meth:`abort_box` in one step.
 
         If ``ops`` really contains a single abortBox :class:`Operation` as
         expected, waits for the box to close. Throws otherwise.
         '''
         assert_ops(ops, 'abortBox')
-        return self.abort_box(*ops[0].args)
+        return await self.abort_box(*ops[0].args)
 
-    def awaited_shell_exec(self, ops: list[Operation]) -> Response:
+    async def awaited_shell_exec(self, ops: list[Operation]) -> Response:
         '''Combines :func:`assert_ops` and :meth:`shell_exec` in one step.
 
         If ``ops`` really contains a single shellExec :class:`Operation` as
         expected, downloads the file. Throws otherwise.
         '''
         assert_ops(ops, 'shellExec')
-        return self.shell_exec(*ops[0].args)
+        return await self.shell_exec(*ops[0].args)
 
-    def awaited_close_application(self, ops: list[Operation]) -> None:
+    async def awaited_close_application(self, ops: list[Operation]) -> None:
         '''Combines :func:`assert_ops` and :meth:`close_all_dialogs` in one
         step.
 
@@ -838,10 +842,10 @@ class Application[D]:
         ``app.force_close()`` instead of ``app.d.exitButton.click()`` etc.
         '''
         assert_ops(ops, 'serverCloseApplication', 'closeApplication')
-        self.close_all_dialogs()
+        await self.close_all_dialogs()
 
 
-def check_connection(context: Context) -> None:
+async def check_connection(context: Context) -> None:
     # We used to request /ais/portal/changeTab.do?tab=0, but it switches the
     # user to the old interface. Same with / or /ais/start.do. This should work
     # regardless of old vs new student interface, and preserve the user's
@@ -852,7 +856,7 @@ def check_connection(context: Context) -> None:
         # It is mostly stable, but sometimes changes rarely on some AIS updates.
         # It can also be found in an inline script in /ais/start.do, but
         # requesting that would switch the user to the old interface.
-        response = context.request_ais('/ais/apps/student/sk/main.js')
+        response = await context.request_ais('/ais/apps/student/sk/main.js')
         match = _access_token_re.search(response.text)
         if not match:
             raise AISParseError('Could not find header in main.js code')
@@ -860,7 +864,7 @@ def check_connection(context: Context) -> None:
         # This request returns 200 with empty body if logged in (and strangely
         # also if no JSESSIONID is sent), or 401 if a JSESSIONID is sent but the
         # session is logged out or expired.
-        response = context.request_ais(
+        response = await context.request_ais(
             '/ais/rest/apps/get-access-token',
             headers={match.group(1): match.group(2)})
         aisauth = response.headers.get('AISAuth')
@@ -872,7 +876,7 @@ def check_connection(context: Context) -> None:
         # recreate what AIS is doing.
         # Future note: If we store the aisauth value for a longer time, we
         # should always check if a response contains a new AISAuth header.
-        context.request_ais(
+        await context.request_ais(
             '/ais/rest/apps/check-session/check-light',
             headers={'AISAuth': aisauth})
     except HTTPError as e:

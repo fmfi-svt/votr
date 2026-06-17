@@ -69,8 +69,8 @@ class NumberControl(TextInput):
             value = value.replace(self.separator_1000, '')
         self.bdvalue = value.replace(self.decimal_point, '.')
 
-    def write(self, bdvalue: str) -> None:
-        self.log('action', f'Writing {bdvalue!r} in {self.id}')
+    async def write(self, bdvalue: str) -> None:
+        await self.log('action', f'Writing {bdvalue!r} in {self.id}')
         self.bdvalue = bdvalue
         self.dialog.component_changes(self, False)
 

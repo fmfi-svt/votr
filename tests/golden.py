@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import asyncio
 import json
 import re
 import sys
@@ -26,7 +27,7 @@ class LogTester:
         self.client = None
         self.login_is_old = False
 
-    def test_request(self, entries):
+    async def test_request(self, entries):
         start = entries[0]
         prefix = start.message[:-len(' started')]
 
@@ -49,8 +50,8 @@ class LogTester:
                 self.login_is_old = True
                 return True
 
-            def inner():
-                Logger().log('login', 'Creating client', entries[1].data)
+            async def inner():
+                await Logger().log('login', 'Creating client', entries[1].data)
                 logintype = entries[1].data['type']
                 if (m := re.match(
                         r'^Requesting GET (http\S+/)ais/', entries[2].message)):
@@ -73,38 +74,38 @@ class LogTester:
                     ais_cookie='fake_value',
                     rest_cookie='fake_value',
                 )
-                self.client = create_client(server, params)
+                self.client = await create_client(server, params)
                 return entries[-1].data
         elif start.type == 'logout':
             if self.login_is_old:
                 p('  SKIP: old logout version')
                 return True
-            def inner():
-                self.client.logout()
+            async def inner():
+                await self.client.logout()
                 self.client = None
         elif start.type == 'front':
-            def inner():
-                self.client.check_connection()
+            async def inner():
+                await self.client.check_connection()
         elif start.type == 'rpc':
-            def inner():
+            async def inner():
                 _, name = prefix.split(' ')
-                self.client.prepare_for_rpc()
+                await self.client.prepare_for_rpc()
                 method = getattr(self.client, name)
-                return encode_result(method(*start.data))
+                return encode_result(await method(*start.data))
 
-        def body():
-            Logger().log(start.type, start.message, start.data)
+        async def body():
+            await Logger().log(start.type, start.message, start.data)
             try:
-                result = inner()
-                Logger().log(start.type, f'{prefix} finished', result)
+                result = await inner()
+                await Logger().log(start.type, f'{prefix} finished', result)
             except Exception as e:
                 if start.type == 'rpc':
                     self.client.last_rpc_failed = True
-                Logger().log(start.type, f'{prefix} failed with {type(e).__name__}', traceback.format_exc())
+                await Logger().log(start.type, f'{prefix} failed with {type(e).__name__}', traceback.format_exc())
 
         printed = []
 
-        ok = MockRunner().run(
+        ok = await MockRunner().run(
             body, entries, print=printed.append,
             old_log=self.old_log, fail_fast=self.fail_fast)
 
@@ -119,7 +120,7 @@ class LogTester:
         return ok
 
 
-def test_log(name, lines, *, old_log, fail_fast, verbose_pass):
+async def test_log(name, lines, *, old_log, fail_fast, verbose_pass):
     p(f'PROGRESS: testing {name}')
 
     try:
@@ -163,7 +164,7 @@ def test_log(name, lines, *, old_log, fail_fast, verbose_pass):
                 elif old_log and failed_rpc and not closes_apps_after_failure and entry.type == 'rpc':
                     p(f'  SKIP: skipping after failed rpc: {json.dumps(entries[last_start].message)}')
                 else:
-                    if not tester.test_request(entries[last_start:i + 1]):
+                    if not await tester.test_request(entries[last_start:i + 1]):
                         failed_test = True
                     if entry.type == 'rpc' and ' failed with ' in entry.message:
                         failed_rpc = True
@@ -182,7 +183,7 @@ def test_log(name, lines, *, old_log, fail_fast, verbose_pass):
         p(traceback.format_exc())
 
 
-def test_file(filename, *, old_log, fail_fast, verbose_pass):
+async def test_file(filename, *, old_log, fail_fast, verbose_pass):
     if '.tar.' in filename:
         import tarfile
         first = last = None
@@ -199,26 +200,26 @@ def test_file(filename, *, old_log, fail_fast, verbose_pass):
                 if last and info.name.split('/')[-1][:len(last)] > last:
                     break
                 with tar.extractfile(info) as f:
-                    test_log(f'{filename}:{info.name}', list(f),
+                    await test_log(f'{filename}:{info.name}', list(f),
                         old_log=old_log, fail_fast=fail_fast,
                         verbose_pass=verbose_pass)
     elif filename.endswith('.gz'):
         import gzip
         with gzip.open(filename, 'rb') as f:
-            test_log(filename, list(f),
+            await test_log(filename, list(f),
                 old_log=old_log, fail_fast=fail_fast, verbose_pass=verbose_pass)
     elif filename.endswith('.xz'):
         import lzma
         with lzma.open(filename, 'rb') as f:
-            test_log(filename, list(f),
+            await test_log(filename, list(f),
                 old_log=old_log, fail_fast=fail_fast, verbose_pass=verbose_pass)
     else:
         with open(filename, 'rb') as f:
-            test_log(filename, list(f),
+            await test_log(filename, list(f),
                 old_log=old_log, fail_fast=fail_fast, verbose_pass=verbose_pass)
 
 
-def main(args):
+async def main(args):
     parser = argparse.ArgumentParser()
     parser.add_argument('log_filename', nargs='+', help=
         'Input log file(s) to test. Can be compressed. ' +
@@ -235,9 +236,9 @@ def main(args):
     options = parser.parse_args(args)
 
     for filename in options.log_filename:
-        test_file(filename, old_log=options.old_log,
+        await test_file(filename, old_log=options.old_log,
             fail_fast=options.fail_fast, verbose_pass=options.verbose_pass)
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    asyncio.run(main(sys.argv[1:]))

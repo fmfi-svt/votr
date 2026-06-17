@@ -45,15 +45,15 @@ UNAVAILABLE = "Zápis predmetov pre tento zápisný list nie je dostupný."
 
 
 class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
-    def zapis_get_zapisane_predmety(self, zapisny_list_key: str, cast: str) -> tuple[list[ZapisPredmet], str | None]:
+    async def zapis_get_zapisane_predmety(self, zapisny_list_key: str, cast: str) -> tuple[list[ZapisPredmet], str | None]:
         try:
-            app = self._open_zapis_predmetov_app(zapisny_list_key)
+            app = await self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
             return ([], UNAVAILABLE)
-        self.__zatvor_ponuku_predmetov(app)
+        await self.__zatvor_ponuku_predmetov(app)
 
         # Oznacime vrchol pre celu cast, aby sme videli vsetky predmety.
-        app.d.castiZapisnehoListuTree.select('nR/' + cast)
+        await app.d.castiZapisnehoListuTree.select('nR/' + cast)
 
         result = [ZapisPredmet(skratka=row['skratka'],
                                nazov=row['nazov'],
@@ -72,29 +72,29 @@ class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
                                v_bloku_index=None,
                                odporucany_rocnik=None,
                                cast=row['kodCastStPlanu'])
-                  for row in app.d.predmetyTable.all_rows()]
+                  for row in await app.d.predmetyTable.all_rows()]
         return (result, None)
 
-    def zapis_get_vlastnosti_programu(self, zapisny_list_key: str) -> tuple[list[ZapisVlastnost], str | None]:
+    async def zapis_get_vlastnosti_programu(self, zapisny_list_key: str) -> tuple[list[ZapisVlastnost], str | None]:
         try:
-            app = self._open_zapis_predmetov_app(zapisny_list_key)
+            app = await self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
             return ([], UNAVAILABLE)
-        self.__zatvor_ponuku_predmetov(app)
+        await self.__zatvor_ponuku_predmetov(app)
 
         result = [ZapisVlastnost(skratka=row['skratka'],
                                  nazov=row['nazov'],
                                  minimalny_kredit=row['kredit'],
                                  poznamka=row['poznamky'])
-                  for row in app.d.vlastnostiStudProgramuTable.all_rows()]
+                  for row in await app.d.vlastnostiStudProgramuTable.all_rows()]
         return (result, None)
 
-    def zapis_plan_vyhladaj(self, zapisny_list_key: str, cast: str) -> tuple[list[ZapisPredmet], str | None]:
+    async def zapis_plan_vyhladaj(self, zapisny_list_key: str, cast: str) -> tuple[list[ZapisPredmet], str | None]:
         try:
-            app = self._open_zapis_predmetov_app(zapisny_list_key)
+            app = await self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
             return ([], UNAVAILABLE)
-        self.__zatvor_ponuku_predmetov(app)
+        await self.__zatvor_ponuku_predmetov(app)
 
         # AIS ponuka styri dialogy na pridavanie predmetov:
         # (1) "Pridat predmet zo studijneho planu"
@@ -121,35 +121,35 @@ class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
             if id in ('nR/SC/A', 'nR/SC/B'): continue
 
             # Oznacime dany vrchol stromu.
-            app.d.castiZapisnehoListuTree.select(id)
+            await app.d.castiZapisnehoListuTree.select(id)
 
             # Stlacime "Pridat predmet zo studijneho planu".
             with app.collect_operations() as ops:
-                app.d.pridatPredmetAction.execute()
+                await app.d.pridatPredmetAction.execute()
 
             # Mozno vyskoci chyba.
             if len(ops) == 1 and ops[0].method == 'messageBox':
                 return ([], ops[0].args[0])
 
             # Otvori sa novy dialog.
-            app.awaited_open_dialog(ops)
+            await app.awaited_open_dialog(ops)
 
             # Zapneme schovane stlpce.
             want = ['kodTypVyucby', 'popis', 'poradieB', 'poradieP', 'kodCastSP']
             if any(col not in app.d.predmetyTable.column_map for col in want):
-                self._show_all_columns(app, app.d.predmetyTable)
+                await self._show_all_columns(app, app.d.predmetyTable)
 
             # Zrusime filter podla odporucaneho rocniku.
             index = find_option(app.d.rocnikComboBox.options, title='')
-            app.d.rocnikComboBox.select(index)
+            await app.d.rocnikComboBox.select(index)
 
             # Ak sa da, zrusime filter podla typu vyucby.
             if app.d.typComboBox.is_really_enabled():
                 index = find_option(app.d.typComboBox.options, title='')
-                app.d.typComboBox.select(index)
+                await app.d.typComboBox.select(index)
 
             # Nacitame vsetky predmety.
-            app.d.zobrazitPredmetyButton.click()
+            await app.d.zobrazitPredmetyButton.click()
 
             result.extend(ZapisPredmet(skratka=row['skratkaPredmet'],
                                        nazov=row['nazovPredmet'],
@@ -168,22 +168,22 @@ class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
                                        v_bloku_index=row['poradieP'],
                                        odporucany_rocnik=row['rocnik'],
                                        cast=row['kodCastSP'])
-                          for row in app.d.predmetyTable.all_rows())
+                          for row in await app.d.predmetyTable.all_rows())
 
             # Ked sme hotovi, zavrieme dialog.
             with app.collect_operations() as ops:
-                app.d.click_close_button()
-            app.awaited_close_dialog(ops)
+                await app.d.click_close_button()
+            await app.awaited_close_dialog(ops)
 
         return (result, None)
 
-    def zapis_plan_pridaj_predmety(self, zapisny_list_key: str, cast: str,
+    async def zapis_plan_pridaj_predmety(self, zapisny_list_key: str, cast: str,
                                    dvojice_typ_vyucby_skratka: list[tuple[str, str]]) -> str | None:
         try:
-            app = self._open_zapis_predmetov_app(zapisny_list_key)
+            app = await self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
             return UNAVAILABLE
-        self.__zatvor_ponuku_predmetov(app)
+        await self.__zatvor_ponuku_predmetov(app)
 
         # Zistime, ake vsetky typy vyucby chceme zapisat.
         typy_vyucby = sorted(set(
@@ -192,18 +192,18 @@ class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
         for typ_vyucby in typy_vyucby:
             # Oznacime dany vrchol stromu.
             id = 'nR/' + cast + '/' + typ_vyucby
-            app.d.castiZapisnehoListuTree.select(id)
+            await app.d.castiZapisnehoListuTree.select(id)
 
             # Stlacime "Pridat predmet zo studijneho planu".
             with app.collect_operations() as ops:
-                app.d.pridatPredmetAction.execute()
+                await app.d.pridatPredmetAction.execute()
 
             # Mozno vyskoci chyba.
             if len(ops) == 1 and ops[0].method == 'messageBox':
                 return ops[0].args[0]
 
             # Otvori sa novy dialog.
-            app.awaited_open_dialog(ops)
+            await app.awaited_open_dialog(ops)
 
             # Skusime, ci uz teraz vidime vsetky hladane predmety.
             found_all = True
@@ -211,77 +211,77 @@ class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
                 if typ_vyucby != typ_vyucby_predmetu: continue
                 try:
                     find_row(
-                        app.d.predmetyTable.all_rows(), skratkaPredmet=skratka)
+                        await app.d.predmetyTable.all_rows(), skratkaPredmet=skratka)
                 except KeyError:
                     found_all = False
 
             if not found_all:
                 # Ak nevidime, zrusime filter podla odporucaneho rocniku.
                 index = find_option(app.d.rocnikComboBox.options, title='')
-                app.d.rocnikComboBox.select(index)
+                await app.d.rocnikComboBox.select(index)
 
                 # Nacitame vsetky predmety.
-                app.d.zobrazitPredmetyButton.click()
+                await app.d.zobrazitPredmetyButton.click()
 
             # Teraz uz by sme mali vidiet vsetky predmety, co chceme zapisat.
             # Postupne ich najdeme a zapneme checkboxy.
             for typ_vyucby_predmetu, skratka in dvojice_typ_vyucby_skratka:
                 if typ_vyucby != typ_vyucby_predmetu: continue
                 index = find_row(
-                    app.d.predmetyTable.all_rows(), skratkaPredmet=skratka)
-                app.d.predmetyTable.edit_cell('p', index, True)
+                    await app.d.predmetyTable.all_rows(), skratkaPredmet=skratka)
+                await app.d.predmetyTable.edit_cell('p', index, True)
 
             # Stlacime "OK".
             with app.collect_operations() as ops:
-                app.d.enterButton.click()
+                await app.d.enterButton.click()
 
             # Mozno vyskoci confirm box. (Napriklad nas upozornuje, ze niektore
             # predmety uz mame zapisane. O inych confirm boxoch nevieme, a
             # dufame, ze su neskodne.) Zvolime "Ano".
             if len(ops) == 1 and ops[0].method == 'confirmBox':
                 with app.collect_operations() as ops:
-                    app.confirm_box(2)
+                    await app.confirm_box(2)
 
             # Mozno vyskoci chyba.
             message = None
             if len(ops) == 1 and ops[0].method == 'messageBox':
                 message = ops[0].args[0]
                 with app.collect_operations() as ops:
-                    app.d.click_close_button()
+                    await app.d.click_close_button()
 
             # Dialog sa zavrie.
-            app.awaited_close_dialog(ops)
+            await app.awaited_close_dialog(ops)
 
             if message: return message
 
         return None
 
-    def __zatvor_ponuku_predmetov(self, app: Application[ZapisPredmetovDialogsType]) -> None:
+    async def __zatvor_ponuku_predmetov(self, app: Application[ZapisPredmetovDialogsType]) -> None:
         if app.d.name == 'VSES260_PridaniePredmetuDlg1':
             with app.collect_operations() as ops:
-                app.d.click_close_button()
-            app.awaited_close_dialog(ops)
+                await app.d.click_close_button()
+            await app.awaited_close_dialog(ops)
 
-    def __otvor_ponuku_predmetov(self, app: Application[ZapisPredmetovDialogsType]) -> str | None:
+    async def __otvor_ponuku_predmetov(self, app: Application[ZapisPredmetovDialogsType]) -> str | None:
         if app.d.name != 'VSES260_PridaniePredmetuDlg1':
             # Oznacime vrchol SC - C. (V ponuke predmetov nezalezi, aky typ
             # vyucby zvolime, a zapise sa spravne.)
-            app.d.castiZapisnehoListuTree.select('nR/SC/C')
+            await app.d.castiZapisnehoListuTree.select('nR/SC/C')
 
             # Stlacime "Pridat predmet z ponuky predmetov".
             with app.collect_operations() as ops:
-                app.d.pridatPredmetZPonukyAction.execute()
+                await app.d.pridatPredmetZPonukyAction.execute()
 
             # Mozno vyskoci chyba.
             if len(ops) == 1 and ops[0].method == 'messageBox':
                 return ops[0].args[0]
 
             # Otvori sa novy dialog.
-            app.awaited_open_dialog(ops)
+            await app.awaited_open_dialog(ops)
 
-    def __query_ponuka_predmetov(self, app: Application[ZapisPredmetovDialogsType], fakulta: str | None, stredisko: str | None,
+    async def __query_ponuka_predmetov(self, app: Application[ZapisPredmetovDialogsType], fakulta: str | None, stredisko: str | None,
                                  filter_skratka: str | None, filter_nazov: str | None) -> str | None:
-        message = self.__otvor_ponuku_predmetov(app)
+        message = await self.__otvor_ponuku_predmetov(app)
         if message:
             return message
 
@@ -292,34 +292,34 @@ class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
             (not stredisko or not app.d.strediskoTextTextField.value)):
             return None
 
-        app.d.fakultaComboBox.select(find_option(app.d.fakultaComboBox.options, id=(fakulta or '')))
+        await app.d.fakultaComboBox.select(find_option(app.d.fakultaComboBox.options, id=(fakulta or '')))
 
-        app.d.predmetSkratkaTextField.write(filter_skratka or '')
+        await app.d.predmetSkratkaTextField.write(filter_skratka or '')
 
-        app.d.predmetNazovTextField.write(filter_nazov or '')
+        await app.d.predmetNazovTextField.write(filter_nazov or '')
 
-        if not self._select_text_ciselnik(
+        if not await self._select_text_ciselnik(
                 app, stredisko, 'strediskoSkratkaTextField',
                 app.d.zmazatStrediskoAction.component_ids[0],
                 app.d.vybratStrediskoAction.component_ids[0], 'skratka'):
             return "Stredisko neexistuje."
 
-        app.d.zobrazitPredmetyAction.execute()
+        await app.d.zobrazitPredmetyAction.execute()
 
         while not app.d.predmetyTable.is_end_of_data:
-            app.d.predmetyTable.scroll_down(10)
+            await app.d.predmetyTable.scroll_down(10)
 
         return None
 
-    def zapis_ponuka_vyhladaj(self, zapisny_list_key: str, fakulta: str | None, stredisko: str | None,
+    async def zapis_ponuka_vyhladaj(self, zapisny_list_key: str, fakulta: str | None, stredisko: str | None,
                               filter_skratka: str | None, filter_nazov: str | None) -> tuple[list[ZapisPredmet], str | None]:
         try:
-            app = self._open_zapis_predmetov_app(zapisny_list_key)
+            app = await self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
             return ([], UNAVAILABLE)
 
         # Otvorime ponuku predmetov a vyhladame predmety.
-        message = self.__query_ponuka_predmetov(
+        message = await self.__query_ponuka_predmetov(
             app, fakulta, stredisko, filter_skratka, filter_nazov)
         if message:
             return ([], message)
@@ -347,16 +347,16 @@ class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
                   for row in app.d.predmetyTable.loaded_rows]
         return (result, message)
 
-    def zapis_ponuka_pridaj_predmety(self, zapisny_list_key: str, fakulta: str | None, stredisko: str | None,
+    async def zapis_ponuka_pridaj_predmety(self, zapisny_list_key: str, fakulta: str | None, stredisko: str | None,
                                      filter_skratka: str | None, filter_nazov: str | None,
                                      zvolene_skratky: list[str]) -> str | None:
         try:
-            app = self._open_zapis_predmetov_app(zapisny_list_key)
+            app = await self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
             return UNAVAILABLE
 
         # Otvorime ponuku predmetov a vyhladame predmety.
-        message = self.__query_ponuka_predmetov(
+        message = await self.__query_ponuka_predmetov(
             app, fakulta, stredisko, filter_skratka, filter_nazov)
         if message:
             return message
@@ -364,73 +364,73 @@ class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
         # Odznacime vsetky vyznacene predmety (nemalo by sa stat).
         for row in app.d.predmetyTable.loaded_rows:
             if row.cell('p').value == True:
-                app.d.predmetyTable.edit_cell('p', row.id, False)
+                await app.d.predmetyTable.edit_cell('p', row.id, False)
 
         # Vyznacime predmety, co si chceme zapisat.
         for skratka in zvolene_skratky:
             index = find_row(
                 app.d.predmetyTable.loaded_rows, skratkaPredmet=skratka)
-            app.d.predmetyTable.edit_cell('p', index, True)
+            await app.d.predmetyTable.edit_cell('p', index, True)
 
         # Stlacime "OK".
         with app.collect_operations() as ops:
-            app.d.enterButton.click()
+            await app.d.enterButton.click()
 
         # Mozno vyskoci confirm box. (Napriklad nas upozornuje, ze niektore
         # predmety uz mame zapisane. O inych confirm boxoch nevieme, a
         # dufame, ze su neskodne.) Zvolime "Ano".
         if len(ops) == 1 and ops[0].method == 'confirmBox':
             with app.collect_operations() as ops:
-                app.confirm_box(2)
+                await app.confirm_box(2)
 
         # Mozno vyskoci chyba. (Dialog zostane otvoreny.)
         if len(ops) == 1 and ops[0].method == 'messageBox':
             return ops[0].args[0]
 
         # Dialog sa zavrie.
-        app.awaited_close_dialog(ops)
+        await app.awaited_close_dialog(ops)
 
         return None
 
-    def zapis_ponuka_options(self, zapisny_list_key: str) -> tuple[list[Option], str | None]:
+    async def zapis_ponuka_options(self, zapisny_list_key: str) -> tuple[list[Option], str | None]:
         try:
-            app = self._open_zapis_predmetov_app(zapisny_list_key)
+            app = await self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
             return ([], UNAVAILABLE)
 
-        message = self.__otvor_ponuku_predmetov(app)
+        message = await self.__otvor_ponuku_predmetov(app)
         if message:
             return ([], message)
 
         return (app.d.fakultaComboBox.options, None)
 
-    def zapis_odstran_predmety(self, zapisny_list_key: str, cast: str, predmet_key_list: list[str]) -> str | None:
+    async def zapis_odstran_predmety(self, zapisny_list_key: str, cast: str, predmet_key_list: list[str]) -> str | None:
         try:
-            app = self._open_zapis_predmetov_app(zapisny_list_key)
+            app = await self._open_zapis_predmetov_app(zapisny_list_key)
         except CantOpenApplication:
             return UNAVAILABLE
-        self.__zatvor_ponuku_predmetov(app)
+        await self.__zatvor_ponuku_predmetov(app)
 
         # Oznacime vrchol pre celu cast, aby sme videli vsetky predmety.
-        app.d.castiZapisnehoListuTree.select('nR/' + cast)
+        await app.d.castiZapisnehoListuTree.select('nR/' + cast)
 
         # Vyberieme v tabulke dane predmety.
         indexes: list[int] = []
         for predmet_key in predmet_key_list:
             (skratka_predmetu,) = decode_key(predmet_key)
             indexes.append(find_row(
-                app.d.predmetyTable.all_rows(),
+                await app.d.predmetyTable.all_rows(),
                 skratka=skratka_predmetu))
-        app.d.predmetyTable.select(indexes)
+        await app.d.predmetyTable.select(indexes)
 
         # Stlacime "Odobrat predmet".
         with app.collect_operations() as ops:
-            app.d.odobratPredmetButton.click()
+            await app.d.odobratPredmetButton.click()
 
         # Mozno vyskoci confirm box. Zvolime "Ano".
         if len(ops) == 1 and ops[0].method == 'confirmBox':
             with app.collect_operations() as ops:
-                app.confirm_box(2)
+                await app.confirm_box(2)
 
         # Mozno vyskoci chyba. Ak nie, sme hotovi.
         if ops:

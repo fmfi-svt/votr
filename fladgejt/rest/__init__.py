@@ -9,6 +9,6 @@ from typing import override
 
 class RestClient(RestStudiumMixin, BaseClient):
     @override
-    def check_connection(self) -> None:
-        self.context.request_json('')
-        super().check_connection()
+    async def check_connection(self) -> None:
+        await self.context.request_json('')
+        await super().check_connection()

@@ -24,19 +24,19 @@ class Panel(Control):
     def _ais_setCollapsed(self, value: object) -> None:
         self.collapsed = is_true(value)
 
-    def toggle_collapsed(self) -> None:
+    async def toggle_collapsed(self) -> None:
         if not self.collapsable: return
         if not self.parent.is_really_enabled(): return
-        self.log('action', '{} {}'.format(
+        await self.log('action', '{} {}'.format(
             'Opening' if self.collapsed else 'Closing', self.id))
         self.collapsed = not self.collapsed
-        self._fire_event()
+        await self._fire_event()
 
-    def _fire_event(self) -> None:
+    async def _fire_event(self) -> None:
         self.dialog.component_changes(self, False)
         command = 'COLLAPSE' if self.collapsed else 'EXPAND'
         ev = action_event(self, command, self.id)
-        self.dialog.app.send_events(ev)
+        await self.dialog.app.send_events(ev)
 
     @override
     def changed_properties(self) -> str:

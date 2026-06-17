@@ -24,27 +24,27 @@ class CheckBox(Control):
         self.selected = is_true(value)
         self.dialog.try_interactive(self, "ItemEvent")
 
-    def _fire_event(self) -> None:
+    async def _fire_event(self) -> None:
         self.dialog.component_changes(self, False)
         ev = item_event(self)
-        self.dialog.app.send_events(ev)
+        await self.dialog.app.send_events(ev)
 
     @override
     def changed_properties(self) -> str:
         return self._build_changed_properties(
             selected=self.selected, smoked=self.smoked)
 
-    def toggle(self) -> None:
+    async def toggle(self) -> None:
         self.selected = not self.selected
         self.smoked = False
-        self.log('action', '{} {}'.format(
+        await self.log('action', '{} {}'.format(
             'Checking' if self.selected else 'Unchecking', self.id))
-        self._fire_event()
+        await self._fire_event()
 
-    def set_to(self, value: bool) -> None:
+    async def set_to(self, value: bool) -> None:
         if self.smoked or self.selected != bool(value):
             self.selected = bool(value)
             self.smoked = False
-            self.log('action', '{} {}'.format(
+            await self.log('action', '{} {}'.format(
                 'Checking' if self.selected else 'Unchecking', self.id))
-            self._fire_event()
+            await self._fire_event()

@@ -1,3 +1,5 @@
+# pyright: reportUninitializedInstanceVariable=none
+
 import json
 from aisikl.components.component import is_true
 from aisikl.components.action import Action
@@ -49,9 +51,11 @@ class Tree(Control):
         self.expansion_changed = False
         self.checked_changed = False
 
-        self._init_from_data_view(nn(element).find(id=self.id + '_dataView'))
+    @override
+    async def async_init(self, element: Tag | None) -> None:
+        await self._init_from_data_view(nn(element).find(id=self.id + '_dataView'))
 
-    def _init_from_data_view(self, data_view: Tag | None, updating: bool=False) -> None:
+    async def _init_from_data_view(self, data_view: Tag | None, updating: bool=False) -> None:
         if not data_view: return
 
         element = nn(data_view.find(id='nodes'))
@@ -88,24 +92,24 @@ class Tree(Control):
         if updating:
             for id in properties['expand']:
                 if not self.nodes[id].expanded:
-                    self.toggle_expansion(id, _send_event=False)
+                    await self.toggle_expansion(id, _send_event=False)
             for id in properties['collapse']:
                 if self.nodes[id].expanded:
-                    self.toggle_expansion(id, _send_event=False)
+                    await self.toggle_expansion(id, _send_event=False)
         else:
             self.expansion_synchronizer: dict[str, bool] = {}
             self.checked_synchronizer: dict[str, bool] = {}
 
         self.dialog.try_interactive(self, "TreeSelectionEvent")
 
-    def _ais_setDataView(self, id: str, body: Tag) -> None:
+    async def _ais_setDataView(self, id: str, body: Tag) -> None:
         data_view = nn(body.find(id=id))
         if not data_view.contents: return
 
         if nn(data_view.find(id='nodes')).name == 'script':
-            self._init_from_data_view(data_view)
+            await self._init_from_data_view(data_view)
         else:
-            self._init_from_data_view(data_view, updating=True)
+            await self._init_from_data_view(data_view, updating=True)
     _ais_setDataView.wants_body = True  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportFunctionMemberAccess]
 
     @override
@@ -136,29 +140,29 @@ class Tree(Control):
 
         return self._build_changed_properties(dataView=(True, True, ''.join(cdata)))
 
-    def double_click(self) -> None:
-        self.log('action', f'Double-clicking {self.id}')
+    async def double_click(self) -> None:
+        await self.log('action', f'Double-clicking {self.id}')
 
         if self.action_name:
             action = self.dialog.components[self.action_name]
             if action:
-                ct(Action, action).execute(self.id)
+                await ct(Action, action).execute(self.id)
                 return
         ev = action_event(self, None, self.id)
-        self.dialog.app.send_events(ev)
+        await self.dialog.app.send_events(ev)
 
     def _ais_setMultipleSelection(self, value: object) -> None:
         self.multiple_selection = is_true(value)
     def _ais_setCommands(self, value: object) -> None:
         self.commands = ct_none(str, value)
 
-    def select(self, ids: str | Iterable[str], active_id: str | None=None) -> None:
+    async def select(self, ids: str | Iterable[str], active_id: str | None=None) -> None:
         if isinstance(ids, str):
             ids = [ids]
         else:
             ids = sorted(set(ids))
 
-        self.log('action',
+        await self.log('action',
             'Selecting ' +
             (f'node {ids[0]!r} ' if len(ids) == 1 else f'nodes {ids!r} ') +
             (f'with active id {active_id!r} ' if active_id else '') +
@@ -179,15 +183,15 @@ class Tree(Control):
         self.selection_changed = True
         self.dialog.component_changes(self, False)
         ev = tree_selection_event(self, active_id, "SELECT")
-        self.dialog.app.send_events(ev)
+        await self.dialog.app.send_events(ev)
 
-    def toggle_expansion(self, id: str, _send_event: bool=True) -> None:
+    async def toggle_expansion(self, id: str, _send_event: bool=True) -> None:
         node = self.nodes[id]
         if node.expanded is None:
             raise ValueError("this node cannot expand")
         node.expanded = not node.expanded
 
-        self.log('action',
+        await self.log('action',
             ('Expanding ' if node.expanded else 'Collapsing ') +
             f'node {id!r} in {self.id}')
 
@@ -203,19 +207,19 @@ class Tree(Control):
         no_filled = False   # TODO: we don't know where to look for the attribute
         if no_filled:
             ev = tree_expansion_action_event(self, path)
-            self.dialog.app.send_events(ev)
+            await self.dialog.app.send_events(ev)
 
         if _send_event:
             ev = tree_expansion_event(self, path, node.expanded)
-            self.dialog.app.send_events(ev)
+            await self.dialog.app.send_events(ev)
 
-    def toggle_checkbox(self, id: str) -> None:
+    async def toggle_checkbox(self, id: str) -> None:
         node = self.nodes[id]
         if node.checked is None:
             raise ValueError("this node does not have a checkbox")
         node.checked = not node.checked
 
-        self.log('action',
+        await self.log('action',
             ('Checking ' if node.checked else 'Unchecking ') +
             f'node {id!r} in {self.id}')
 
@@ -230,4 +234,4 @@ class Tree(Control):
             if 'CHECK_CHANGE_COMMAND|' not in (self.commands or ''): return
             self.used_listeners_mask |= 64
             ev = action_event(self, 'CHECK_CHANGE_COMMAND', self.id)
-            self.dialog.app.send_events(ev)
+            await self.dialog.app.send_events(ev)

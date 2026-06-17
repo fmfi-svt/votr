@@ -19,9 +19,9 @@ class ActionableControl(Control):
         if not self.action_name: return None
         return ct(Action, self.dialog.components[self.action_name])
 
-    def try_execute_action(self, params: str | None=None) -> bool:
+    async def try_execute_action(self, params: str | None=None) -> bool:
         if self.action:
-            self.action.execute(self.id, params)
+            await self.action.execute(self.id, params)
             return True
         return False
 

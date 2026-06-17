@@ -29,8 +29,11 @@ class Component:
         if properties.get('state', 1) == 2:
             raise AISParseError('STATE_DT is not supported')
 
-    def log(self, type: str, message: str, data: object=None, /) -> None:
-        self.dialog.app.ctx.log(type, message, data)
+    async def async_init(self, element: Tag | None) -> None:
+        pass
+
+    async def log(self, type: str, message: str, data: object=None, /) -> None:
+        await self.dialog.app.ctx.log(type, message, data)
 
     def is_really_enabled(self) -> bool:
         return self.enabled and self.enabled_in_ui

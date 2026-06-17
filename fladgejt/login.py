@@ -98,11 +98,11 @@ def _redact_response(response: Response) -> str:
 _samlsso_re = re.compile(r'^https://[^/]+/ais/sso/samlsso\?')
 
 
-def _send_request(ctx: Context, url: str, data: dict[str, str] | None) -> Response:
+async def _send_request(ctx: Context, url: str, data: dict[str, str] | None) -> Response:
     method = 'POST' if data else 'GET'
 
     redacted_data = { k: '[...]' for k in data } if data else data
-    ctx.log('http', f'Requesting {method} {_redact(url)}', redacted_data)
+    await ctx.log('http', f'Requesting {method} {_redact(url)}', redacted_data)
 
     response = ctx.requests_session.request(
         method, url, data=data, allow_redirects=False)
@@ -114,7 +114,7 @@ def _send_request(ctx: Context, url: str, data: dict[str, str] | None) -> Respon
         response.headers['content-type'] = 'text/html; charset=UTF-8'
 
     # Log headers and body together in one string, for nicer `log view`.
-    ctx.log(
+    await ctx.log(
         'http', f'Received HTTP {response.status_code} response',
         _redact_response(response))
 
@@ -143,7 +143,7 @@ def _parse_form(old_url: str, soup: BeautifulSoup) -> tuple[str, dict[str, str]]
 _idp_profile_re = re.compile(r'^https://[^/]+/idp/profile/')
 
 
-def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: dict[str, str] | None) -> None:
+async def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: dict[str, str] | None) -> None:
     count = 0
     tried_saml_password_login = False
     while True:
@@ -169,9 +169,9 @@ def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: dict[s
                 'andrvotr_authority_token': params['andrvotr_authority_token'],
                 'target_url': old_url,
             }
-            ctx.log('login', 'Going andrvotr', [_redact(old_url), url])
+            await ctx.log('login', 'Going andrvotr', [_redact(old_url), url])
 
-        response = _send_request(ctx, url, data)
+        response = await _send_request(ctx, url, data)
 
         # Handle real HTTP 3xx redirects.
         if response.is_redirect:
@@ -189,23 +189,23 @@ def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: dict[s
         # SAML yet.
 
         if response.headers.get('content-type', '').startswith('text/html'):
-            soup = ctx.parse_html(response)
+            soup = await ctx.parse_html(response)
 
             # Detect successful AIS login (old interface).
             username_element = soup.find(class_='user-name')
             if username_element and username_element.get_text().strip():
-                ctx.log('login', 'AIS login successful (old interface)')
+                await ctx.log('login', 'AIS login successful (old interface)')
                 return
 
             # Detect successful AIS login (new student interface).
             if '/ais/apps/student/' in response.url and soup.find('app-root'):
-                ctx.log('login', 'AIS login successful (new student interface)')
+                await ctx.log('login', 'AIS login successful (new student interface)')
                 return
 
             # Detect successful AIS login (new teacher interface).
             # Votr functionality may be limited but at least login will work.
             if '/ais/portal2/ucitel/' in response.url:
-                ctx.log('login', 'AIS login successful (new teacher interface)')
+                await ctx.log('login', 'AIS login successful (new teacher interface)')
                 return
 
             # Handle login errors for saml_password and plain_password.
@@ -232,7 +232,7 @@ def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: dict[s
             onload = (soup.body and soup.body.get('onload')) or ''
             script = (soup.script and soup.script.get_text()) or ''
             if js_submit in onload or js_submit in script:
-                ctx.log('login', 'Detected a POST page')
+                await ctx.log('login', 'Detected a POST page')
                 url, data = _parse_form(url, soup)
                 continue
 
@@ -245,13 +245,13 @@ def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: dict[s
                     for k in data:
                         if k.startswith('shib_idp_ls_success.'):
                             data[k] = 'true'
-                    ctx.log('login', 'Detected a local storage page')
+                    await ctx.log('login', 'Detected a local storage page')
                     continue
 
                 # Handle Shibboleth IdP's password based login form.
                 if (soup.find('input', attrs={'name': 'j_username'}) and
                         soup.find('input', attrs={'name': 'j_password'})):
-                    ctx.log('login', 'Detected a login form page')
+                    await ctx.log('login', 'Detected a login form page')
                     if tried_saml_password_login:
                         raise Exception('Username and password did not work')
                     tried_saml_password_login = True
@@ -280,18 +280,18 @@ def _create_normal_client(ctx: Context, server: ServerDict, logout_mode: str) ->
         raise Exception('Neither ais_url nor rest_url is configured')
 
 
-def _login_with_saml(server: ServerDict, params: ParamsDict, logger: Logger) -> BaseClient:
+async def _login_with_saml(server: ServerDict, params: ParamsDict, logger: Logger) -> BaseClient:
     ctx = _create_context(server, logger)
 
     if 'ais_url' in server:
         # Simulate clicking the login button. It has
         # onclick="location.href='/ais/sso/samlsso?SAML2.HTTPBinding=HTTP-POST'"
         url = server['ais_url'] + 'ais/sso/samlsso?SAML2.HTTPBinding=HTTP-POST'
-        _send_request_chain(ctx, params, url, None)
+        await _send_request_chain(ctx, params, url, None)
 
     if 'rest_url' in server:
         # TODO: This is purely theoretical. REST API does not support SAML yet.
-        _send_request_chain(ctx, params, server['rest_url'], None)
+        await _send_request_chain(ctx, params, server['rest_url'], None)
 
     logout_mode = {
         # End the AIS session, just to be polite and free up resources. But
@@ -306,7 +306,7 @@ def _login_with_saml(server: ServerDict, params: ParamsDict, logger: Logger) -> 
     return _create_normal_client(ctx, server, logout_mode)
 
 
-def _login_with_plain_password(server: ServerDict, params: ParamsDictPlainPassword, logger: Logger) -> BaseClient:
+async def _login_with_plain_password(server: ServerDict, params: ParamsDictPlainPassword, logger: Logger) -> BaseClient:
     if 'rest_url' in server:
         raise Exception('plain_password type does not support rest_url')
 
@@ -317,7 +317,7 @@ def _login_with_plain_password(server: ServerDict, params: ParamsDictPlainPasswo
     # start.do will contain either an error message or the signed in view.
     login_url = server['ais_url'] + 'ais/login.do'  # pyright: ignore [reportTypedDictNotRequiredAccess]
     login_data = { 'login': params['username'], 'password': params['password'] }
-    _send_request_chain(ctx, params, login_url, login_data)
+    await _send_request_chain(ctx, params, login_url, login_data)
 
     return _create_normal_client(ctx, server, WebuiClient.LOGOUT_WITH_REDIRECTS)
 
@@ -348,11 +348,11 @@ def _parse_cookie_string(ctx: Context, base_url: str | None, default_name: str |
         ctx.requests_session.cookies.set(name, value, domain=domain)
 
 
-def _login_with_cookie(server: ServerDict, params: ParamsDictCookie, logger: Logger) -> BaseClient:
+async def _login_with_cookie(server: ServerDict, params: ParamsDictCookie, logger: Logger) -> BaseClient:
     # If login type is "cookie", but we only know ais_cookie, skip REST login.
     if ('ais_url' in server and 'rest_url' in server and
             not (params.get('rest_cookie') or '').strip()):
-        logger.log('login', 'Skipping REST login because rest_cookie is empty')
+        await logger.log('login', 'Skipping REST login because rest_cookie is empty')
         server = server.copy()
         server.pop('rest_url', None)
         server.pop('rest_cookie', None)
@@ -370,7 +370,7 @@ def _login_with_cookie(server: ServerDict, params: ParamsDictCookie, logger: Log
     return _create_normal_client(ctx, server, WebuiClient.LOGOUT_NOTHING)
 
 
-def _login_with_flashback(server: ServerDict, params: ParamsDictFlashback, logger: Logger) -> BaseClient:
+async def _login_with_flashback(server: ServerDict, params: ParamsDictFlashback, logger: Logger) -> BaseClient:
     if 'ais_url' in server:
         raise Exception('flashback type does not support ais_url')
     if 'rest_url' in server:
@@ -389,7 +389,7 @@ _handlers = {
 }
 
 
-def create_client(server: ServerDict, params: ParamsDict, *, logger: Logger | None=None) -> BaseClient:
+async def create_client(server: ServerDict, params: ParamsDict, *, logger: Logger | None=None) -> BaseClient:
     logger = logger or Logger()
 
     if params['type'] not in server['login_types']:
@@ -397,11 +397,11 @@ def create_client(server: ServerDict, params: ParamsDict, *, logger: Logger | No
 
     handler = _handlers[params['type']]
     # pyrefly: ignore [bad-argument-type]
-    client = handler(server, params, logger)  # pyright: ignore [reportArgumentType]
+    client = await handler(server, params, logger)  # pyright: ignore [reportArgumentType]
 
     # Check that login was successful.
     try:
-        client.check_connection()
+        await client.check_connection()
     except Exception as e:
         if params['type'] == 'cookie':
             raise CookieLoginError('Cookie value did not work') from e

@@ -27,14 +27,14 @@ class Button(ActionableControl):
     def _ais_setConfirmQuestion(self, value: object) -> None:
         self.confirm_question = ct_none(str, value)
 
-    def click(self) -> None:
-        self.log('action', f'Clicking {self.id}')
+    async def click(self) -> None:
+        await self.log('action', f'Clicking {self.id}')
 
-        if self.try_execute_action(): return
+        if await self.try_execute_action(): return
 
         ev = action_event(self, None, self.id)
         # TODO: We should technically ask confirm_question before firing
         # (if ev.listening is True), but we probably don't care.
-        self.dialog.app.send_events(ev)
+        await self.dialog.app.send_events(ev)
 
         # Note that showPopupMenus() is unsupported. Use menu items directly.

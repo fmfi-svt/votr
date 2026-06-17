@@ -45,16 +45,16 @@ class RadioBox(Control):
 
     # If self.always_selected == False, select(-1) unselects the current item.
     # (Votr always allows select(-1), but AIS might not like it.)
-    def select(self, index: int) -> None:
-        self.log('action',
+    async def select(self, index: int) -> None:
+        await self.log('action',
             f'Selecting "{self.options[index].title}" in {self.id}')
         self.selected_index = index
-        self._fire_event()
+        await self._fire_event()
 
-    def _fire_event(self) -> None:
+    async def _fire_event(self) -> None:
         self.dialog.component_changes(self, False)
         ev = selection_event(self, self.selected_index)
-        self.dialog.app.send_events(ev)
+        await self.dialog.app.send_events(ev)
 
     @override
     def changed_properties(self) -> str:

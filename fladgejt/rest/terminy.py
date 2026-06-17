@@ -5,11 +5,11 @@ from typing import Any, cast
 
 
 class RestTerminyMixin(BaseClient):
-    def get_predmety(self, zapisny_list_key: str) -> list[Predmet]:
+    async def get_predmety(self, zapisny_list_key: str) -> list[Predmet]:
         studium_key, akademicky_rok = decode_key(zapisny_list_key)
         sp_skratka, zaciatok = decode_key(studium_key)
 
-        predmety = self.context.request_json(
+        predmety = await self.context.request_json(
             "zapisnyList/predmety",
             skratkaStudijnehoProgramu=sp_skratka,
             zaciatokStudia=zaciatok,
@@ -23,11 +23,11 @@ class RestTerminyMixin(BaseClient):
                   for row in predmety]
         return result
 
-    def get_prihlasene_terminy(self, zapisny_list_key: str) -> list[Termin]:
+    async def get_prihlasene_terminy(self, zapisny_list_key: str) -> list[Termin]:
         studium_key, akademicky_rok = decode_key(zapisny_list_key)
         sp_skratka, zaciatok = decode_key(studium_key)
 
-        terminy = self.context.request_json(
+        terminy = await self.context.request_json(
             "zapisnyList/terminyHodnotenia",
             skratkaStudijnehoProgramu=sp_skratka,
             zaciatokStudia=zaciatok,
@@ -55,23 +55,23 @@ class RestTerminyMixin(BaseClient):
                   if not row['datumOdhlasenia']]
         return result
 
-    def get_vypisane_terminy(self, zapisny_list_key: str) -> list[Termin]:
-        predmety = self.get_predmety(zapisny_list_key)
+    async def get_vypisane_terminy(self, zapisny_list_key: str) -> list[Termin]:
+        predmety = await self.get_predmety(zapisny_list_key)
 
         result: list[Termin] = []
 
         for row in predmety:
-            result.extend(self.get_vypisane_terminy_predmetu(
+            result.extend(await self.get_vypisane_terminy_predmetu(
                 zapisny_list_key, cast(Any, row)['predmet_key']))
 
         return result
 
-    def get_vypisane_terminy_predmetu(self, zapisny_list_key: str, predmet_key: str) -> list[Termin]:
+    async def get_vypisane_terminy_predmetu(self, zapisny_list_key: str, predmet_key: str) -> list[Termin]:
         studium_key, akademicky_rok = decode_key(zapisny_list_key)
         sp_skratka, zaciatok = decode_key(studium_key)
         (skratka,) = decode_key(predmet_key)
 
-        terminy = self.context.request_json(
+        terminy = await self.context.request_json(
             "predmet/aktualneTerminyHodnotenia",
             skratkaStudijnehoProgramu=sp_skratka,
             zaciatokStudia=zaciatok,

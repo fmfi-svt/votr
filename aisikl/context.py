@@ -44,7 +44,7 @@ class Context:
                     f'https://{old_hostname}/',
                     _DnsOverrideAdapter(old_hostname, new_hostname))
 
-    def request_ais(self, url: str, *, method: str='GET', **kwargs: Any) -> Response:
+    async def request_ais(self, url: str, *, method: str='GET', **kwargs: Any) -> Response:
         r'''Sends a request to AIS and returns the :class:`requests.Response`.
 
         :param url: the URL, either absolute or relative to the AIS server.
@@ -52,20 +52,20 @@ class Context:
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
         :return: a :class:`requests.Response` object.
         '''
-        self.log('benchmark', 'Begin AIS network request')
-        self.log('http', 'Requesting {} {}'.format(
+        await self.log('benchmark', 'Begin AIS network request')
+        await self.log('http', 'Requesting {} {}'.format(
             method, url.partition('?')[0]), [url, kwargs.get('data', None)])
         url = urljoin(nn(self.ais_url), url)
         response = self.requests_session.request(method, url, **kwargs)
         response.raise_for_status()
         if response.headers.get('content-type', '').startswith('text'):
-            self.log('http', 'Received response', response.text)
+            await self.log('http', 'Received response', response.text)
         else:
-            self.log('http', 'Received response (binary data)')
-        self.log('benchmark', 'End AIS network request')
+            await self.log('http', 'Received response (binary data)')
+        await self.log('benchmark', 'End AIS network request')
         return response
 
-    def request_html(self, url: str, *, method: str='GET', **kwargs: Any) -> BeautifulSoup:
+    async def request_html(self, url: str, *, method: str='GET', **kwargs: Any) -> BeautifulSoup:
         r'''Sends a request to AIS and parses the response as HTML.
 
         :param url: the URL, either absolute or relative to the AIS server.
@@ -73,15 +73,15 @@ class Context:
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
         :return: a ``BeautifulSoup`` object.
         '''
-        return self.parse_html(self.request_ais(url, method=method, **kwargs))
+        return await self.parse_html(await self.request_ais(url, method=method, **kwargs))
 
-    def parse_html(self, response: Response) -> BeautifulSoup:
-        self.log('benchmark', 'Begin HTML parsing')
+    async def parse_html(self, response: Response) -> BeautifulSoup:
+        await self.log('benchmark', 'Begin HTML parsing')
         soup = BeautifulSoup(response.text, 'lxml')
-        self.log('benchmark', 'End HTML parsing')
+        await self.log('benchmark', 'End HTML parsing')
         return soup
 
-    def request_json(self, url: str, **data: object) -> Any:
+    async def request_json(self, url: str, **data: object) -> Any:
         r'''Sends a request to REST API and parses the response as JSON.
 
         :param url: the URL, either absolute or relative to the AIS server.
@@ -89,14 +89,14 @@ class Context:
         :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
         :return: a dictionary.
         '''
-        self.log('benchmark', 'Begin REST network request')
-        self.log('http', 'Requesting POST {}'.format(
+        await self.log('benchmark', 'Begin REST network request')
+        await self.log('http', 'Requesting POST {}'.format(
             url.partition('?')[0]), [url, data])
         url = urljoin(nn(self.rest_url), url)
         response = self.requests_session.request("POST", url, data=data)
         response.raise_for_status()
-        self.log('http', 'Received response', response.text)
-        self.log('benchmark', 'End REST network request')
+        await self.log('http', 'Received response', response.text)
+        await self.log('benchmark', 'End REST network request')
 
         if not response.url.startswith(nn(self.rest_url)):
             raise LoggedOutError('REST login expired.')
@@ -106,10 +106,10 @@ class Context:
             raise RESTServerError(
                 "Status: {status} Error: {error}".format(**response))
 
-        self.log('http', 'Parsed JSON data')
+        await self.log('http', 'Parsed JSON data')
         return response['response']
 
-    def log(self, type: str, message: str, data: object=None) -> None:
+    async def log(self, type: str, message: str, data: object=None) -> None:
         '''Logs a message.
 
         Args:
@@ -117,7 +117,7 @@ class Context:
             message: The log message. Should be a single line.
             data: A JSON-serializable object containing more details.
         '''
-        self.logger.log(type, message, data)
+        await self.logger.log(type, message, data)
 
 
 class Logger:
@@ -136,7 +136,7 @@ class Logger:
     def __getstate__(self) -> dict[object, object]:
         return {}
 
-    def log(self, type: str, message: str, data: object=None) -> None:
+    async def log(self, type: str, message: str, data: object=None) -> None:
         timestamp = time.time()
 
         if self.log_file and type != 'benchmark':

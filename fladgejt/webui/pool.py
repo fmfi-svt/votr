@@ -4,13 +4,15 @@ from typing import Any, TYPE_CHECKING, Unpack
 if TYPE_CHECKING:
     from aisikl.app import Application
     from aisikl.context import Context
-    from collections.abc import Callable
+    from collections.abc import Awaitable, Callable
 
 
 OPEN_APP_LIMIT = 10
 
 
-def pooled_app[S, D, *A](original_method: Callable[[S, Unpack[A]], Application[D]]) -> Callable[[S, Unpack[A]], Application[D]]:
+def pooled_app[S, D, *A](
+    original_method: Callable[[S, Unpack[A]], Awaitable[Application[D]]]
+) ->                 Callable[[S, Unpack[A]], Awaitable[Application[D]]]:
     '''Decorator for methods that return an :class:`~aisikl.app.Application`.
 
     Generally, we don't want to open an application if we've already opened it.
@@ -36,20 +38,20 @@ def pooled_app[S, D, *A](original_method: Callable[[S, Unpack[A]], Application[D
         The decorated method.
     '''
     @wraps(original_method)
-    def wrapper(self: Any, *args: Unpack[A]) -> Application[D]:
+    async def wrapper(self: Any, *args: Unpack[A]) -> Application[D]:
         app_pool: Pool = self.app_pool
         open_apps: dict[object, Application[object]] = app_pool.open_apps
         active_keys: set[object] = app_pool.active_keys
         app_key = (original_method.__name__, args)
 
-        if app_key in open_apps and not open_apps[app_key].is_still_open():
+        if app_key in open_apps and not await open_apps[app_key].is_still_open():
             del open_apps[app_key]
             active_keys.discard(app_key)
 
         if app_key not in open_apps:
-            app_pool.reserve(1)
+            await app_pool.reserve(1)
             # pyrefly: ignore [bad-argument-type]
-            open_apps[app_key] = original_method(self, *args)
+            open_apps[app_key] = await original_method(self, *args)
 
         active_keys.add(app_key)
         return open_apps[app_key]  # pyrefly: ignore [bad-return] # pyright: ignore [reportReturnType]
@@ -63,7 +65,7 @@ class Pool:
         self.open_apps: dict[object, Application[object]] = {}
         self.active_keys: set[object] = set()
 
-    def reserve(self, count: int) -> None:
+    async def reserve(self, count: int) -> None:
         sorted_keys = sorted(
             self.open_apps,
             key=lambda k: self.open_apps[k].last_response_time)
@@ -74,9 +76,9 @@ class Pool:
             if key in self.active_keys:
                 continue
 
-            self.context.log('operation', 'Closing pooled application', key)
+            await self.context.log('operation', 'Closing pooled application', key)
             app = self.open_apps.pop(key)
-            if not app.force_close():
+            if not await app.force_close():
                 # force_close() can fail if the AIS server is still busy, e.g.
                 # if an earlier Votr RPC timed out. The app still counts towards
                 # OPEN_APP_LIMIT, but right now it's in an unusable state for
@@ -87,10 +89,10 @@ class Pool:
                         self.open_apps[new_key] = app
                         break
 
-    def prepare_for_rpc(self, last_rpc_failed: bool) -> None:
+    async def prepare_for_rpc(self, last_rpc_failed: bool) -> None:
         self.active_keys = set()
 
         if last_rpc_failed and self.open_apps:
-            self.context.log('operation',
+            await self.context.log('operation',
                 'Closing all open apps because of previous RPC error')
-            self.reserve(OPEN_APP_LIMIT)
+            await self.reserve(OPEN_APP_LIMIT)

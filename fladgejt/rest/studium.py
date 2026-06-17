@@ -9,8 +9,8 @@ def convert(rows: list[dict[str, object]]) -> list[dict[str, str]]:
 
 
 class RestStudiumMixin(BaseClient):
-    def get_studia(self) -> list[Studium]:
-        studia = convert(self.context.request_json('studium'))
+    async def get_studia(self) -> list[Studium]:
+        studia = convert(await self.context.request_json('studium'))
 
         result = [Studium(sp_skratka=row['studijnyProgramSkratka'],
                           sp_popis=row['studijnyProgramPopis'],
@@ -24,10 +24,10 @@ class RestStudiumMixin(BaseClient):
                   for row in studia]
         return result
 
-    def get_zapisne_listy(self, studium_key: str) -> list[ZapisnyList]:
+    async def get_zapisne_listy(self, studium_key: str) -> list[ZapisnyList]:
         sp_skratka, zaciatok = decode_key(studium_key)
 
-        zapisne_listy = convert(self.context.request_json(
+        zapisne_listy = convert(await self.context.request_json(
             "studium/zapisneListy",
             skratkaStudijnehoProgramu=sp_skratka,
             zaciatokStudia=zaciatok))

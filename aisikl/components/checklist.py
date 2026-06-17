@@ -43,26 +43,26 @@ class CheckList(Control):
             if 'selectedListRow' in (tr.get('class') or []):
                 self.selected_index = index
 
-    def up_down_row(self, command: str) -> None:
+    async def up_down_row(self, command: str) -> None:
         raise Exception('up_down_row not yet implemented.')   # TODO
 
-    def select_unselect_all(self) -> None:
+    async def select_unselect_all(self) -> None:
         if not self.items: return
         new_value = not self.items[0].checked
-        self.log('action', '{} all items in {}'.format(
+        await self.log('action', '{} all items in {}'.format(
             'Selecting' if new_value else 'Unselecting', self.id))
         for item in self.items:
             item.checked = new_value
         self._mark_changed()
 
-    def select(self, index: int) -> None:
-        self.log('action',
+    async def select(self, index: int) -> None:
+        await self.log('action',
             f'Selecting item "{self.items[index].title}" {self.id}')
         self.selected_index = index
 
-    def toggle(self, index: int) -> None:
+    async def toggle(self, index: int) -> None:
         self.items[index].checked = not self.items[index].checked
-        self.log('action', '{} item "{}" in {}'.format(
+        await self.log('action', '{} item "{}" in {}'.format(
             'Checking' if self.items[index].checked else 'Unchecking',
             self.items[index].title, self.id))
         self.selected_index = index

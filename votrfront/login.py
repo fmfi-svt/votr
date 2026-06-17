@@ -1,4 +1,4 @@
-
+import asyncio
 from base64 import b64decode, b64encode
 from datetime import datetime, UTC
 import hashlib
@@ -193,15 +193,15 @@ def do_logout(request):
             credentials = load_credentials(session['credentials'])
             log = session['client'].context.log
             try:
-                log('logout', 'Logout started', request.full_path)
-                session['client'].logout()
+                asyncio.run(log('logout', 'Logout started', request.full_path))
+                asyncio.run(session['client'].logout())
             except Exception as e:
-                log('logout',
+                asyncio.run(log('logout',
                     f'Logout failed with {type(e).__name__}',
-                    traceback.format_exc())
+                    traceback.format_exc()))
                 # But delete the session anyway.
             else:
-                log('logout', 'Logout finished')
+                asyncio.run(log('logout', 'Logout finished'))
             sessions.delete(request)
             # When the with statement ends, the session dict is still written
             # to the open session fd, but the file was already deleted.
@@ -226,16 +226,16 @@ def finish_login(request, get_params):
         logger.log_file = log_file
 
         try:
-            logger.log('login', 'Login started')
+            asyncio.run(logger.log('login', 'Login started'))
             params = get_params(request)
             server = request.app.settings.servers[int(params['server'])]
             destination = params['destination']
-            logger.log('login', 'Creating client', {
+            asyncio.run(logger.log('login', 'Creating client', {
                 'server_title': server.get('title'),
                 'type': params['type'],
                 'destination': destination,
-            })
-            client = create_client(server, params, logger=logger)
+            }))
+            client = asyncio.run(create_client(server, params, logger=logger))
             csrf_token = generate_key()
             session = dict(
                 last_announcement=request.app.settings.announcement_html,
@@ -246,8 +246,8 @@ def finish_login(request, get_params):
             sessions.create(request, sessid, session)
         except Exception as e:
             error = traceback.format_exc()
-            logger.log('login',
-                f'Login failed with {type(e).__name__}', error)
+            asyncio.run(logger.log(
+                'login', f'Login failed with {type(e).__name__}', error))
             app_kwargs = { 'error': error, 'destination': destination or '' }
             if server:
                 app_kwargs['server'] = params['server']
@@ -255,7 +255,8 @@ def finish_login(request, get_params):
                     app_kwargs['type'] = params['type']
             return app_response(request, **app_kwargs)
 
-        logger.log('login', 'Login finished', params.get('username'))
+        asyncio.run(logger.log(
+            'login', 'Login finished', params.get('username')))
 
     request.votr_cookie_value = dict(sessid=sessid)
 

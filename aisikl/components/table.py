@@ -136,9 +136,11 @@ class Table(Control):
         self.changed_cells: set[tuple[str, int]] = set()
         self.last_changed_row_index: int | None = None
 
-        self._init_from_data_view(nn(element).find(id=self.id + '_dataView'))
+    @override
+    async def async_init(self, element: Tag | None) -> None:
+        await self._init_from_data_view(nn(element).find(id=self.id + '_dataView'))
 
-    def _init_from_data_view(self, data_view: Tag | None) -> None:
+    async def _init_from_data_view(self, data_view: Tag | None) -> None:
         if not data_view: return
 
         self._update_data_position_properties(data_view)
@@ -181,10 +183,10 @@ class Table(Control):
 
         self.column_map = { col.alias: col for col in self.columns }
 
-        self.log('table', f'Found {len(self.columns)} columns in {self.id}', self.columns)
+        await self.log('table', f'Found {len(self.columns)} columns in {self.id}', self.columns)
 
-        self._load_rows(nn(load_script(data_view, 'dataTabBodies')),
-                        load_script(data_view, 'dataTabBodiesFixed'))
+        await self._load_rows(nn(load_script(data_view, 'dataTabBodies')),
+                              load_script(data_view, 'dataTabBodiesFixed'))
 
         self._load_edit_models(load_script(data_view, 'dataTabEditModels'))
 
@@ -284,79 +286,79 @@ class Table(Control):
     def _ais_setBufferSize(self, value: object) -> None:
         self.buffer_size = 50 if value is None else really_int(value)
 
-    def switch_row_numbers_visible(self) -> None:
-        self.log('action', f'Switching row numbers visibility in {self.id}')
+    async def switch_row_numbers_visible(self) -> None:
+        await self.log('action', f'Switching row numbers visibility in {self.id}')
         self.row_numbers_visible = not self.row_numbers_visible
         self.row_numbers_visible_changed = True
         self.dialog.component_changes(self, True)
 
-    def switch_status_visible(self) -> None:
-        self.log('action', f'Switching status bar visibility in {self.id}')
+    async def switch_status_visible(self) -> None:
+        await self.log('action', f'Switching status bar visibility in {self.id}')
         self.status_visible = not self.status_visible
         self.status_visible_changed = True
         self.dialog.component_changes(self, True)
 
-    def on_column_move(self, column_alias: str, after_column_alias: str) -> None: # TODO inline into actual column move fn
-        self.log('action', f'Moving {column_alias} to be after {after_column_alias} in {self.id}')
+    async def on_column_move(self, column_alias: str, after_column_alias: str) -> None: # TODO inline into actual column move fn
+        await self.log('action', f'Moving {column_alias} to be after {after_column_alias} in {self.id}')
         ev = table_header_event(
             self, column_alias, after_column_alias, None, 'MOVE_COLUMN')
-        self.dialog.app.send_events(ev)
+        await self.dialog.app.send_events(ev)
 
-    def _on_edit_row(self, index: int) -> None:
+    async def _on_edit_row(self, index: int) -> None:
         if not self.edited_cells: return
         self.dialog.component_changes(self, False)
         if 'EDITED_ROW|' in self.supported_events:
             self.used_listeners_mask |= 64
             ev = row_edited_event(self, 'EDITED_ROW', index)
-            self.dialog.app.send_events(ev)
+            await self.dialog.app.send_events(ev)
 
-    def sort(self, column_alias: str, modifiers: str | None) -> None:
+    async def sort(self, column_alias: str, modifiers: str | None) -> None:
         # TODO: find out if this should be a public function
         ev = table_header_event(
             self, column_alias, None, modifiers, 'HEADER_CLICK')
-        self.dialog.app.send_events(ev)
+        await self.dialog.app.send_events(ev)
 
-    def _on_data_tab_dbl_click(self) -> None:
+    async def _on_data_tab_dbl_click(self) -> None:
         # TODO: rename or inline this appropriately
         if self.action_name:
             action = self.dialog.components[self.action_name]
             if action:
-                ct(Action, action).execute(self.id)
+                await ct(Action, action).execute(self.id)
                 return
         if 'EMPTY|' in self.supported_events:
             self.used_listeners_mask |= 64
             ev = action_event(self, None, self.id)
-            self.dialog.app.send_events(ev)
+            await self.dialog.app.send_events(ev)
 
-    def _fire_action_command(self, command: str) -> None:
+    async def _fire_action_command(self, command: str) -> None:
         if command + '|' in self.supported_events:
             self.used_listeners_mask |= 64
             ev = action_event(self, command, self.id)
-            self.dialog.app.send_events(ev)
+            await self.dialog.app.send_events(ev)
 
-    def delete_row(self) -> None:
+    async def delete_row(self) -> None:
         self.dialog.component_changes(self, False)
-        self._fire_action_command('DELETE_ROW')
+        await self._fire_action_command('DELETE_ROW')
 
-    def insert_row(self) -> None:
+    async def insert_row(self) -> None:
         self.dialog.component_changes(self, False)
-        self._fire_action_command('INSERT_ROW')
+        await self._fire_action_command('INSERT_ROW')
 
-    def control_button_row_count(self) -> None:
+    async def control_button_row_count(self) -> None:
         self.dialog.component_changes(self, True)
-        self._fire_action_command('ROW_COUNT')
+        await self._fire_action_command('ROW_COUNT')
 
-    def control_button_columns(self) -> None:
+    async def control_button_columns(self) -> None:
         self.dialog.component_changes(self, True)
-        self._fire_action_command('SET_COLUMNS')
+        await self._fire_action_command('SET_COLUMNS')
 
-    def control_button_sort(self) -> None:
+    async def control_button_sort(self) -> None:
         self.dialog.component_changes(self, True)
-        self._fire_action_command('SET_SORTING')
+        await self._fire_action_command('SET_SORTING')
 
-    def control_button_debug_info(self) -> None:
+    async def control_button_debug_info(self) -> None:
         self.dialog.component_changes(self, True)
-        self._fire_action_command('DEBUG_INFO')
+        await self._fire_action_command('DEBUG_INFO')
 
     def up_down_row(self, command: str) -> None:
         if not self.up_down_enabled: return
@@ -364,24 +366,24 @@ class Table(Control):
             self.up_downed_rows = True
             self.dialog.component_changes(self, False)
 
-    def _on_edit_cell(self, send: bool, alias: str, row_index: int) -> None:
+    async def _on_edit_cell(self, send: bool, alias: str, row_index: int) -> None:
         self.edited_cells = True
         self.dialog.component_changes(self, False)
         if not send: return
         if 'EDITED_CELL|' not in self.supported_events: return
         self.used_listeners_mask |= 64
         ev = cell_edited_event(self, 'EDITED_CELL', alias, row_index)
-        self.dialog.app.send_events(ev)
+        await self.dialog.app.send_events(ev)
 
-    def button_num_code_click(self, alias: str, row_index: int, value: str | bool) -> None:
-        self.edit_cell(alias, row_index, value, _skip_event=True)
+    async def button_num_code_click(self, alias: str, row_index: int, value: str | bool) -> None:
+        await self.edit_cell(alias, row_index, value, _skip_event=True)
 
         self.edited_cells = True
         self.dialog.component_changes(self, False)
         if 'BUTTON_NUM_CODE|' not in self.supported_events: return
         self.used_listeners_mask |= 64
         ev = cell_edited_event(self, 'BUTTON_NUM_CODE', alias, row_index)
-        self.dialog.app.send_events(ev)
+        await self.dialog.app.send_events(ev)
 
     @override
     def changed_properties(self) -> str:
@@ -455,16 +457,16 @@ class Table(Control):
 
         return self._build_changed_properties(**properties)
 
-    def _ais_setDataView(self, id: str, body: Tag) -> None:
+    async def _ais_setDataView(self, id: str, body: Tag) -> None:
         data_view = nn(body.find(id=id))
         if not data_view.contents: return
         if data_view.find(id='columnModel'):
-            self._init_from_data_view(data_view)
+            await self._init_from_data_view(data_view)
         else:
-            self._update_data(data_view)
+            await self._update_data(data_view)
     _ais_setDataView.wants_body = True  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportFunctionMemberAccess]
 
-    def _update_data(self, data_view: Tag) -> None:
+    async def _update_data(self, data_view: Tag) -> None:
         self._update_selection_model_properties(data_view)
 
         data_tab_bodies = data_view.find(id='dataTabBodies')
@@ -476,7 +478,7 @@ class Table(Control):
 
         data_send_type = data_tab_bodies.get('datasendtype', 'update')
         if data_send_type == 'info':
-            self.log('table', f'Updating info in {self.id}')
+            await self.log('table', f'Updating info in {self.id}')
             return
 
         if data_tab_bodies.find(id='dataTabTmp'):
@@ -484,12 +486,12 @@ class Table(Control):
                 # This might be a behavior difference - WebUI actually does
                 # `this.dataSendType == "update";`. We hope they meant `=`.
                 data_send_type = 'update'
-            self._load_rows(data_tab_bodies, data_tab_bodies_fixed,
+            await self._load_rows(data_tab_bodies, data_tab_bodies_fixed,
                             replace=(data_send_type == 'update'))
 
         self._load_edit_models(data_view.find(id='dataTabEditModels'))
 
-    def _load_rows(self, data_tab_bodies: Tag, data_tab_bodies_fixed: Tag | None, replace: bool=True) -> None:
+    async def _load_rows(self, data_tab_bodies: Tag, data_tab_bodies_fixed: Tag | None, replace: bool=True) -> None:
         really_replaced = replace and self.loaded_rows
         if replace:
             self.loaded_buffers = set()
@@ -526,7 +528,7 @@ class Table(Control):
                 self.loaded_rows.append(cast(Row, cast(object, None)))  # For ease of use, lie to the type checker.
             self.loaded_rows[row.id] = row
 
-        self.log('table', 'Loaded {} rows in {}{}'.format(
+        await self.log('table', 'Loaded {} rows in {}{}'.format(
             len(new_rows), self.id,
             ' (replacing old content)' if really_replaced else ''),
             new_rows)
@@ -578,26 +580,26 @@ class Table(Control):
                     tool_tip_text=ct(str, option['title']),
                 ))
 
-    def scroll_down(self, buffers: int=1) -> None:
+    async def scroll_down(self, buffers: int=1) -> None:
         if self.is_end_of_data: return
-        self.log('action', f'Scrolling down in {self.id}')
+        await self.log('action', f'Scrolling down in {self.id}')
         self.num_visible_buffers += buffers
         self.scrolled_vertically = True
         self.dialog.component_changes(self, True)
         ev = cursor_event(self, 'pagedown', 'PAGEDOWN')
-        self.dialog.app.send_events(ev)
+        await self.dialog.app.send_events(ev)
 
-    def all_rows(self) -> list[Row]:
+    async def all_rows(self) -> list[Row]:
         if self.declared_row_count > 0:
-            self.scroll_down(self.declared_row_count // self.buffer_size + 1)
+            await self.scroll_down(self.declared_row_count // self.buffer_size + 1)
 
         while not self.is_end_of_data:
-            self.scroll_down(10)
+            await self.scroll_down(10)
         if self.truncated:
             raise AISBehaviorError("AIS did not return all table rows")
         return self.loaded_rows
 
-    def select(self, indexes: int | Iterable[int], cursor: int | None=None, inverted: bool=False, column_alias: str | None=None, *, _skip_event: bool=False) -> None:
+    async def select(self, indexes: int | Iterable[int], cursor: int | None=None, inverted: bool=False, column_alias: str | None=None, *, _skip_event: bool=False) -> None:
         if isinstance(indexes, int):
             indexes = [indexes]
         else:
@@ -633,7 +635,7 @@ class Table(Control):
                 (inverted and len(indexes) == len(self.loaded_rows))):
             raise AISBehaviorError('empty selection not supported for this table')
 
-        self.log('action', 'Selecting {}{}{} {}{} in {}'.format(
+        await self.log('action', 'Selecting {}{}{} {}{} in {}'.format(
             f'column {column_alias} of ' if column_alias else '',
             'inverted ' if inverted else '',
             'rows' if len(indexes) > 1 else 'row',
@@ -660,7 +662,7 @@ class Table(Control):
         if active_index_changed:
             self.active_index_changed = True
             self.dialog.component_changes(self, True)
-            self._fire_action_command('ACTIVE_ROW_CHANGE')
+            await self._fire_action_command('ACTIVE_ROW_CHANGE')
 
         if selection_changed:
             self.selection_changed = True
@@ -679,9 +681,9 @@ class Table(Control):
             # already had this "problem" when Shift+selecting, so it should be
             # OK for Votr. You could always call select() many times if needed.
             evs.append(selection_event(self, cursor, cursor in indexes))
-            self.dialog.app.send_events(*evs)
+            await self.dialog.app.send_events(*evs)
 
-    def edit_cell(self, alias: str, row_index: int, value: str | bool, *, _skip_event: bool=False) -> None:
+    async def edit_cell(self, alias: str, row_index: int, value: str | bool, *, _skip_event: bool=False) -> None:
         column = self.column_map[alias]
         row = self.loaded_rows[row_index]
         cell = row.cells[column.index]
@@ -694,11 +696,11 @@ class Table(Control):
             send_edit_cell = cell.send_edit_cell
             value = bool(value)
 
-        self.select(row_index,
+        await self.select(row_index,
             column_alias=(alias if self.cell_selection_mode else None),
             _skip_event=(is_checkbox and send_edit_cell))
 
-        self.log('action', f'Setting cell {alias} of row {row_index} in {self.id} to {value!r}')
+        await self.log('action', f'Setting cell {alias} of row {row_index} in {self.id} to {value!r}')
 
         cell = row.cells[column.index] = cell._replace(value=value)
 
@@ -706,4 +708,4 @@ class Table(Control):
         self.last_changed_row_index = row_index
 
         if not _skip_event:
-            self._on_edit_cell(send_edit_cell, alias, row_index)
+            await self._on_edit_cell(send_edit_cell, alias, row_index)

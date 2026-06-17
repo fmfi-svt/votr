@@ -49,8 +49,8 @@ class TextField(TextInput):
             self.tool_tip_changed = True
             self.tool_tip_text: str | None = ''
 
-    def write(self, value: str) -> None:
-        self.log('action', f'Writing {value!r} in {self.id}')
+    async def write(self, value: str) -> None:
+        await self.log('action', f'Writing {value!r} in {self.id}')
         self.value = value
         self._mark_changed()
 

@@ -2,13 +2,18 @@ import gzip
 import json
 import os
 import sys
-import time
 from aisikl.typeutils import nn
 from fladgejt.base import BaseClient
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.context import Context
+    from asyncio import sleep
+else:
+    try:
+        from anyio import sleep
+    except ImportError:
+        from asyncio import sleep
 
 
 _STATEFUL = {
@@ -100,25 +105,25 @@ class FlashbackClient(BaseClient):
         if name.startswith('_'):
             raise AttributeError(name)
 
-        def rpc_method(*argst: object) -> object:
+        async def rpc_method(*argst: object) -> object:
             args = _tuplify(argst)
             found = self._rpcs.get((name, args))
             if not found:
                 raise TimeParadoxError("RPC %s%r did not happen in the flashback" % (name, args))
             self._did.add((name, args))
             outcome = None
-            self.context.log("flashback", "%s candidates" % len(found))
+            await self.context.log("flashback", "%s candidates" % len(found))
             for (condition, outcome_candidate) in found:
                 if condition == None:
                     outcome = outcome_candidate
                 elif condition in self._did:
-                    self.context.log("flashback", "%s%r already happened" % condition)
+                    await self.context.log("flashback", "%s%r already happened" % condition)
                     outcome = outcome_candidate
                 else:
-                    self.context.log("flashback", "%s%r did not happen yet" % condition)
+                    await self.context.log("flashback", "%s%r did not happen yet" % condition)
 
             # TODO: Configurable sleep.
-            time.sleep(0.5)
+            await sleep(0.5)
 
             success, result = nn(outcome)
             if success:
