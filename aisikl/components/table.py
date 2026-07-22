@@ -434,7 +434,7 @@ class Table(Control):
             self.edited_cells = False
 
         if self.deleted_rows or self.up_downed_rows:
-            cdata.append(f"<upDownedRows>{self._get_rows_ids()}</upDownedRows>")   # TODO: not implemented yet # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue, reportUnknownArgumentType, reportUnknownMemberType]
+            cdata.append(f"<upDownedRows>{self._get_rows_ids()}</upDownedRows>")   # TODO: not implemented yet # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType]
             self._table_model_reset_rows_ids()   # TODO: not implemented yet # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType]
             self.deleted_rows = False
             self.up_downed_rows = False
