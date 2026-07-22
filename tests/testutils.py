@@ -1,7 +1,9 @@
+# pyright: reportUninitializedInstanceVariable=none
+
 import argparse
 import asyncio
 import base64
-from collections import deque, namedtuple
+from collections import deque
 import contextlib
 import json
 import os
@@ -10,15 +12,25 @@ import re
 import time
 import traceback
 from types import SimpleNamespace
+from typing import Any, NamedTuple, TYPE_CHECKING
 from urllib.parse import urljoin
 from requests import HTTPError, Session
 import aisikl.context
 from aisikl.context import Context, Logger
-from fladgejt.login import create_client
+from aisikl.typeutils import ct, nn
+from fladgejt.login import ParamsDictSamlPassword, ServerDict, create_client
 from fladgejt.webui import WebuiClient
 
+if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable, Iterable, Sequence
+    from fladgejt.base import BaseClient
 
-LogEntry = namedtuple('LogEntry', ('timestamp', 'type', 'message', 'data'))
+
+class LogEntry(NamedTuple):
+    timestamp: float
+    type: str
+    message: str
+    data: object
 
 
 _IGNORE_DETAILS = '[{_IGNORE_DETAILS}]'
@@ -28,7 +40,15 @@ class MockRunner:
     FAKE_AIS_URL = 'https://ais.invalid/'
     FAKE_REST_URL = 'https://rest.invalid/'
 
-    async def run(self, body, expected_logs, *, print, old_log, fail_fast):
+    async def run(
+        self,
+        body: Callable[[], Awaitable[None]],
+        expected_logs: Sequence[LogEntry],
+        *,
+        print: Callable[[str], None],
+        old_log: bool,
+        fail_fast: bool,
+    ) -> bool:
         self.expected_logs = deque(_preprocess_expected_logs(
             expected_logs, old_log))
         self.responses = deque(_prepare_http_responses(self.expected_logs))
@@ -46,7 +66,7 @@ class MockRunner:
         try:
             time.time = self._mock_time
             Logger.send_log = self._mock_send_log
-            Session.request = self._mock_request
+            Session.request = self._mock_request  # pyrefly: ignore [bad-assignment] # pyright: ignore [reportAttributeAccessIssue]
             await body()
         except _FailFast:
             count = len(self.expected_logs)
@@ -65,10 +85,10 @@ class MockRunner:
 
         return self.ok
 
-    def _mock_time(self):
+    def _mock_time(self) -> float:
         return self.now
 
-    def _mock_request(self, *args, **kwargs):
+    def _mock_request(self, *args: object, **kwargs: object) -> object:
         # This doesn't check if the request url or any other args match. It just
         # returns the original responses in the given order.
         # This can lead to confusing output if we diverge too much from the
@@ -76,7 +96,9 @@ class MockRunner:
         # fully trusted.
         return self.responses.popleft()()
 
-    def _mock_send_log(self, atimestamp, atype, amessage, adata):
+    def _mock_send_log(
+        self, atimestamp: float, atype: str, amessage: str, adata: object,
+    ) -> None:
         self._mock_send_log_match(atimestamp, atype, amessage, adata)
 
         if self.fail_fast and not self.ok:
@@ -94,12 +116,14 @@ class MockRunner:
             if self.expected_logs[0].message.endswith(
                     ' failed with BrokenPipeError'):
                 raise BrokenPipeError(
-                    re.search(
+                    nn(re.search(
                         r'\nBrokenPipeError: (.*\S)\n*$',
-                        self.expected_logs[0].data,
-                    ).group(1))
+                        ct(str, self.expected_logs[0].data),
+                    )).group(1))
 
-    def _mock_send_log_match(self, atimestamp, atype, amessage, adata):
+    def _mock_send_log_match(
+        self, atimestamp: float, atype: str, amessage: str, adata: object,
+    ) -> None:
         if atype == 'benchmark':
             return
 
@@ -143,7 +167,7 @@ class MockRunner:
 
         self.expected_logs.popleft()
 
-        def fail(message, *, desync):
+        def fail(message: str, *, desync: bool) -> None:
             self.ok = False
             if desync:
                 self.synced = False
@@ -183,9 +207,9 @@ class MockRunner:
 
         # For some exceptions it's hard to mock the exact details including
         # the chain.
-        if (
-            ' failed with ' in amessage and
-            (_IGNORE_DETAILS in adata or _IGNORE_DETAILS in edata)
+        if ' failed with ' in amessage and (
+            _IGNORE_DETAILS in ct(str, adata) or
+            _IGNORE_DETAILS in ct(str, edata)
         ):
             self.print(f'INFO: match exception ignoring details: {ajson}')
             return
@@ -201,7 +225,8 @@ class MockRunner:
         fail('wrong data', desync=False)
 
 
-def _preprocess_expected_logs(entries, old_log):
+def _preprocess_expected_logs(
+        entries: Sequence[LogEntry], old_log: bool) -> Iterable[LogEntry]:
     skip = 0
 
     for i in range(len(entries)):
@@ -269,7 +294,8 @@ def _preprocess_expected_logs(entries, old_log):
         yield entries[i]
 
 
-def _prepare_http_responses(entries):
+def _prepare_http_responses(
+        entries: Sequence[LogEntry]) -> Iterable[Callable[[], object]]:
     for i in range(1, len(entries)):
         responder = _prepare_http_response(
             entries[i - 1], entries[i], entries[-1])
@@ -277,7 +303,11 @@ def _prepare_http_responses(entries):
             yield responder
 
 
-def _prepare_http_response(request_entry, response_entry, final_entry):
+def _prepare_http_response(
+        request_entry: LogEntry,
+        response_entry: LogEntry,
+        final_entry: LogEntry,
+) -> Callable[[], object] | None:
     # Match normal successful text responses for Context.request_ais() or
     # Context.request_json().
     if (
@@ -295,7 +325,8 @@ def _prepare_http_response(request_entry, response_entry, final_entry):
             # This is only used when request_json() checks if
             # response.url.startswith(self.rest_url) to see if login expired.
             # Hack: Assume that JSON is logged in and HTML is logged out.
-            url=(MockRunner.FAKE_REST_URL if response_entry.data.startswith('{')
+            url=(MockRunner.FAKE_REST_URL
+                if ct(str, response_entry.data).startswith('{')
                 else ''),
         )
 
@@ -344,7 +375,7 @@ def _prepare_http_response(request_entry, response_entry, final_entry):
         return lambda: SimpleNamespace(
             headers={},
             text=None,
-            content=base64.b64decode(final_entry.data),
+            content=base64.b64decode(ct(str, final_entry.data)),
             raise_for_status=lambda: None,
         )
 
@@ -368,13 +399,13 @@ def _prepare_http_response(request_entry, response_entry, final_entry):
         response_entry is final_entry and
         ' failed with ' in final_entry.message and
         (m := re.search(r'\nrequests.exceptions.HTTPError: ((\d+) [^\n]+)',
-            final_entry.data))
+            ct(str, final_entry.data)))
     ):
         error_message = m.group(1)
         status_code = int(m.group(2))
-        def raise_for_status():
+        def raise_for_status() -> None:
             # check_connection() needs the response attribute.
-            raise HTTPError(error_message, response=error_response)
+            raise HTTPError(error_message, response=error_response)  # pyrefly: ignore [bad-argument-type]
         error_response = SimpleNamespace(
             # check_connection() needs the status_code attribute.
             status_code=status_code,
@@ -393,7 +424,7 @@ def _prepare_http_response(request_entry, response_entry, final_entry):
         final_entry.message.endswith(
             (' failed with ConnectionError', ' failed with SSLError'))
     ):
-        def raise_error():
+        def raise_error() -> None:
             if final_entry.message.endswith(' failed with ConnectionError'):
                 raise ConnectionError(_IGNORE_DETAILS)
             else:
@@ -415,17 +446,17 @@ def _prepare_http_response(request_entry, response_entry, final_entry):
         # Hack: This response log format was meant for human consumption.
         # Hack: The real headers dict is case insensitive. This assumes that
         # login.py always uses lowercase when reading.
-        headers_str, _, body = response_entry.data.partition('\n---\n')
+        headers_str, _, body = ct(str, response_entry.data).partition('\n---\n')
         headers_list = [line.split(': ') for line in headers_str.split('\n')]
         headers_dict = { k.lower(): v for k, v in headers_list }
 
-        def raise_for_status():
+        def raise_for_status() -> None:
             if status_code >= 400:
                 # Hack: The log contains the HTTP status code, but not status
                 # text, so we must extract it from the final entry.
-                error_match = re.search(
+                error_match = nn(re.search(
                     r'(^|\n)requests.exceptions.HTTPError: (\d+ [^\n]+)',
-                    final_entry.data)
+                    ct(str, final_entry.data)))
                 raise HTTPError(error_match.group(2))
         return lambda: SimpleNamespace(
             status_code=status_code,
@@ -460,9 +491,10 @@ def _prepare_http_response(request_entry, response_entry, final_entry):
         )
 
 
-def _canonicalize(jsonstr, old_log):
+def _canonicalize(jsonstr: str, old_log: bool) -> str:
     # json.dumps + json.loads also implicitly creates a deep copy so we can
     # modify `data` without affecting the original log() argument.
+    data: Any
     timestamp, type, message, data = json.loads(jsonstr)
 
     # For exceptions, compare messages but ignore tracebacks.
@@ -473,7 +505,7 @@ def _canonicalize(jsonstr, old_log):
 
     # For GET requests, redact the antiCache query string parameter.
     # Votr uses time.time() as the value.
-    def url_remove_anticache(s):
+    def url_remove_anticache(s: str) -> str:
         return re.sub(r'(&antiCache=)\d+\.\d+', r'\1[antiCache redacted]', s)
     if message.startswith('Requesting GET '):
         data[0] = url_remove_anticache(data[0])
@@ -508,12 +540,12 @@ def _canonicalize(jsonstr, old_log):
     return json.dumps([timestamp, type, message, data])
 
 
-def _sort_xml(xml_spec, parent, item):
+def _sort_xml(xml_spec: str, parent: str, item: str) -> str:
     p = re.escape(parent)
     i = re.escape(item)
     pattern1 = rf'(<{p}>\n*)(<{i}[ >].*</{i}>)(\n*</{p}>)'
     pattern2 = rf'(?=<{i}[ >])'
-    def replacer(m):
+    def replacer(m: re.Match[str]) -> str:
         group2 = ''.join(sorted(re.split(pattern2, m.group(2))))
         return f'{m.group(1)}[xml sorted]{group2}[/xml sorted]{m.group(3)}'
     return re.sub(pattern1, replacer, xml_spec, flags=re.DOTALL)
@@ -524,7 +556,10 @@ class ConnectionError(Exception): pass
 class _FailFast(BaseException): pass
 
 
-async def _scenario_main_async(run, anonymous):
+async def _scenario_main_async(
+    run: Callable[[BaseClient], Awaitable[None]],
+    anonymous: bool,
+) -> None:
     parser = argparse.ArgumentParser()
 
     parser.add_argument('--save', type=pathlib.Path, metavar='FILENAME',
@@ -549,7 +584,7 @@ async def _scenario_main_async(run, anonymous):
 
     options = parser.parse_args()
 
-    async def body():
+    async def body() -> None:
         await client.context.log('scenario', 'Scenario started')
         try:
             result = await run(client)
@@ -604,7 +639,7 @@ async def _scenario_main_async(run, anonymous):
                     (username := os.getenv('AIS_USERNAME')) and
                     (password := os.getenv('AIS_PASSWORD'))
                 ):
-                    params = dict(
+                    params = ParamsDictSamlPassword(
                         type='saml_password',
                         username=username,
                         password=password,
@@ -613,7 +648,7 @@ async def _scenario_main_async(run, anonymous):
                     parser.error('either --params or $AIS_PARAMS or ' +
                         '$AIS_USERNAME + $AIS_PASSWORD is required')
 
-                server = dict(
+                server = ServerDict(
                     login_types=(params['type'],),
                     ais_url=ais_url,
                     ais_cookie='JSESSIONID',
@@ -631,5 +666,8 @@ async def _scenario_main_async(run, anonymous):
             await body()
 
 
-def scenario_main(run, *, anonymous=False):
+def scenario_main(
+    run: Callable[[BaseClient], Awaitable[None]], *,
+    anonymous: bool=False,
+) -> None:
     asyncio.run(_scenario_main_async(run, anonymous))

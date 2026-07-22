@@ -80,7 +80,7 @@ from votrfront import sessions
 from votrfront.utils import check_header
 
 
-def encode_result(thing):
+def encode_result(thing: object) -> object:
     if isinstance(thing, tuple) and hasattr(thing, '_asdict'):
         thing = thing._asdict()
 

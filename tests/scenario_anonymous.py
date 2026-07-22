@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """Opens the only AIS application which allows anonymous access, and clicks
 around in it. Can be used to test Votr without an account, and verify that
 Aisikl is still able to parse common AIS GUI components.
@@ -6,13 +8,37 @@ Aisikl is still able to parse common AIS GUI components.
 from aisikl.app import Application
 from fladgejt.helpers import find_option
 from tests.testutils import scenario_main
+from typing import TYPE_CHECKING
 
-async def run(client):
+if TYPE_CHECKING:
+    from abc import ABC
+    from aisikl.components.button import Button
+    from aisikl.components.combobox import ComboBox
+    from aisikl.components.menuitem import MenuItem
+    from aisikl.components.table import Table
+    from aisikl.dialog import Dialog
+    from fladgejt.base import BaseClient
+
+    class TestDialogsType(ABC, Dialog):
+        enterButton: Button
+        fakultaComboBox: ComboBox
+        oznacitInverzneButton: Button
+        oznacitVsetkyButton: Button
+        resetButton: Button
+        studPlanMenuItem: MenuItem
+        studijneProgramyTable: Table
+        vyberButton: Button
+        zobrazitPreFakultuButton: Button
+        zobrazitPreStudiumButton: Button
+else:
+    TestDialogsType = None
+
+async def run(client: BaseClient) -> None:
     # 1. "VSST060 - Register predmetov" doesn't allow anonymous access anymore.
 
     # 2. "VSST178 - Študijné plány, informačné listy, ... študijných programov"
 
-    app, ops = await Application.open(client.context, '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST178App&kodAplikacie=VSST178&uiLang=SK')
+    app, ops = await Application[TestDialogsType].open(client.context, '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST178App&kodAplikacie=VSST178&uiLang=SK')
     await app.awaited_open_main_dialog(ops)
 
     await app.d.fakultaComboBox.select(find_option(

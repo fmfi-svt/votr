@@ -1,10 +1,17 @@
+#!/usr/bin/env python3
+
 """Calls most read-only Fladgejt RPCs."""
 
 from tests.testutils import scenario_main
 from votrfront.rpc import encode_result
+from typing import Any, TYPE_CHECKING
 
-async def run(client):
-    async def call(name, *args, silent=False):
+if TYPE_CHECKING:
+    from fladgejt.base import BaseClient
+
+
+async def run(client: BaseClient) -> None:
+    async def call(name: str, *args: object, silent: bool=False) -> Any:
         await client.context.log('scenario', f'{name} started', args)
         await client.prepare_for_rpc()
         result = encode_result(await getattr(client, name)(*args))
@@ -14,7 +21,7 @@ async def run(client):
     if await call('get_som_student'):
         studia = await call('get_studia')
 
-        zapisne_listy = []
+        zapisne_listy: list[Any] = []
         for studium in studia:
             sk = studium['studium_key']
 
@@ -28,7 +35,7 @@ async def run(client):
             # it's currently unavailable.
 
         for zapisny_list in zapisne_listy:
-            zlk = zapisny_list['zapisny_list_key']
+            zlk: str = zapisny_list['zapisny_list_key']
 
             await call('zapisny_list_key_to_akademicky_rok', zlk)
 
@@ -70,7 +77,7 @@ async def run(client):
     for predmet in predmety[0:5]:
         await call('get_informacny_list', predmet['predmet_key'], roky[2]['id'], silent=True)
 
-        predmet2 = (await call('get_studenti_zapisani_na_predmet', predmet['predmet_key'], roky[2]['id']))['predmet']
+        predmet2: Any = (await call('get_studenti_zapisani_na_predmet', predmet['predmet_key'], roky[2]['id']))['predmet']
 
         await call('get_ucitelia_predmetu', predmet['predmet_key'], roky[2]['id'], predmet2['semester'], predmet2['fakulta'])
 

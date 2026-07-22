@@ -6,28 +6,33 @@ import json
 import re
 import sys
 import traceback
+from typing import Any, TYPE_CHECKING, cast
 from aisikl.context import Context, Logger
+from aisikl.typeutils import nn
 from fladgejt.hybrid import HybridClient
-from fladgejt.login import create_client
+from fladgejt.login import ServerDict, create_client
 from fladgejt.webui import WebuiClient
 from tests.testutils import LogEntry, MockRunner
 from votrfront.rpc import encode_result
 
+if TYPE_CHECKING:
+    from fladgejt.base import BaseClient
 
-def p(msg):
+
+def p(msg: str) -> None:
     print(msg, flush=True)
 
 
 class LogTester:
-    def __init__(self, *, old_log, fail_fast, verbose_pass):
+    def __init__(self, *, old_log: bool, fail_fast: bool, verbose_pass: bool) -> None:
         self.old_log = old_log
         self.fail_fast = fail_fast
         self.verbose_pass = verbose_pass
 
-        self.client = None
+        self.client: BaseClient | None = None
         self.login_is_old = False
 
-    async def test_request(self, entries):
+    async def test_request(self, entries: list[LogEntry]) -> bool:
         start = entries[0]
         prefix = start.message[:-len(' started')]
 
@@ -50,21 +55,21 @@ class LogTester:
                 self.login_is_old = True
                 return True
 
-            async def inner():
+            async def inner() -> object:
                 await Logger().log('login', 'Creating client', entries[1].data)
-                logintype = entries[1].data['type']
+                logintype: str = cast(Any, entries[1].data)['type']
                 if (m := re.match(
                         r'^Requesting GET (http\S+/)ais/', entries[2].message)):
                     ais_url = m.group(1)
                 else:
                     # Happens with type == 'cookie'.
                     ais_url = MockRunner.FAKE_AIS_URL
-                server = dict(
+                server = ServerDict(
                     login_types=(logintype,),
                     ais_url=ais_url,
                     ais_cookie='JSESSIONID',
                 )
-                params = dict(
+                params: Any = dict(
                     type=logintype,
                     username='fake_value',
                     password='fake_value',
@@ -80,30 +85,32 @@ class LogTester:
             if self.login_is_old:
                 p('  SKIP: old logout version')
                 return True
-            async def inner():
-                await self.client.logout()
+            async def inner() -> object:
+                await nn(self.client).logout()
                 self.client = None
         elif start.type == 'front':
-            async def inner():
-                await self.client.check_connection()
+            async def inner() -> object:
+                await nn(self.client).check_connection()
         elif start.type == 'rpc':
-            async def inner():
+            async def inner() -> object:
                 _, name = prefix.split(' ')
-                await self.client.prepare_for_rpc()
-                method = getattr(self.client, name)
-                return encode_result(await method(*start.data))
+                client = nn(self.client)
+                await client.prepare_for_rpc()
+                method = getattr(client, name)
+                args: Any = start.data
+                return encode_result(await method(*args))
 
-        async def body():
+        async def body() -> None:
             await Logger().log(start.type, start.message, start.data)
             try:
                 result = await inner()
                 await Logger().log(start.type, f'{prefix} finished', result)
             except Exception as e:
                 if start.type == 'rpc':
-                    self.client.last_rpc_failed = True
+                    nn(self.client).last_rpc_failed = True
                 await Logger().log(start.type, f'{prefix} failed with {type(e).__name__}', traceback.format_exc())
 
-        printed = []
+        printed: list[str] = []
 
         ok = await MockRunner().run(
             body, entries, print=printed.append,
@@ -120,7 +127,7 @@ class LogTester:
         return ok
 
 
-async def test_log(name, lines, *, old_log, fail_fast, verbose_pass):
+async def test_log(name: str, lines: list[bytes], *, old_log: bool, fail_fast: bool, verbose_pass: bool) -> None:
     p(f'PROGRESS: testing {name}')
 
     try:
@@ -183,7 +190,7 @@ async def test_log(name, lines, *, old_log, fail_fast, verbose_pass):
         p(traceback.format_exc())
 
 
-async def test_file(filename, *, old_log, fail_fast, verbose_pass):
+async def test_file(filename: str, *, old_log: bool, fail_fast: bool, verbose_pass: bool) -> None:
     if '.tar.' in filename:
         import tarfile
         first = last = None
@@ -199,7 +206,7 @@ async def test_file(filename, *, old_log, fail_fast, verbose_pass):
                     continue
                 if last and info.name.split('/')[-1][:len(last)] > last:
                     break
-                with tar.extractfile(info) as f:
+                with nn(tar.extractfile(info)) as f:
                     await test_log(f'{filename}:{info.name}', list(f),
                         old_log=old_log, fail_fast=fail_fast,
                         verbose_pass=verbose_pass)
@@ -219,7 +226,7 @@ async def test_file(filename, *, old_log, fail_fast, verbose_pass):
                 old_log=old_log, fail_fast=fail_fast, verbose_pass=verbose_pass)
 
 
-async def main(args):
+async def main(args: list[str]) -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument('log_filename', nargs='+', help=
         'Input log file(s) to test. Can be compressed. ' +
