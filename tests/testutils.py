@@ -9,13 +9,13 @@ import json
 import os
 import pathlib
 import re
+import sys
 import time
 import traceback
 from types import SimpleNamespace
 from typing import Any, NamedTuple, TYPE_CHECKING
 from urllib.parse import urljoin
 from requests import HTTPError, Session
-import aisikl.context
 from aisikl.context import Context, Logger
 from aisikl.typeutils import ct, nn
 from fladgejt.login import ParamsDictSamlPassword, ServerDict, create_client
@@ -584,6 +584,8 @@ async def _scenario_main_async(
 
     options = parser.parse_args()
 
+    body_failed = False
+
     async def body() -> None:
         await client.context.log('scenario', 'Scenario started')
         try:
@@ -593,6 +595,8 @@ async def _scenario_main_async(
             await client.context.log('scenario',
                 f'Scenario failed with {type(e).__name__}',
                 traceback.format_exc())
+            nonlocal body_failed
+            body_failed = True
 
     with contextlib.ExitStack() as es:
         if options.ais_url and options.load:
@@ -618,7 +622,11 @@ async def _scenario_main_async(
                 body, entries, print=print,
                 old_log=False, fail_fast=options.fail_fast)
 
-            print('PASS' if ok else 'FAIL')
+            if ok:
+                print('PASS')
+            else:
+                print('FAIL')
+                sys.exit(1)
 
         if options.ais_url:
             if options.fail_fast:
@@ -658,12 +666,15 @@ async def _scenario_main_async(
             if options.save:
                 client.context.logger.log_file = es.enter_context(
                     options.save.open('w'))
-
-            aisikl.context.print_logs = True
+            else:
+                client.context.logger.log_file = sys.stdout
 
             time.time = lambda: 0.0
 
             await body()
+
+            if body_failed:
+                sys.exit("Scenario failed")
 
 
 def scenario_main(

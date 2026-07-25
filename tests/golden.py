@@ -2,6 +2,8 @@
 
 import argparse
 import asyncio
+from collections import Counter
+from dataclasses import dataclass
 import json
 import re
 import sys
@@ -19,26 +21,30 @@ if TYPE_CHECKING:
     from fladgejt.base import BaseClient
 
 
-def p(msg: str) -> None:
-    print(msg, flush=True)
+@dataclass
+class Options:
+    old_log: bool
+    fail_fast: bool
+    verbose_pass: bool
+    stats: Counter[str]
+
+    def p(self, *lines: str) -> None:
+        kind = nn(re.match(r'^ *([A-Z]+):', lines[0])).group(1)
+        self.stats[kind] += 1
+        print('\n'.join(lines), flush=True)
 
 
 class LogTester:
-    def __init__(self, *, old_log: bool, fail_fast: bool, verbose_pass: bool) -> None:
-        self.old_log = old_log
-        self.fail_fast = fail_fast
-        self.verbose_pass = verbose_pass
+    client: BaseClient | None = None
+    login_is_old: bool = False
 
-        self.client: BaseClient | None = None
-        self.login_is_old = False
-
-    async def test_request(self, entries: list[LogEntry]) -> bool:
+    async def test_request(self, o: Options, entries: list[LogEntry]) -> bool:
         start = entries[0]
         prefix = start.message[:-len(' started')]
 
         if start.type == 'login':
-            if self.old_log and entries[1].message != 'Creating client':
-                p('  SKIP: old login version')
+            if o.old_log and entries[1].message != 'Creating client':
+                o.p('  SKIP: old login version')
                 if any(
                     isinstance(entry.data, str) and
                     entry.data.startswith('{"status":"OK",')
@@ -83,7 +89,7 @@ class LogTester:
                 return entries[-1].data
         elif start.type == 'logout':
             if self.login_is_old:
-                p('  SKIP: old logout version')
+                o.p('  SKIP: old logout version')
                 return True
             async def inner() -> object:
                 await nn(self.client).logout()
@@ -114,24 +120,23 @@ class LogTester:
 
         ok = await MockRunner().run(
             body, entries, print=printed.append,
-            old_log=self.old_log, fail_fast=self.fail_fast)
+            old_log=o.old_log, fail_fast=o.fail_fast)
 
-        if ok and not self.verbose_pass:
-            p(f'  PASS: {entries[-1].message}')
+        if ok and not o.verbose_pass:
+            o.p(f'  PASS: {entries[-1].message}')
         else:
-            p(f'  {'PASS' if ok else 'FAIL'}: {prefix} ' + '{{{')
-            for msg in printed:
-                p('    ' + msg)
-            p('  }}}')
+            o.p(f'  {'PASS' if ok else 'FAIL'}: {prefix} ' + '{{{',
+                *('    ' + msg for msg in printed),
+                '  }}}')
 
         return ok
 
 
-async def test_log(name: str, lines: list[bytes], *, old_log: bool, fail_fast: bool, verbose_pass: bool) -> None:
-    p(f'PROGRESS: testing {name}')
+async def test_log(o: Options, name: str, lines: list[bytes]) -> None:
+    o.p(f'PROGRESS: testing {name}')
 
     try:
-        tester = LogTester(old_log=old_log, fail_fast=fail_fast, verbose_pass=verbose_pass)
+        tester = LogTester()
 
         entries = [LogEntry(*json.loads(line)) for line in lines]
 
@@ -139,7 +144,7 @@ async def test_log(name: str, lines: list[bytes], *, old_log: bool, fail_fast: b
 
         for entry in entries:
             if entry.type == 'flashback':
-                p('  SKIP: log file is just a flashback')
+                o.p('  SKIP: log file is just a flashback')
                 return
             if entry.message == 'Closing all open apps because of previous RPC error':
                 closes_apps_after_failure = True
@@ -151,46 +156,46 @@ async def test_log(name: str, lines: list[bytes], *, old_log: bool, fail_fast: b
         for i, entry in enumerate(entries):
             if entry.type in ('login', 'logout', 'front', 'rpc') and entry.message.endswith(' started'):
                 if last_start is not None:
-                    p('  ERROR: skipping bad log structure - request interrupted by another')
-                    p(f'  ... {last_start+1}: {json.dumps(entries[last_start])}')
-                    p(f'  ... {i+1}: {json.dumps(entry)}')
+                    o.p('  ERROR: skipping bad log structure - request interrupted by another',
+                        f'  ... {last_start+1}: {json.dumps(entries[last_start])}',
+                        f'  ... {i+1}: {json.dumps(entry)}')
                     return
                 last_start = i
             elif entry.type in ('login', 'logout', 'front', 'rpc') and (entry.message.endswith(' finished') or ' failed with ' in entry.message):
                 if last_start is None:
-                    p('  ERROR: skipping bad log structure - end without start')
-                    p(f'  ... {i+1}: {json.dumps(entry)}')
+                    o.p('  ERROR: skipping bad log structure - end without start',
+                        f'  ... {i+1}: {json.dumps(entry)}')
                     return
                 if entry.type != entries[last_start].type or not entry.message.startswith(entries[last_start].message[:-len('started')]):
-                    p('  ERROR: skipping bad log structure - end does not match start')
-                    p(f'  ... {last_start+1}: {json.dumps(entries[last_start])}')
-                    p(f'  ... {i+1}: {json.dumps(entry)}')
+                    o.p('  ERROR: skipping bad log structure - end does not match start',
+                        f'  ... {last_start+1}: {json.dumps(entries[last_start])}',
+                        f'  ... {i+1}: {json.dumps(entry)}')
                     return
-                if fail_fast and failed_test:
-                    p(f'  SKIP: skipping after failed test: {json.dumps(entries[last_start].message)}')
-                elif old_log and failed_rpc and not closes_apps_after_failure and entry.type == 'rpc':
-                    p(f'  SKIP: skipping after failed rpc: {json.dumps(entries[last_start].message)}')
+                if o.fail_fast and failed_test:
+                    o.p(f'  SKIP: skipping after failed test: {json.dumps(entries[last_start].message)}')
+                elif o.old_log and failed_rpc and not closes_apps_after_failure and entry.type == 'rpc':
+                    o.p(f'  SKIP: skipping after failed rpc: {json.dumps(entries[last_start].message)}')
                 else:
-                    if not await tester.test_request(entries[last_start:i + 1]):
+                    if not await tester.test_request(o, entries[last_start:i + 1]):
                         failed_test = True
                     if entry.type == 'rpc' and ' failed with ' in entry.message:
                         failed_rpc = True
                 last_start = None
             else:
                 if last_start is None:
-                    p(f'  WARNING: ignoring loose line {i+1}: {json.dumps(entry)}')
+                    o.p(f'  WARNING: ignoring loose line {i+1}: {json.dumps(entry)}')
 
         if last_start is not None:
-            p('  WARNING: skipping bad log structure - request did not finish, reached EOF')
-            p(f'  ... {last_start+1}: {json.dumps(entries[last_start])}')
-            p(f'  ... {len(entries)-1+1}: {json.dumps(entries[-1])}')
+            o.p('  WARNING: skipping bad log structure - request did not finish, reached EOF',
+                f'  ... {last_start+1}: {json.dumps(entries[last_start])}',
+                f'  ... {len(entries)-1+1}: {json.dumps(entries[-1])}')
 
     except Exception:
-        p(f'ERROR: uncaught exception in {name}')
-        p(traceback.format_exc())
+        o.p(f'ERROR: uncaught exception in {name}',
+            traceback.format_exc())
 
 
-async def test_file(filename: str, *, old_log: bool, fail_fast: bool, verbose_pass: bool) -> None:
+async def test_file(o: Options, filename: str) -> None:
     if '.tar.' in filename:
         import tarfile
         first = last = None
@@ -200,30 +205,25 @@ async def test_file(filename: str, *, old_log: bool, fail_fast: bool, verbose_pa
         with tarfile.open(filename, 'r:*') as tar:
             for info in tar:
                 if not info.isreg():
-                    p(f'WARNING: tar file entry has bad type: {info!r}')
+                    o.p(f'WARNING: tar file entry has bad type: {info!r}')
                     continue
                 if first and info.name.split('/')[-1][:len(first)] < first:
                     continue
                 if last and info.name.split('/')[-1][:len(last)] > last:
                     break
                 with nn(tar.extractfile(info)) as f:
-                    await test_log(f'{filename}:{info.name}', list(f),
-                        old_log=old_log, fail_fast=fail_fast,
-                        verbose_pass=verbose_pass)
+                    await test_log(o, f'{filename}:{info.name}', list(f))
     elif filename.endswith('.gz'):
         import gzip
         with gzip.open(filename, 'rb') as f:
-            await test_log(filename, list(f),
-                old_log=old_log, fail_fast=fail_fast, verbose_pass=verbose_pass)
+            await test_log(o, filename, list(f))
     elif filename.endswith('.xz'):
         import lzma
         with lzma.open(filename, 'rb') as f:
-            await test_log(filename, list(f),
-                old_log=old_log, fail_fast=fail_fast, verbose_pass=verbose_pass)
+            await test_log(o, filename, list(f))
     else:
         with open(filename, 'rb') as f:
-            await test_log(filename, list(f),
-                old_log=old_log, fail_fast=fail_fast, verbose_pass=verbose_pass)
+            await test_log(o, filename, list(f))
 
 
 async def main(args: list[str]) -> None:
@@ -242,9 +242,23 @@ async def main(args: list[str]) -> None:
 
     options = parser.parse_args(args)
 
+    o = Options(
+        old_log=options.old_log,
+        fail_fast=options.fail_fast,
+        verbose_pass=options.verbose_pass,
+        stats=Counter(),
+    )
+
     for filename in options.log_filename:
-        await test_file(filename, old_log=options.old_log,
-            fail_fast=options.fail_fast, verbose_pass=options.verbose_pass)
+        await test_file(o, filename)
+
+    success = all(k in ('PROGRESS', 'PASS', 'SKIP') for k, v in o.stats.items() if v)
+    print(
+        'overall stats:',
+        ', '.join(f'{v}x {k}' for k, v in sorted(o.stats.items()) if v),
+        (' -->  success :D' if success else ' -->  failure :C'))
+    if not success:
+        sys.exit(1)
 
 
 if __name__ == '__main__':
