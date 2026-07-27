@@ -1,6 +1,5 @@
-
+from aisikl.components.control import Control
 from aisikl.events import component_event
-from .control import Control
 
 
 class PopupMenu(Control):

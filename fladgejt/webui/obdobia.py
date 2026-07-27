@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from abc import ABC
-    from aisikl.app import Application
     from aisikl.components.table import Table
     from aisikl.dialog import Dialog
 

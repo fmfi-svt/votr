@@ -1,5 +1,4 @@
-
-from .control import Control
+from aisikl.components.control import Control
 
 
 class Separator(Control):

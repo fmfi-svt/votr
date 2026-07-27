@@ -1,5 +1,7 @@
-from collections.abc import Callable
-from typing import cast
+from typing import TYPE_CHECKING, cast
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 def ct[T](cls: type[T], value: object) -> T:

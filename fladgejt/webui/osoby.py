@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from abc import ABC
-    from aisikl.app import Application
     from aisikl.components.action import Action
     from aisikl.components.button import Button
     from aisikl.components.checkbox import CheckBox

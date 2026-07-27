@@ -14,7 +14,6 @@ from typing import Any, NamedTuple, TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from aisikl.context import Context
-    from aisikl.dialog import Dialog
     from aisikl.events import Event
     from bs4 import BeautifulSoup
     from collections.abc import Generator

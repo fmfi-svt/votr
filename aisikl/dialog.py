@@ -12,7 +12,6 @@ from typing import Literal, TYPE_CHECKING, override
 if TYPE_CHECKING:
     from aisikl.app import Application
     from aisikl.components.component import Component
-    from aisikl.components.control import Control
 
 _properties_re = re.compile(r'^var componentsProperties\s*=\s*(.*);$')
 
