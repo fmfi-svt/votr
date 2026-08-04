@@ -5,6 +5,7 @@ import asyncio
 import base64
 from collections import deque
 import contextlib
+from httpx2 import Headers, Request, Response
 import json
 import os
 import pathlib
@@ -12,10 +13,8 @@ import re
 import sys
 import time
 import traceback
-from types import SimpleNamespace
-from typing import Any, NamedTuple, TYPE_CHECKING
+from typing import Any, NamedTuple, NotRequired, TYPE_CHECKING, TypedDict, cast
 from urllib.parse import urljoin
-from requests import HTTPError, Session
 from aisikl.context import Context, Logger
 from aisikl.typeutils import ct, nn
 from fladgejt.login import ParamsDictSamlPassword, ServerDict, create_client
@@ -31,6 +30,13 @@ class LogEntry(NamedTuple):
     type: str
     message: str
     data: object
+
+
+class HttpResponseData(TypedDict):
+    status_code: int
+    reason_phrase: str
+    headers: list[list[str]]
+    body: NotRequired[str]
 
 
 _IGNORE_DETAILS = '[{_IGNORE_DETAILS}]'
@@ -61,12 +67,12 @@ class MockRunner:
 
         original_time_time = time.time
         original_send_log = Logger.send_log
-        original_session_request = Session.request
+        original_request_http = Context.request_http
 
         try:
             time.time = self._mock_time
             Logger.send_log = self._mock_send_log
-            Session.request = self._mock_request  # pyrefly: ignore [bad-assignment] # pyright: ignore [reportAttributeAccessIssue]
+            Context.request_http = self._mock_request_http  # pyrefly: ignore [bad-assignment] # pyright: ignore [reportAttributeAccessIssue]
             await body()
         except _FailFast:
             count = len(self.expected_logs)
@@ -76,7 +82,7 @@ class MockRunner:
         finally:
             time.time = original_time_time
             Logger.send_log = original_send_log
-            Session.request = original_session_request
+            Context.request_http = original_request_http
 
         if self.ok and self.expected_logs:
             self.ok = False
@@ -88,7 +94,7 @@ class MockRunner:
     def _mock_time(self) -> float:
         return self.now
 
-    def _mock_request(self, *args: object, **kwargs: object) -> object:
+    async def _mock_request_http(self, *args: object, **kwargs: object) -> object:
         # This doesn't check if the request url or any other args match. It just
         # returns the original responses in the given order.
         # This can lead to confusing output if we diverge too much from the
@@ -230,16 +236,20 @@ def _preprocess_expected_logs(
     skip = 0
 
     for i in range(len(entries)):
-        # Match the old pre-SAML aisikl.app.check_connection() implementation.
-        # But not aisikl.porta.get_modules(), which requests the same URL.
+        if skip:
+            skip -= 1
+            continue
+
+        # Match the old pre-SAML (2024-12-21, 9ca91c73) implementation of
+        # aisikl.app.check_connection().
+        # But not aisikl.portal.get_modules(), which requests the same URL.
         if (
-            skip == 0 and
             old_log and
             entries[i].type == 'http' and
             entries[i].message == 'Requesting GET /ais/portal/changeTab.do' and
             not (i and entries[i-1].message == 'Opening main menu')
         ):
-            url1 = '/ais/rest/apps/get-access-token'
+            url1 = '/ais/apps/student/sk/main.js'
             yield LogEntry(
                 timestamp=entries[i].timestamp,
                 type='http',
@@ -252,28 +262,41 @@ def _preprocess_expected_logs(
                 entries[i+1].type == 'http' and
                 entries[i+1].message == 'Received response'
             ):
-                skip = 1
+                # Next entry is probably a network error.
+                continue
             elif (
                 i+2 < len(entries) and
                 entries[i+2].message.endswith(' failed with LoggedOutError')
             ):
-                skip = 3
-                yield LogEntry(
-                    timestamp=entries[i+2].timestamp,
-                    type=entries[i+2].type,
-                    message=entries[i+2].message,
-                    data=('\nrequests.exceptions.HTTPError: 401 fake\n' +
-                        _IGNORE_DETAILS),
-                )
-            else:
-                skip = 2
+                # Originally it was a 200 response without a username element,
+                # meaning the user is logged out. Replace with network error.
                 yield LogEntry(
                     timestamp=entries[i+1].timestamp,
                     type='http',
-                    message='Received response (binary data)',
-                    data=None,
+                    message='Received response',
+                    data=HttpResponseData(
+                        status_code=401,
+                        reason_phrase=_IGNORE_DETAILS,
+                        headers=[],
+                    ),
                 )
-                url2 = '/ais/rest/apps/check-session/check-light'
+                # Skip the original "Received response", but keep the
+                # "... failed with LoggedOutError" entry.
+                skip = 1
+                continue
+            else:
+                # The connection check was a success.
+                yield LogEntry(
+                    timestamp=entries[i+1].timestamp,
+                    type='http',
+                    message='Received response',
+                    data=HttpResponseData(
+                        status_code=200,
+                        reason_phrase='',
+                        headers=[],
+                    ),
+                )
+                url2 = '/ais/rest/apps/get-access-token'
                 yield LogEntry(
                     timestamp=entries[i+1].timestamp,
                     type='http',
@@ -283,12 +306,173 @@ def _preprocess_expected_logs(
                 yield LogEntry(
                     timestamp=entries[i+1].timestamp,
                     type='http',
-                    message='Received response (binary data)',
-                    data=None,
+                    message='Received response',
+                    data=HttpResponseData(
+                        status_code=200,
+                        reason_phrase='',
+                        headers=[['aisauth', 'fake']],
+                    ),
                 )
+                url3 = '/ais/rest/apps/check-session/check-light'
+                yield LogEntry(
+                    timestamp=entries[i+1].timestamp,
+                    type='http',
+                    message=f'Requesting GET {url3}',
+                    data=[url3, None],
+                )
+                yield LogEntry(
+                    timestamp=entries[i+1].timestamp,
+                    type='http',
+                    message='Received response',
+                    data=HttpResponseData(
+                        status_code=200,
+                        reason_phrase='',
+                        headers=[],
+                    ),
+                )
+                # Skip the original "Received response" entry.
+                skip = 1
+                continue
 
-        if skip:
-            skip -= 1
+        # Match `requests`-based (before 2026-09-ish) responses for
+        # fladgejt.login._send_request().
+        if (
+            old_log and
+            entries[i].type == 'http' and
+            (m := re.fullmatch(r'Received HTTP (\d+) response',
+                entries[i].message))
+        ):
+            headers_str, sep, body = ct(str, entries[i].data).partition('\n---\n')
+            headers = [line.split(': ') for line in headers_str.split('\n')]
+            headers = [[k.lower(), v] for k, v in headers]
+            if i and '/ais/sso/samlsso' in entries[i-1].message:
+                # Hack: This fake header is added in fladgejt/login.py, but
+                # previously it wasn't added to the response log.
+                headers.append(['content-type', 'text/html; charset=UTF-8'])
+            data = HttpResponseData(
+                status_code=int(m.group(1)),
+                # Hack: reason_phrase is displayed in raise_for_status(). Use
+                # that to ignore differences in the raised message.
+                reason_phrase=_IGNORE_DETAILS,
+                headers=headers,
+            )
+            if sep: data['body'] = body
+            yield LogEntry(
+                timestamp=entries[i].timestamp,
+                type='http',
+                message='Received response',
+                data=data,
+            )
+            continue
+
+        # Match `requests`-based (before 2026-09-ish) HTTP status errors for
+        # fladgejt.login._send_request(). In this case, we already logged the
+        # response before raise_for_status(), but the exception has changed.
+        if (
+            old_log and
+            i and
+            entries[i] is entries[-1] and
+            entries[i].message == 'Login failed with HTTPError' and
+            re.fullmatch(r'Received HTTP \d+ response', entries[i-1].message)
+        ):
+            yield LogEntry(
+                timestamp=entries[i].timestamp,
+                type=entries[i].type,
+                message='Login failed with HTTPStatusError',
+                # No need to change data. It already contains _IGNORE_DETAILS
+                # because of the reason_phrase edit above.
+                data=entries[i].data,
+            )
+            continue
+
+        # Match `requests`-based (before 2026-09-ish) expired REST logins in
+        # Context.request_json().
+        if (
+            old_log and
+            entries[i].type == 'http' and
+            entries[i].message == 'Received response' and
+            isinstance((d1 := entries[i].data), str) and
+            'login.uniba.sk' in d1 and  # some Cosign error page
+            isinstance((d2 := entries[-1].data), str) and
+            'REST login expired' in d2
+        ):
+            yield LogEntry(
+                timestamp=entries[i].timestamp,
+                type=entries[i].type,
+                message='Received response',
+                data=HttpResponseData(
+                    status_code=303,
+                    reason_phrase='',
+                    headers=[['location', '/fake']],
+                ),
+            )
+            continue
+
+        # Match `requests`-based (before 2026-09-ish) successful text responses
+        # for Context.request_ais() and Context.request_json().
+        if (
+            old_log and
+            entries[i].type == 'http' and
+            entries[i].message == 'Received response' and
+            isinstance((body := entries[i].data), str)
+        ):
+            yield LogEntry(
+                timestamp=entries[i].timestamp,
+                type=entries[i].type,
+                message=entries[i].message,
+                data=HttpResponseData(
+                    status_code=200,
+                    reason_phrase='',
+                    # This is only used when request_ais() checks if
+                    # response.headers.get('content-type', '').startswith('text').
+                    headers=[['content-type', 'text/fake']],
+                    body=body,
+                ),
+            )
+            continue
+
+        # Match `requests`-based (before 2026-09-ish) successful binary
+        # responses for Context.request_ais(). They will be processed further in
+        # _prepare_http_response().
+        if (
+            old_log and
+            entries[i].type == 'http' and
+            entries[i].message == 'Received response (binary data)' and
+            entries[i].data is None
+        ):
+            yield LogEntry(
+                timestamp=entries[i].timestamp,
+                type='http',
+                message='Received response',
+                data=HttpResponseData(
+                    status_code=200,
+                    reason_phrase='',
+                    # Used in aisikl.app.check_connection().
+                    headers=[['aisauth', 'fake']],
+                ),
+            )
+            continue
+
+        # Match `requests`-based (before 2026-09-ish) 401 errors in
+        # check_connection() leading to LoggedOutError('AIS login expired.').
+        if (
+            old_log and
+            entries[i] is entries[-1] and
+            ' failed with ' in entries[i].message and
+            'AIS login expired.' in ct(str, entries[i].data) and
+            'requests.exceptions.HTTPError' in ct(str, entries[i].data)
+        ):
+            yield LogEntry(
+                timestamp=entries[i].timestamp,
+                type='http',
+                message='Received response',
+                data=HttpResponseData(
+                    status_code=401,
+                    reason_phrase=_IGNORE_DETAILS,
+                    headers=[],
+                ),
+            )
+            yield entries[i]
             continue
 
         yield entries[i]
@@ -308,187 +492,83 @@ def _prepare_http_response(
         response_entry: LogEntry,
         final_entry: LogEntry,
 ) -> Callable[[], object] | None:
-    # Match normal successful text responses for Context.request_ais() or
-    # Context.request_json().
+    # Match successfully-received responses for Context.request_ais(),
+    # Context.request_json(), and fladgejt.login._send_request().
     if (
         request_entry.type == 'http' and
         request_entry.message.startswith('Requesting ') and
         response_entry.type == 'http' and
-        response_entry.message == 'Received response'
+        response_entry.message == 'Received response' and
+        isinstance(response_entry.data, dict)
     ):
-        return lambda: SimpleNamespace(
-            # This is only used when request_ais() checks if
-            # response.headers.get('content-type', '').startswith('text').
-            headers={ 'content-type': 'text/fake' },
-            text=response_entry.data,
-            raise_for_status=lambda: None,
-            # This is only used when request_json() checks if
-            # response.url.startswith(self.rest_url) to see if login expired.
-            # Hack: Assume that JSON is logged in and HTML is logged out.
-            url=(MockRunner.FAKE_REST_URL
-                if ct(str, response_entry.data).startswith('{')
-                else ''),
+        _, method, url = request_entry.message.split(' ')
+        # url can be relative, but close enough!
+
+        response_data = cast('HttpResponseData',
+            cast('object', response_entry.data))
+
+        content = None
+        text = None
+        if 'body' in response_data:
+            # If it's a text response and its body was logged, just use it.
+            text = response_data['body']
+        elif url == '/ais/apps/student/sk/main.js':
+            # This is requested in aisikl.app.check_connection(). The real file
+            # is freaking huge, but we only look for this fragment.
+            text = 'retrieveAccessToken() { setRequestHeader("foo", "bar"); }'
+        elif (
+            url.startswith('/ais/files') and
+            final_entry.message == 'RPC get_informacny_list finished'
+        ):
+            # For PDF files in get_informacny_list(), extract the content from
+            # the RPC return value.
+            content = base64.b64decode(ct(str, final_entry.data))
+        else:
+            # In other cases, e.g. redirect responses in fladgejt.login, or
+            # BrokenPipeError in get_informacny_list, the body shouldn't matter.
+            text = ''
+
+        response = Response(
+            status_code=response_data['status_code'],
+            extensions=dict(
+                # For matching the raised message in raise_for_status().
+                reason_phrase=response_data['reason_phrase'].encode(),
+            ),
+            text=text,
+            content=content,
+            request=Request(method=method, url=url),
         )
 
-    # Match successful binary responses for aisikl.app.check_connection().
-    if (
-        request_entry.type == 'http' and
-        request_entry.message ==
-            'Requesting GET /ais/apps/student/sk/main.js' and
-        response_entry.type == 'http' and
-        response_entry.message == 'Received response (binary data)'
-    ):
-        return lambda: SimpleNamespace(
-            headers={},
-            text='retrieveAccessToken() { setRequestHeader("foo", "bar"); }',
-            raise_for_status=lambda: None,
-            # check_connection() does not try to read `content`.
-        )
-    if (
-        request_entry.type == 'http' and
-        request_entry.message in (
-            'Requesting GET /ais/rest/apps/get-access-token',
-            'Requesting GET /ais/rest/apps/check-session/check-light',
-        ) and
-        response_entry.type == 'http' and
-        response_entry.message == 'Received response (binary data)'
-    ):
-        return lambda: SimpleNamespace(
-            # check_connection() only requires that this header is not empty.
-            headers={ 'AISAuth': 'fake' },
-            text=None,
-            raise_for_status=lambda: None,
-            # check_connection() does not try to read `content`.
-        )
+        # Set headers afterwards. If 'Content-Encoding' is given to Response
+        # constructor, it affects how `content` is interpreted. :C
+        response.headers = Headers(
+            [(k, v) for k, v in response_data['headers']])
 
-    # Match successful binary responses for PDF files in get_informacny_list().
-    # Hack: Context.request_ais() doesn't log the response, but we can find it
-    # in the RPC return value.
-    if (
-        request_entry.type == 'http' and
-        request_entry.message.startswith('Requesting GET /ais/files/') and
-        response_entry.type == 'http' and
-        response_entry.message == 'Received response (binary data)' and
-        final_entry.type == 'rpc' and
-        final_entry.message == 'RPC get_informacny_list finished'
-    ):
-        return lambda: SimpleNamespace(
-            headers={},
-            text=None,
-            content=base64.b64decode(ct(str, final_entry.data)),
-            raise_for_status=lambda: None,
-        )
+        if response.has_redirect_location:
+            response.next_request = Request(
+                # Hack: assume the next request is GET.
+                method='GET',
+                url=urljoin(url, response.headers['location'],
+            ))
 
-    # Hack: For other binary responses the content most likely doesn't matter.
-    # (E.g. if get_informacny_list failed with BrokenPipeError or similar.)
-    if response_entry.message == 'Received response (binary data)':
-        return lambda: SimpleNamespace(
-            headers={},
-            text=None,
-            content=b'fake_binary_response',
-            raise_for_status=lambda: None,
-        )
+        return lambda: response
 
-    # Match HTTPError for Context.request_ais() or Context.request_json().
-    # They call raise_for_status() directly, before logging the response, so
-    # "Requesting ..." is directly followed by "... failed with ...".
-    # The HTTPError may cause another exception, e.g. in check_connection().
+    # Match network errors. The traceback contains a chain of causes. Instead
+    # of faithfully replicating it, we ignore it in _mock_send_log_match().
+    #
+    # Also deal with old exceptions raised by `requests` (before 2026-09-ish).
+    # Old HTTP status errors, which used to be raised before the response was
+    # logged, are also treated as if they were network errors.
     if (
         request_entry.type == 'http' and
         request_entry.message.startswith('Requesting ') and
         response_entry is final_entry and
         ' failed with ' in final_entry.message and
-        (m := re.search(r'\nrequests.exceptions.HTTPError: ((\d+) [^\n]+)',
-            ct(str, final_entry.data)))
-    ):
-        error_message = m.group(1)
-        status_code = int(m.group(2))
-        def raise_for_status() -> None:
-            # check_connection() needs the response attribute.
-            raise HTTPError(error_message, response=error_response)  # pyrefly: ignore [bad-argument-type]
-        error_response = SimpleNamespace(
-            # check_connection() needs the status_code attribute.
-            status_code=status_code,
-            raise_for_status=raise_for_status,
-        )
-        return lambda: error_response
-
-    # Match ConnectionError or SSLError for Context.request_ais() or
-    # Context.request_json(). They are raised directly from Session.request(),
-    # not raise_for_status(). The traceback contains a chain of causes. Instead
-    # of faithfully replicating it, we ignore it in _mock_send_log_match().
-    if (
-        request_entry.type == 'http' and
-        request_entry.message.startswith('Requesting ') and
-        response_entry is final_entry and
-        final_entry.message.endswith(
-            (' failed with ConnectionError', ' failed with SSLError'))
+        (error_class := HTTP_ERRORS.get(final_entry.message.split()[-1]))
     ):
         def raise_error() -> None:
-            if final_entry.message.endswith(' failed with ConnectionError'):
-                raise ConnectionError(_IGNORE_DETAILS)
-            else:
-                raise SSLError(_IGNORE_DETAILS)
+            raise error_class(_IGNORE_DETAILS)
         return raise_error
-
-    # Match text responses for fladgejt.login._send_request().
-    # _send_request() logs the response before calling raise_for_status(), so
-    # this matches both successes and HTTP errors.
-    if (
-        request_entry.type == 'http' and
-        (m1 := re.match(r'^Requesting \w+ (\S+)$', request_entry.message)) and
-        (m2 := re.match(r'^Received HTTP (\d+) response$',
-            response_entry.message))
-    ):
-        url = m1.group(1)
-        status_code = int(m2.group(1))
-
-        # Hack: This response log format was meant for human consumption.
-        # Hack: The real headers dict is case insensitive. This assumes that
-        # login.py always uses lowercase when reading.
-        headers_str, _, body = ct(str, response_entry.data).partition('\n---\n')
-        headers_list = [line.split(': ') for line in headers_str.split('\n')]
-        headers_dict = { k.lower(): v for k, v in headers_list }
-
-        def raise_for_status() -> None:
-            if status_code >= 400:
-                # Hack: The log contains the HTTP status code, but not status
-                # text, so we must extract it from the final entry.
-                error_match = nn(re.search(
-                    r'(^|\n)requests.exceptions.HTTPError: (\d+ [^\n]+)',
-                    ct(str, final_entry.data)))
-                raise HTTPError(error_match.group(2))
-        return lambda: SimpleNamespace(
-            status_code=status_code,
-            headers=headers_dict,
-            text=body,
-            raise_for_status=raise_for_status,
-
-            # _send_request() reads response.content for responses without
-            # 'content-type'.
-            content=body.encode(),
-
-            # _redact_response() and _send_request_chain() read
-            # response.is_redirect. FYI: the real Response.is_redirect also
-            # checks if 'location' is present.
-            is_redirect=(status_code in (301, 302, 303, 307, 308)),
-
-            # _redact_response() calls response.raw.headers.items() for logging.
-            raw=SimpleNamespace(
-                headers=SimpleNamespace(
-                    items=lambda: headers_list,
-                ),
-            ),
-
-            # _send_request_chain() reads response.url.
-            url=url,
-
-            # _send_request_chain() reads response.next.url. This implementation
-            # might not perfectly match real Requests, but it's good enough.
-            next=SimpleNamespace(
-                url=urljoin(url, headers_dict.get('location')),
-            ),
-        )
 
 
 def _canonicalize(jsonstr: str, old_log: bool) -> str:
@@ -513,8 +593,9 @@ def _canonicalize(jsonstr: str, old_log: bool) -> str:
         data = url_remove_anticache(data)
 
     if message == 'Requesting POST /ais/servlets/WebUIServlet':
-        # For POST requests, redact the antiCache POST parameter.
+        # For POST requests, redact the antiCache GET and POST parameters.
         # Votr uses time.time() as the value.
+        data[0] = url_remove_anticache(data[0])
         data[1]['antiCache'] = '[antiCache redacted]'
 
         if old_log:
@@ -524,6 +605,12 @@ def _canonicalize(jsonstr: str, old_log: bool) -> str:
                 data[1]['xml_spec'], 'embObjChProps', 'changedProperties')
             data[1]['xml_spec'] = _sort_xml(
                 data[1]['xml_spec'], 'editedCells', 'cell')
+
+            # URL parameters were not logged until httpx (2026-09-ish).
+            data[0] = data[0].partition('?')[0]
+
+            # reqIndex was int until httpx (2026-09-ish).
+            data[1]['reqIndex'] = str(data[1]['reqIndex'])
 
     # This log call was changed in 1a4eb12115 (2025-03-07).
     if old_log and message == 'Detected a local storage page':
@@ -551,9 +638,35 @@ def _sort_xml(xml_spec: str, parent: str, item: str) -> str:
     return re.sub(pattern1, replacer, xml_spec, flags=re.DOTALL)
 
 
-class SSLError(Exception): pass
-class ConnectionError(Exception): pass
 class _FailFast(BaseException): pass
+
+
+class ConnectError(Exception):
+    """Fake network error for ``httpx`` requests."""
+
+
+class ConnectionError(Exception):
+    """Fake network error for old ``requests`` requests."""
+
+
+class HTTPError(Exception):
+    """Fake status error for old ``requests`` requests. For simplicity, it's
+    handled like network errors, even though that's not quite how it worked.
+    """
+
+
+class SSLError(Exception):
+    """Fake network error for old ``requests`` requests. (``httpx`` does not
+    raise SSLError.)
+    """
+
+
+HTTP_ERRORS = {
+    'ConnectError': ConnectError,
+    'ConnectionError': ConnectionError,
+    'HTTPError': HTTPError,
+    'SSLError': SSLError,
+}
 
 
 async def _scenario_main_async(

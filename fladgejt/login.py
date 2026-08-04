@@ -1,3 +1,4 @@
+from httpx2 import Cookies
 import re
 from urllib.parse import urljoin
 from aisikl.context import Context, Logger
@@ -11,7 +12,7 @@ from typing import Literal, NotRequired, TYPE_CHECKING, TypedDict
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
     from fladgejt.base import BaseClient
-    from requests.models import Response
+    from httpx2 import Response
 
 
 class ServerDict(TypedDict):
@@ -81,18 +82,21 @@ _value_attr_a_re = re.compile(r"(value)='[^']{10,}'", re.IGNORECASE)
 _value_attr_a_sub = r"\1='[...]'"
 
 
-def _redact_response(response: Response) -> str:
-    # https://github.com/psf/requests/issues/3957 :(
-    headers = '\n'.join(
-        f'{k}: {_redact(v)}' for k, v in response.raw.headers.items())
-    if response.is_redirect:
-        return headers
+def _redact_response(response: Response) -> object:
+    log_data = {
+        'status_code': response.status_code,
+        'reason_phrase': response.reason_phrase,
+        'headers': [[k, _redact(v)] for k, v in response.headers.multi_items()],
+    }
+    if response.has_redirect_location:
+        return log_data
     if not response.headers.get('content-type', '').startswith('text/'):
-        return headers
+        return log_data
     text = response.text
     text = _value_attr_q_re.sub(_value_attr_q_sub, text)
     text = _value_attr_a_re.sub(_value_attr_a_sub, text)
-    return headers + '\n---\n' + text
+    log_data['body'] = text
+    return log_data
 
 
 _samlsso_re = re.compile(r'^https://[^/]+/ais/sso/samlsso\?')
@@ -104,8 +108,7 @@ async def _send_request(ctx: Context, url: str, data: dict[str, str] | None) -> 
     redacted_data = { k: '[...]' for k in data } if data else data
     await ctx.log('http', f'Requesting {method} {_redact(url)}', redacted_data)
 
-    response = ctx.requests_session.request(
-        method, url, data=data, allow_redirects=False)
+    response = await ctx.request_http(method=method, url=url, data=data)
 
     # Work around a missing Content-Type header on /ais/sso/samlsso.
     # We read the header in _redact_response and _send_request_chain.
@@ -113,12 +116,10 @@ async def _send_request(ctx: Context, url: str, data: dict[str, str] | None) -> 
             response.content.startswith(b'<html>')):
         response.headers['content-type'] = 'text/html; charset=UTF-8'
 
-    # Log headers and body together in one string, for nicer `log view`.
-    await ctx.log(
-        'http', f'Received HTTP {response.status_code} response',
-        _redact_response(response))
+    await ctx.log('http', f'Received response', _redact_response(response))
 
-    response.raise_for_status()
+    if not response.has_redirect_location:
+        response.raise_for_status()
 
     return response
 
@@ -174,11 +175,10 @@ async def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: 
         response = await _send_request(ctx, url, data)
 
         # Handle real HTTP 3xx redirects.
-        if response.is_redirect:
-            # For simplicity we assume the next request is always GET.
-            # HTTP 307 and 308 are not supported correctly.
-            url = nn(nn(response.next).url)
-            data = None
+        if response.has_redirect_location:
+            url = str(nn(response.next_request).url)
+            if nn(response.next_request).method == 'GET':
+                data = None
             continue
 
         # Everything except 200 (and 3xx handled above) is an error.
@@ -198,13 +198,13 @@ async def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: 
                 return
 
             # Detect successful AIS login (new student interface).
-            if '/ais/apps/student/' in response.url and soup.find('app-root'):
+            if '/ais/apps/student/' in url and soup.find('app-root'):
                 await ctx.log('login', 'AIS login successful (new student interface)')
                 return
 
             # Detect successful AIS login (new teacher interface).
             # Votr functionality may be limited but at least login will work.
-            if '/ais/portal2/ucitel/' in response.url:
+            if '/ais/portal2/ucitel/' in url:
                 await ctx.log('login', 'AIS login successful (new teacher interface)')
                 return
 
@@ -345,7 +345,7 @@ def _parse_cookie_string(ctx: Context, base_url: str | None, default_name: str |
                 '";"-separated key=value elements, but an element does not '
                 'contain "="')
         name, _, value = pair.partition('=')
-        ctx.requests_session.cookies.set(name, value, domain=domain)
+        Cookies(ctx.cookie_jar).set(name, value, domain=domain)
 
 
 async def _login_with_cookie(server: ServerDict, params: ParamsDictCookie, logger: Logger) -> BaseClient:

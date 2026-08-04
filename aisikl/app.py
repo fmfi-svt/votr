@@ -1,10 +1,10 @@
 # pyright: reportUninitializedInstanceVariable=none
 
 from contextlib import contextmanager
+from httpx2 import HTTPStatusError
 from inspect import iscoroutinefunction
 import json
 import re
-from requests import HTTPError
 import time
 import urllib.parse
 from aisikl.exceptions import AISParseError, AISBehaviorError, AISApplicationClosedError, LoggedOutError
@@ -17,7 +17,7 @@ if TYPE_CHECKING:
     from aisikl.events import Event
     from bs4 import BeautifulSoup
     from collections.abc import Generator
-    from requests.models import Response
+    from httpx2 import Response
 
 
 #: Record of a "big" action done by AIS that isn't handled automatically
@@ -423,11 +423,11 @@ class Application[D]:
         finally:
             self.collector = None
 
-    def _prepare_url_base(self) -> dict[str, object]:
+    def _prepare_url_base(self) -> dict[str, str]:
         old_req_index = self.req_index
         self.req_index += 1
-        return { 'appId': self.app_id, 'antiCache': time.time(),
-                 'reqIndex': old_req_index, 'viewer': 'web' }
+        return { 'appId': self.app_id, 'antiCache': str(time.time()),
+                 'reqIndex': str(old_req_index), 'viewer': 'web' }
 
     async def _do_request(self, body: str) -> None:
         '''Sends a POST request to AIS and process the response.
@@ -450,8 +450,8 @@ class Application[D]:
         # same.
         headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
         return await self.ctx.parse_html(await self.ctx.request_ais(
-            '/ais/servlets/WebUIServlet',
-            method='POST', params=params, data=data, headers=headers))
+            '/ais/servlets/WebUIServlet?' + urllib.parse.urlencode(params),
+            method='POST', data=data, headers=headers))
 
     def _filter_operations(self, operations: list[Operation]) -> list[Operation]:
         return [operation for operation in operations
@@ -737,7 +737,7 @@ class Application[D]:
         call :meth:`send_shell_exec_result` afterwards.
 
         Returns:
-            The downloaded :class:`requests.Response`.
+            The downloaded HTTP response.
         '''
         if content_type == 'webui/execCustomFunction':
             raise AISParseError("webui/execCustomFunction is not supported")
@@ -879,8 +879,8 @@ async def check_connection(context: Context) -> None:
         await context.request_ais(
             '/ais/rest/apps/check-session/check-light',
             headers={'AISAuth': aisauth})
-    except HTTPError as e:
-        if e.response is not None and e.response.status_code == 401:
+    except HTTPStatusError as e:
+        if e.response.status_code == 401:
             raise LoggedOutError('AIS login expired.') from e
         else:
             raise e

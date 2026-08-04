@@ -1,16 +1,20 @@
 from bs4 import BeautifulSoup
+from contextlib import AsyncExitStack
+from http.cookiejar import CookieJar
+import httpcore2
+from httpcore2._backends.auto import AutoBackend  # TODO: Replace with public import after https://github.com/pydantic/httpx2/issues/1131
+import httpx2
 import sys
 import time
 import json
-import requests
 from urllib.parse import urljoin
 from aisikl.exceptions import RESTServerError, LoggedOutError
 from aisikl.typeutils import nn
-from typing import Any, TYPE_CHECKING, TextIO, cast, override
+from typing import Any, Literal, TYPE_CHECKING, TextIO, override
 
 if TYPE_CHECKING:
-    from requests.models import Response
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterable, Mapping
+    from http.cookiejar import Cookie
 
 
 #: Set this to True (either in the source code, or with ``import aisikl.context;
@@ -36,60 +40,114 @@ class Context:
                  logger: Logger | None=None) -> None:
         self.ais_url = ais_url
         self.rest_url = rest_url
+        self.dns_overrides = dns_overrides or {}
         self.logger = logger or Logger()
-        self.requests_session = requests.Session()
-        if dns_overrides:
-            for old_hostname, new_hostname in dns_overrides.items():
-                self.requests_session.mount(
-                    f'https://{old_hostname}/',
-                    _DnsOverrideAdapter(old_hostname, new_hostname))
+        self.cookie_jar = _PickleableCookieJar()
 
-    async def request_ais(self, url: str, *, method: str='GET', **kwargs: Any) -> Response:
-        r'''Sends a request to AIS and returns the :class:`requests.Response`.
+    async def request_http(
+        self, *,
+        method: str,
+        url: str,
+        data: Mapping[str, str] | None=None,
+        headers: Mapping[str, str] | None=None,
+    ) -> httpx2.Response:
+        '''Sends an HTTP request to an arbitrary absolute URL and returns the
+        response. Reads and writes ``self.cookie_jar``.
+
+        ``request_http`` does not log the request, follow redirects, or check
+        response HTTP status; the caller should take care of that.
+        '''
+        async with AsyncExitStack() as stack:
+            if self.dns_overrides:
+                backend = _BackendWithDnsOverrides(self.dns_overrides)
+                pool = await stack.enter_async_context(
+                    httpcore2.AsyncConnectionPool(network_backend=backend))
+            else:
+                pool = await stack.enter_async_context(
+                    httpcore2.AsyncConnectionPool())
+
+            client = await stack.enter_async_context(httpx2.AsyncClient(
+                transport=_TransportWithCustomPool(pool),
+                # This relies on an undocumented detail: the behavior of
+                # AsyncClient(cookies=...) changes depending on argument type.
+                # Given `dict[str, str]` or `httpx2.Cookies`, it creates a copy.
+                # Given `http.cookiejar.CookieJar` or a subclass, the jar won't
+                # be copied, but modified in-place.
+                cookies=self.cookie_jar,
+            ))
+
+            return await client.request(
+                method=method, url=url, data=data, headers=headers,
+                follow_redirects=False, timeout=None)
+
+    async def request_ais(
+        self, url: str, *,
+        method: str='GET',
+        data: Mapping[str, str] | None=None,
+        headers: Mapping[str, str] | None=None,
+        redirects: Literal['raise', 'return', 'follow']='raise',
+    ) -> httpx2.Response:
+        r'''Sends a request to AIS and returns the response.
 
         :param url: the URL, either absolute or relative to the AIS server.
-        :param method: HTTP method for the request.
-        :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
-        :return: a :class:`requests.Response` object.
         '''
-        await self.log('benchmark', 'Begin AIS network request')
-        await self.log('http', 'Requesting {} {}'.format(
-            method, url.partition('?')[0]), [url, kwargs.get('data', None)])
-        url = urljoin(nn(self.ais_url), url)
-        response = self.requests_session.request(method, url, **kwargs)
-        response.raise_for_status()
-        if response.headers.get('content-type', '').startswith('text'):
-            await self.log('http', 'Received response', response.text)
-        else:
-            await self.log('http', 'Received response (binary data)')
-        await self.log('benchmark', 'End AIS network request')
-        return response
+        while True:
+            await self.log('benchmark', 'Begin AIS network request')
+            await self.log('http', 'Requesting {} {}'.format(
+                method, url.partition('?')[0]), [url, data])
 
-    async def parse_html(self, response: Response) -> BeautifulSoup:
+            url = urljoin(nn(self.ais_url), url)
+            response = await self.request_http(
+                method=method, url=url, data=data, headers=headers)
+
+            await self._log_response(response)
+            await self.log('benchmark', 'End AIS network request')
+
+            if response.has_redirect_location and redirects == 'follow':
+                next_request = nn(response.next_request)
+                url = str(next_request.url)
+                method = next_request.method
+                if method == 'GET': data = None
+                headers = next_request.headers
+                continue
+                # Max redirects count is not implemented (not needed so far).
+            else:
+                break
+
+        if response.has_redirect_location and redirects == 'return':
+            return response
+        else:
+            # httpx2.Response.raise_for_status() succeeds only on 2xx. Note this
+            # is a difference from `requests`, which raises only on 4xx or 5xx.
+            response.raise_for_status()
+            return response
+
+    async def parse_html(self, response: httpx2.Response) -> BeautifulSoup:
         await self.log('benchmark', 'Begin HTML parsing')
         soup = BeautifulSoup(response.text, 'lxml')
         await self.log('benchmark', 'End HTML parsing')
         return soup
 
-    async def request_json(self, url: str, **data: object) -> Any:
+    async def request_json(self, url: str, **data: str) -> Any:
         r'''Sends a request to REST API and parses the response as JSON.
 
-        :param url: the URL, either absolute or relative to the AIS server.
-        :param method: HTTP method for the request.
-        :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
+        :param url: the URL, either absolute or relative to the REST server.
+        :param \*\*data: POST form fields.
         :return: a dictionary.
         '''
         await self.log('benchmark', 'Begin REST network request')
         await self.log('http', 'Requesting POST {}'.format(
             url.partition('?')[0]), [url, data])
+
         url = urljoin(nn(self.rest_url), url)
-        response = self.requests_session.request("POST", url, data=data)
-        response.raise_for_status()
-        await self.log('http', 'Received response', response.text)
+        response = await self.request_http(method="POST", url=url, data=data)
+
+        await self._log_response(response)
         await self.log('benchmark', 'End REST network request')
 
-        if not response.url.startswith(nn(self.rest_url)):
+        if response.has_redirect_location:
             raise LoggedOutError('REST login expired.')
+        response.raise_for_status()
         response = json.loads(response.text)
 
         if response['status'] != 'OK':
@@ -98,6 +156,26 @@ class Context:
 
         await self.log('http', 'Parsed JSON data')
         return response['response']
+
+    async def _log_response(self, response: httpx2.Response) -> None:
+        log_data = {
+            'status_code': response.status_code,
+            'reason_phrase': response.reason_phrase,
+            'headers': [
+                [k, v] for k, v in response.headers.multi_items()
+                if k.lower() in { 'aisauth', 'content-type', 'location' }
+            ],
+        }
+        if response.has_redirect_location:
+            pass
+        elif response.headers.get('content-type', '').startswith('text'):
+            log_data['body'] = response.text
+        else:
+            # We could log base64 content here... it would simplify testutils.py
+            # slightly... But '/ais/apps/student/sk/main.js' is freaking huge,
+            # so let's not.
+            pass
+        await self.log('http', 'Received response', log_data)
 
     async def log(self, type: str, message: str, data: object=None) -> None:
         '''Logs a message.
@@ -144,45 +222,89 @@ class Logger:
     log.__doc__ = Context.log.__doc__
 
 
-class _DnsOverrideAdapter(requests.adapters.HTTPAdapter):  # pyright: ignore [reportUnknownMemberType, reportUntypedBaseClass, reportAttributeAccessIssue]
-    '''A HTTPAdapter which overrides the DNS resolution (i.e. the socket
-    connect() address) from old_hostname to new_hostname.'''
+# Miscellaneous notes on `httpx`:
+#
+# PICKLING:
+#   The httpx API is unfortunately very obstinate about pickling. We want to
+#   store cookies in our `Context` and save them in Votr sessions, but this is
+#   needlessly difficult. `httpx2.Client` represents both a connection pool and
+#   a cookie jar in one object. Constructing and wiring the underlying pool and
+#   jar objects manually is nontrivial - see `_TransportWithCustomPool`. And the
+#   default cookie jar is not pickleable, anyway - see `_PickleableCookieJar`.
+#   *shakes fist*
+#
+# NURSERIES:
+#   JFYI: The reason httpx/httpcore's API does not need a `trio.open_nursery()`
+#   block is that it never does any background work. All pool maintenance is
+#   done only when it prepares to send a request. At that time, the pool scans
+#   all connections, and closes: 1. sockets that were idle for longer than
+#   `keepalive_expiry`, 2. sockets where the server sent us an EOF. (JFYI: it
+#   detects EOF indirectly by checking if it's idle and `is_socket_readable`,
+#   because EOF also counts as readable, and the pool assumes the server won't
+#   send anything else.) Notice that this arrangement means sockets could stay
+#   open for arbitrarily long - `keepalive_expiry` is not applied immediately.
+#   But in practice, with our usage patterns, socket/fd exhaustion shouldn't be
+#   a problem.
 
-    def __init__(self, old_hostname: str, new_hostname: str) -> None:
-        super().__init__()  # pyright: ignore [reportUnknownMemberType]
-        self.old_hostname = old_hostname
-        self.new_hostname = new_hostname
+
+class _BackendWithDnsOverrides(AutoBackend):
+    '''A httpcore network backend that overrides the DNS resolution (i.e. the
+    socket connect() address). The original hostname is still used in the Host
+    header and SNI name.
+
+    Votr Beta uses this for ``idp.uniba.sk`` vs ``idp.test.uniba.sk``. These
+    requests need to have original Host header to pass Andrvotr's Host check.
+    SNI could technically have either value, because this server currently has
+    both SANs, but matching SNI = Host should be more polite and future-proof.
+    '''
+
+    def __init__(self, dns_overrides: dict[str, str]):
+        super().__init__()
+        self.dns_overrides = dns_overrides
 
     @override
-    def build_connection_pool_key_attributes(self, *args: Any, **kwargs: Any) -> Any:  # pyright: ignore [reportGeneralTypeIssues]
-        host_params, pool_kwargs = (  # pyright: ignore [reportUnknownVariableType]
-            super().build_connection_pool_key_attributes(*args, **kwargs))  # pyright: ignore [reportUnknownMemberType]
-        if host_params['host'] != self.old_hostname:
-            raise Exception(f'{host_params["host"]!r} != {self.old_hostname!r}')
-        # Modifying this field changes the connect() address, SNI, expected cert
-        # SAN, and default Host header. We only want to change the connect()
-        # address, so we must change the rest back to old_hostname.
-        host_params = { **host_params, 'host': self.new_hostname }  # pyright: ignore [reportUnknownVariableType]
-        # Change SNI and expected cert SAN back to old_hostname.
-        pool_kwargs = { **pool_kwargs, 'server_hostname': self.old_hostname }  # pyright: ignore [reportUnknownVariableType]
-        return host_params, pool_kwargs
+    async def connect_tcp(
+        self,
+        host: str,
+        port: int,
+        timeout: float | None = None,
+        local_address: str | None = None,
+        socket_options: Iterable[httpcore2.SOCKET_OPTION] | None = None,
+    ) -> httpcore2.AsyncNetworkStream:
+        return await super().connect_tcp(
+            host=self.dns_overrides.get(host, host), port=port, timeout=timeout,
+            local_address=local_address, socket_options=socket_options)
 
-    @override
-    def add_headers(self, request: Any, **kwargs: object) -> None:  # pyright: ignore [reportGeneralTypeIssues]
-        # Explicitly set the Host header to old_hostname. FYI: It is usually
-        # implicitly added by HTTPConnection.put_request() in http/client.py
-        # using the value of HTTPConnection.host (not by requests or urllib3).
-        if 'Host' in request.headers:
-            raise Exception('Requests with custom Host header are unsupported')
-        request.headers['Host'] = self.old_hostname
 
+class _TransportWithCustomPool(httpx2.AsyncBaseTransport):
+    def __init__(self, pool: httpcore2.AsyncConnectionPool):
+        super().__init__()
+        self._pool = pool
+
+    # Borrow the `handle_async_request` definition from `AsyncHTTPTransport`.
+    # It mainly handles translation of `httpx2.Request` to `httpcore2.Request`,
+    # and uses `self._pool` to send it.
+    #
+    # This relies on a private undocumented implementation detail: The method 1)
+    # uses an attribute named specifically `self._pool`, and 2) doesn't need any
+    # other attributes on `self`.
+    handle_async_request = override(
+        httpx2.AsyncHTTPTransport.handle_async_request)
+
+    # `__aenter__`, `__aexit__`, `aclose` are intentionally not overridden, i.e.
+    # they keep their no-op definitions from `AsyncBaseTransport`. This class
+    # doesn't own and doesn't close `self._pool`, unlike `AsyncHTTPTransport`.
+
+
+class _PickleableCookieJar(CookieJar):
     @override
-    def __getstate__(self) -> object:
-        return {
-            **cast(Any, super().__getstate__()),  # pyright: ignore [reportUnknownMemberType]
-            'old_hostname': self.old_hostname,
-            'new_hostname': self.new_hostname,
-        }
+    def __getstate__(self) -> list[Cookie]:
+        return list(self)
+
+    def __setstate__(self, state: list[Cookie]) -> None:
+        self.__init__()
+        for cookie in state:
+            self.set_cookie(cookie)
 
 
 try:

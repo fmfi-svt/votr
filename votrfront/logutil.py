@@ -33,11 +33,9 @@ def classify(line):
         return 'SQLError'
     if "args=['Nastala SQL chyba" in line.content:
         return 'SQLError'
-    if "failed with ConnectionError" in line.content:
+    if "failed with ConnectError" in line.content:
         return 'ConnectionError'
-    if "failed with SSLError" in line.content:
-        return 'ConnectionError'
-    if "failed with HTTPError" in line.content:
+    if "failed with HTTPStatusError" in line.content:
         return 'HTTPError'
     if "failed with LoggedOutError" in line.content:
         return 'LoggedOutError'
@@ -252,7 +250,15 @@ def cli_view(*args):
                 else:
                     print(separator, file=out)
                     print(when, typestr, message, file=out)
-                print(data, file=out)
+                if type == 'http' and isinstance(data, dict) and 'headers' in data:
+                    print({ k: v for k, v in data.items() if k != 'headers' and k != 'body' }, file=out)
+                    for k, v in data['headers']:
+                        print(f'{k}: {v}', file=out)
+                    if 'body' in data:
+                        print('---', file=out)
+                        print(data['body'], file=out)
+                else:
+                    print(data, file=out)
 
 
 def cli_path(*sessids):
