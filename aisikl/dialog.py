@@ -55,7 +55,8 @@ class Dialog:
 
         Called from :meth:`aisikl.app.Application.open_dialog`.
         '''
-        dialog_soup = await self.app.ctx.request_html(url)
+        dialog_soup = await self.app.ctx.parse_html(
+            await self.app.ctx.request_ais(url))
         await self.app.ctx.log('benchmark', 'Begin dialog initialization')
 
         body = nn(dialog_soup.body)

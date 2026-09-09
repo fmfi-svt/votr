@@ -327,7 +327,7 @@ class Application[D]:
         self.class_name = match.group(1) if match else None
         await self.ctx.log('operation', f'Opening application {self.class_name}', url)
 
-        app_soup = await self.ctx.request_html(url)
+        app_soup = await self.ctx.parse_html(await self.ctx.request_ais(url))
         if not app_soup.find(id='webuiProperties'):
             alert_match = _alert_re.match(
                 app_soup.script.get_text().strip() if app_soup.script else '')
@@ -449,8 +449,9 @@ class Application[D]:
         # don't have it, but sendRequestEvent manually sets it, so we do the
         # same.
         headers = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
-        return await self.ctx.request_html('/ais/servlets/WebUIServlet',
-            method='POST', params=params, data=data, headers=headers)
+        return await self.ctx.parse_html(await self.ctx.request_ais(
+            '/ais/servlets/WebUIServlet',
+            method='POST', params=params, data=data, headers=headers))
 
     def _filter_operations(self, operations: list[Operation]) -> list[Operation]:
         return [operation for operation in operations

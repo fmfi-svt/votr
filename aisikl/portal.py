@@ -27,7 +27,8 @@ async def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[Port
         ``url``, ``title`` and ``description``.
     '''
     await ctx.log('portal', 'Opening main menu')
-    front_soup = await ctx.request_html('/ais/portal/changeTab.do?tab=0')
+    front_soup = await ctx.parse_html(
+        await ctx.request_ais('/ais/portal/changeTab.do?tab=0'))
 
     results: list[tuple[str, list[tuple[str, list[PortalApp]]]]] = []
 
@@ -37,8 +38,8 @@ async def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[Port
         if not module: continue
 
         await ctx.log('portal', f'Opening section "{menu_link.get_text()}"')
-        applist_soup = await ctx.request_html(
-            '/ais/portal/changeModul.do?modul=' + module)
+        applist_soup = await ctx.parse_html(await ctx.request_ais(
+            '/ais/portal/changeModul.do?modul=' + module))
 
         submodules: list[tuple[str, list[PortalApp]]] = []
         for submodule in applist_soup.find_all(class_='submodul'):

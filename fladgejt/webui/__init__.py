@@ -36,10 +36,10 @@ class WebuiClient(WebuiHodnoteniaMixin, WebuiObdobiaMixin,
     async def logout(self) -> None:
         if self.logout_mode == self.LOGOUT_WITH_REDIRECTS:
             await self.context.log('logout', 'Requesting logout.do with redirects')
-            await self.context.request_html('/ais/logout.do')
+            await self.context.request_ais('/ais/logout.do')
         elif self.logout_mode == self.LOGOUT_WITHOUT_REDIRECTS:
             await self.context.log('logout', 'Requesting logout.do without redirects')
-            await self.context.request_html('/ais/logout.do', allow_redirects=False)
+            await self.context.request_ais('/ais/logout.do', allow_redirects=False)
         elif self.logout_mode == self.LOGOUT_NOTHING:
             await self.context.log('logout', 'Skipped logout.do')
         else:

@@ -65,16 +65,6 @@ class Context:
         await self.log('benchmark', 'End AIS network request')
         return response
 
-    async def request_html(self, url: str, *, method: str='GET', **kwargs: Any) -> BeautifulSoup:
-        r'''Sends a request to AIS and parses the response as HTML.
-
-        :param url: the URL, either absolute or relative to the AIS server.
-        :param method: HTTP method for the request.
-        :param \*\*kwargs: arguments for :meth:`requests.Session.request`.
-        :return: a ``BeautifulSoup`` object.
-        '''
-        return await self.parse_html(await self.request_ais(url, method=method, **kwargs))
-
     async def parse_html(self, response: Response) -> BeautifulSoup:
         await self.log('benchmark', 'Begin HTML parsing')
         soup = BeautifulSoup(response.text, 'lxml')
