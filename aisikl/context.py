@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from contextlib import AsyncExitStack
+from contextlib import contextmanager, AsyncExitStack
 from http.cookiejar import CookieJar
 import httpcore2
 from httpcore2._backends.auto import AutoBackend  # TODO: Replace with public import after https://github.com/pydantic/httpx2/issues/1131
@@ -13,7 +13,7 @@ from aisikl.typeutils import nn
 from typing import Any, Literal, TYPE_CHECKING, TextIO, override
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable, Iterable, Mapping
+    from collections.abc import Awaitable, Callable, Generator, Iterable, Mapping
     from http.cookiejar import Cookie
 
 
@@ -43,6 +43,26 @@ class Context:
         self.dns_overrides = dns_overrides or {}
         self.logger = logger or Logger()
         self.cookie_jar = _PickleableCookieJar()
+        self._pool: httpcore2.AsyncConnectionPool | None = None
+
+    @contextmanager
+    def use_connection_pool(
+        self, pool: httpcore2.AsyncConnectionPool | None,
+    ) -> Generator[None]:
+        '''By default, ``Context`` creates a new TCP connection for each HTTP
+        request. ``use_connection_pool`` makes it use the given pool instead for
+        its duration.
+
+        The purpose of this design is to allow using an effectively process-wide
+        pool for efficiency, but not require it in scripts, notebooks and REPLs.
+
+        If ``dns_overrides`` are enabled, ``use_connection_pool`` has no effect.
+        '''
+        old, self._pool = self._pool, pool
+        try:
+            yield
+        finally:
+            self._pool = old
 
     async def request_http(
         self, *,
@@ -62,6 +82,8 @@ class Context:
                 backend = _BackendWithDnsOverrides(self.dns_overrides)
                 pool = await stack.enter_async_context(
                     httpcore2.AsyncConnectionPool(network_backend=backend))
+            elif self._pool:
+                pool = self._pool
             else:
                 pool = await stack.enter_async_context(
                     httpcore2.AsyncConnectionPool())

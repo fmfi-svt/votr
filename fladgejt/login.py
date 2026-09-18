@@ -12,6 +12,7 @@ from typing import Literal, NotRequired, TYPE_CHECKING, TypedDict
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
     from fladgejt.base import BaseClient
+    from httpcore2 import AsyncConnectionPool
     from httpx2 import Response
 
 
@@ -263,12 +264,6 @@ async def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: 
         raise Exception('Unrecognized response during login process')
 
 
-def _create_context(server: ServerDict, logger: Logger) -> Context:
-    return Context(
-        ais_url=server.get('ais_url'), rest_url=server.get('rest_url'),
-        dns_overrides=server.get('dns_overrides'), logger=logger)
-
-
 def _create_normal_client(ctx: Context, server: ServerDict, logout_mode: str) -> BaseClient:
     if 'ais_url' in server and 'rest_url' in server:
         return HybridClient(ctx, logout_mode=logout_mode)
@@ -280,9 +275,7 @@ def _create_normal_client(ctx: Context, server: ServerDict, logout_mode: str) ->
         raise Exception('Neither ais_url nor rest_url is configured')
 
 
-async def _login_with_saml(server: ServerDict, params: ParamsDict, logger: Logger) -> BaseClient:
-    ctx = _create_context(server, logger)
-
+async def _login_with_saml(ctx: Context, server: ServerDict, params: ParamsDict) -> BaseClient:
     if 'ais_url' in server:
         # Simulate clicking the login button. It has
         # onclick="location.href='/ais/sso/samlsso?SAML2.HTTPBinding=HTTP-POST'"
@@ -306,11 +299,9 @@ async def _login_with_saml(server: ServerDict, params: ParamsDict, logger: Logge
     return _create_normal_client(ctx, server, logout_mode)
 
 
-async def _login_with_plain_password(server: ServerDict, params: ParamsDictPlainPassword, logger: Logger) -> BaseClient:
+async def _login_with_plain_password(ctx: Context, server: ServerDict, params: ParamsDictPlainPassword) -> BaseClient:
     if 'rest_url' in server:
         raise Exception('plain_password type does not support rest_url')
-
-    ctx = _create_context(server, logger)
 
     # Submit the login form. It has action="/ais/login.do".
     # On both success and failure, it will respond with 302 to ais/start.do.
@@ -348,16 +339,15 @@ def _parse_cookie_string(ctx: Context, base_url: str | None, default_name: str |
         Cookies(ctx.cookie_jar).set(name, value, domain=domain)
 
 
-async def _login_with_cookie(server: ServerDict, params: ParamsDictCookie, logger: Logger) -> BaseClient:
+async def _login_with_cookie(ctx: Context, server: ServerDict, params: ParamsDictCookie) -> BaseClient:
     # If login type is "cookie", but we only know ais_cookie, skip REST login.
     if ('ais_url' in server and 'rest_url' in server and
             not (params.get('rest_cookie') or '').strip()):
-        await logger.log('login', 'Skipping REST login because rest_cookie is empty')
+        await ctx.logger.log('login', 'Skipping REST login because rest_cookie is empty')
         server = server.copy()
         server.pop('rest_url', None)
         server.pop('rest_cookie', None)
-
-    ctx = _create_context(server, logger)
+        ctx.rest_url = None
 
     _parse_cookie_string(
         ctx, server.get('ais_url'), server.get('ais_cookie'),
@@ -370,13 +360,12 @@ async def _login_with_cookie(server: ServerDict, params: ParamsDictCookie, logge
     return _create_normal_client(ctx, server, WebuiClient.LOGOUT_NOTHING)
 
 
-async def _login_with_flashback(server: ServerDict, params: ParamsDictFlashback, logger: Logger) -> BaseClient:
+async def _login_with_flashback(ctx: Context, server: ServerDict, params: ParamsDictFlashback) -> BaseClient:
     if 'ais_url' in server:
         raise Exception('flashback type does not support ais_url')
     if 'rest_url' in server:
         raise Exception('flashback type does not support rest_url')
 
-    ctx = _create_context(server, logger)
     return FlashbackClient(ctx, server['flashbacks_dir'], params['file'])  # pyright: ignore [reportTypedDictNotRequiredAccess]
 
 
@@ -389,23 +378,28 @@ _handlers = {
 }
 
 
-async def create_client(server: ServerDict, params: ParamsDict, *, logger: Logger | None=None) -> BaseClient:
+async def create_client(server: ServerDict, params: ParamsDict, *, connection_pool: AsyncConnectionPool | None = None, logger: Logger | None=None) -> BaseClient:
     logger = logger or Logger()
 
     if params['type'] not in server['login_types']:
         raise ValueError("Unsupported login type")
 
-    handler = _handlers[params['type']]
-    # pyrefly: ignore [bad-argument-type]
-    client = await handler(server, params, logger)  # pyright: ignore [reportArgumentType]
+    ctx = Context(
+        ais_url=server.get('ais_url'), rest_url=server.get('rest_url'),
+        dns_overrides=server.get('dns_overrides'), logger=logger)
 
-    # Check that login was successful.
-    try:
-        await client.check_connection()
-    except Exception as e:
-        if params['type'] == 'cookie':
-            raise CookieLoginError('Cookie value did not work') from e
-        else:
-            raise Exception(f'check_connection failed immediately: {e}') from e
+    with ctx.use_connection_pool(connection_pool):
+        handler = _handlers[params['type']]
+        # pyrefly: ignore [bad-argument-type]
+        client = await handler(ctx, server, params)  # pyright: ignore [reportArgumentType]
+
+        # Check that login was successful.
+        try:
+            await client.check_connection()
+        except Exception as e:
+            if params['type'] == 'cookie':
+                raise CookieLoginError('Cookie value did not work') from e
+            else:
+                raise Exception(f'check_connection failed immediately: {e}') from e
 
     return client

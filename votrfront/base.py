@@ -5,6 +5,7 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
     from fladgejt.base import BaseClient
     from fladgejt.login import ServerDict
+    from httpcore2 import AsyncConnectionPool
     from votrfront.login import OneLogin_Saml2_Settings
 
 
@@ -58,6 +59,7 @@ class SessionDict(TypedDict):
 
 
 class VotrState(TypedDict):
+    connection_pool: AsyncConnectionPool
     saml_settings: OneLogin_Saml2_Settings | str
     settings: Settings
     votr_cookie_value: NotRequired[VotrCookie]

@@ -283,7 +283,9 @@ async def finish_login(request: Request[VotrState], get_params: Callable[[], Map
                 'type': params['type'],
                 'destination': destination,
             })
-            client = await create_client(server, cast("ParamsDict", cast("object", params)), logger=logger)
+            client = await create_client(
+                server, cast("ParamsDict", cast("object", params)),
+                connection_pool=request.state["connection_pool"], logger=logger)
             csrf_token = generate_key()
             session = SessionDict(
                 last_announcement=settings.announcement_html,

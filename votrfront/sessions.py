@@ -134,5 +134,9 @@ async def logged_transaction(request: Request[VotrState], sessid: str | None = N
     async with transaction(request, sessid) as session:
         with open_log_file(nn(sessid)) as log_file:
             client = session.get('client')
-            if client: client.context.logger.log_file = log_file
-            yield session
+            if client:
+                client.context.logger.log_file = log_file
+                with client.context.use_connection_pool(request.state['connection_pool']):
+                    yield session
+            else:
+                yield session

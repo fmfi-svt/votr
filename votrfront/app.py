@@ -2,6 +2,7 @@ import logging
 from anycorn.middleware import ProxyFixMiddleware
 from contextlib import asynccontextmanager
 from http import HTTPStatus
+from httpcore2 import AsyncConnectionPool
 from markupsafe import Markup
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
@@ -209,10 +210,12 @@ def build_app(
 
     @asynccontextmanager
     async def lifespan(_app: Starlette) -> AsyncGenerator[VotrState]:
-        yield VotrState(
-            settings=settings,
-            saml_settings=login.build_saml_settings(settings),
-        )
+        async with AsyncConnectionPool(max_connections=None) as connection_pool:
+            yield VotrState(
+                connection_pool=connection_pool,
+                settings=settings,
+                saml_settings=login.build_saml_settings(settings),
+            )
 
     return Starlette(
         debug=debug,
