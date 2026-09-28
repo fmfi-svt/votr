@@ -12,6 +12,7 @@ from typing import Literal, TYPE_CHECKING, override
 if TYPE_CHECKING:
     from aisikl.app import Application
     from aisikl.components.component import Component
+    from aisikl.operations import Operations
 
 _properties_re = re.compile(r'^var componentsProperties\s*=\s*(.*);$')
 
@@ -53,7 +54,7 @@ class Dialog:
     async def _init(self, url: str) -> None:
         '''Load the dialog body.
 
-        Called from :meth:`aisikl.app.Application.open_dialog`.
+        Called from :meth:`aisikl.app.Application._open_dialog`.
         '''
         dialog_soup = await self.app.ctx.parse_html(
             await self.app.ctx.request_ais(url))
@@ -159,7 +160,7 @@ class Dialog:
             self.changed_components[component.id] = True
             self.try_interactive(component, 'change')
 
-    async def click_close_button(self) -> None:
+    async def click_close_button(self, *, return_ops: Literal[True]) -> Operations:
         if not self.closeable:
             raise ValueError(f"Dialog {self.name} has no close button")
         # TODO: Return unless "self.enabled" is True.
@@ -167,4 +168,4 @@ class Dialog:
         await self.app.ctx.log('action',
             f'Pressing close button of {self.name}')
         ev = component_event(self.body, 'close', 'CLOSE')
-        await self.app.send_events(ev)
+        return await self.app.send_events(ev, return_ops=return_ops)

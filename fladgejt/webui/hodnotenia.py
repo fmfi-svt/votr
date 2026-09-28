@@ -1,3 +1,4 @@
+from aisikl.operations import RefreshDialogOp
 from fladgejt.helpers import CantOpenApplication, decode_key
 from fladgejt.structures import Hodnotenie, Priemer, PriebezneHodnotenie, PriebezneHodnoteniaPredmetu
 from fladgejt.webui.studium import WebuiStudiumMixin
@@ -93,10 +94,9 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
         result: list[PriebezneHodnoteniaPredmetu] = []
         for i, row in enumerate(await app.d.predmetySPriebeznymHodnotenimTable.all_rows()):
             # Klikneme na predmet s priebeznym hodnotenim a pockame na nacitanie
-            with app.collect_operations() as ops:
-                await app.d.predmetySPriebeznymHodnotenimTable.select(i)
+            ops = await app.d.predmetySPriebeznymHodnotenimTable.select(i, return_ops=True)
             if ops:
-                await app.awaited_refresh_dialog(ops)
+                await ops.expect_one(RefreshDialogOp).perform()
 
             # Klikneme na button nacitatHodnotenie
             await app.d.nacitatHodnotenieButton.click()

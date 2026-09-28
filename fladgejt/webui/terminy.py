@@ -1,4 +1,4 @@
-from aisikl.app import assert_ops
+from aisikl.operations import CloseDialogOp, ConfirmBoxOp, MessageBoxOp, OpenDialogOp
 from fladgejt.helpers import CantOpenApplication, find_row, find_option, encode_key, decode_key
 from fladgejt.structures import Predmet, Termin, PrihlasenyStudent
 from fladgejt.webui.studium import WebuiStudiumMixin
@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from abc import ABC
-    from aisikl.app import Application, Operation
+    from aisikl.app import Application
     from aisikl.components.action import Action
     from aisikl.components.button import Button
     from aisikl.components.checkbox import CheckBox
@@ -114,11 +114,10 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
         # v konzistentnom stave pre dalsieho co ju pouzije.
 
         # Stlacime button "Prihlasit sa na termin" dole.
-        with app.collect_operations() as ops:
-            await app.d.pridatButton.click()
+        ops = await app.d.pridatButton.click(return_ops=True)
 
         # Otvori sa novy dialog.
-        await app.awaited_open_dialog(ops)
+        await ops.expect_one(OpenDialogOp).perform()
 
     async def __select_predmet_row(self, app: Application[TerminyHodnoteniaDialogsType], predmet_key: str) -> Row:
         await self.__vyber_oba_semestre(app)
@@ -158,11 +157,10 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
                   for row in await app.d.zoznamTerminovTable.all_rows()]
 
         # Stlacime zatvaraci button.
-        with app.collect_operations() as ops:
-            await app.d.click_close_button()
+        ops = await app.d.click_close_button(return_ops=True)
 
         # Dialog sa zavrie.
-        await app.awaited_close_dialog(ops)
+        await ops.expect_one(CloseDialogOp).perform()
 
         return result
 
@@ -188,10 +186,12 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
         if index is not None:
             await app.d.terminyTable.select(index)
             # Stlacime "Zobrazit zoznam prihlasenych".
-            with app.collect_operations() as ops:
-                await app.d.zoznamPrihlasenychStudentovAction.execute()
+            ops = await app.d.zoznamPrihlasenychStudentovAction.execute(return_ops=True)
 
-            return await self.__process_prihlaseni_studenti_list(app, ops)
+            # Otvori sa zoznam prihlasenych.
+            await ops.expect_one(OpenDialogOp).perform()
+
+            return await self.__process_prihlaseni_studenti_list(app)
         else:
             # zapisny_list_key a predmet_key uz sme selectli predtym.
             return await self.__get_prihlaseni_studenti_cez_vyber_terminu(app,
@@ -218,24 +218,22 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
         await app.d.zoznamTerminovTable.select(index)
 
         # Stlacime "Zobrazit zoznam prihlasenych".
-        with app.collect_operations() as ops:
-            await app.d.zobrazitZoznamPrihlasenychAction.execute()
+        ops = await app.d.zobrazitZoznamPrihlasenychAction.execute(return_ops=True)
 
-        result = await self.__process_prihlaseni_studenti_list(app, ops)
+        # Otvori sa zoznam prihlasenych.
+        await ops.expect_one(OpenDialogOp).perform()
+
+        result = await self.__process_prihlaseni_studenti_list(app)
 
         # Stlacime zatvaraci button na zozname terminov.
-        with app.collect_operations() as ops:
-            await app.d.click_close_button()
+        ops = await app.d.click_close_button(return_ops=True)
 
         # Dialog sa zavrie.
-        await app.awaited_close_dialog(ops)
+        await ops.expect_one(CloseDialogOp).perform()
 
         return result
 
-    async def __process_prihlaseni_studenti_list(self, app: Application[TerminyHodnoteniaDialogsType], ops: list[Operation]) -> list[PrihlasenyStudent]:
-        # Otvori sa zoznam prihlasenych.
-        await app.awaited_open_dialog(ops)
-
+    async def __process_prihlaseni_studenti_list(self, app: Application[TerminyHodnoteniaDialogsType]) -> list[PrihlasenyStudent]:
         # Vytiahneme data z tabulky.
         result = [PrihlasenyStudent(sp_skratka=row['skratka'],
                                     datum_prihlasenia=row['datumPrihlas'],
@@ -245,11 +243,10 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
                   for row in await app.d.prihlaseniTable.all_rows()]
 
         # Stlacime zatvaraci button na zozname prihlasenych.
-        with app.collect_operations() as ops:
-            await app.d.click_close_button()
+        ops = await app.d.click_close_button(return_ops=True)
 
         # Dialog sa zavrie.
-        await app.awaited_close_dialog(ops)
+        await ops.expect_one(CloseDialogOp).perform()
 
         return result
 
@@ -267,18 +264,16 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
             dat=datum, cas=cas, miestnosti=miestnost, poznamka=poznamka))
 
         # Stlacime OK.
-        with app.collect_operations() as ops:
-            await app.d.enterButton.click()
+        ops = await app.d.enterButton.click(return_ops=True)
 
+        # Mozno sa objavi chyba. Ak ano, stlacime zatvaraci button.
         message = None
-        if ops and ops[0].method == 'messageBox':
-            assert_ops(ops, 'messageBox')
-            message = ops[0].args[0]
-            with app.collect_operations() as ops:
-                await app.d.click_close_button()
+        if ops.has_types(MessageBoxOp):
+            message = ops.expect_one(MessageBoxOp).message
+            ops = await app.d.click_close_button(return_ops=True)
 
         # Dialog sa zavrie.
-        await app.awaited_close_dialog(ops)
+        await ops.expect_one(CloseDialogOp).perform()
 
         return message
 
@@ -302,16 +297,12 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
             predmetSkratka=skratka_predmetu))
 
         # Stlacime "Odhlasit sa z terminu".
-        with app.collect_operations() as ops:
-            await app.d.odstranitButton.click()
+        ops = await app.d.odstranitButton.click(return_ops=True)
 
         # Vyskoci confirm box, ci sa naozaj chceme odhlasit. Stlacime "Ano".
-        assert_ops(ops, 'confirmBox')
-        with app.collect_operations() as ops:
-            await app.confirm_box(2)
+        ops = await ops.expect_one(ConfirmBoxOp).reply(ConfirmBoxOp.Option.YES, return_ops=True)
 
         if ops:
-            assert_ops(ops, 'messageBox')
-            return ops[0].args[0]
+            return ops.expect_one(MessageBoxOp).message
 
         return None

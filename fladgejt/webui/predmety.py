@@ -1,4 +1,5 @@
-from aisikl.app import Application, assert_ops
+from aisikl.app import Application
+from aisikl.operations import AbortBoxOp, CloseDialogOp, MessageBoxOp, OpenDialogOp, ShellExecOp
 import base64
 from fladgejt.base import BaseClient
 from fladgejt.webui.commonui import select_text_ciselnik
@@ -70,7 +71,7 @@ class WebuiPredmetyMixin(BaseClient):
     async def _open_register_predmetov(self) -> Application[RegisterPredmetovDialogsType]:
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.st.VSST060App&kodAplikacie=VSST060&uiLang=SK'
         app, ops = await Application[RegisterPredmetovDialogsType].open(self.context, url)
-        await app.awaited_open_main_dialog(ops)
+        await ops.expect_one(OpenDialogOp).perform()
         return app
 
     async def get_informacny_list(self, kod_predmetu: str, akademicky_rok: str) -> str | None:
@@ -93,27 +94,24 @@ class WebuiPredmetyMixin(BaseClient):
         # ich AIS zoradi.)
 
         # Stlacime v menu "Informacny list".
-        with app.collect_operations() as ops:
-            await app.d.infListMenuItem.click()
+        ops = await app.d.infListMenuItem.click(return_ops=True)
 
         # Otvori sa dialog na vyber formatu.
-        await app.awaited_open_dialog(ops)
+        await ops.expect_one(OpenDialogOp).perform()
 
         # Vyberieme vrchny riadok. TODO: fakt chceme ten?
         await app.d.sablonyTable.select(0)
 
         # Stlacime OK.
-        with app.collect_operations() as ops:
-            await app.d.enterButton.click()
+        ops = await app.d.enterButton.click(return_ops=True)
 
         # Dialog sa zavrie a otvori sa "prosim cakajte", tak cakame.
-        assert_ops(ops, 'closeDialog', 'abortBox')
-        await app.close_dialog(*ops[0].args)
-        with app.collect_operations() as ops2:
-            await app.abort_box(*ops[1].args)
+        op1, op2 = ops.expect_two(CloseDialogOp, AbortBoxOp)
+        await op1.perform()
+        ops = await op2.perform(return_ops=True)
 
         # Vratime zakodove PDF.
-        url = await app.awaited_shell_exec(ops2)
+        url = await ops.expect_one(ShellExecOp).download()
         return base64.b64encode(url.content).decode()
 
     async def __query_dialog(self, app: Application[RegisterPredmetovDialogsType], akademicky_rok: str, fakulta: str | None=None, semester: str | None=None,
@@ -184,13 +182,12 @@ class WebuiPredmetyMixin(BaseClient):
                              konanie=predmet_row['konanie'],
                              cudzi_nazov=predmet_row['nazovJ'],
                              kredit=predmet_row['kredit'])
-        with app.collect_operations() as ops:
-            await app.d.zoznamStudentovAction.execute()
+        ops = await app.d.zoznamStudentovAction.execute(return_ops=True)
 
-        if len(ops) == 1 and ops[0].method == 'messageBox':
-            return GetStudentiZapisaniNaPredmetResult(items=[], message=ops[0].args[0], predmet=predmet)
+        if ops.has_types(MessageBoxOp):
+            return GetStudentiZapisaniNaPredmetResult(items=[], message=ops.expect_one(MessageBoxOp).message, predmet=predmet)
 
-        await app.awaited_open_dialog(ops)
+        await ops.expect_one(OpenDialogOp).perform()
 
         studenti = [PrihlasenyStudent(sp_skratka=row['studProgSkratka'],
                                       datum_prihlasenia=row['datumZapisania'],
@@ -200,10 +197,9 @@ class WebuiPredmetyMixin(BaseClient):
                     for row in await app.d.zaradeniStudentiTable.all_rows()]
 
         # zatvarame dialog so zoznamom studentov
-        with app.collect_operations() as ops:
-            await app.d.closeButton.click()
+        ops = await app.d.closeButton.click(return_ops=True)
 
-        await app.awaited_close_dialog(ops)
+        await ops.expect_one(CloseDialogOp).perform()
 
         return GetStudentiZapisaniNaPredmetResult(items=studenti, message=None, predmet=predmet)
 
@@ -211,7 +207,7 @@ class WebuiPredmetyMixin(BaseClient):
     async def _open_nastenka_predmetu(self) -> Application[NastenkaPredmetuDialogsType]:
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.st.VSST157App&kodAplikacie=VSST157&uiLang=SK'
         app, ops = await Application[NastenkaPredmetuDialogsType].open(self.context, url)
-        await app.awaited_open_main_dialog(ops)
+        await ops.expect_one(OpenDialogOp).perform()
         return app
 
     async def get_ucitelia_predmetu(self, predmet_key: str, akademicky_rok: str, semester: str, fakulty: str) -> list[RegUcitelPredmetu]:

@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
+    from aisikl.operations import Operations
     from bs4.element import Tag
 
 
@@ -27,14 +28,16 @@ class Button(ActionableControl):
     def _ais_setConfirmQuestion(self, value: object) -> None:
         self.confirm_question = ct_none(str, value)
 
-    async def click(self) -> None:
+    async def click(self, *, return_ops: bool = False) -> Operations:
         await self.log('action', f'Clicking {self.id}')
 
-        if await self.try_execute_action(): return
+        did, ops = await self.try_execute_action(return_ops=return_ops)
+        if did:
+            return ops
 
         ev = action_event(self, None, self.id)
         # TODO: We should technically ask confirm_question before firing
         # (if ev.listening is True), but we probably don't care.
-        await self.dialog.app.send_events(ev)
+        return await self.dialog.app.send_events(ev, return_ops=return_ops)
 
         # Note that showPopupMenus() is unsupported. Use menu items directly.

@@ -1,5 +1,5 @@
-from aisikl.app import assert_ops
 from aisikl.exceptions import AISBehaviorError
+from aisikl.operations import CloseDialogOp, MessageBoxOp, OpenDialogOp
 from fladgejt.helpers import find_row_insensitive
 from typing import TYPE_CHECKING, cast
 
@@ -34,8 +34,7 @@ async def select_ciselnik[D: Dialog](app_arg: Application[D], text: str | None, 
     old_ignored_messages = app.ignored_messages
     app.ignored_messages = [m for m in app.ignored_messages if m != 'Podmienkam nevyhovuje žiadny záznam.']
     try:
-        with app.collect_operations() as ops:
-            await select_button.click()
+        ops = await select_button.click(return_ops=True)
     finally:
         app.ignored_messages = old_ignored_messages
 
@@ -46,32 +45,28 @@ async def select_ciselnik[D: Dialog](app_arg: Application[D], text: str | None, 
         return True
 
     # Ak AIS nenasiel ziaden riadok s danym prefixom.
-    if len(ops) == 1 and ops[0].method == 'messageBox' and ops[0].args[0] == 'Podmienkam nevyhovuje žiadny záznam.':
+    if ops.has_types(MessageBoxOp) and ops.expect_one(MessageBoxOp).message == 'Podmienkam nevyhovuje žiadny záznam.':
         return False
 
     # Ak AIS nasiel viacero riadkov s danym prefixom.
-    assert_ops(ops, 'openDialog')
-
-    if ops[0].args[0]['code'] != 'SSSC001':
+    op = ops.expect_one(OpenDialogOp)
+    if op.props['code'] != 'SSSC001':
+        op.acknowledge()
         raise AISBehaviorError(f"AIS opened an unexpected dialog: {ops}")
+    await op.perform()
 
-    await app.awaited_open_dialog(ops)
     try:
         index = find_row_insensitive(await app.d.table.all_rows(), **{compare_column: text})
     except KeyError:
-        with app.collect_operations() as ops:
-            await app.d.closeButton.click()
-
-        await app.awaited_close_dialog(ops)
+        ops = await app.d.closeButton.click(return_ops=True)
+        await ops.expect_one(CloseDialogOp).perform()
 
         return False
 
     await app.d.table.select(index)
 
-    with app.collect_operations() as ops:
-        await app.d.enterButton.click()
-
-    await app.awaited_close_dialog(ops)
+    ops = await app.d.enterButton.click(return_ops=True)
+    await ops.expect_one(CloseDialogOp).perform()
 
     return True
 
@@ -84,15 +79,12 @@ async def select_text_ciselnik[D: Dialog](app: Application[D], text: str | None,
 
 async def show_all_columns[D](app_arg: Application[D], table: Table) -> None:
     app = cast('Application[ShowColumnsDialogsType]', app_arg)
-    with app.collect_operations() as ops:
-        await table.control_button_columns()
-
-    await app.awaited_open_dialog(ops)
+    ops = await table.control_button_columns(return_ops=True)
+    await ops.expect_one(OpenDialogOp).perform()
 
     for row in await app.d.table.all_rows():
         if row.cell('check').value == False:
             await app.d.table.edit_cell('check', row.id, True)
 
-    with app.collect_operations() as ops:
-        await app.d.enterButton.click()
-    await app.awaited_close_dialog(ops)
+    ops = await app.d.enterButton.click(return_ops=True)
+    await ops.expect_one(CloseDialogOp).perform()

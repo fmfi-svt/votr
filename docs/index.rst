@@ -17,6 +17,7 @@ Learn more at https://github.com/fmfi-svt/votr.
    aisikl.dialog
    aisikl.events
    aisikl.exceptions
+   aisikl.operations
    aisikl.portal
    aisikl.components
    fladgejt.helpers

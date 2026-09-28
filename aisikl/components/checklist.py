@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
+    from aisikl.operations import Operations
     from bs4.element import Tag
 
 
@@ -43,7 +44,7 @@ class CheckList(Control):
             if 'selectedListRow' in (tr.get('class') or []):
                 self.selected_index = index
 
-    async def up_down_row(self, command: str) -> None:
+    async def up_down_row(self, command: str, *, return_ops: bool = False) -> Operations:
         raise Exception('up_down_row not yet implemented.')   # TODO
 
     async def select_unselect_all(self) -> None:

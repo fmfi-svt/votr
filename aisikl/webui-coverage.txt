@@ -480,7 +480,7 @@ PARTIAL
 
 # DialogStack
 
-COMPLETE (merged into Application)
+COMPLETE (pieces in aisikl/app.py and aisikl/operations.py)
 
 DialogStack keeps track of the list of dialogs. It also knows which is the
 "desired active dialog" and which is the "top modal dialog". (The real variable
@@ -501,12 +501,12 @@ after they are closed.
       DialogBody.setEnabled(), which we skip for simplicity) and so this
       function is also IRRELEVANT.
 - reinit()
-    - Implements the rules outlined above. Inlined in Application.open_dialog()
-      and Application.close_dialog().
+    - Implements the rules outlined above. Inlined as `app.active_dialog = ...`
+      assignmnents in OpenDialogOp.perform() and CloseDialogOp.perform().
 - pushDialog()
-    - Inlined in Application.open_dialog().
+    - Inlined in OpenDialogOp.perform().
 - removeDialog()
-    - Inlined in Application.close_dialog() and Application.close_all_dialogs().
+    - Inlined in OpenDialogOp.perform() and CloseApplicationOp.perform().
 - getDialog() -> `app.dialogs[name]`
 - getTopDialog() -> `app.dialog_stack[-1]`
 - getBaseDialog() -> `app.dialog_stack[0]`
@@ -526,7 +526,7 @@ after they are closed.
 
 # DialogManager
 
-PARTIAL (merged into Application)
+PARTIAL (pieces in aisikl/app.py and aisikl/operations.py)
 
 Opening and closing dialogs is blocking in Votr, so there's no need to handle
 dialogs that aren't fully loaded, queue waiting dialogs, etc.
@@ -541,10 +541,10 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
 - prepareBrowserForDialogsOpen()
     - IRRELEVANT (probably only affects positioning and visuals)
 - showDialogs()
-    - Handled in parse_response()
+    - Handled in Application._process_response()
     - useDialogFrame is IRRELEVANT (it only affects positioning and visuals).
 - openDialog()
-    - Application.open_dialog()
+    - OpenDialogOp.perform()
     - isNative is true and/or msgOnly is non-null only when called from
       showNativeDialog(), which is used in messageBox(), confirmBox(), etc.
     - Multiple dialog stacks are UNSUPPORTED.
@@ -559,7 +559,7 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
     - Unused in webui.js, but perhaps used elsewhere.
     - Removed. Store the result of open_main_dialog() in a variable.
 - closeDialog(), checkDialogStacksEmpty()
-    - Application.close_dialog()
+    - CloseDialogOp.perform()
     - `isNative` is an optional argument. It seems it is only used for calls
       within webui.js, and always absent in result frame scripts.
     - Result frame scripts always call checkDialogStacksEmpty after closeDialog.
@@ -571,10 +571,11 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
       for the last dialog, this no longer happens in practice. Except for native
       dialogs which are IRRELEVANT. See clear() below.
 - closeAllDialogs()
-    - Application.close_all_dialogs()
+    - Application._close_all_dialogs()
     - Only called by webui.clear().
 - canKillApplication()
-    - IRRELEVANT. Only used in beforeUnload().
+    - IRRELEVANT. Only used in beforeUnload() to decide whether to show the
+      beforeunload confirmation dialog.
 - disableAllDialogs() -> no-op
 - setActiveDialogName() -> no-op (we have a single dialog stack)
 - setActiveDialog() -> no-op
@@ -583,7 +584,7 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
 - reactivateDialogs()
     - IRRELEVANT -- only used in enableApplication(), which is not used in Votr
       (the API is synchronous and not reentrant)
-- refreshDialog() -> Application.refresh_dialog()
+- refreshDialog() -> RefreshDialogOp.perform()
 - loadedAllDialogs() -> `True`
 - retrieveAllComponentsIdsFromActiveDialog(),
   retrieveIdAndComponentTypeOnActiveDialog()
@@ -601,7 +602,7 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
       `webui().foo()`, at least for the operations we've seen so far.
     - The implementation opens a GUI, which is IRRELEVANT.
 - onLoadAbortBox()
-    - Application.abort_box()
+    - AbortBoxOp.perform()
 - showNativeDialog(), showNextNativeDialog(), onNativeDialogClosed()
     - IRRELEVANT
 - onMessageBoxClose()
@@ -611,7 +612,7 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
       sendRequest == true, only as DateControl with calendarEnabled. Should be
       easy to implement if needed.
 - onConfirmBoxClose()
-    - Application.confirm_box()
+    - ConfirmBoxOp.reply()
 - closeAbortBox()
     - IRRELEVANT
 - onFileUploadSubmit(), onFileUploadCancel(), closeFileUpload(),
@@ -1986,7 +1987,7 @@ TODO
 
 PARTIAL
 
-Mostly covered by Application. No longer global.
+Mostly covered by Application and operations.py. No longer global.
 
 - appId -> app.app_id
 - sessionId
@@ -2029,8 +2030,15 @@ Mostly covered by Application. No longer global.
     - Seen in result frame scripts on access denied or exitButton click.
     - serverCloseApplication() only sets wasClosedOnServer to true, which only
       tells clear() not to send WebUIKillEvent. See clear() below.
-    - The Votr translation is that once you receive serverCloseApplication, you
-      should not call force_close(). You still can, but the server ignores it.
+    - Tracking wasClosedOnServer is not implemented in Votr. Instead:
+        - In the result frame case, we assume that whenever the result frame
+          calls closeApplication, it also calls serverCloseApplication. Hence,
+          CloseApplicationOp.perform() never calls Application.force_close()
+          which sends WebUIKillEvent, only Application._close_all_dialogs().
+        - In the unload() case, represented by Application.force_close(), Votr
+          always sends WebUIKillEvent, even if a serverCloseApplication was
+          already received. An extra WebUIKillEvent shouldn't hurt (the server
+          just ignores it), and could conceivably help in some rare cases.
 - closeApplication()
     - Seen in result frame scripts on access denied or exitButton click.
       Also called by beforeUnload() and unload().
@@ -2039,38 +2047,47 @@ Mostly covered by Application. No longer global.
       and even then, it only delays closeApplication() until the dialog closes.
 - beforeUnload(), unload()
     - Application.force_close()
-    - Tries to call closeApplication(), which calls clear(true), which sends a
-      WebUIKillEvent request. It doesn't actually work in current Chrome -- the
-      POST request is cancelled. But it's useful for Votr, because it can close
-      an application regardless of its current state or the open dialogs.
+    - Calls closeApplication(false), which calls clear(true), which sends a
+      WebUIKillEvent request. It seems that even though the POST request is
+      cancelled when the browser window closes, it still squeezes through, and
+      the server receives it. It's also useful for Votr, because it can close an
+      application regardless of its current state or the open dialogs.
 - clear()
     - The main method for closing the application.
     - Called:
-        - Primarily by closeApplication().
-        - Technically also by DialogManager after closing the last dialog, but
-          in practice the main dialog's exitButton does not call closeDialog.
-          This code path is only used for e.g. the access denied message box.
-        - Technically also by onAppClosedOnServer() if refreshAppEnabled is
-          true, which needs windowInFrame, which was never seen (UNSUPPORTED).
-          Hence the withRequest argument is effectively always true.
+        - Primarily as clear(true) by closeApplication(), which is itself called
+          by unload() and by result frame scripts.
+        - clear(true) is technically also called by DialogManager.closeDialog()
+          and checkDialogStacksEmpty() after closing the last dialog. But in
+          practice the main dialog's exitButton does not call closeDialog. So
+          this code path is only used for e.g. the access denied message box.
+        - clear(false) is technically also called by onAppClosedOnServer(), but
+          only if refreshAppEnabled is true, which is UNSUPPORTED (see above).
     - Does:
         - If wasClosedOnServer is false (i.e. serverCloseApplication() was not
           called) and the withRequest argument is true, sends a WebUIKillEvent
-          and ignores the response. This is very rare in practice, because
-          result frame scripts usually call serverCloseApplication() before
-          closeApplication(), and unload() doesn't work as intended.
+          and ignores the response. In practice, this happens in unload().
         - Calls dialogManager.closeAllDialogs(), destroying most of the DOM.
         - Sets various globals to null (probably trying to avoid memory leaks in
           old IE) and closes the window.
-    - The Votr equivalent is Application.force_close() if a WebUIKillEvent
-      should be sent, or Application.close_all_dialogs() if not. The Application
-      object technically remains usable, but sending any requests will raise an
-      AISApplicationClosedError.
+    - Votr translation:
+        - Votr assumes that withRequest (clear's argument) is true.
+        - Votr assumes that refreshAppEnabled is false.
+        - Votr assumes that closeApplication() is the only caller.
+        - Application.force_close() represents the case where closeApplication()
+          is called by unload(), as if the user clicked the window close button.
+          It always sends a WebUIKillEvent (see wasClosedOnServer above) and
+          closes all dialogs.
+        - CloseApplicationOp.perform() represents the case where
+          closeApplication() was sent in the result frame. It never sends a
+          WebUIKillEvent (see wasClosedOnServer above), just closes all dialogs.
+        - In either case, the Application object technically remains usable, but
+          sending any requests will raise an AISApplicationClosedError.
 - onAppClosedOnServer()
     - Assuming refreshAppEnabled is false (as windowInFrame is UNSUPPORTED),
       calls killApplication() with a message, which shows the message and
       disables interaction, but does not actually close the browser window.
-    - In Votr, this is handled in parse_response() by raising
+    - In Votr, this is handled in Application._process_response() by raising
       AISApplicationClosedError. No other cleanup (closing dialog etc) is done.
 - setReturnValue()
     - UNSUPPORTED
@@ -2096,7 +2113,7 @@ Mostly covered by Application. No longer global.
     - TODO
 - requestInDisabledApp, getRequestInDisabledApp()
     - Probably IRRELEVANT.
-- sendEmptyRequest() -> app.send_empty_request()
+- sendEmptyRequest() -> app._send_empty_request()
 - currentTimeMillis() -> time.time()
     - Used only in `antiCache`, so nobody cares whether it's a float.
 - prepareUpdatingDialogs()
@@ -2135,14 +2152,12 @@ Mostly covered by Application. No longer global.
 - confirmBox()
     - Listed in known_operations. Args: [message, title, image, buttons, check,
       checkBoxLabel, detail, defaultButton]
-    - Votr code should respond with Application.confirm_box() or
-      Application.awaited_confirm_box().
+    - Votr code should respond with ConfirmBoxOp.reply().
 - calendarBox(), fileUpload(), fileXUpload()
     - Listed in known_operations, but never seen. UNSUPPORTED.
 - abortBox()
     - Listed in known_operations.
-    - Votr code should respond with Application.abort_box() or
-      Application.awaited_abort_box().
+    - Votr code should respond with AbortBoxOp.perform().
 - abort()
     - IRRELEVANT. Votr is synchronous, so a request can't be aborted.
 - sendSuggestionsRequest(), sendSuggestionsRequest_()
@@ -2157,15 +2172,13 @@ Mostly covered by Application. No longer global.
     - UNSUPPORTED
 - shellExec()
     - Listed in known_operations.
-    - Votr code can download files with Application.shell_exec() or
-      Application.awaited_shell_exec().
+    - Votr code can download files with ShellExecOp.download().
     - "webui/execCustomFunction" is UNSUPPORTED.
 - showHelp()
     - Listed in known_operations, but never seen. UNSUPPORTED.
 - startApp()
     - Listed in known_operations.
-    - Votr code should respond with Application.start_app() or
-      Application.awaited_start_app().
+    - Votr code should respond with StartAppOp.perform().
 - dblClick(), keyDown(), updateAppSizeProperties(), workspaceResize(),
   setUpdateInterval(), getScrollBarWidth(), setWidth(), setHeight(),
   resizeBrowserByApp(), cancelEvent(), getSrcElement()

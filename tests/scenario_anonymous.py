@@ -6,6 +6,7 @@ Aisikl is still able to parse common AIS GUI components.
 """
 
 from aisikl.app import Application
+from aisikl.operations import AbortBoxOp, CloseDialogOp, OpenDialogOp, ShellExecOp
 from fladgejt.helpers import find_option
 from tests.testutils import scenario_main
 from typing import TYPE_CHECKING
@@ -39,7 +40,7 @@ async def run(client: BaseClient) -> None:
     # 2. "VSST178 - Študijné plány, informačné listy, ... študijných programov"
 
     app, ops = await Application[TestDialogsType].open(client.context, '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST178App&kodAplikacie=VSST178&uiLang=SK')
-    await app.awaited_open_main_dialog(ops)
+    await ops.expect_one(OpenDialogOp).perform()
 
     await app.d.fakultaComboBox.select(find_option(
         app.d.fakultaComboBox.options, id='FMFI'))
@@ -49,34 +50,27 @@ async def run(client: BaseClient) -> None:
     await app.d.zobrazitPreFakultuButton.click()
     await app.d.zobrazitPreStudiumButton.click()
 
-    with app.collect_operations() as ops:
-        await app.d.studPlanMenuItem.click()
-    with app.collect_operations() as ops2:
-        await app.awaited_abort_box(ops)
-    await app.awaited_shell_exec(ops2)
+    ops = await app.d.studPlanMenuItem.click(return_ops=True)
+    ops = await ops.expect_one(AbortBoxOp).perform(return_ops=True)
+    await ops.expect_one(ShellExecOp).download()
 
-    with app.collect_operations() as ops:
-        await app.d.studijneProgramyTable.control_button_columns()
-    await app.awaited_open_dialog(ops)
+    ops = await app.d.studijneProgramyTable.control_button_columns(return_ops=True)
+    await ops.expect_one(OpenDialogOp).perform()
 
     await app.d.oznacitInverzneButton.click()
     await app.d.oznacitVsetkyButton.click()
 
-    with app.collect_operations() as ops:
-        await app.d.enterButton.click()
-    await app.awaited_close_dialog(ops)
+    ops = await app.d.enterButton.click(return_ops=True)
+    await ops.expect_one(CloseDialogOp).perform()
 
-    with app.collect_operations() as ops:
-        await app.d.studijneProgramyTable.control_button_sort()
-    await app.awaited_open_dialog(ops)
+    ops = await app.d.studijneProgramyTable.control_button_sort(return_ops=True)
+    await ops.expect_one(OpenDialogOp).perform()
 
     await app.d.resetButton.click()
 
-    with app.collect_operations() as ops:
-        await app.d.vyberButton.click()
-    with app.collect_operations() as ops2:
-        await app.awaited_abort_box(ops)
-    await app.awaited_close_dialog(ops2)
+    ops = await app.d.vyberButton.click(return_ops=True)
+    ops = await ops.expect_one(AbortBoxOp).perform(return_ops=True)
+    await ops.expect_one(CloseDialogOp).perform()
 
     # TODO: Clicking obsahNaplnMenuItem leads to unexplored territory.
     # It executes a new script line: `webui().sendEmptyRequest(true); return;`

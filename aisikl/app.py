@@ -1,6 +1,5 @@
 # pyright: reportUninitializedInstanceVariable=none
 
-from contextlib import contextmanager
 from httpx2 import HTTPStatusError
 from inspect import iscoroutinefunction
 import json
@@ -9,43 +8,14 @@ import time
 import urllib.parse
 from aisikl.exceptions import AISParseError, AISBehaviorError, AISApplicationClosedError, LoggedOutError
 from aisikl.dialog import Dialog
-from aisikl.typeutils import ct, ct_none, nn
-from typing import Any, NamedTuple, TYPE_CHECKING, cast
+from aisikl.operations import CloseApplicationOp, MessageBoxOp, OpenDialogOp, Operations, ServerCloseApplicationOp, known_operations
+from aisikl.typeutils import ct, nn
+from typing import NamedTuple, TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from aisikl.context import Context
     from aisikl.events import Event
     from bs4 import BeautifulSoup
-    from collections.abc import Generator
-    from httpx2 import Response
-
-
-#: Record of a "big" action done by AIS that isn't handled automatically
-#: and requires some reaction, such as:
-#:
-#: - Opening a new application or browser window
-#: - Showing a message box or another modal dialog
-#: - Opening and closing dialogs
-#:
-#: You can use :meth:`Application.collect_operations` to express that you
-#: expected something to happen and are prepared to handle it, or use
-#: :attr:`Application.ignored_messages` to specify that some ``messageBox``
-#: Operations can be safely ignored. If an Operation isn't collected or
-#: safely ignored, it throws an exception.
-#:
-#: Attributes:
-#:     target: The target JavaScript object. Either "webui" or "dm". Usually,
-#:         you just need :attr:`method`.
-#:     method: The type of the operation -- the name of the WebUI JavaScript
-#:         method being called. See :data:`known_operations` for possible
-#:         values.
-#:     args: The list of attributes to the JavaScript method. Votr follows the
-#:         same signatures as WebUI. For example, if ``op.method ==
-#:         "openDialog"``, the Votr call is ``app.open_dialog(*op.args)``.
-class Operation(NamedTuple):
-    target: str
-    method: str
-    args: list[Any]
 
 
 #: Record of AIS calling a setter on some component.
@@ -61,15 +31,6 @@ class Update(NamedTuple):
     target: str
     method: str
     args: list[object]
-
-
-#: The known :class:`Operation` methods.
-known_operations = {
-    'webui': { 'serverCloseApplication', 'closeApplication', 'messageBox',
-               'confirmBox', 'calendarBox', 'fileUpload', 'fileXUpload',
-               'abortBox', 'editDoc', 'shellExec', 'showHelp', 'startApp' },
-    'dm': { 'openMainDialog', 'openDialog', 'closeDialog', 'refreshDialog' },
-}
 
 
 #: The default value for :attr:`Application.ignored_messages`
@@ -128,135 +89,13 @@ def _parse_args(args_str: str) -> list[object]:
     return json.loads('[' + args_str + ']')
 
 
-def parse_response(soup: BeautifulSoup) -> tuple[list[Operation], list[Update]]:
-    r'''Parses the resultFrame content (the response to a POST request).
-
-    Args:
-        soup: The HTML structure.
-    Returns:
-        An ``(operations, updates)`` tuple. ``operations`` is a list of
-        :class:`Operation`\ s. ``updates`` is a list of :class:`Update`\ s.
-    '''
-    operations: list[Operation] = []
-    updates: list[Update] = []
-
-    script_tag = nn(soup.head).script
-    if not script_tag or script_tag.get('src'):
-        raise AISParseError("Unexpected result frame response")
-    script = script_tag.get_text()
-
-    match = _alert_re.match(script.strip())
-    if match:
-        raise AISBehaviorError('AIS error in result frame response: %s' %
-            match.group(1))
-
-    functions = [m.group(1) for m in _functions_re.finditer(script)]
-    if ','.join(functions) == 'main' and 'onAppClosedOnServer' in script:
-        raise AISApplicationClosedError("Application has already closed")
-    if ','.join(functions) != 'webui,f,dm,isResponseIdle,main0,main':
-        raise AISParseError("Unexpected script in result frame response")
-
-    in_main = False
-    show_dlg_properties = None
-
-    for r in _multiline_res:
-        script = r.sub('', script)
-
-    for line in script.split('\n'):
-        line = line.strip()
-        line = _var_re.sub('', line)
-        line = _trycatch_re.sub('', line)
-        line = line.strip(';')
-
-        if not line: continue
-        if any(r.match(line) for r in _useless_res): continue
-
-        if line.startswith('var showDlgProperties ='):
-            if in_main: raise AISParseError("Bad script structure")
-            if show_dlg_properties is not None:
-                raise AISParseError("Duplicate showDlgProperties")
-            show_dlg_properties: list[dict[str, object]] | None = json.loads(line.partition('=')[2])
-            continue
-
-        if _main_re.match(line):
-            if in_main: raise AISParseError("Bad script structure")
-            in_main = True
-            continue
-
-        if line == '}':
-            if not in_main: raise AISParseError("Bad script structure")
-            in_main = False
-            continue
-
-        if not in_main:
-            raise AISParseError("Unexpected line out of main() or main0()")
-
-        if line == 'dm().showDialogs(showDlgProperties)':
-            if show_dlg_properties is None:
-                raise AISParseError("Missing showDlgProperties")
-            for dialog in show_dlg_properties:
-                # openMainDialog doesn't exist anymore, but we kept the name
-                # because it's convenient for existing fladgejt code.
-                method = 'openMainDialog' if dialog['isMain'] else 'openDialog'
-                operations.append(Operation('dm', method, [dialog]))
-            continue
-
-        match = _operation_re.match(line)
-        if match:
-            target, method, args_str = match.groups()
-            args = _parse_args(args_str)
-            if method not in known_operations[target]:
-                raise AISParseError(f"Unknown method {target}().{method}()")
-            operations.append(Operation(target, method, args))
-            continue
-
-        match = _update_re.match(line)
-        if match:
-            target, dialog, method, args_str = match.groups()
-            args = _parse_args(args_str)
-            updates.append(Update(dialog, target, method, args))
-            continue
-
-        match = _dialog_update_re.match(line)
-        if match:
-            target, method, args_str = match.groups()
-            args = _parse_args(args_str)
-            updates.append(Update(target, target, method, args))
-            continue
-
-        raise AISParseError(f"Couldn't parse script line: {line}")
-
-    return (operations, updates)
-
-
-def assert_ops(operations: list[Operation], *expected_methods: str) -> None:
-    r'''Ensures the list of collected operations contains the methods we expect.
-
-    This is a helper method you can use after calling
-    :meth:`~Application.collect_operations`. It just looks at each operation's
-    :attr:`~Operation.method` and checks if they match.
-
-    :param operations: The collected operations.
-    :param \*expected_methods: A list of method names.
-    Raises:
-        ~aisikl.exceptions.AISBehaviorError: Raised if the methods don't match.
-    '''
-    real_methods = [op.method for op in operations]
-    expected_methods_list = list(expected_methods)
-    if real_methods != expected_methods_list:
-        raise AISBehaviorError(
-            "We expected %r but AIS did something different: %r" %
-                (expected_methods_list, operations),
-            expected_methods=expected_methods_list,
-            operations=operations)
-
-
 class Application[D]:
     r'''An opened AIS application. (That is, a "browser window".)
 
     Instances cannot be created directly. Use :meth:`open` if you know the full
-    URL (e.g. from the :mod:`~aisikl.portal`), or :meth:`start_app` when
-    opening an application from another one.
+    URL (e.g. from the :mod:`~aisikl.portal`), or
+    :meth:`aisikl.operations.StartAppOp.perform` when opening an application
+    from another one.
 
     Attributes:
         ctx: The :class:`~aisikl.context.Context`.
@@ -267,9 +106,9 @@ class Application[D]:
         d: The currently active dialog.
         last_response_time: When did this app last receive a WebUI response.
         ignored_messages: List of ignored message patterns. When the application
-            receives a ``messageBox`` :class:`Operation` whose first argument
-            contains any of the patterns, the :class:`Operation` will be
-            ignored: it won't be returned by :meth:`collect_operations`, and
+            receives a :class:`~aisikl.operations.MessageBoxOp` operation whose
+            message contains any of the patterns, the operation will be ignored:
+            it won't be returned in :class:`~aisikl.operations.Operations`, and
             won't cause exceptions if left uncollected. This attribute can be
             modified.
     '''
@@ -282,15 +121,15 @@ class Application[D]:
     ignored_messages: list[str]
 
     @classmethod
-    async def open(cls, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> tuple[Application[D], list[Operation]]:
+    async def open(cls, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> tuple[Application[D], Operations]:
         '''Opens a new application.
 
         Returns an ``(app, ops)`` tuple containing the new Application instance
         and the initial list of operations caused by the "INIT" event. This
-        list must be processed as usual -- see :meth:`collect_operations`. For
-        example, if the application should only open a main dialog, use
-        ``app.awaited_open_main_dialog(ops)``. (If the user isn't authorized,
-        ``ops`` will probably contain a message box saying so.)
+        list must be handled as usual -- see
+        :class:`~aisikl.operations.Operation`. For example, use
+        ``await ops.expect_one(OpenDialogOp).perform()`` if you expect the
+        application to contain one dialog.
 
         Args:
             ctx: The :class:`~aisikl.context.Context` to use.
@@ -311,7 +150,7 @@ class Application[D]:
         raise Exception(
             "The Application constructor is private, use open() instead")
 
-    async def _open(self, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> list[Operation]:
+    async def _open(self, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> Operations:
         '''Actually opens the new instance created by :meth:`open`.'''
         self.ctx = ctx
         self.serial = 0
@@ -319,7 +158,6 @@ class Application[D]:
         self.dialogs = {}
         self.dialog_stack = []
         self.active_dialog = None
-        self.collector: list[Operation] | None = None
         self.ignored_messages = (
             ignored_messages or DEFAULT_IGNORED_MESSAGES).copy()
 
@@ -355,12 +193,19 @@ class Application[D]:
         rq = ("<events><ev><event class='avc.ui.event.AVCComponentEvent'>"
               "<command>INIT</command></event></ev></events>\n" +
               self.collect_component_changes())
-        with self.collect_operations() as ops:
-            await self._do_request(rq)
+        ops = await self._do_request(rq, return_ops=True)
 
-        methods = [op.method for op in ops]
-        if (methods == ['serverCloseApplication', 'messageBox', 'closeApplication'] and
-            ops[1].args[0] == 'Neautorizovaný prístup!'):
+        if (
+            ops.has_types(
+                ServerCloseApplicationOp, MessageBoxOp, CloseApplicationOp)
+            and ct(MessageBoxOp, ops[1]).message == 'Neautorizovaný prístup!'
+        ):
+            # First two op types don't need perform(). Third is a no-op.
+            await ct(CloseApplicationOp, ops[2]).perform()
+
+            # If access is denied just because the session expired, raise
+            # LoggedOutError. If access is really denied for this user, return
+            # the three ops, and the caller can deal with it.
             await check_connection(self.ctx)
 
         return ops
@@ -392,50 +237,19 @@ class Application[D]:
                 "Cannot change active dialog while a modal dialog is open")
         self.active_dialog = self.dialogs[name]
 
-    @contextmanager
-    def collect_operations(self) -> Generator[list[Operation]]:
-        r'''Collects :class:`Operation`\ s done by AIS.
-
-        Calling this function means that you are expecting an Operation to
-        happen and are prepared to handle it. Operations happens during this
-        function will be returned in a list instead of throwing exceptions.
-
-        You are responsible for checking that the operations are what you
-        expected, and responding appropriately. This is usually done by
-        calling :func:`assert_ops` and then using the relevant
-        :class:`Application` methods. If you're only expecting one Operation,
-        you can use one of the ``awaited_*`` methods.
-
-        This function is used with the ``with`` keyword as a context manager::
-
-            with app.collect_operations() as ops:
-                app.d.someButton.click()
-
-            assert_ops(ops, 'closeDialog', 'messageBox')
-            app.close_dialog(*ops[0].args)
-            message_text = ops[1].args[0]
-        '''
-        if self.collector is not None:
-            raise Exception("Already inside another collect_operations()")
-        self.collector = []
-        try:
-            yield self.collector
-        finally:
-            self.collector = None
-
     def _prepare_url_base(self) -> dict[str, str]:
         old_req_index = self.req_index
         self.req_index += 1
         return { 'appId': self.app_id, 'antiCache': str(time.time()),
                  'reqIndex': str(old_req_index), 'viewer': 'web' }
 
-    async def _do_request(self, body: str) -> None:
+    async def _do_request(self, body: str, *, return_ops: bool) -> Operations:
         '''Sends a POST request to AIS and process the response.
 
         Usually called from :meth:`send_events`.
         '''
         soup = await self._send_request(body)
-        await self._process_response(soup)
+        return await self._process_response(soup, return_ops=return_ops)
 
     async def _send_request(self, body: str) -> BeautifulSoup:
         xml_spec = f'<request> <serial>{self.serial}</serial>\n{body}</request>\n'
@@ -453,31 +267,113 @@ class Application[D]:
             '/ais/servlets/WebUIServlet?' + urllib.parse.urlencode(params),
             method='POST', data=data, headers=headers))
 
-    def _filter_operations(self, operations: list[Operation]) -> list[Operation]:
-        return [operation for operation in operations
-                if not (operation.method == 'messageBox' and
-                        any(pattern in operation.args[0]
-                            for pattern in self.ignored_messages))]
-
-    async def _process_response(self, soup: BeautifulSoup) -> None:
+    async def _process_response(self, soup: BeautifulSoup, *, return_ops: bool) -> Operations:
         await self.ctx.log('benchmark', 'Begin response frame processing')
         self.last_response_time = time.time()
-        operations, updates = parse_response(soup)
+
+        operations = Operations()
+        updates: list[Update] = []
+
+        script_tag = nn(soup.head).script
+        if not script_tag or script_tag.get('src'):
+            raise AISParseError("Unexpected result frame response")
+        script = script_tag.get_text()
+
+        match = _alert_re.match(script.strip())
+        if match:
+            raise AISBehaviorError('AIS error in result frame response: %s' %
+                match.group(1))
+
+        functions = [m.group(1) for m in _functions_re.finditer(script)]
+        if ','.join(functions) == 'main' and 'onAppClosedOnServer' in script:
+            raise AISApplicationClosedError("Application has already closed")
+        if ','.join(functions) != 'webui,f,dm,isResponseIdle,main0,main':
+            raise AISParseError("Unexpected script in result frame response")
+
+        in_main = False
+        show_dlg_properties = None
+
+        for r in _multiline_res:
+            script = r.sub('', script)
+
+        for line in script.split('\n'):
+            line = line.strip()
+            line = _var_re.sub('', line)
+            line = _trycatch_re.sub('', line)
+            line = line.strip(';')
+
+            if not line: continue
+            if any(r.match(line) for r in _useless_res): continue
+
+            if line.startswith('var showDlgProperties ='):
+                if in_main: raise AISParseError("Bad script structure")
+                if show_dlg_properties is not None:
+                    raise AISParseError("Duplicate showDlgProperties")
+                show_dlg_properties: list[dict[str, object]] | None = json.loads(line.partition('=')[2])
+                continue
+
+            if _main_re.match(line):
+                if in_main: raise AISParseError("Bad script structure")
+                in_main = True
+                continue
+
+            if line == '}':
+                if not in_main: raise AISParseError("Bad script structure")
+                in_main = False
+                continue
+
+            if not in_main:
+                raise AISParseError("Unexpected line out of main() or main0()")
+
+            if line == 'dm().showDialogs(showDlgProperties)':
+                if show_dlg_properties is None:
+                    raise AISParseError("Missing showDlgProperties")
+                for dialog in show_dlg_properties:
+                    await self.ctx.log(
+                        "operation", f"Received operation openDialog",
+                        ["dm", "openDialog", [dialog]])
+                    operations.append(OpenDialogOp(dialog, app=self))
+                continue
+
+            match = _operation_re.match(line)
+            if match:
+                target, method, args_str = match.groups()
+                args = _parse_args(args_str)
+                if (target, method) not in known_operations:
+                    raise AISParseError(f"Unknown method {target}().{method}()")
+                await self.ctx.log(
+                    "operation", f"Received operation {method}",
+                    [target, method, args])
+                if not (
+                    method == 'messageBox'
+                    and isinstance(args[0], str)
+                    and any(s in args[0] for s in self.ignored_messages)
+                ):
+                    operations.append(
+                        known_operations[(target, method)](*args, app=self))  # pyrefly: ignore [bad-argument-type] # pyright: ignore [reportArgumentType]
+                continue
+
+            match = _update_re.match(line)
+            if match:
+                target, dialog, method, args_str = match.groups()
+                args = _parse_args(args_str)
+                updates.append(Update(dialog, target, method, args))
+                continue
+
+            match = _dialog_update_re.match(line)
+            if match:
+                target, method, args_str = match.groups()
+                args = _parse_args(args_str)
+                updates.append(Update(target, target, method, args))
+                continue
+
+            raise AISParseError(f"Couldn't parse script line: {line}")
+
+        if operations and not return_ops:
+            raise AISBehaviorError(
+                f"AIS did an unexpected operation: {operations}")
+
         body = soup.body
-
-        for operation in operations:
-            await self.ctx.log('operation',
-                f'Received operation {operation.method}', operation)
-
-        operations = self._filter_operations(operations)
-
-        if operations:
-            if self.collector is None:
-                raise AISBehaviorError(
-                    f"AIS did an unexpected operation: {operations}",
-                    operations=operations)
-
-            self.collector.extend(operations)
 
         if updates:
             await self.ctx.log('update',
@@ -515,28 +411,36 @@ class Application[D]:
 
         await self.ctx.log('benchmark', 'End response frame processing')
 
-    async def send_events(self, *events: Event) -> None:
+        for operation in operations:
+            operation._arm_warning()  # pyright: ignore [reportPrivateUsage]
+
+        return operations
+
+    async def send_events(self, *events: Event, return_ops: bool) -> Operations:
         r'''Sends the given events to AIS, if AIS is listening to them.
 
         :param \*events: the events to send.
         '''
         body = ''.join(e.xml for e in events if e.listening)
-        if not body: return
-        await self._do_request('<events>' + body + '</events>' +
-                         self.collect_component_changes())
+        if not body:
+            return Operations()
+        return await self._do_request(
+            '<events>' + body + '</events>' + self.collect_component_changes(),
+            return_ops=return_ops)
 
-    async def send_empty_request(self) -> None:
+    async def _send_empty_request(self, return_ops: bool) -> Operations:
         '''Sends a request without any events to AIS.'''
-        await self._do_request(self.collect_component_changes())
+        return await self._do_request(self.collect_component_changes(), return_ops=return_ops)
 
-    async def _send_namevalue_request(self, name: str, value: int | str) -> None:
+    async def _send_namevalue_request(self, name: str, value: int | str, return_ops: bool) -> Operations:
         '''Helper function for small requests sent by some operations.
         These requests don't contain any events or component changes.
         '''
-        await self._do_request(
+        return await self._do_request(
             '<changedProps><changedProperties><propertyValues><nameValue>' +
             f'<name>{name}</name><value>{value}</value>' +
-            '</nameValue></propertyValues></changedProperties></changedProps>')
+            '</nameValue></propertyValues></changedProperties></changedProps>',
+            return_ops=return_ops)
 
     async def force_close(self) -> bool:
         '''Tells the server to close the application.
@@ -551,7 +455,7 @@ class Application[D]:
             False if there was an error, e.g. when the server is still busy with
             an earlier HTTP request.
         '''
-        await self.close_all_dialogs()
+        await self._close_all_dialogs()
         await self.ctx.log('operation',
             f'Sending WebUIKillEvent to {self.class_name}')
         soup = await self._send_request(
@@ -594,255 +498,19 @@ class Application[D]:
             await self.ctx.log('operation',
                 f'Checking if {self.class_name} is still open')
             try:
-                await self.send_empty_request()
+                await self._send_empty_request(return_ops=False)
             except AISApplicationClosedError:
                 await self.ctx.log('operation',
                     f'Server already closed {self.class_name}')
                 return False
         return True
 
-    async def start_app[D2](self, url: str, params: str, *, ignored_messages: list[str] | None=None, hint: type[D2] | None=None) -> tuple[Application[D2], list[Operation]]:
-        '''Opens a new application in response to the startApp
-        :class:`Operation`.
-
-        Returns:
-            An `(app, ops)` tuple, just like :meth:`open`.
-        '''
-        url = f'/ais/servlets/WebUIServlet?appClassName={url}{params}&antiCache={time.time()}'
-        return await Application[D2].open(self.ctx, url, ignored_messages)
-
-    async def open_main_dialog(self, props: dict[str, object]) -> Dialog:
-        '''Opens the main dialog in response to the openMainDialog
-        :class:`Operation`.
-
-        Returns:
-            The opened :class:`aisikl.dialog.Dialog`.
-        '''
-        return await self.open_dialog(props)
-
-    async def open_dialog(self, props: dict[str, object]) -> Dialog:
-        '''Opens a new dialog in response to the openDialog :class:`Operation`.
-
-        Returns:
-            The opened :class:`aisikl.dialog.Dialog`.
-        '''
-        name = ct(str, props['id'])
-        await self.ctx.log('operation', 'Opening dialog {} "{}"'.format(
-            name, props['title']))
-
-        # Ignore properties that only affect visuals: basedOnTheme, style,
-        # isDlgDefaultStyleUsed, x, y, w, h, ra (resizeable), ma (minimizeable),
-        # minWidth, minHeight, and forControlOfParent.
-        dialog = Dialog(
-            name=name, title=ct(str, props['title']), code=ct(str, props['code']),
-            parent_dialog_name=ct_none(str, props.get('parentDlgName')), modal=ct(bool, props['modal']),
-            is_main_dialog=ct(bool, props['isMain']), closeable=ct(bool, props['ca']),
-            hide_title_bar=ct(bool, props['htb']), app=self)
-        self.dialog_stack.append(dialog)
-        self.dialogs[name] = dialog
-
-        # The topmost modal dialog will be active. If no modals exist, this
-        # dialog will be active.
-        modals = [d for d in self.dialog_stack if d.modal]
-        self.active_dialog = modals[-1] if modals else dialog
-
-        url_params = '&'.join(
-            f'{k}={v}' for k, v in self._prepare_url_base().items())
-        url = f'/ais/servlets/WebUIServlet?{url_params}&form={name}'
-        await dialog._init(url)  # pyright: ignore [reportPrivateUsage]
-
-        return dialog
-
-    async def refresh_dialog(self, name: str) -> None:
-        '''Refreshes a dialog in response to the refreshDialog
-        :class:`Operation`.
-        '''
-        dialog = self.dialogs[name]
-
-        await self.ctx.log('operation',
-            f'Refreshing dialog {dialog.name} "{dialog.title}"')
-
-        url = f'/ais/servlets/WebUIServlet?appId={self.app_id}&form={dialog.name}&antiCache={time.time()}'
-        await dialog._init(url)  # pyright: ignore [reportPrivateUsage]
-
-    async def close_dialog(self, name: str, is_native: bool=False) -> None:
-        '''Closes a dialog in response to the closeDialog :class:`Operation`.
-        '''
-        if is_native:
-            raise AISParseError("closeDialog() with isNative is not supported")
-
-        dialog = self.dialogs.get(name)
-        if not dialog:
-            return
-
-        await self.ctx.log('operation', f'Closing dialog {name}')
-
-        self.dialog_stack.remove(dialog)
-        del self.dialogs[name]
-
-        if dialog == self.active_dialog or not self.active_dialog:
-            modals = [d for d in self.dialog_stack if d.modal]
-            self.active_dialog = (
-                modals or self.dialog_stack or [None])[-1]
-
-        # Just for completeness. In practice, WebUI has not been observed to
-        # call closeDialog on the last dialog.
-        if not self.dialog_stack:
-            await self.force_close()
-
-    async def close_all_dialogs(self) -> None:
-        '''Closes all dialogs after they have been closed on the server.'''
+    async def _close_all_dialogs(self) -> None:
         if self.dialog_stack:
             await self.ctx.log('operation', 'Closing all dialogs')
         self.dialogs.clear()
         self.dialog_stack.clear()
         self.active_dialog = None
-
-    async def confirm_box(self, option_index: int) -> None:
-        '''Sends an answer after receiving the confirmBox :class:`~Operation`.
-
-        Possible values of `option_index` are:
-
-        =====  ===========
-        Value  Action name
-        =====  ===========
-            4  Yes to all
-            2  Yes
-            1  OK
-           -1  Cancel
-           -2  No
-           -4  No to all
-        =====  ===========
-
-        Args:
-            option_index: webui index of the button to be clicked
-        '''
-        await self.ctx.log('operation',
-            f'Selecting button {option_index} in confirm box')
-        await self._send_namevalue_request('confirmResult', option_index)
-
-    async def abort_box(self, message: str, title: object=None) -> None:
-        '''Waits for AIS in response to the abortBox :class:`~Operation`.'''
-        await self.ctx.log('operation', 'Waiting for abort box')
-        await self._send_namevalue_request('confirmResult', -1)
-
-    async def shell_exec(self, content_type: str, file_name: str, new_window_name: str, width: int,
-                   height: int) -> Response:
-        '''Downloads a file in response to the shellExec :class:`Operation`.
-        Then sends a request to AIS saying that the shellExec was executed.
-
-        This method only supports the common use of shellExec -- downloading
-        files. Technically, shellExec can also run custom JavaScript code. If
-        you need that, don't use :meth:`shell_exec`, handle it manually and
-        call :meth:`send_shell_exec_result` afterwards.
-
-        Returns:
-            The downloaded HTTP response.
-        '''
-        if content_type == 'webui/execCustomFunction':
-            raise AISParseError("webui/execCustomFunction is not supported")
-
-        file_name = file_name.rpartition('/')[2]
-        url = (
-            f'/ais/files/{urllib.parse.quote(file_name)}'
-            f'?appId={self.app_id}&contentType={content_type}'
-            f'&antiCache={time.time()}&file={urllib.parse.quote(file_name)}'
-        )
-
-        await self.ctx.log('operation', f'Downloading "{file_name}"')
-
-        response = await self.ctx.request_ais(url)
-
-        await self.send_shell_exec_result('')
-
-        return response
-
-    async def send_shell_exec_result(self, shell_exec_result: str) -> None:
-        '''Informs AIS that a shellExec operation was executed.
-
-        Args:
-            shell_exec_result: The string value of ``shellExecResult``.
-        '''
-        await self._send_namevalue_request('shellExecResult', shell_exec_result)
-
-    async def awaited_start_app[D2](self, ops: list[Operation], ignored_messages: list[str] | None=None, hint: type[D2] | None=None) -> tuple[Application[D2], list[Operation]]:
-        '''Combines :func:`assert_ops` and :meth:`start_app` in one step.
-
-        If ``ops`` really contains a single startApp :class:`Operation` as
-        expected, opens the application. Throws otherwise.
-        '''
-        assert_ops(ops, 'startApp')
-        return await self.start_app(*ops[0].args, ignored_messages=ignored_messages)
-
-    async def awaited_open_dialog(self, ops: list[Operation]) -> Dialog:
-        '''Combines :func:`assert_ops` and :meth:`open_dialog` in one step.
-
-        If ``ops`` really contains a single openDialog :class:`Operation` as
-        expected, opens the new dialog. Throws otherwise.
-        '''
-        assert_ops(ops, 'openDialog')
-        return await self.open_dialog(*ops[0].args)
-
-    async def awaited_open_main_dialog(self, ops: list[Operation]) -> Dialog:
-        '''Combines :func:`assert_ops` and :meth:`open_main_dialog` in one
-        step.
-
-        If ``ops`` really contains a single openMainDialog :class:`Operation`
-        as expected, opens the main dialog. Throws otherwise.
-        '''
-        assert_ops(ops, 'openMainDialog')
-        return await self.open_main_dialog(*ops[0].args)
-
-    async def awaited_refresh_dialog(self, ops: list[Operation]) -> None:
-        '''Combines :func:`assert_ops` and :meth:`refresh_dialog` in one step.
-
-        If ``ops`` really contains a single refreshDialog :class:`Operation` as
-        expected, refreshes the dialog. Throws otherwise.
-        '''
-        assert_ops(ops, 'refreshDialog')
-        return await self.refresh_dialog(*ops[0].args)
-
-    async def awaited_close_dialog(self, ops: list[Operation]) -> None:
-        '''Combines :func:`assert_ops` and :meth:`close_dialog` in one step.
-
-        If ``ops`` really contains a single closeDialog :class:`Operation` as
-        expected, closes the dialog. Throws otherwise.
-        '''
-        assert_ops(ops, 'closeDialog')
-        return await self.close_dialog(*ops[0].args)
-
-    async def awaited_abort_box(self, ops: list[Operation]) -> None:
-        '''Combines :func:`assert_ops` and :meth:`abort_box` in one step.
-
-        If ``ops`` really contains a single abortBox :class:`Operation` as
-        expected, waits for the box to close. Throws otherwise.
-        '''
-        assert_ops(ops, 'abortBox')
-        return await self.abort_box(*ops[0].args)
-
-    async def awaited_shell_exec(self, ops: list[Operation]) -> Response:
-        '''Combines :func:`assert_ops` and :meth:`shell_exec` in one step.
-
-        If ``ops`` really contains a single shellExec :class:`Operation` as
-        expected, downloads the file. Throws otherwise.
-        '''
-        assert_ops(ops, 'shellExec')
-        return await self.shell_exec(*ops[0].args)
-
-    async def awaited_close_application(self, ops: list[Operation]) -> None:
-        '''Combines :func:`assert_ops` and :meth:`close_all_dialogs` in one
-        step.
-
-        Intended for ``exitButton``, because clicking it usually produces the
-        operations [serverCloseApplication, closeApplication]. If ``ops`` really
-        contains them, closes all dialogs and does not send any other requests
-        (the server already considers the application closed). Throws otherwise.
-
-        Currently dead code, because it is usually easier to call
-        ``app.force_close()`` instead of ``app.d.exitButton.click()`` etc.
-        '''
-        assert_ops(ops, 'serverCloseApplication', 'closeApplication')
-        await self.close_all_dialogs()
 
 
 async def check_connection(context: Context) -> None:

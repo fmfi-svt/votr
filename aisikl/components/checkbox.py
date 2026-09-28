@@ -1,6 +1,7 @@
 from aisikl.events import item_event
 from aisikl.components.component import is_true
 from aisikl.components.control import Control
+from aisikl.operations import Operations
 from aisikl.typeutils import ct_none, nn
 from typing import TYPE_CHECKING, override
 
@@ -24,27 +25,29 @@ class CheckBox(Control):
         self.selected = is_true(value)
         self.dialog.try_interactive(self, "ItemEvent")
 
-    async def _fire_event(self) -> None:
+    async def _fire_event(self, *, return_ops: bool) -> Operations:
         self.dialog.component_changes(self, False)
         ev = item_event(self)
-        await self.dialog.app.send_events(ev)
+        return await self.dialog.app.send_events(ev, return_ops=return_ops)
 
     @override
     def changed_properties(self) -> str:
         return self._build_changed_properties(
             selected=self.selected, smoked=self.smoked)
 
-    async def toggle(self) -> None:
+    async def toggle(self, *, return_ops: bool = False) -> Operations:
         self.selected = not self.selected
         self.smoked = False
         await self.log('action', '{} {}'.format(
             'Checking' if self.selected else 'Unchecking', self.id))
-        await self._fire_event()
+        return await self._fire_event(return_ops=return_ops)
 
-    async def set_to(self, value: bool) -> None:
+    async def set_to(self, value: bool, *, return_ops: bool = False) -> Operations:
         if self.smoked or self.selected != bool(value):
             self.selected = bool(value)
             self.smoked = False
             await self.log('action', '{} {}'.format(
                 'Checking' if self.selected else 'Unchecking', self.id))
-            await self._fire_event()
+            return await self._fire_event(return_ops=return_ops)
+        else:
+            return Operations()

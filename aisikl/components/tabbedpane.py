@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
+    from aisikl.operations import Operations
     from bs4.element import Tag
 
 
@@ -23,10 +24,10 @@ class TabbedPane(Control):
     def _ais_setSelectedIndex(self, value: object) -> None:
         self.selected_index = really_int(value)
 
-    async def select(self, index: int) -> None:
+    async def select(self, index: int, *, return_ops: bool = False) -> Operations:
         await self.log('action', f'Switching {self.id} to tab {index}')
         self.selected_index = index
-        await self._fire_event()
+        return await self._fire_event(return_ops=return_ops)
 
     def get_panel(self, index: int) -> Panel:
         return ct(Panel, self.dialog.components[self.panel_ids[index]])
@@ -38,7 +39,7 @@ class TabbedPane(Control):
         return self._build_changed_properties(
             selectedIndex=str(self.selected_index))
 
-    async def _fire_event(self) -> None:
+    async def _fire_event(self, *, return_ops: bool) -> Operations:
         self.dialog.component_changes(self, False)
         ev = change_action_event(self, self.selected_index)
-        await self.dialog.app.send_events(ev)
+        return await self.dialog.app.send_events(ev, return_ops=return_ops)

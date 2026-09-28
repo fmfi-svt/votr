@@ -1,6 +1,7 @@
 from aisikl.components.component import is_true
 from aisikl.components.control import Control
 from aisikl.events import action_event
+from aisikl.operations import Operations
 from aisikl.typeutils import ct, ct_none, nn
 from typing import TYPE_CHECKING, override
 
@@ -24,19 +25,19 @@ class Panel(Control):
     def _ais_setCollapsed(self, value: object) -> None:
         self.collapsed = is_true(value)
 
-    async def toggle_collapsed(self) -> None:
-        if not self.collapsable: return
-        if not self.parent.is_really_enabled(): return
+    async def toggle_collapsed(self, *, return_ops: bool = False) -> Operations:
+        if not self.collapsable: return Operations()
+        if not self.parent.is_really_enabled(): return Operations()
         await self.log('action', '{} {}'.format(
             'Opening' if self.collapsed else 'Closing', self.id))
         self.collapsed = not self.collapsed
-        await self._fire_event()
+        return await self._fire_event(return_ops=return_ops)
 
-    async def _fire_event(self) -> None:
+    async def _fire_event(self, *, return_ops: bool) -> Operations:
         self.dialog.component_changes(self, False)
         command = 'COLLAPSE' if self.collapsed else 'EXPAND'
         ev = action_event(self, command, self.id)
-        await self.dialog.app.send_events(ev)
+        return await self.dialog.app.send_events(ev, return_ops=return_ops)
 
     @override
     def changed_properties(self) -> str:

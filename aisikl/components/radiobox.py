@@ -6,6 +6,7 @@ from typing import NamedTuple, TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
+    from aisikl.operations import Operations
     from bs4.element import Tag
 
 
@@ -45,16 +46,16 @@ class RadioBox(Control):
 
     # If self.always_selected == False, select(-1) unselects the current item.
     # (Votr always allows select(-1), but AIS might not like it.)
-    async def select(self, index: int) -> None:
+    async def select(self, index: int, *, return_ops: bool = False) -> Operations:
         await self.log('action',
             f'Selecting "{self.options[index].title}" in {self.id}')
         self.selected_index = index
-        await self._fire_event()
+        return await self._fire_event(return_ops=return_ops)
 
-    async def _fire_event(self) -> None:
+    async def _fire_event(self, *, return_ops: bool) -> Operations:
         self.dialog.component_changes(self, False)
         ev = selection_event(self, self.selected_index)
-        await self.dialog.app.send_events(ev)
+        return await self.dialog.app.send_events(ev, return_ops=return_ops)
 
     @override
     def changed_properties(self) -> str:

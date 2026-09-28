@@ -11,9 +11,8 @@ More information: https://github.com/fmfi-svt/votr/wiki/Praca-s-ipythonom-(sk)
 '''
 
 # Convenience imports.
-import aisikl.app
 import aisikl.portal
-from aisikl.app import Application, assert_ops
+from aisikl.app import Application
 from fladgejt.login import create_client
 from votrfront.default_settings import servers as _ds
 

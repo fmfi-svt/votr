@@ -6,6 +6,7 @@ from aisikl.components.action import Action
 from aisikl.components.control import Control
 from aisikl.components.table import load_script_plain, load_script
 from aisikl.events import (action_event, tree_expansion_event, tree_expansion_action_event, tree_selection_event)
+from aisikl.operations import Operations
 from aisikl.typeutils import ct, ct_none, nn
 from typing import TYPE_CHECKING, override
 
@@ -140,23 +141,22 @@ class Tree(Control):
 
         return self._build_changed_properties(dataView=(True, True, ''.join(cdata)))
 
-    async def double_click(self) -> None:
+    async def double_click(self, *, return_ops: bool = False) -> Operations:
         await self.log('action', f'Double-clicking {self.id}')
 
         if self.action_name:
             action = self.dialog.components[self.action_name]
             if action:
-                await ct(Action, action).execute(self.id)
-                return
+                return await ct(Action, action).execute(self.id, return_ops=return_ops)
         ev = action_event(self, None, self.id)
-        await self.dialog.app.send_events(ev)
+        return await self.dialog.app.send_events(ev, return_ops=return_ops)
 
     def _ais_setMultipleSelection(self, value: object) -> None:
         self.multiple_selection = is_true(value)
     def _ais_setCommands(self, value: object) -> None:
         self.commands = ct_none(str, value)
 
-    async def select(self, ids: str | Iterable[str], active_id: str | None=None) -> None:
+    async def select(self, ids: str | Iterable[str], active_id: str | None=None, *, return_ops: bool = False) -> Operations:
         if isinstance(ids, str):
             ids = [ids]
         else:
@@ -183,9 +183,9 @@ class Tree(Control):
         self.selection_changed = True
         self.dialog.component_changes(self, False)
         ev = tree_selection_event(self, active_id, "SELECT")
-        await self.dialog.app.send_events(ev)
+        return await self.dialog.app.send_events(ev, return_ops=return_ops)
 
-    async def toggle_expansion(self, id: str, _send_event: bool=True) -> None:
+    async def toggle_expansion(self, id: str, *, _send_event: bool=True, return_ops: bool = False) -> Operations:
         node = self.nodes[id]
         if node.expanded is None:
             raise ValueError("this node cannot expand")
@@ -204,16 +204,20 @@ class Tree(Control):
             self.expansion_changed = True
             self.dialog.component_changes(self, False)
 
+        operations = Operations()
+
         no_filled = False   # TODO: we don't know where to look for the attribute
         if no_filled:
             ev = tree_expansion_action_event(self, path)
-            await self.dialog.app.send_events(ev)
+            operations.extend(await self.dialog.app.send_events(ev, return_ops=return_ops))
 
         if _send_event:
             ev = tree_expansion_event(self, path, node.expanded)
-            await self.dialog.app.send_events(ev)
+            operations.extend(await self.dialog.app.send_events(ev, return_ops=return_ops))
 
-    async def toggle_checkbox(self, id: str) -> None:
+        return operations
+
+    async def toggle_checkbox(self, id: str, *, return_ops: bool = False) -> Operations:
         node = self.nodes[id]
         if node.checked is None:
             raise ValueError("this node does not have a checkbox")
@@ -226,12 +230,16 @@ class Tree(Control):
         path = id[1:]
         if self.checked_synchronizer.get(path) == (not node.checked):
             del self.checked_synchronizer[path]
+            return Operations()
         elif self.checked_synchronizer.get(path) == None:
             self.checked_synchronizer[path] = node.checked
 
             self.checked_changed = True
             self.dialog.component_changes(self, False)
-            if 'CHECK_CHANGE_COMMAND|' not in (self.commands or ''): return
+            if 'CHECK_CHANGE_COMMAND|' not in (self.commands or ''):
+                return Operations()
             self.used_listeners_mask |= 64
             ev = action_event(self, 'CHECK_CHANGE_COMMAND', self.id)
-            await self.dialog.app.send_events(ev)
+            return await self.dialog.app.send_events(ev, return_ops=return_ops)
+        else:
+            return Operations()

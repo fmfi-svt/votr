@@ -1,6 +1,7 @@
 import re
-from aisikl.app import Application, assert_ops, DEFAULT_IGNORED_MESSAGES
+from aisikl.app import Application, DEFAULT_IGNORED_MESSAGES
 from aisikl.exceptions import AISBehaviorError
+from aisikl.operations import CloseDialogOp, ConfirmBoxOp, MessageBoxOp, OpenDialogOp, RefreshDialogOp, StartAppOp
 from fladgejt.base import BaseClient
 from fladgejt.helpers import CantOpenApplication, find_row, find_option, encode_key, decode_key
 from fladgejt.structures import Studium, ZapisnyList, Hodnotenie
@@ -62,7 +63,7 @@ class WebuiStudiumMixin(BaseClient):
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.es.VSES017App&kodAplikacie=VSES017&uiLang=SK'
         ignored_messages = DEFAULT_IGNORED_MESSAGES + ['Štúdium je prerušené. Zvoľte aktívne štúdium.']
         app, ops = await Application[AdministraciaStudiaDialogsType].open(self.context, url, ignored_messages)
-        await app.awaited_open_main_dialog(ops)
+        await ops.expect_one(OpenDialogOp).perform()
         return app
 
     async def get_som_student(self) -> bool:
@@ -118,16 +119,13 @@ class WebuiStudiumMixin(BaseClient):
 
         # Vyberieme studium a stlacime nacitavaci button (sipku dole).
         if app.d.studiaTable.selected_row_indexes != [studium_index] or len(await app.d.zapisneListyTable.all_rows()) == 0:
-            with app.collect_operations() as ops:
-                await app.d.studiaTable.select(studium_index)
+            ops = await app.d.studiaTable.select(studium_index, return_ops=True)
             if ops:
-                await app.awaited_refresh_dialog(ops)
+                await ops.expect_one(RefreshDialogOp).perform()
 
-            with app.collect_operations() as ops:
-                await app.d.nacitatButton.click()
-
+            ops = await app.d.nacitatButton.click(return_ops=True)
             if ops:
-                await app.awaited_refresh_dialog(ops)
+                await ops.expect_one(RefreshDialogOp).perform()
 
     async def __vyber_zapisny_list(self, app: Application[AdministraciaStudiaDialogsType], zapisny_list_key: str) -> None:
         studium_key, akademicky_rok = decode_key(zapisny_list_key)
@@ -148,14 +146,13 @@ class WebuiStudiumMixin(BaseClient):
         await self.__vyber_zapisny_list(app, zapisny_list_key)
 
         # Stlacime v menu "Priebezne hodnotenie".
-        with app.collect_operations() as ops:
-            await app.d.priebezneHodnotenieAction.execute()
+        ops = await app.d.priebezneHodnotenieAction.execute(return_ops=True)
 
         if not ops: raise CantOpenApplication()
 
         # Otvori sa nove okno a v nom hlavny dialog.
-        new_app, new_ops = await app.awaited_start_app(ops, hint=PriebezneHodnotenieDialogsType)
-        await new_app.awaited_open_main_dialog(new_ops)
+        new_app, new_ops = await ops.expect_one(StartAppOp).perform(hint=PriebezneHodnotenieDialogsType)
+        await new_ops.expect_one(OpenDialogOp).perform()
         return new_app
 
     @pooled_app
@@ -166,14 +163,13 @@ class WebuiStudiumMixin(BaseClient):
         await self.__vyber_zapisny_list(app, zapisny_list_key)
 
         # Stlacime v menu "Zapis predmetov, kredity".
-        with app.collect_operations() as ops:
-            await app.d.zapisPredmetovKredityAction.execute()
+        ops = await app.d.zapisPredmetovKredityAction.execute(return_ops=True)
 
         if not ops: raise CantOpenApplication()
 
         # Otvori sa nove okno a v nom hlavny dialog.
-        new_app, new_ops = await app.awaited_start_app(ops, hint=ZapisPredmetovDialogsType)
-        await new_app.awaited_open_main_dialog(new_ops)
+        new_app, new_ops = await ops.expect_one(StartAppOp).perform(hint=ZapisPredmetovDialogsType)
+        await new_ops.expect_one(OpenDialogOp).perform()
         return new_app
 
     @pooled_app
@@ -184,14 +180,13 @@ class WebuiStudiumMixin(BaseClient):
         await self.__vyber_zapisny_list(app, zapisny_list_key)
 
         # Stlacime v menu "Terminy hodnotenia".
-        with app.collect_operations() as ops:
-            await app.d.terminyHodnoteniaAction.execute()
+        ops = await app.d.terminyHodnoteniaAction.execute(return_ops = True)
 
         if not ops: raise CantOpenApplication()
 
         # Otvori sa nove okno a v nom hlavny dialog.
-        new_app, new_ops = await app.awaited_start_app(ops, hint=TerminyHodnoteniaDialogsType)
-        await new_app.awaited_open_main_dialog(new_ops)
+        new_app, new_ops = await ops.expect_one(StartAppOp).perform(hint=TerminyHodnoteniaDialogsType)
+        await new_ops.expect_one(OpenDialogOp).perform()
         return new_app
 
     @pooled_app
@@ -202,14 +197,13 @@ class WebuiStudiumMixin(BaseClient):
         await self.__vyber_zapisny_list(app, zapisny_list_key)
 
         # Stlacime v menu "Hodnotenia, priemery".
-        with app.collect_operations() as ops:
-            await app.d.hodnoteniaPriemeryAction.execute()
+        ops = await app.d.hodnoteniaPriemeryAction.execute(return_ops=True)
 
         if not ops: raise CantOpenApplication()
 
         # Otvori sa nove okno a v nom hlavny dialog.
-        new_app, new_ops = await app.awaited_start_app(ops, hint=HodnoteniaPriemeryDialogsType)
-        await new_app.awaited_open_main_dialog(new_ops)
+        new_app, new_ops = await ops.expect_one(StartAppOp).perform(hint=HodnoteniaPriemeryDialogsType)
+        await new_ops.expect_one(OpenDialogOp).perform()
         return new_app
 
     async def get_prehlad_kreditov(self, studium_key: str) -> GetPrehladKreditovResult:
@@ -219,8 +213,7 @@ class WebuiStudiumMixin(BaseClient):
         await self.__vyber_studium(app, studium_key)
 
         # Stlacime v menu "Kontrola" -> "Ziskanych kreditov, prehlad hodnotenia".
-        with app.collect_operations() as ops:
-            await app.d.ziskaneMenuItem.click()
+        ops = await app.d.ziskaneMenuItem.click(return_ops=True)
 
         if not ops:
             return GetPrehladKreditovResult(
@@ -233,7 +226,7 @@ class WebuiStudiumMixin(BaseClient):
             )
 
         # Otvori sa dialog s prehladom kreditov.
-        await app.awaited_open_dialog(ops)
+        await ops.expect_one(OpenDialogOp).perform()
 
         # Vytiahneme tabulku predmetov.
         result = [Hodnotenie(akademicky_rok=row['akRok'],
@@ -261,11 +254,10 @@ class WebuiStudiumMixin(BaseClient):
         priemer_vsetkych = app.d.vsp_statniceLabel.tool_tip_text
 
         # Stlacime zatvaraci button.
-        with app.collect_operations() as ops:
-            await app.d.click_close_button()
+        ops = await app.d.click_close_button(return_ops=True)
 
         # Dialog sa zavrie.
-        await app.awaited_close_dialog(ops)
+        await ops.expect_one(CloseDialogOp).perform()
 
         return GetPrehladKreditovResult(
             items=result,
@@ -300,9 +292,8 @@ class WebuiStudiumMixin(BaseClient):
         await self.__vyber_studium(app, studium_key)
 
         # Klikneme na tlacidlo pridania noveho zapisneho listu.
-        with app.collect_operations() as ops:
-            await app.d.pridatZapisnyListButton.click()
-        await app.awaited_open_dialog(ops)
+        ops = await app.d.pridatZapisnyListButton.click(return_ops=True)
+        await ops.expect_one(OpenDialogOp).perform()
 
     async def get_akademicke_roky_noveho_zapisneho_listu(self, studium_key: str) -> list[Option]:
         '''Gets available values for the academic year option when creating a
@@ -319,9 +310,8 @@ class WebuiStudiumMixin(BaseClient):
         await self.__open_novy_zapisny_list_dialog(app, studium_key)
         options = app.d.rokComboBox.options
 
-        with app.collect_operations() as ops:
-            await app.d.closeButton.click()
-        await app.awaited_close_dialog(ops)
+        ops = await app.d.closeButton.click(return_ops=True)
+        await ops.expect_one(CloseDialogOp).perform()
 
         return options
 
@@ -340,9 +330,8 @@ class WebuiStudiumMixin(BaseClient):
         await self.__open_novy_zapisny_list_dialog(app, studium_key)
         options = app.d.rocnikComboBox.options
 
-        with app.collect_operations() as ops:
-            await app.d.closeButton.click()
-        await app.awaited_close_dialog(ops)
+        ops = await app.d.closeButton.click(return_ops=True)
+        await ops.expect_one(CloseDialogOp).perform()
 
         return options
 
@@ -371,26 +360,22 @@ class WebuiStudiumMixin(BaseClient):
                 option = find_option(app.d.rokComboBox.options, id=akademicky_rok)
             # Snazime sa vytvorit zapisny list na akademicky rok, ktory nie je na vyber v comboBoxe
             except KeyError:
-                with app.collect_operations() as ops:
-                    await app.d.click_close_button()
-                await app.awaited_close_dialog(ops)
+                ops = await app.d.click_close_button(return_ops=True)
+                await ops.expect_one(CloseDialogOp).perform()
                 return "Na tento akademický rok sa nedá vytvoriť zápisný list."
 
             await app.d.rokComboBox.select(option)
 
         # Stlacime tlacidlo "OK".
-        with app.collect_operations() as ops:
-            await app.d.enterButton.click()
+        ops = await app.d.enterButton.click(return_ops=True)
 
         # Ak sa neda vytvorit zapisny list, lebo to nie je povolene v danom datume
-        if ops and ops[0].method == 'messageBox':
-            assert_ops(ops, 'messageBox')
-            message = ops[0].args[0]
-            with app.collect_operations() as ops:
-                await app.d.click_close_button()
+        if ops.has_types(MessageBoxOp):
+            message = ops.expect_one(MessageBoxOp).message
+            ops = await app.d.click_close_button(return_ops=True)
 
         # Dialog sa zavrie.
-        await app.awaited_close_dialog(ops)
+        await ops.expect_one(CloseDialogOp).perform()
 
         return message
 
@@ -407,10 +392,7 @@ class WebuiStudiumMixin(BaseClient):
         await self.__vyber_zapisny_list(app, zapisny_list_key)
 
         # Klikneme na tlacidlo zrusenia zapisneho listu.
-        with app.collect_operations() as ops:
-            await app.d.odobratZapisnyListButton.click()
+        ops = await app.d.odobratZapisnyListButton.click(return_ops=True)
 
         # Vyskoci confirm box, ci naozaj chceme odstranit zapisny list. Stlacime "Ano".
-        assert_ops(ops, 'confirmBox')
-        with app.collect_operations() as ops:
-            await app.confirm_box(2)
+        await ops.expect_one(ConfirmBoxOp).reply(ConfirmBoxOp.Option.YES)

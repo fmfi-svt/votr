@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from aisikl.components.button import Button
     from aisikl.components.menuitem import MenuItem
     from aisikl.dialog import Dialog
+    from aisikl.operations import Operations
     from bs4.element import Tag
 
 
@@ -36,7 +37,7 @@ class Action(Component):
         return [cast('Button | MenuItem', o) for o in self.get_components()
                 if o.component_type in ('button', 'menuItem')]
 
-    async def execute(self, original_source_name: str | None=None, params: str | None=None) -> None:
+    async def execute(self, original_source_name: str | None=None, params: str | None=None, *, return_ops: bool = False) -> Operations:
         '''Executes the action and emits the appropriate event.'''
         if not (self.accessible and self.enabled and self.enabled_in_ui and
                 self.visible and self.visible_in_ui):
@@ -50,7 +51,7 @@ class Action(Component):
         ev = action_event(self, None, original_source_name or self.id, params)
         # TODO: We should technically ask confirm_question before firing
         # (if ev.listening is True), but we probably don't care.
-        await self.dialog.app.send_events(ev)
+        return await self.dialog.app.send_events(ev, return_ops=return_ops)
 
     def _ais_setAccessible(self, value: object) -> None:
         self.accessible = is_true(value)

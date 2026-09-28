@@ -2,6 +2,7 @@ from aisikl.components.action import Action
 from aisikl.components.actionlist import ActionList
 from aisikl.components.control import Control
 from aisikl.typeutils import ct, ct_none
+from aisikl.operations import Operations
 from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
@@ -19,11 +20,12 @@ class ActionableControl(Control):
         if not self.action_name: return None
         return ct(Action, self.dialog.components[self.action_name])
 
-    async def try_execute_action(self, params: str | None=None) -> bool:
+    async def try_execute_action(self, *, params: str | None = None, return_ops: bool) -> tuple[bool, Operations]:
         if self.action:
-            await self.action.execute(self.id, params)
-            return True
-        return False
+            ops = await self.action.execute(
+                self.id, params, return_ops=return_ops)
+            return (True, ops)
+        return (False, Operations())
 
     @override
     def is_really_enabled(self) -> bool:

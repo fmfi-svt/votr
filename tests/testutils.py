@@ -475,6 +475,35 @@ def _preprocess_expected_logs(
             yield entries[i]
             continue
 
+        # Match AISBehaviorError messages that changed in the Operation refactor
+        # (2026-10-ish).
+        if (
+            old_log and
+            entries[i].message.endswith(' failed with AISBehaviorError') and
+            ("Operation(target='" in ct(str, entries[i].data) or
+            "We expected ['" in ct(str, entries[i].data))
+        ):
+            yield LogEntry(
+                timestamp=entries[i].timestamp,
+                type=entries[i].type,
+                message=entries[i].message,
+                data=_IGNORE_DETAILS,
+            )
+            continue
+
+        # openMainDialog was removed in the Operation refactor (2026-10-ish).
+        if (
+            old_log and
+            entries[i].message == 'Received operation openMainDialog'
+        ):
+            yield LogEntry(
+                timestamp=entries[i].timestamp,
+                type=entries[i].type,
+                message='Received operation openDialog',
+                data=[ct(list, entries[i].data)[0], 'openDialog', ct(list, entries[i].data)[2]],
+            )
+            continue
+
         yield entries[i]
 
 

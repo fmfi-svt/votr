@@ -1,4 +1,5 @@
-from aisikl.app import Application, assert_ops
+from aisikl.app import Application
+from aisikl.operations import CloseDialogOp, MessageBoxOp, OpenDialogOp
 from fladgejt.base import BaseClient
 from fladgejt.webui.commonui import select_ciselnik, show_all_columns
 from fladgejt.webui.pool import pooled_app
@@ -43,10 +44,9 @@ class WebuiOsobyMixin(BaseClient):
     async def _open_register_osob(self) -> Application[RegisterOsobDialogsType]:
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.lz.LZ014App&kodAplikacie=LZ014&uiLang=SK'
         app, ops = await Application[RegisterOsobDialogsType].open(self.context, url)
-        assert_ops(ops, 'openMainDialog', 'openDialog')
-
-        await app.open_main_dialog(*ops[0].args)
-        await app.open_dialog(*ops[1].args)
+        op1, op2 = ops.expect_two(OpenDialogOp, OpenDialogOp)
+        await op1.perform()
+        await op2.perform()
 
         return app
 
@@ -86,11 +86,9 @@ class WebuiOsobyMixin(BaseClient):
             await app.d.akademickyRokComboBox.select(find_option(
                 app.d.akademickyRokComboBox.options, title=akademicky_rok))
 
-            with app.collect_operations() as ops:
-                await app.d.odstranitFakultuButton.click()
-
+            ops = await app.d.odstranitFakultuButton.click(return_ops=True)
             if ops:
-                assert_ops(ops, 'messageBox')   # "Interna chyba: Nepodarilo sa osetrenie udalosti."
+                ops.expect_one(MessageBoxOp)   # "Interna chyba: Nepodarilo sa osetrenie udalosti."
 
             if not await select_ciselnik(app, fakulta or None, app.d.VyberFakultaButton, "skratka"):
                 return 'Fakulta nebola nájdená.'
@@ -151,33 +149,25 @@ class WebuiOsobyMixin(BaseClient):
 
         await self.__open_filter(app)
 
-        with app.collect_operations() as ops:
-            await app.d.VyberFakultaButton.click()
-
-        await app.awaited_open_dialog(ops)
+        ops = await app.d.VyberFakultaButton.click(return_ops=True)
+        await ops.expect_one(OpenDialogOp).perform()
 
         fakulty = [{'id': row['skratka'], 'title': row['popis']}
                    for row in await app.d.table.all_rows()]
 
         fakulty.insert(0, {'id': '', 'title': ''})
 
-        with app.collect_operations() as ops:
-            await app.d.closeButton.click()
-
-        await app.awaited_close_dialog(ops)
+        ops = await app.d.closeButton.click(return_ops=True)
+        await ops.expect_one(CloseDialogOp).perform()
 
         return fakulty
 
     async def __open_filter(self, app: Application[RegisterOsobDialogsType]) -> None:
         if app.d.name != "LZ015_VyhladavanieOsobFilterDlg1":
-            with app.collect_operations() as ops:
-                await app.d.filterAction.execute()
-
-            await app.awaited_open_dialog(ops)
+            ops = await app.d.filterAction.execute(return_ops=True)
+            await ops.expect_one(OpenDialogOp).perform()
 
     async def __close_filter(self, app: Application[RegisterOsobDialogsType]) -> None:
         if app.d.name == "LZ015_VyhladavanieOsobFilterDlg1":
-            with app.collect_operations() as ops:
-                await app.d.enterButton.click()
-
-            await app.awaited_close_dialog(ops)
+            ops = await app.d.enterButton.click(return_ops=True)
+            await ops.expect_one(CloseDialogOp).perform()

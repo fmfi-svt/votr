@@ -1,5 +1,5 @@
-from aisikl.app import assert_ops
 from aisikl.components.button import Button
+from aisikl.operations import CloseDialogOp, ConfirmBoxOp, MessageBoxOp, OpenDialogOp
 from aisikl.typeutils import ct, nn
 from fladgejt.base import BaseClient
 from fladgejt.helpers import CantOpenApplication, find_row, find_option, decode_key
@@ -124,15 +124,14 @@ class WebuiZapisMixin(WebuiStudiumMixin, BaseClient):
             await app.d.castiZapisnehoListuTree.select(id)
 
             # Stlacime "Pridat predmet zo studijneho planu".
-            with app.collect_operations() as ops:
-                await app.d.pridatPredmetAction.execute()
+            ops = await app.d.pridatPredmetAction.execute(return_ops=True)
 
             # Mozno vyskoci chyba.
-            if len(ops) == 1 and ops[0].method == 'messageBox':
-                return ([], ops[0].args[0])
+            if ops.has_types(MessageBoxOp):
+                return ([], ops.expect_one(MessageBoxOp).message)
 
             # Otvori sa novy dialog.
-            await app.awaited_open_dialog(ops)
+            await ops.expect_one(OpenDialogOp).perform()
 
             # Zapneme schovane stlpce.
             want = ['kodTypVyucby', 'popis', 'poradieB', 'poradieP', 'kodCastSP']
@@ -171,9 +170,8 @@ class WebuiZapisMixin(WebuiStudiumMixin, BaseClient):
                           for row in await app.d.predmetyTable.all_rows())
 
             # Ked sme hotovi, zavrieme dialog.
-            with app.collect_operations() as ops:
-                await app.d.click_close_button()
-            await app.awaited_close_dialog(ops)
+            ops = await app.d.click_close_button(return_ops=True)
+            await ops.expect_one(CloseDialogOp).perform()
 
         return (result, None)
 
@@ -195,15 +193,14 @@ class WebuiZapisMixin(WebuiStudiumMixin, BaseClient):
             await app.d.castiZapisnehoListuTree.select(id)
 
             # Stlacime "Pridat predmet zo studijneho planu".
-            with app.collect_operations() as ops:
-                await app.d.pridatPredmetAction.execute()
+            ops = await app.d.pridatPredmetAction.execute(return_ops=True)
 
             # Mozno vyskoci chyba.
-            if len(ops) == 1 and ops[0].method == 'messageBox':
-                return ops[0].args[0]
+            if ops.has_types(MessageBoxOp):
+                return ops.expect_one(MessageBoxOp).message
 
             # Otvori sa novy dialog.
-            await app.awaited_open_dialog(ops)
+            await ops.expect_one(OpenDialogOp).perform()
 
             # Skusime, ci uz teraz vidime vsetky hladane predmety.
             found_all = True
@@ -232,25 +229,23 @@ class WebuiZapisMixin(WebuiStudiumMixin, BaseClient):
                 await app.d.predmetyTable.edit_cell('p', index, True)
 
             # Stlacime "OK".
-            with app.collect_operations() as ops:
-                await app.d.enterButton.click()
+            ops = await app.d.enterButton.click(return_ops=True)
 
             # Mozno vyskoci confirm box. (Napriklad nas upozornuje, ze niektore
             # predmety uz mame zapisane. O inych confirm boxoch nevieme, a
             # dufame, ze su neskodne.) Zvolime "Ano".
-            if len(ops) == 1 and ops[0].method == 'confirmBox':
-                with app.collect_operations() as ops:
-                    await app.confirm_box(2)
+            if ops.has_types(ConfirmBoxOp):
+                ops = await ops.expect_one(ConfirmBoxOp).reply(
+                    ConfirmBoxOp.Option.YES, return_ops=True)
 
             # Mozno vyskoci chyba.
             message = None
-            if len(ops) == 1 and ops[0].method == 'messageBox':
-                message = ops[0].args[0]
-                with app.collect_operations() as ops:
-                    await app.d.click_close_button()
+            if ops.has_types(MessageBoxOp):
+                message = ops.expect_one(MessageBoxOp).message
+                ops = await app.d.click_close_button(return_ops=True)
 
             # Dialog sa zavrie.
-            await app.awaited_close_dialog(ops)
+            await ops.expect_one(CloseDialogOp).perform()
 
             if message: return message
 
@@ -258,9 +253,8 @@ class WebuiZapisMixin(WebuiStudiumMixin, BaseClient):
 
     async def __zatvor_ponuku_predmetov(self, app: Application[ZapisPredmetovDialogsType]) -> None:
         if app.d.name == 'VSES260_PridaniePredmetuDlg1':
-            with app.collect_operations() as ops:
-                await app.d.click_close_button()
-            await app.awaited_close_dialog(ops)
+            ops = await app.d.click_close_button(return_ops=True)
+            await ops.expect_one(CloseDialogOp).perform()
 
     async def __otvor_ponuku_predmetov(self, app: Application[ZapisPredmetovDialogsType]) -> str | None:
         if app.d.name != 'VSES260_PridaniePredmetuDlg1':
@@ -269,15 +263,14 @@ class WebuiZapisMixin(WebuiStudiumMixin, BaseClient):
             await app.d.castiZapisnehoListuTree.select('nR/SC/C')
 
             # Stlacime "Pridat predmet z ponuky predmetov".
-            with app.collect_operations() as ops:
-                await app.d.pridatPredmetZPonukyAction.execute()
+            ops = await app.d.pridatPredmetZPonukyAction.execute(return_ops=True)
 
             # Mozno vyskoci chyba.
-            if len(ops) == 1 and ops[0].method == 'messageBox':
-                return ops[0].args[0]
+            if ops.has_types(MessageBoxOp):
+                return ops.expect_one(MessageBoxOp).message
 
             # Otvori sa novy dialog.
-            await app.awaited_open_dialog(ops)
+            await ops.expect_one(OpenDialogOp).perform()
 
     async def __query_ponuka_predmetov(self, app: Application[ZapisPredmetovDialogsType], fakulta: str | None, stredisko: str | None,
                                  filter_skratka: str | None, filter_nazov: str | None) -> str | None:
@@ -377,22 +370,21 @@ class WebuiZapisMixin(WebuiStudiumMixin, BaseClient):
             await app.d.predmetyTable.edit_cell('p', index, True)
 
         # Stlacime "OK".
-        with app.collect_operations() as ops:
-            await app.d.enterButton.click()
+        ops = await app.d.enterButton.click(return_ops=True)
 
         # Mozno vyskoci confirm box. (Napriklad nas upozornuje, ze niektore
         # predmety uz mame zapisane. O inych confirm boxoch nevieme, a
         # dufame, ze su neskodne.) Zvolime "Ano".
-        if len(ops) == 1 and ops[0].method == 'confirmBox':
-            with app.collect_operations() as ops:
-                await app.confirm_box(2)
+        if ops.has_types(ConfirmBoxOp):
+            ops = await ops.expect_one(ConfirmBoxOp).reply(
+                ConfirmBoxOp.Option.YES, return_ops=True)
 
         # Mozno vyskoci chyba. (Dialog zostane otvoreny.)
-        if len(ops) == 1 and ops[0].method == 'messageBox':
-            return ops[0].args[0]
+        if ops.has_types(MessageBoxOp):
+            return ops.expect_one(MessageBoxOp).message
 
         # Dialog sa zavrie.
-        await app.awaited_close_dialog(ops)
+        await ops.expect_one(CloseDialogOp).perform()
 
         return None
 
@@ -428,17 +420,15 @@ class WebuiZapisMixin(WebuiStudiumMixin, BaseClient):
         await app.d.predmetyTable.select(indexes)
 
         # Stlacime "Odobrat predmet".
-        with app.collect_operations() as ops:
-            await app.d.odobratPredmetButton.click()
+        ops = await app.d.odobratPredmetButton.click(return_ops=True)
 
         # Mozno vyskoci confirm box. Zvolime "Ano".
-        if len(ops) == 1 and ops[0].method == 'confirmBox':
-            with app.collect_operations() as ops:
-                await app.confirm_box(2)
+        if ops.has_types(ConfirmBoxOp):
+            ops = await ops.expect_one(ConfirmBoxOp).reply(
+                ConfirmBoxOp.Option.YES, return_ops=True)
 
         # Mozno vyskoci chyba. Ak nie, sme hotovi.
         if ops:
-            assert_ops(ops, 'messageBox')
-            return ops[0].args[0]
+            return ops.expect_one(MessageBoxOp).message
 
         return None

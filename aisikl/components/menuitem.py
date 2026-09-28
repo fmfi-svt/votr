@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
+    from aisikl.operations import Operations
     from bs4.element import Tag
 
 
@@ -22,12 +23,14 @@ class MenuItem(ActionableControl):
     def _ais_setImage(self, value: object) -> None:
         self.image = ct_none(str, value)
 
-    async def click(self, params: str | None=None) -> None:
+    async def click(self, params: str | None=None, *, return_ops: bool = False) -> Operations:
         await self.log('action', f'Clicking {self.id}')
 
-        if await self.try_execute_action(params): return
+        did, ops = await self.try_execute_action(return_ops=return_ops)
+        if did:
+            return ops
 
         ev = action_event(self, None, self.id, params)
         # TODO: We should technically ask confirm_question before firing
         # (if ev.listening is True), but we probably don't care.
-        await self.dialog.app.send_events(ev)
+        return await self.dialog.app.send_events(ev, return_ops=return_ops)

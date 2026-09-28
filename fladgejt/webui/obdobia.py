@@ -1,4 +1,5 @@
 from aisikl.app import Application
+from aisikl.operations import OpenDialogOp
 from fladgejt.base import BaseClient
 from fladgejt.helpers import find_row
 from fladgejt.structures import Obdobie
@@ -26,7 +27,7 @@ class WebuiObdobiaMixin(BaseClient):
         '''
         url = '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST010App&fajr=A&kodAplikacie=VSST010&uiLang=SK'
         app, ops = await Application[SpravaDatumovDialogsType].open(self.context, url)
-        await app.awaited_open_main_dialog(ops)
+        await ops.expect_one(OpenDialogOp).perform()
         return app
 
     async def get_obdobie(self, datumova_akcia_id: str, akademicky_rok: str | None=None) -> Obdobie:
