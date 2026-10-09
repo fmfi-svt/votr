@@ -1,7 +1,7 @@
 from aisikl.app import Application, assert_ops
 import base64
 from fladgejt.base import BaseClient
-from fladgejt.webui.commonui import WebuiCommonUIMixin
+from fladgejt.webui.commonui import select_text_ciselnik
 from fladgejt.webui.pool import pooled_app
 from fladgejt.helpers import find_option, find_row, decode_key
 from fladgejt.structures import RegUcitelPredmetu, PrihlasenyStudent, RegPredmet
@@ -30,10 +30,16 @@ if TYPE_CHECKING:
         sablonyTable: Table
         semesterComboBox: ComboBox
         skratkaPredmetuTextField: TextField
+        skratkaStrediskaTextField: TextField
+        skratkaStudProgramuTextField: TextField
         stupenPredmetuComboBox: ComboBox
         typPredmetuComboBox: ComboBox
+        vybratStrediskoButton: Button
+        vybratStudProogramButton: Button  # [sic]
         vyucujuciTextField: TextField
         zaradeniStudentiTable: Table
+        zmazatStrediskoButton: Button
+        zmazatStudProgramButton: Button
         zobrazitLenComboBox: ComboBox
         zobrazitPredmetyButton: Button
         zoznamPredmetovTable: Table
@@ -59,7 +65,7 @@ class GetStudentiZapisaniNaPredmetResult(TypedDict):
     predmet: RegPredmet | None
 
 
-class WebuiPredmetyMixin(WebuiCommonUIMixin, BaseClient):
+class WebuiPredmetyMixin(BaseClient):
     @pooled_app
     async def _open_register_predmetov(self) -> Application[RegisterPredmetovDialogsType]:
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.st.VSST060App&kodAplikacie=VSST060&uiLang=SK'
@@ -133,14 +139,14 @@ class WebuiPredmetyMixin(WebuiCommonUIMixin, BaseClient):
 
         await app.d.cisloPredmetuNumberControl.write(cislo_predmetu or '')
 
-        if not await self._select_text_ciselnik(
-                app, stredisko, 'skratkaStrediskaTextField',
-                'zmazatStrediskoButton', 'vybratStrediskoButton', 'skratka'):
+        if not await select_text_ciselnik(
+                app, stredisko, app.d.skratkaStrediskaTextField,
+                app.d.zmazatStrediskoButton, app.d.vybratStrediskoButton, 'skratka'):
             message.append("Stredisko neexistuje.")
 
-        if not await self._select_text_ciselnik(
-                app, skratka_sp, 'skratkaStudProgramuTextField',
-                'zmazatStudProgramButton', 'vybratStudProogramButton',
+        if not await select_text_ciselnik(
+                app, skratka_sp, app.d.skratkaStudProgramuTextField,
+                app.d.zmazatStudProgramButton, app.d.vybratStudProogramButton,
                 'skratka'):
             message.append("Študijný program neexistuje.")
 

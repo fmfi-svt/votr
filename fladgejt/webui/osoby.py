@@ -1,6 +1,6 @@
 from aisikl.app import Application, assert_ops
 from fladgejt.base import BaseClient
-from fladgejt.webui.commonui import WebuiCommonUIMixin
+from fladgejt.webui.commonui import select_ciselnik, show_all_columns
 from fladgejt.webui.pool import pooled_app
 from fladgejt.helpers import find_option
 from fladgejt.structures import RegOsoba
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
 
     class RegisterOsobDialogsType(ABC, Dialog):
         VyberFakultaButton: Button
+        VyberOdborButton: Button
         absolventCheckBox: CheckBox
         akademickyRokComboBox: ComboBox
         closeButton: Button
@@ -37,7 +38,7 @@ else:
     RegisterOsobDialogsType = None
 
 
-class WebuiOsobyMixin(WebuiCommonUIMixin, BaseClient):
+class WebuiOsobyMixin(BaseClient):
     @pooled_app
     async def _open_register_osob(self) -> Application[RegisterOsobDialogsType]:
         url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.lz.LZ014App&kodAplikacie=LZ014&uiLang=SK'
@@ -91,11 +92,11 @@ class WebuiOsobyMixin(WebuiCommonUIMixin, BaseClient):
             if ops:
                 assert_ops(ops, 'messageBox')   # "Interna chyba: Nepodarilo sa osetrenie udalosti."
 
-            if not await self._select_ciselnik(app, fakulta or None, "VyberFakultaButton", "skratka"):
+            if not await select_ciselnik(app, fakulta or None, app.d.VyberFakultaButton, "skratka"):
                 return 'Fakulta nebola nájdená.'
 
             await app.d.odstranitOdborButton.click()
-            if not await self._select_ciselnik(app, studijny_program or None, "VyberOdborButton", "skratka"):
+            if not await select_ciselnik(app, studijny_program or None, app.d.VyberOdborButton, "skratka"):
                 return 'Študijný program sa nenašiel, skontrolujte fakultu.'
 
             for index, item in enumerate(rocniky):
@@ -123,7 +124,7 @@ class WebuiOsobyMixin(WebuiCommonUIMixin, BaseClient):
         await self.__close_filter(app)
 
         if 'email' not in app.d.osobyTable.column_map:
-            await self._show_all_columns(app, app.d.osobyTable)
+            await show_all_columns(app, app.d.osobyTable)
 
         while not app.d.osobyTable.is_end_of_data:
             await app.d.osobyTable.scroll_down(10)

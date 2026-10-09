@@ -1,6 +1,5 @@
 from aisikl.app import check_connection
 from fladgejt.base import BaseClient
-from fladgejt.webui.commonui import WebuiCommonUIMixin
 from fladgejt.webui.hodnotenia import WebuiHodnoteniaMixin
 from fladgejt.webui.obdobia import WebuiObdobiaMixin
 from fladgejt.webui.osoby import WebuiOsobyMixin
@@ -16,7 +15,7 @@ if TYPE_CHECKING:
 
 class WebuiClient(WebuiHodnoteniaMixin, WebuiObdobiaMixin,
                   WebuiOsobyMixin, WebuiPredmetyMixin,
-                  WebuiTerminyMixin, WebuiZapisMixin, WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
+                  WebuiTerminyMixin, WebuiZapisMixin, WebuiStudiumMixin, BaseClient):
     def __init__(self, context: Context, *, logout_mode: str | None=None) -> None:
         super().__init__(context)
         self.app_pool = Pool(context)

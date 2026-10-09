@@ -1,9 +1,10 @@
 from aisikl.app import assert_ops
-from aisikl.typeutils import nn
+from aisikl.components.button import Button
+from aisikl.typeutils import ct, nn
 from fladgejt.base import BaseClient
 from fladgejt.helpers import CantOpenApplication, find_row, find_option, decode_key
 from fladgejt.structures import ZapisPredmet, ZapisVlastnost
-from fladgejt.webui.commonui import WebuiCommonUIMixin
+from fladgejt.webui.commonui import select_text_ciselnik, show_all_columns
 from fladgejt.webui.studium import WebuiStudiumMixin
 from typing import TYPE_CHECKING
 
@@ -11,7 +12,6 @@ if TYPE_CHECKING:
     from abc import ABC
     from aisikl.app import Application
     from aisikl.components.action import Action
-    from aisikl.components.button import Button
     from aisikl.components.combobox import ComboBox, Option
     from aisikl.components.table import Table
     from aisikl.components.textfield import TextField
@@ -44,7 +44,7 @@ else:
 UNAVAILABLE = "Zápis predmetov pre tento zápisný list nie je dostupný."
 
 
-class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
+class WebuiZapisMixin(WebuiStudiumMixin, BaseClient):
     async def zapis_get_zapisane_predmety(self, zapisny_list_key: str, cast: str) -> tuple[list[ZapisPredmet], str | None]:
         try:
             app = await self._open_zapis_predmetov_app(zapisny_list_key)
@@ -137,7 +137,7 @@ class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
             # Zapneme schovane stlpce.
             want = ['kodTypVyucby', 'popis', 'poradieB', 'poradieP', 'kodCastSP']
             if any(col not in app.d.predmetyTable.column_map for col in want):
-                await self._show_all_columns(app, app.d.predmetyTable)
+                await show_all_columns(app, app.d.predmetyTable)
 
             # Zrusime filter podla odporucaneho rocniku.
             index = find_option(app.d.rocnikComboBox.options, title='')
@@ -298,10 +298,14 @@ class WebuiZapisMixin(WebuiStudiumMixin, WebuiCommonUIMixin, BaseClient):
 
         await app.d.predmetNazovTextField.write(filter_nazov or '')
 
-        if not await self._select_text_ciselnik(
-                app, stredisko, 'strediskoSkratkaTextField',
-                app.d.zmazatStrediskoAction.component_ids[0],
-                app.d.vybratStrediskoAction.component_ids[0], 'skratka'):
+        if not await select_text_ciselnik(
+            app, stredisko, app.d.strediskoSkratkaTextField,
+            # vola sa "c1Button", ale fuj, to tu nechcem hardcodovat
+            ct(Button, app.d.zmazatStrediskoAction.get_components()[0]),
+            # vola sa "Button", ale fuj, to tu nechcem hardcodovat
+            ct(Button, app.d.vybratStrediskoAction.get_components()[0]),
+            'skratka',
+        ):
             return "Stredisko neexistuje."
 
         await app.d.zobrazitPredmetyAction.execute()
