@@ -201,7 +201,12 @@ async def test_file(o: Options, filename: str) -> None:
         first = last = None
         if '@@' in filename:
             filename, ranges = filename.split('@@')
-            first, last = ranges.split('..')
+            if '..' in ranges:
+                first, last = ranges.split('..')
+            else:
+                first = last = ranges
+            first = first.split('/')[-1]
+            last = last.split('/')[-1]
         with tarfile.open(filename, 'r:*') as tar:
             for info in tar:
                 if not info.isreg():
