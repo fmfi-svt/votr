@@ -10,27 +10,12 @@ from aisikl.exceptions import AISParseError, AISBehaviorError, AISApplicationClo
 from aisikl.dialog import Dialog
 from aisikl.operations import CloseApplicationOp, MessageBoxOp, OpenDialogOp, Operations, ServerCloseApplicationOp, known_operations
 from aisikl.typeutils import ct, nn
-from typing import NamedTuple, TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from aisikl.context import Context
     from aisikl.events import Event
     from bs4 import BeautifulSoup
-
-
-#: Record of AIS calling a setter on some component.
-#:
-#: Attributes:
-#:     dialog: The dialog name.
-#:     target: The target component name.
-#:     method: The setter method that is called. In Votr, this original
-#:         method name will be prefixed with ``_ais_``.
-#:     args: The list of setter arguments. (Usually a single string.)
-class Update(NamedTuple):
-    dialog: str
-    target: str
-    method: str
-    args: list[object]
 
 
 #: The default value for :attr:`Application.ignored_messages`
@@ -192,7 +177,7 @@ class Application[D]:
 
         rq = ("<events><ev><event class='avc.ui.event.AVCComponentEvent'>"
               "<command>INIT</command></event></ev></events>\n" +
-              self.collect_component_changes())
+              self._collect_component_changes())
         ops = await self._do_request(rq, return_ops=True)
 
         if (
@@ -272,7 +257,7 @@ class Application[D]:
         self.last_response_time = time.time()
 
         operations = Operations()
-        updates: list[Update] = []
+        updates: list[tuple[str, str, str, list[object]]] = []
 
         script_tag = nn(soup.head).script
         if not script_tag or script_tag.get('src'):
@@ -357,14 +342,14 @@ class Application[D]:
             if match:
                 target, dialog, method, args_str = match.groups()
                 args = _parse_args(args_str)
-                updates.append(Update(dialog, target, method, args))
+                updates.append((dialog, target, method, args))
                 continue
 
             match = _dialog_update_re.match(line)
             if match:
                 target, method, args_str = match.groups()
                 args = _parse_args(args_str)
-                updates.append(Update(target, target, method, args))
+                updates.append((target, target, method, args))
                 continue
 
             raise AISParseError(f"Couldn't parse script line: {line}")
@@ -379,28 +364,21 @@ class Application[D]:
             await self.ctx.log('update',
                 f'Updating {len(updates)} components', updates)
 
-        for update in updates:
-            try:
-                dialog = self.dialogs[update.dialog]
-            except KeyError:
-                raise AISParseError("Dialog %r doesn't exist." %
-                    update.dialog) from None
+        for dialog_name, component_name, method_name, args in updates:
+            if (dialog := self.dialogs.get(dialog_name)) is None:
+                raise AISParseError(f"Dialog {dialog_name!r} doesn't exist.")
 
-            try:
-                component = dialog.components[update.target]
-            except KeyError:
-                if update.target == "HeaderView":
+            if (component := dialog.components.get(component_name)) is None:
+                if component_name == "HeaderView":
                     continue   # a mysterious non-existent component
-                raise AISParseError("Component %r doesn't exist in %r." %
-                    (update.target, update.dialog)) from None
+                raise AISParseError(f"Component {component_name!r} doesn't exist in {dialog_name!r}.")
 
             try:
-                method = getattr(component, '_ais_' + update.method)
+                method = getattr(component, '_ais_' + method_name)
             except AttributeError:
                 raise AISParseError("Method %r of %s is not yet implemented." %
-                    (update.method, component.__class__.__name__)) from None
+                    (method_name, component.__class__.__name__)) from None
 
-            args = update.args
             if getattr(method, 'wants_body', False):
                 args = args + [body]
 
@@ -425,12 +403,12 @@ class Application[D]:
         if not body:
             return Operations()
         return await self._do_request(
-            '<events>' + body + '</events>' + self.collect_component_changes(),
+            '<events>' + body + '</events>' + self._collect_component_changes(),
             return_ops=return_ops)
 
     async def _send_empty_request(self, return_ops: bool) -> Operations:
         '''Sends a request without any events to AIS.'''
-        return await self._do_request(self.collect_component_changes(), return_ops=return_ops)
+        return await self._do_request(self._collect_component_changes(), return_ops=return_ops)
 
     async def _send_namevalue_request(self, name: str, value: int | str, return_ops: bool) -> Operations:
         '''Helper function for small requests sent by some operations.
@@ -463,7 +441,7 @@ class Application[D]:
             "</ev></events>\n")
         return not soup.script
 
-    def collect_component_changes(self) -> str:
+    def _collect_component_changes(self) -> str:
         '''Returns the <changedProps> string that goes into POST requests.'''
         app_changes = ''
         if self.active_dialog:

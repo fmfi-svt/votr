@@ -2131,7 +2131,7 @@ Mostly covered by Application and operations.py. No longer global.
     - No need to implement it. We will throw because it's not in
       known_operations.
 - changesToXML(), resetComponentChanges()
-    - Merged into Application.collect_component_changes()
+    - Merged into Application._collect_component_changes()
 - onComponentChanges()
     - Merged into Dialog.component_changes(), because Dialog.componentChanges()
       was the only caller.
