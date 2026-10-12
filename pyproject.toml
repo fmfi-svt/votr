@@ -30,7 +30,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.basedpyright]
-include = ["aisikl", "fladgejt", "tests"]
+include = ["aisikl", "fladgejt", "nbenv.py", "tests", "votrfront"]
 # Disabled for being too annoying.
 reportExplicitAny = "none"
 reportImportCycles = "none"
@@ -64,7 +64,7 @@ include = ["aisikl", "fladgejt"]
 
 [tool.pyrefly]
 preset = "strict"
-project-includes = ["aisikl/**/*.py*", "fladgejt/**/*.py", "tests/**/*.py"]
+project-includes = ["aisikl/**/*.py", "fladgejt/**/*.py", "nbenv.py", "tests/**/*.py", "votrfront/**/*.py"]
 
 [tool.uv]
 default-groups = ["votrfront"]

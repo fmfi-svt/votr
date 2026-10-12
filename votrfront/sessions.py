@@ -5,27 +5,33 @@ import gzip
 import os
 import pickle
 import trio
+from typing import TextIO, TYPE_CHECKING
+from aisikl.typeutils import ct_none, nn
 from aisikl.exceptions import LoggedOutError
-from votrfront.base import var_path
+from votrfront.base import SessionDict, VotrState, var_path
+
+if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
+    from starlette.requests import Request
 
 
-def get_sessid_from_cookie(request):
-    return request.state['votr_cookie_value'].get('sessid')
+def get_sessid_from_cookie(request: Request[VotrState]) -> str | None:
+    return ct_none(str, request.state['votr_cookie_value'].get('sessid'))  # pyright: ignore [reportTypedDictNotRequiredAccess]
 
 
-def check_sessid(sessid):
+def check_sessid(sessid: str) -> None:
     for ch in sessid:
         if ch not in '0123456789abcdef_':
             raise LoggedOutError('Invalid sessid')
 
 
-def open_log_file(sessid):
+def open_log_file(sessid: str) -> TextIO:
     check_sessid(sessid)
     filename = var_path('logs', sessid + '.gz')
     return gzip.open(filename, 'at', encoding='utf8')
 
 
-def create(request, sessid, session):
+def create(request: Request[VotrState], sessid: str, session: SessionDict) -> str:
     check_sessid(sessid)
     with var_path('sessions', sessid).open('xb') as f:
         pickle.dump(session, f, pickle.HIGHEST_PROTOCOL)
@@ -33,19 +39,18 @@ def create(request, sessid, session):
     return sessid
 
 
-def delete(request, sessid=None):
+def delete(request: Request[VotrState], sessid: str | None = None) -> None:
     if not sessid: sessid = get_sessid_from_cookie(request)
     if not sessid: return
     check_sessid(sessid)
     try:
         var_path('sessions', sessid).unlink()
-        return True
     except FileNotFoundError:
-        return False
+        pass
 
 
 @contextlib.asynccontextmanager
-async def lock(sessid):
+async def lock(sessid: str) -> AsyncGenerator[None]:
     """Acquires a named mutex identified by ``sessid``, waiting if another
     process/thread is already holding it. If a process dies, its held locks are
     automatically released. Locks are per user."""
@@ -92,7 +97,7 @@ async def lock(sessid):
 
 
 @contextlib.asynccontextmanager
-async def transaction(request, sessid=None):
+async def transaction(request: Request[VotrState], sessid: str | None = None) -> AsyncGenerator[SessionDict]:
     if not sessid: sessid = get_sessid_from_cookie(request)
     if not sessid: raise LoggedOutError('Session cookie not found')
     check_sessid(sessid)
@@ -123,11 +128,11 @@ async def transaction(request, sessid=None):
 
 
 @contextlib.asynccontextmanager
-async def logged_transaction(request, sessid=None):
+async def logged_transaction(request: Request[VotrState], sessid: str | None = None) -> AsyncGenerator[SessionDict]:
     if not sessid: sessid = get_sessid_from_cookie(request)
 
     async with transaction(request, sessid) as session:
-        with open_log_file(sessid) as log_file:
+        with open_log_file(nn(sessid)) as log_file:
             client = session.get('client')
             if client: client.context.logger.log_file = log_file
             yield session

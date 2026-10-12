@@ -1,5 +1,7 @@
 '''Local changes belong in votrfront/local_settings.py.'''
 
+from fladgejt.login import ServerDict as ServerDict
+
 instance_id = 'votr'
 
 instance_title = 'Votr (dev)'
@@ -18,31 +20,31 @@ feedback_link = ''
 announcement_html = ''
 
 servers = [
-    dict(
+    ServerDict(
         title='ais2.uniba.sk',
         login_types=('saml_password', 'cookie'),
         ais_cookie='JSESSIONID',
         ais_url='https://ais2.uniba.sk/',
     ),
-    dict(
+    ServerDict(
         title='ais2-beta.uniba.sk',
         login_types=('saml_password', 'cookie'),
         ais_cookie='JSESSIONID',
         ais_url='https://ais2-beta.uniba.sk/',
     ),
-    dict(
+    ServerDict(
         title='ais2-test.uniba.sk',
         login_types=('saml_password', 'cookie'),
         ais_cookie='JSESSIONID',
         ais_url='https://ais2-test.uniba.sk/',
     ),
-    dict(
+    ServerDict(
         title='ais2.euba.sk',
         login_types=('plain_password', 'cookie'),
         ais_cookie='JSESSIONID',
         ais_url='https://ais2.euba.sk/',
     ),
-    dict(
+    ServerDict(
         title='Flashback',
         login_types=('flashback',),
         flashbacks_dir='./var/flashbacks',

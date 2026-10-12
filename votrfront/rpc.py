@@ -75,19 +75,25 @@ from starlette.routing import Route
 from starlette.requests import Request
 from votrfront import sessions
 from votrfront.utils import check_header
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
+    from starlette.types import ASGIApp, Scope, Receive, Send
+    from votrfront.base import SessionDict, VotrState
 
 pylogger = logging.getLogger(__name__)
 
 
 def encode_result(thing: object) -> object:
-    if isinstance(thing, tuple) and hasattr(thing, '_asdict'):
-        thing = thing._asdict()
+    if isinstance(thing, tuple) and hasattr(thing, '_asdict'):  # pyright: ignore [reportUnknownArgumentType]
+        thing = thing._asdict()  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownVariableType]
 
     if isinstance(thing, (list, tuple)):
-        return [encode_result(item) for item in thing]
+        return [encode_result(item) for item in thing]  # pyright: ignore [reportUnknownArgumentType, reportUnknownVariableType]
     if isinstance(thing, dict):
-        return { key: encode_result(value) for key, value in thing.items() }
-    return thing
+        return { key: encode_result(value) for key, value in thing.items() }  # pyright: ignore [reportUnknownArgumentType, reportUnknownVariableType]
+    return thing  # pyright: ignore [reportUnknownVariableType]
 
 
 def serialize(json_object: object) -> bytes:
@@ -95,7 +101,14 @@ def serialize(json_object: object) -> bytes:
     return b"%010d%s" % (len(payload), payload)
 
 
-async def rpc_inner(send, request, names, argss, session, cancel_main_nursery):
+async def rpc_inner(
+    send: Send,
+    request: Request[VotrState],
+    names: list[str],
+    argss: list[list[object]],
+    session: SessionDict,
+    cancel_main_nursery: Callable[[str], None],
+) -> None:
     async def send_json(json_object: object) -> None:
         # Check for cancellation. We use cancellation as a general "don't call
         # send() anymore" flag. This checkpoint might not be strictly necessary,
@@ -131,7 +144,12 @@ async def rpc_inner(send, request, names, argss, session, cancel_main_nursery):
             cancel_main_nursery(f'send failed: {exc_message}')  # C3
             await trio.sleep_forever()  # actually raises Cancelled
 
-    async def send_log(timestamp, type, message, data):
+    async def send_log(
+        timestamp: float,
+        type: str,
+        message: str,
+        data: object,
+    ) -> None:
         await send_json({'log': type, 'message': message, 'time': timestamp})
 
     if not (client := session.get('client')):
@@ -206,12 +224,12 @@ async def rpc_inner(send, request, names, argss, session, cancel_main_nursery):
     request.state['votr_log_status'] = 'rpc:ok'
 
 
-async def rpc_asgi(scope, receive, send):
+async def rpc_asgi(scope: Scope, receive: Receive, send: Send) -> None:
     # Phase 1: Read request body and do basic checks. Errors in this phase are
     # dealt with normally - by raising a HTTPException. It is then caught and
     # handled by our `exception_handlers`.
 
-    request = Request(scope, receive)
+    request: Request[VotrState] = Request(scope, receive)
 
     request.state['votr_log_status'] = 'rpc:early_error'
 
@@ -223,7 +241,7 @@ async def rpc_asgi(scope, receive, send):
     # request body) because it's nice to see them in access logs.
     try:
         names = request.query_params['names'].split(',')
-        argss = await request.json()
+        argss: list[list[object]] | None = await request.json()
     except HTTPException:
         # Just in case. RequestBodyLimitMiddleware might raise this, maybe.
         raise
@@ -341,7 +359,7 @@ async def rpc_asgi(scope, receive, send):
     })
 
 
-async def rpc_endpoint(request):
+async def rpc_endpoint(request: object) -> ASGIApp:
     return rpc_asgi
 
 

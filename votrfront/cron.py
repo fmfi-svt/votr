@@ -6,12 +6,16 @@ import shutil
 import tarfile
 import time
 import trio
+from typing import TYPE_CHECKING
 from votrfront import logutil
 from votrfront import sessions
 from votrfront.base import var_path
 
+if TYPE_CHECKING:
+    from votrfront.base import Settings
 
-def create_archive(prefix):
+
+def create_archive(prefix: str) -> None:
     wip = var_path('logarchive', 'wip.tar.xz')
     sources = sorted(var_path('oldlogs').glob(prefix + '*.xz'))
     dest = var_path('logarchive', prefix + '.tar.xz')
@@ -47,7 +51,7 @@ def create_archive(prefix):
         raise Exception(f'Remaining files: {remains!r}')
 
 
-async def cron(settings):
+async def cron(settings: Settings) -> None:
     now = time.time()
 
     for path in var_path('sessions').iterdir():

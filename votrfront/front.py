@@ -4,11 +4,18 @@ import os
 import json
 import traceback
 import trio
+from typing import TYPE_CHECKING
 from markupsafe import Markup
 from starlette.responses import HTMLResponse, PlainTextResponse
 from starlette.routing import Route
 from votrfront import sessions
 from votrfront.utils import check_header
+
+if TYPE_CHECKING:
+    from fladgejt.login import ServerDict
+    from starlette.requests import Request
+    from starlette.responses import Response
+    from votrfront.base import VotrState
 
 
 template = Markup('''\
@@ -58,21 +65,21 @@ ga('create', '%(ua_code)s', 'auto');
 static_path = os.path.join(os.path.dirname(__file__), 'static/')
 
 
-def static_url(filename):
+def static_url(filename: str) -> str:
     mtime = int(os.path.getmtime(static_path + filename))
     return f'static/{filename}?v={mtime}'
 
 
-def process_server(server):
+def process_server(server: ServerDict) -> object:
     keep = ['title', 'login_types', 'ais_url', 'ais_cookie',
             'rest_url', 'rest_cookie']
-    js_server = { k: server[k] for k in keep if k in server }
+    js_server: dict[str, object] = { k: server[k] for k in keep if k in server }
     if 'flashbacks_dir' in server and os.path.isdir(server['flashbacks_dir']):
         js_server['flashback_files'] = sorted(os.listdir(server['flashbacks_dir']))
     return js_server
 
 
-async def app_response(request, **my_data):
+async def app_response(request: Request[VotrState], **my_data: object) -> Response:
     settings = request.state['settings']
     url_root = str(request.base_url)
     instance_id = settings.instance_id
@@ -91,7 +98,7 @@ async def app_response(request, **my_data):
     if 'csrf_token' not in my_data:
         my_data['servers'] = [process_server(s) for s in settings.servers]
 
-    for i in range(30 * 10):
+    for _ in range(30 * 10):
         try:
             with open(static_path + 'status') as f:
                 status = f.read().strip()
@@ -157,7 +164,7 @@ async def app_response(request, **my_data):
         })
 
 
-async def front(request):
+async def front(request: Request[VotrState]) -> Response:
     check_header(request, 'Sec-Fetch-Mode', { 'navigate' })
     check_header(request, 'Sec-Fetch-Dest', { 'document' })
 

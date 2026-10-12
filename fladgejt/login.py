@@ -16,14 +16,14 @@ if TYPE_CHECKING:
 
 
 class ServerDict(TypedDict):
-    login_types: tuple[str]
+    login_types: tuple[str, ...]
     ais_url: NotRequired[str]
     ais_cookie: NotRequired[str]
     rest_url: NotRequired[str]
     rest_cookie: NotRequired[str]
     dns_overrides: NotRequired[dict[str, str]]
     flashbacks_dir: NotRequired[str]
-    # usually also has `title: str` but fladgejt.login does not need it
+    title: NotRequired[str]  #``title` is used only in votrfront, not fladgejt
 
 class ParamsDictSamlPassword(TypedDict):
     type: Literal['saml_password']

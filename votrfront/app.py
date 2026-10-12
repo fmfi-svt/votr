@@ -11,12 +11,13 @@ from starlette.responses import Response, HTMLResponse
 from starlette.routing import BaseRoute, Mount
 from starlette.staticfiles import StaticFiles
 from votrfront import login, front, rpc, report
-from votrfront.base import ROOT_PATH
+from votrfront.base import ROOT_PATH, Settings, VotrState
 import trio
 from typing import TYPE_CHECKING
 from urllib.parse import parse_qs, urlencode
 
 if TYPE_CHECKING:
+    from collections.abc import AsyncGenerator
     from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 pylogger = logging.getLogger(__name__)
@@ -60,7 +61,7 @@ async def handle_http_exception(request: Request, exc: Exception) -> Response:
 
 
 class SessionCookieMiddleware:
-    def __init__(self, app: ASGIApp, settings) -> None:
+    def __init__(self, app: ASGIApp, settings: Settings) -> None:
         self.app = app
         self.settings = settings
 
@@ -108,7 +109,7 @@ class SessionCookieMiddleware:
 
 
 class CheckRootUrlMiddleware:
-    def __init__(self, app: ASGIApp, settings) -> None:
+    def __init__(self, app: ASGIApp, settings: Settings) -> None:
         self.app = app
         self.settings = settings
 
@@ -178,7 +179,7 @@ class RequestTimeoutMiddleware:
 
 def build_app(
     *,
-    settings = None,
+    settings: Settings | None = None,
     debug: bool = False,
     static: bool = False,
     proxy_fix: bool = False,
@@ -207,8 +208,8 @@ def build_app(
             0, Middleware(ProxyFixMiddleware, mode="legacy", trusted_hops=1))
 
     @asynccontextmanager
-    async def lifespan(_app: Starlette):
-        yield dict(
+    async def lifespan(_app: Starlette) -> AsyncGenerator[VotrState]:
+        yield VotrState(
             settings=settings,
             saml_settings=login.build_saml_settings(settings),
         )
