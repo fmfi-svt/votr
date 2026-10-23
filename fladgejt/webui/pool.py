@@ -50,7 +50,6 @@ def pooled_app[S, D, *A](
 
         if app_key not in open_apps:
             await app_pool.reserve(1)
-            # pyrefly: ignore [bad-argument-type]
             open_apps[app_key] = await original_method(self, *args)
 
         active_keys.add(app_key)

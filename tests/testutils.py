@@ -72,7 +72,7 @@ class MockRunner:
         try:
             time.time = self._mock_time
             Logger.send_log = self._mock_send_log
-            Context.request_http = self._mock_request_http  # pyrefly: ignore [bad-assignment] # pyright: ignore [reportAttributeAccessIssue]
+            Context.request_http = self._mock_request_http  # pyrefly: ignore [method-assign]
             await body()
         except _FailFast:
             count = len(self.expected_logs)
@@ -82,7 +82,7 @@ class MockRunner:
         finally:
             time.time = original_time_time
             Logger.send_log = original_send_log
-            Context.request_http = original_request_http
+            Context.request_http = original_request_http  # pyrefly: ignore [method-assign]
 
         if self.ok and self.expected_logs:
             self.ok = False
@@ -94,7 +94,7 @@ class MockRunner:
     def _mock_time(self) -> float:
         return self.now
 
-    async def _mock_request_http(self, *args: object, **kwargs: object) -> object:
+    async def _mock_request_http(self, *args: object, **kwargs: object) -> Response:
         # This doesn't check if the request url or any other args match. It just
         # returns the original responses in the given order.
         # This can lead to confusing output if we diverge too much from the
@@ -521,7 +521,7 @@ def _preprocess_expected_logs(
 
 
 def _prepare_http_responses(
-        entries: Sequence[LogEntry]) -> Iterable[Callable[[], object]]:
+        entries: Sequence[LogEntry]) -> Iterable[Callable[[], Response]]:
     for i in range(1, len(entries)):
         responder = _prepare_http_response(
             entries[i - 1], entries[i], entries[-1])
@@ -533,7 +533,7 @@ def _prepare_http_response(
         request_entry: LogEntry,
         response_entry: LogEntry,
         final_entry: LogEntry,
-) -> Callable[[], object] | None:
+) -> Callable[[], Response] | None:
     # Match successfully-received responses for Context.request_ais(),
     # Context.request_json(), and fladgejt.login._send_request().
     if (
@@ -608,7 +608,7 @@ def _prepare_http_response(
         ' failed with ' in final_entry.message and
         (error_class := HTTP_ERRORS.get(final_entry.message.split()[-1]))
     ):
-        def raise_error() -> None:
+        def raise_error() -> Response:
             raise error_class(_IGNORE_DETAILS)
         return raise_error
 

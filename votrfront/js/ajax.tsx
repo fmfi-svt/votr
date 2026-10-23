@@ -16,10 +16,7 @@ interface RpcResultPayload {
   result: unknown;
 }
 type RpcPayload =
-  | RpcAnnouncementPayload
-  | RpcLogPayload
-  | RpcErrorPayload
-  | RpcResultPayload;
+  RpcAnnouncementPayload | RpcLogPayload | RpcErrorPayload | RpcResultPayload;
 
 const HEADER_LENGTH = 10;
 
