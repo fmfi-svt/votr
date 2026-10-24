@@ -171,11 +171,10 @@ def wrap_pager() -> Generator[IO[str]]:
     if os.isatty(0) and os.isatty(1):
         sp = subprocess.Popen(PAGER, stdin=subprocess.PIPE, encoding='utf8')
         assert sp.stdin
-        try:
+        with contextlib.suppress(BrokenPipeError):
             yield sp.stdin
-        except BrokenPipeError:
-            print('Broken pipe', file=sys.stderr)
-        sp.stdin.close()
+        with contextlib.suppress(BrokenPipeError):
+            sp.stdin.close()
         if sp.wait() != 0:
             raise OSError("Pager return code %s" % sp.returncode)
     else:
