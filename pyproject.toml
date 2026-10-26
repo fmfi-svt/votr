@@ -71,3 +71,7 @@ default-groups = ["votrfront"]
 exclude-dependencies = [
     "rich-click", # kind of big, and only needed by anycorn's CLI
 ]
+
+[tool.uv.sources]
+# TODO: Remove once they release a new version. https://github.com/SAML-Toolkits/python3-saml/issues/446
+python3-saml = { git = "https://github.com/SAML-Toolkits/python3-saml" }

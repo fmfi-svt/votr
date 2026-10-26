@@ -394,15 +394,11 @@ wheels = [
 [[package]]
 name = "python3-saml"
 version = "1.16.0"
-source = { registry = "https://pypi.org/simple" }
+source = { git = "https://github.com/SAML-Toolkits/python3-saml#52d2ac8da3f35262755f6e1c32ba7c62a6011fe1" }
 dependencies = [
     { name = "isodate" },
     { name = "lxml" },
     { name = "xmlsec" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/5d/98/6e0268c3a9893af3d4c5cf670183e0314cd6b5cb034a612d6a7cc5060df8/python3-saml-1.16.0.tar.gz", hash = "sha256:97c9669aecabc283c6e5fb4eb264f446b6e006f5267d01c9734f9d8bffdac133", size = 83468, upload-time = "2023-10-09T10:37:43.128Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/07/14/49d9828443b58bd5cc80a454c91b0f867fbf36a24975d501945e6cb9e32f/python3_saml-1.16.0-py3-none-any.whl", hash = "sha256:20b97d11b04f01ee22e98f4a38242e2fea2e28fbc7fbc9bdd57cab5ac7fc2d0d", size = 76155, upload-time = "2023-10-09T10:40:34.001Z" },
 ]
 
 [[package]]
@@ -518,7 +514,7 @@ dev = [
     { name = "pyrefly", specifier = ">=0" },
     { name = "watchdog", specifier = ">=0" },
 ]
-prod = [{ name = "python3-saml", specifier = ">=0" }]
+prod = [{ name = "python3-saml", git = "https://github.com/SAML-Toolkits/python3-saml" }]
 votrfront = [
     { name = "anycorn", specifier = ">=0" },
     { name = "markupsafe", specifier = ">=0" },
