@@ -743,6 +743,9 @@ async def _scenario_main_async(
     mock_group = parser.add_argument_group(title='mock mode options')
     mock_group.add_argument('--load', type=pathlib.Path, metavar='FILENAME',
         help='Input log file path (required)')
+    mock_group.add_argument('--old-log', action='store_true',
+        help='Allow some known differences in log content ' +
+        'between old Votr and current Votr')
     mock_group.add_argument('--fail-fast', action='store_true',
         help='Do not continue past the first error/warning')
 
@@ -784,7 +787,7 @@ async def _scenario_main_async(
 
             ok = await MockRunner().run(
                 body, entries, print=print,
-                old_log=False, fail_fast=options.fail_fast)
+                old_log=options.old_log, fail_fast=options.fail_fast)
 
             if ok:
                 print('PASS')
@@ -793,6 +796,8 @@ async def _scenario_main_async(
                 sys.exit(1)
 
         if options.ais_url:
+            if options.old_log:
+                parser.error('cannot use both --ais-url and --old-log')
             if options.fail_fast:
                 parser.error('cannot use both --ais-url and --fail-fast')
 
