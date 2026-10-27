@@ -1,3 +1,4 @@
+from aisikl.context import repr_log_data
 import contextlib
 from dataclasses import dataclass
 import gzip
@@ -11,7 +12,7 @@ import sys
 import time
 import traceback
 import trio
-from typing import IO, Literal, NotRequired, TypeIs, TypedDict, TYPE_CHECKING
+from typing import IO, Literal, TYPE_CHECKING
 from votrfront import sessions
 from votrfront.base import var_path
 
@@ -216,15 +217,6 @@ def cli_tag(*args: str) -> None:
     logdb.commit()
 
 
-class HttpLogData(TypedDict):
-    headers: list[list[object]]
-    body: NotRequired[object]
-
-
-def is_http_log_data(data: object) -> TypeIs[HttpLogData]:
-    return isinstance(data, dict) and 'headers' in data
-
-
 def cli_view(*args: str) -> None:
     color = False
     sessid = None
@@ -260,15 +252,7 @@ def cli_view(*args: str) -> None:
                 else:
                     print(separator, file=out)
                     print(when, typestr, message, file=out)
-                if type == 'http' and is_http_log_data(data):
-                    print({ k: v for k, v in data.items() if k != 'headers' and k != 'body' }, file=out)
-                    for k, v in data['headers']:
-                        print(f'{k}: {v}', file=out)
-                    if 'body' in data:
-                        print('---', file=out)
-                        print(data['body'], file=out)
-                else:
-                    print(data, file=out)
+                print(repr_log_data(data), file=out)
 
 
 def cli_path(*sessids: str) -> None:

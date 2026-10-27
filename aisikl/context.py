@@ -10,10 +10,10 @@ import json
 from urllib.parse import urljoin
 from aisikl.exceptions import RESTServerError, LoggedOutError
 from aisikl.typeutils import nn
-from typing import Any, Literal, TYPE_CHECKING, TextIO, override
+from typing import Any, Literal, TYPE_CHECKING, TextIO, TypeIs, override
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable, Callable, Generator, Iterable, Mapping
+    from collections.abc import Awaitable, Callable, Generator, Iterable, Mapping, Sequence
     from http.cookiejar import Cookie
 
 
@@ -229,18 +229,22 @@ class Logger:
     async def log(self, type: str, message: str, data: object=None) -> None:
         timestamp = time.time()
 
-        if self.log_file and type != 'benchmark':
-            # 'benchmark' is excluded from log files. It's too verbose.
-            self.log_file.write(json.dumps([timestamp, type, message, data],
-                                           ensure_ascii=False) + '\n')
+        # 'benchmark' is excluded from log files. It's too verbose.
+        if type != 'benchmark':
+            if self.log_file:
+                self.log_file.write(json.dumps([timestamp, type, message, data],
+                                               ensure_ascii=False) + '\n')
+
+            _log_to_ipython(type, message, data)
+
+            if print_logs:
+                text = f"\033[1;36m{type} \033[1;33m{message}\033[0m"
+                if data is not None:
+                    text = f"{text} {json.dumps(data, ensure_ascii=False)}"
+                print(text, file=sys.stderr)
 
         if self.send_log:
             await self.send_log(timestamp, type, message, data)
-
-        if print_logs:
-            print('\033[1;36m{} \033[1;33m{} \033[0m{}'.format(
-                type, message, '' if data is None else json.dumps(data)),
-                file=sys.stderr)
     log.__doc__ = Context.log.__doc__
 
 
@@ -329,22 +333,61 @@ class _PickleableCookieJar(CookieJar):
             self.set_cookie(cookie)
 
 
+def _is_dict(data: object) -> TypeIs[Mapping[object, object]]:
+    return isinstance(data, dict)
+
+
+def _is_list_or_tuple(data: object) -> TypeIs[Sequence[object]]:
+    return isinstance(data, (list, tuple))
+
+
+def _repr(obj: object, obj_name: object = None, level: int = 0) -> str:
+    if obj_name == "body" and isinstance(obj, str) and "\n" in obj:
+        return f'"""\n{obj}\n"""'
+    if not (_is_dict(obj) or _is_list_or_tuple(obj)):
+        return json.dumps(obj, ensure_ascii=False)
+    children = obj.values() if _is_dict(obj) else obj
+    if all(not (_is_dict(c) or _is_list_or_tuple(c)) for c in children):
+        return json.dumps(obj, ensure_ascii=False)  # also handles empty {} / []
+    pad = "  " * level
+    inner = "  " * (level + 1)
+    if _is_dict(obj):
+        body = [
+            f"{inner}{json.dumps(str(k))}: {_repr(v, k, level + 1)}"
+            for k, v in obj.items()
+        ]
+        return "{\n" + ",\n".join(body) + "\n" + pad + "}"
+    else:
+        body = [inner + _repr(v, None, level + 1) for v in obj]
+        return "[\n" + ",\n".join(body) + "\n" + pad + "]"
+
+
+def repr_log_data(data: object) -> str:
+    """Returns a JSON-like human-readable representation of ``data``. Intended
+    to make Votr log entries in developer tools easier to read.
+
+    Lists and dicts are printed compactly if all children are primitives,
+    otherwise indented. The dict key "body" (presumably a HTTP response body) is
+    printed literally, without string escaping.
+    """
+    return _repr(data)
+
+
 try:
     __IPYTHON__  # pyrefly: ignore [unknown-name] # pyright: ignore [reportUndefinedVariable, reportUnusedExpression]
 except NameError:
-    pass
+
+    def _log_to_ipython(type: str, message: str, data: object) -> None:
+        pass
 else:
     from markupsafe import Markup
-    from IPython.display import display, HTML  # pyrefly: ignore [missing-import] # pyright: ignore [reportMissingImports, reportUnknownVariableType]
+    from IPython.display import display  # pyrefly: ignore [missing-import] # pyright: ignore [reportMissingImports, reportUnknownVariableType]
 
-    async def ipython_log(self: object, timestamp: float, type: str, message: str, data: object) -> None:
-        if type == 'benchmark': return
-        content = Markup('<span style="background:#FF8"><b>{}</b> {}</span>').format(type, message)
+    def _log_to_ipython(type: str, message: str, data: object) -> None:
+        html = Markup('<span style="background:#FF8"><b>{}</b> {}</span>').format(type, message)
         if data is not None:
-            if not isinstance(data, str):
-                data = json.dumps(data)
-            content = Markup('<details><summary>{}</summary><pre>{}</pre></details>').format(content, data)
-        display(HTML(content))
-
-    Logger.send_log = ipython_log  # pyrefly: ignore [bad-assignment] # pyright: ignore [reportAttributeAccessIssue] # false positive because of `self`
-    # TODO: Do not use HTML logs when running command line ipython.
+            html = Markup('<details><summary>{}</summary><pre>{}</pre></details>').format(html, repr_log_data(data))
+        else:
+            # Wrap in <div> to make Jupyter's margin-bottom CSS more consistent.
+            html = Markup('<div>{}</div>').format(html)
+        display({"text/plain": f"<{type}> {message}", "text/html": str(html)}, raw=True)
