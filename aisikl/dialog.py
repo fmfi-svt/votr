@@ -32,7 +32,7 @@ class Dialog:
         is_main_dialog: whether it's the top level body of the application.
         closeable: Whether the dialog can be closed.
         hide_title_bar: Whether AIS would show the title row.
-        app: The :class:`aisikl.app.Application` this dialog belong to.
+        app: The [`Application`][] this dialog belongs to.
         components: The dict of components present in the dialog.
     '''
 
@@ -54,7 +54,8 @@ class Dialog:
     async def _init(self, url: str) -> None:
         '''Load the dialog body.
 
-        Called from :meth:`aisikl.app.Application._open_dialog`.
+        Called from [`aisikl.operations.OpenDialogOp.perform`][] and
+        [`aisikl.operations.RefreshDialogOp.perform`][].
         '''
         dialog_soup = await self.app.ctx.parse_html(
             await self.app.ctx.request_ais(url))

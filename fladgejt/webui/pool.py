@@ -13,7 +13,7 @@ OPEN_APP_LIMIT = 10
 def pooled_app[S, D, *A](
     original_method: Callable[[S, Unpack[A]], Awaitable[Application[D]]]
 ) ->                 Callable[[S, Unpack[A]], Awaitable[Application[D]]]:
-    '''Decorator for methods that return an :class:`~aisikl.app.Application`.
+    '''Decorator for methods that return an [`Application`][].
 
     Generally, we don't want to open an application if we've already opened it.
     We want to store and reuse opened applications. But if an application
@@ -27,13 +27,14 @@ def pooled_app[S, D, *A](
 
     This decorator handles both of the above issues. ``original_method`` should
     accept only ``self`` and positional arguments, and use them to return an
-    :class:`~aisikl.app.Application` instance. The decorated method will only
-    call the original if there is no open application with the same arguments.
-    And if we've reached the limit of open applications, it will close one, so
-    that the original method can open a new application without an error.
+    [`Application`][] instance. The decorated method will only call the original
+    if there is no open application with the same arguments. And if we've
+    reached the limit of open applications, it will close one, so that the
+    original method can open a new application without an error.
 
     Args:
         original_method: The method to decorate.
+
     Returns:
         The decorated method.
     '''

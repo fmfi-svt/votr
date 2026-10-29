@@ -18,13 +18,11 @@ async def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[Port
     The separate pages of the main menu are called "modules", and the sections
     shown on one page are "submodules".
 
-    Args:
-        ctx: The :class:`~aisikl.context.Context` to use.
     Returns:
         The list of modules. Every module is returned as a
-        ``(name, submodules)`` tuple, every submodule is returned as a
-        ``(name, apps)`` tuple, and every app is an object with ``id``,
-        ``url``, ``title`` and ``description``.
+            ``(name, submodules)`` tuple, every submodule is returned as a
+            ``(name, apps)`` tuple, and every app is an object with ``id``,
+            ``url``, ``title`` and ``description``.
     '''
     await ctx.log('portal', 'Opening main menu')
     front_soup = await ctx.parse_html(
@@ -64,12 +62,10 @@ async def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[Port
 async def get_apps(ctx: Context) -> dict[str, PortalApp]:
     '''Downloads the main menu of AIS and returns the visible applications.
 
-    Args:
-        ctx: The :class:`~aisikl.context.Context` to use.
     Returns:
         The dict of applications. Keys are applications IDs and values are
-        objects with ``id``, ``url``, ``title`` and ``description``. The menu
-        structure is not preserved.
+            objects with ``id``, ``url``, ``title`` and ``description``. The
+            menu structure is not preserved.
     '''
     result: dict[str, PortalApp] = {}
     modules = await get_modules(ctx)

@@ -19,16 +19,19 @@ class CantOpenApplication(Exception):
 
 
 def find_row(objects: list[Row], **conditions: str | bool) -> int:
-    r'''Searches the list of objects for one that matches all given conditions.
+    '''Searches the list of objects for one that matches all given conditions.
 
     ``obj.cell('foo').value == bar`` must be true for all ``foo=bar`` keyword arguments
     for ``obj`` to match. The index of the first matching object is returned.
     This is useful for table rows and similar mapping-like objects.
 
-    :param objects: List of objects.
-    :param \*\*conditions: The conditions that the object must match.
+    Args:
+        objects: List of objects.
+        **conditions: The conditions that the object must match.
+
     Returns:
         The index of the first object that had all the given keys and values.
+
     Raises:
         KeyError: Raised if no such object is found.
     '''
@@ -40,7 +43,7 @@ def find_row(objects: list[Row], **conditions: str | bool) -> int:
 
 
 def find_row_insensitive(objects: list[Row], **conditions: str) -> int:
-    '''Same as :func:`find_row` but case insensitive.'''
+    '''Same as [`find_row`][] but case insensitive.'''
     for index, obj in enumerate(objects):
         if all(ct(str, obj.cell(key).value).lower() == value.lower()
                for key, value in conditions.items()):
@@ -49,16 +52,19 @@ def find_row_insensitive(objects: list[Row], **conditions: str) -> int:
 
 
 def find_option(objects: list[Option], **conditions: object) -> int:
-    r'''Searches the list of objects for one that matches all given conditions.
+    '''Searches the list of objects for one that matches all given conditions.
 
     ``obj.foo == bar`` must be true for all ``foo=bar`` keyword arguments for
     ``obj`` to match. The index of the first matching object is returned. This
     is useful for combo box options and similar objects.
 
-    :param objects: List of objects.
-    :param \*\*conditions: The conditions that the object must match.
+    Args:
+        objects: List of objects.
+        **conditions: The conditions that the object must match.
+
     Returns:
         The index of the first object that had all the given keys and values.
+
     Raises:
         KeyError: Raised if no such object is found.
     '''
@@ -72,22 +78,24 @@ def with_key_fields[T](**key_fields: list[str]) -> Callable[[T], T]:
     '''Adds special "key fields" to a TypedDict.
 
     "Key fields" are additional fields automatically added to the dict. Their
-    value is automatically computed using :func:`encode_key` from other fields,
+    value is automatically computed using [`encode_key`][] from other fields,
     combining their values into an encoded string. The key field acts as a
     shorthand for the original fields in situations where a single string is
     easier to work with than multiple values -- notably, to persistently
     identify a row, and roundtrip this identifier between client and server. It
-    can be decoded back when needed::
+    can be decoded back when needed:
 
-        @with_key_fields(k=['a', 'c'])
-        class MyDict(TypedDict):
-            a: str
-            b: str
-            c: str
+    ```python
+    @with_key_fields(k=['a', 'c'])
+    class MyDict(TypedDict):
+        a: str
+        b: str
+        c: str
 
-        my_dict = MyDict(a='Aaaa', b='Bbbb', c='Cccc')
-        assert my_dict['k'] == encode_key(('Aaaa', 'Cccc'))
-        assert decode_key(my_dict['k']) == ('Aaaa', 'Cccc')
+    my_dict = MyDict(a='Aaaa', b='Bbbb', c='Cccc')
+    assert my_dict['k'] == encode_key(('Aaaa', 'Cccc'))
+    assert decode_key(my_dict['k']) == ('Aaaa', 'Cccc')
+    ```
 
     Limitations:
 
@@ -117,7 +125,7 @@ def with_key_fields[T](**key_fields: list[str]) -> Callable[[T], T]:
 def encode_key(tuple: tuple[str, ...]) -> str:
     '''Reversibly encode a tuple of strings into a single string.
 
-    See :func:`with_key_fields` for the rationale.
+    See [`with_key_fields`][] for the rationale.
 
     Empty tuples may be decoded incorrectly. Do not use them.
 
@@ -126,6 +134,7 @@ def encode_key(tuple: tuple[str, ...]) -> str:
 
     Args:
         tuple: A tuple of strings that is to be encoded.
+
     Returns:
         A string ``s`` such that ``decode_key(s)`` produces the original tuple.
     '''
@@ -140,14 +149,15 @@ def encode_key(tuple: tuple[str, ...]) -> str:
 
 
 def decode_key(string: str) -> tuple[str, ...]:
-    '''Decode the output of :func:`encode_key` back into a tuple of strings.
+    '''Decode the output of [`encode_key`][] back into a tuple of strings.
 
-    See :func:`with_key_fields` for the rationale.
+    See [`with_key_fields`][] for the rationale.
 
     Args:
-        string: A string created with :func:`encode_key`.
+        string: A string created with [`encode_key`][].
+
     Returns:
-        The tuple of strings that was originally given to :func:`encode_key`.
+        The tuple of strings that was originally given to [`encode_key`][].
     '''
     result: list[str] = []
     for part in string.split('.'):

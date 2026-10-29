@@ -18,12 +18,12 @@ if TYPE_CHECKING:
     from bs4 import BeautifulSoup
 
 
-#: The default value for :attr:`Application.ignored_messages`
 DEFAULT_IGNORED_MESSAGES = [
     'Činnosť úspešne dokončená.',
     'Podmienkam nevyhovuje žiadny záznam.',
     'Používate nepodporovaný prehliadač ',
 ]
+"""The default value for [`Application.ignored_messages`][]."""
 
 
 # Regexes for parsing AIS JavaScript
@@ -75,27 +75,25 @@ def _parse_args(args_str: str) -> list[object]:
 
 
 class Application[D]:
-    r'''An opened AIS application. (That is, a "browser window".)
+    '''An opened AIS application. (That is, a "browser window".)
 
-    Instances cannot be created directly. Use :meth:`open` if you know the full
-    URL (e.g. from the :mod:`~aisikl.portal`), or
-    :meth:`aisikl.operations.StartAppOp.perform` when opening an application
-    from another one.
+    Instances cannot be created directly. Use [`open`][] if you know the full
+    URL (e.g. from the [`aisikl.portal`][]), or
+    [`StartAppOp.perform`][aisikl.operations.StartAppOp.perform] when opening an
+    application from another one.
 
     Attributes:
-        ctx: The :class:`~aisikl.context.Context`.
-        dialogs: The dict of open :class:`~aisikl.dialog.Dialog`\ s.
-        dialog_stack:
-            The ordered list of open :class:`~aisikl.dialog.Dialog`\ s.
+        ctx: The [`Context`][].
+        dialogs: The dict of open [`Dialog`][]s.
+        dialog_stack: The ordered list of open [`Dialog`][]s.
         active_dialog: The currently active dialog.
         d: The currently active dialog.
         last_response_time: When did this app last receive a WebUI response.
         ignored_messages: List of ignored message patterns. When the application
-            receives a :class:`~aisikl.operations.MessageBoxOp` operation whose
-            message contains any of the patterns, the operation will be ignored:
-            it won't be returned in :class:`~aisikl.operations.Operations`, and
-            won't cause exceptions if left uncollected. This attribute can be
-            modified.
+            receives a [`MessageBoxOp`][] operation whose message contains any
+            of the patterns, the operation will be ignored: it won't be returned
+            in [`Operations`][], and won't cause exceptions if left uncollected.
+            This attribute can be modified.
     '''
 
     ctx: Context
@@ -112,18 +110,19 @@ class Application[D]:
         Returns an ``(app, ops)`` tuple containing the new Application instance
         and the initial list of operations caused by the "INIT" event. This
         list must be handled as usual -- see
-        :class:`~aisikl.operations.Operation`. For example, use
+        [`Operation`][aisikl.operations.Operation]. For example, use
         ``await ops.expect_one(OpenDialogOp).perform()`` if you expect the
         application to contain one dialog.
 
         Args:
-            ctx: The :class:`~aisikl.context.Context` to use.
+            ctx: The [`Context`][] to use.
             url: The main app URL. Can be relative to the server root.
-            ignored_messages: The initial value for :attr:`ignored_messages`.
-                Defaults to :data:`DEFAULT_IGNORED_MESSAGES`.
+            ignored_messages: The initial value for [`ignored_messages`][].
+                Defaults to [`DEFAULT_IGNORED_MESSAGES`][].
+
         Returns:
-            An `(app, ops)` tuple with the new instance and the initial list of
-            operations.
+            app: The new instance.
+            ops: The initial list of operations.
         '''
         app = super().__new__(cls)
         ops = await app._open(ctx, url, ignored_messages)
@@ -136,7 +135,7 @@ class Application[D]:
             "The Application constructor is private, use open() instead")
 
     async def _open(self, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> Operations:
-        '''Actually opens the new instance created by :meth:`open`.'''
+        '''Actually opens the new instance created by [`open`][].'''
         self.ctx = ctx
         self.serial = 0
         self.req_index = 0
@@ -211,6 +210,7 @@ class Application[D]:
 
         Args:
             name: Name of the dialog to activate.
+
         Raises:
             ValueError: Raised if a modal dialog is open.
         '''
@@ -230,7 +230,7 @@ class Application[D]:
     async def _do_request(self, body: str, *, return_ops: bool) -> Operations:
         '''Sends a POST request to AIS and process the response.
 
-        Usually called from :meth:`send_events`.
+        Usually called from [`send_events`][].
         '''
         soup = await self._send_request(body)
         return await self._process_response(soup, return_ops=return_ops)
@@ -392,9 +392,10 @@ class Application[D]:
         return operations
 
     async def send_events(self, *events: Event, return_ops: bool) -> Operations:
-        r'''Sends the given events to AIS, if AIS is listening to them.
+        '''Sends the given events to AIS, if AIS is listening to them.
 
-        :param \*events: the events to send.
+        Args:
+            *events: The events to send.
         '''
         body = ''.join(e.xml for e in events if e.listening)
         if not body:
@@ -427,8 +428,8 @@ class Application[D]:
 
         Returns:
             True if the application is successfully closed, or already was.
-            False if there was an error, e.g. when the server is still busy with
-            an earlier HTTP request.
+                False if there was an error, e.g. when the server is still busy
+                with an earlier HTTP request.
         '''
         await self._close_all_dialogs()
         await self.ctx.log('operation',

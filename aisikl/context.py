@@ -17,9 +17,10 @@ if TYPE_CHECKING:
     from http.cookiejar import Cookie
 
 
-#: Set this to True (either in the source code, or with ``import aisikl.context;
-#: aisikl.context.print_logs = True``) in order to print all logs to stderr.
 print_logs = False
+'''Set this to True (either in the source code, or with ``import
+aisikl.context; aisikl.context.print_logs = True``) in order to print all logs
+to stderr.'''
 
 
 class Context:
@@ -33,7 +34,7 @@ class Context:
         dns_overrides: A dict[str, str] of hostname replacements. When sending
             any https request to K, the socket will connect() to V instead. The
             SNI name and Host header will still be K.
-        logger: An optional :class:`Logger` instance to use.
+        logger: An optional [`Logger`][] instance to use.
     '''
 
     def __init__(self, *, ais_url: str | None=None, rest_url: str | None=None, dns_overrides: dict[str, str] | None=None,
@@ -109,9 +110,10 @@ class Context:
         headers: Mapping[str, str] | None=None,
         redirects: Literal['raise', 'return', 'follow']='raise',
     ) -> httpx2.Response:
-        r'''Sends a request to AIS and returns the response.
+        '''Sends a request to AIS and returns the response.
 
-        :param url: the URL, either absolute or relative to the AIS server.
+        Args:
+            url: The URL, either absolute or relative to the AIS server.
         '''
         while True:
             await self.log('benchmark', 'Begin AIS network request')
@@ -150,11 +152,14 @@ class Context:
         return soup
 
     async def request_json(self, url: str, **data: str) -> Any:
-        r'''Sends a request to REST API and parses the response as JSON.
+        '''Sends a request to REST API and parses the response as JSON.
 
-        :param url: the URL, either absolute or relative to the REST server.
-        :param \*\*data: POST form fields.
-        :return: a dictionary.
+        Args:
+            url: The URL, either absolute or relative to the REST server.
+            **data: POST form fields.
+
+        Returns:
+            A dictionary.
         '''
         await self.log('benchmark', 'Begin REST network request')
         await self.log('http', f'Requesting POST {url.partition('?')[0]}', [url, data])
@@ -211,14 +216,14 @@ class Context:
 class Logger:
     '''Logs messages to various destinations.'''
 
-    #: An open file to write log entries to. Votrfront sets it to a per-session
-    #: log file on every request. The value is not preserved between requests.
     log_file: TextIO | None = None
+    '''An open file to write log entries to. Votrfront sets it to a per-session
+    log file on every request. The value is not preserved between requests.'''
 
-    #: A function that will be called with (timestamp, type, message, data) for
-    #: every log entry. Votrfront uses it to send JSON logs to the client during
-    #: a RPC request. The value is not preserved between requests.
     send_log: Callable[[float, str, str, object], Awaitable[None]] | None = None
+    '''A function that will be called with (timestamp, type, message, data) for
+    every log entry. Votrfront uses it to send JSON logs to the client during a
+    RPC request. The value is not preserved between requests.'''
 
     @override
     def __getstate__(self) -> dict[object, object]:

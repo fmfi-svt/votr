@@ -29,6 +29,6 @@ def nn[T](value: T | None) -> T:
     return value
 
 
-#: Converts ``value`` to int. Raises at runtime if ``value`` is not
-#: something that can be converted (string-like or number-like).
 really_int = cast('Callable[[object], int]', int)
+'''Converts ``value`` to int. Raises at runtime if ``value`` is not something
+that can be converted (string-like or number-like).'''

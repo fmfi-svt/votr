@@ -28,24 +28,26 @@ class Operation:
     argument:
 
     - If you expect something to happen, use ``return_ops=True`` to enable
-      "operation collecting mode". It will return an :class:`Operations` list.
-      You then have to check if the operations are what you expected, and deal
-      with them, usually by calling ``perform()``. The returned list can be
-      empty if nothing happened.
+      "operation collecting mode". It will return an  [`Operations`][] list. You
+      then have to check if the operations are what you expected, and deal with
+      them, usually by calling ``perform()``. The returned list can be empty if
+      nothing happened.
 
     - Otherwise (without ``return_ops=True``), it means you don't expect
       anything to happen. If something happens anyway, an error is raised. The
-      function returns an empty :class:`Operations` list.
+      function returns an empty [`Operations`][] list.
 
-    Example::
+    For example:
 
-        # If this shows a message box, an error is raised.
-        await app.d.someInnocentButton.click()
+    ```python
+    # If this shows a message box, an error is raised.
+    await app.d.someInnocentButton.click()
 
-        # This button should open a dialog. If it does anything else, or
-        # nothing, an error is raised.
-        ops = await.d.newDialogOpeningButton.click()
-        await ops.expect_one(OpenDialogOp).perform()
+    # This button should open a dialog. If it does anything else, or
+    # nothing, an error is raised.
+    ops = await app.d.newDialogOpeningButton.click(return_ops=True)
+    await ops.expect_one(OpenDialogOp).perform()
+    ```
     """
 
     app: Application[object] = field(repr=False, kw_only=True)
@@ -77,9 +79,9 @@ class MessageBoxOp(Operation):
 
     You don't have to ``perform()`` or ``acknowledge()`` this operation type.
 
-    Message boxes matching :attr:`aisikl.app.Application.ignored_messages` are
-    ignored: they won't appear in :class:`Operations`, and won't trigger
-    unexpected operation errors with ``return_ops=False``.
+    Message boxes matching [`Application.ignored_messages`][] are ignored: they
+    won't appear in [`Operations`][], and won't trigger unexpected operation
+    errors with ``return_ops=False``.
     """
 
     message: str
@@ -187,8 +189,7 @@ class ShellExecOp(Operation):
 
         This method only supports the common use of shellExec -- downloading
         files. Technically, shellExec can also run custom JavaScript code. If
-        you need that, handle it manually and call :meth:`send_result`
-        afterwards.
+        you need that, handle it manually and call [`send_result`][] afterwards.
         """
         self.handled = True
 
@@ -413,7 +414,7 @@ class Operations(list[Operation]):
         ``ct()`` or ``cast()``.
 
         Raises:
-            ~aisikl.exceptions.AISBehaviorError: if the types don't match.
+            aisikl.exceptions.AISBehaviorError: If the types don't match.
         """
         real_types = [type(op) for op in self]
         expected_types_list = list(expected_types)
@@ -425,7 +426,7 @@ class Operations(list[Operation]):
 
     def acknowledge_all(self) -> None:
         """Suppresses the unhandled warning on all contained operations. See
-        :meth:`Operation.acknowledge`.
+        [`Operation.acknowledge`][].
         """
         for op in self:
             op.acknowledge()

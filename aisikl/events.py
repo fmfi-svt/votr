@@ -13,7 +13,8 @@ class Event:
     Attributes:
         source: The component that fired the event.
         listening: Whether the server actually wants the event. If false,
-            :meth:`aisikl.app.Application.send_events` will ignore it.
+            [`Application.send_events`][aisikl.app.Application.send_events]
+            will ignore it.
         xml: The XML payload.
     '''
     def __init__(self, source: Component, mask_bit: int, xml: str) -> None:
