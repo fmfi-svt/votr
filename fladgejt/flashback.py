@@ -30,6 +30,10 @@ def _tuplify(obj: object) -> object:
         return tuple(_tuplify(mem) for mem in obj)  # pyright: ignore [reportUnknownArgumentType, reportUnknownVariableType]
     return obj
 
+def _show(key: tuple[str, object]) -> str:
+    name, args = key
+    return f"{name}({json.dumps(args, ensure_ascii=False)[1:-1]})"
+
 def _load_log(filename: str) -> tuple[int | None, dict[tuple[str, object], list[tuple[tuple[str, object] | None, tuple[bool, object]]]]]:
     rpcs: list[tuple[str, object, tuple[bool, object]]] = []
     current_rpc_name: str | None = None
@@ -68,10 +72,10 @@ def _load_log(filename: str) -> tuple[int | None, dict[tuple[str, object], list[
 
     print("=====", file=sys.stderr)
     for key in sorted(grouped):
-        print("- %s%r" % key, file=sys.stderr)
+        print(f"- {_show(key)}", file=sys.stderr)
         for condition, outcome in grouped[key]:
             if condition != None:
-                print("  - changes after %s%r" % condition, file=sys.stderr)
+                print(f"  - changes after {_show(condition)}", file=sys.stderr)
 
     return fake_time_msec, grouped
 
@@ -85,18 +89,18 @@ class FlashbackClient(BaseClient):
     def __init__(self, context: Context, flashbacks_dir: str, file: str | None) -> None:
         super().__init__(context)
         if not os.path.exists(flashbacks_dir):
-            raise Exception("Flashbacks are unavailable: %r does not exist" % flashbacks_dir)
+            raise Exception(f"Flashbacks are unavailable: {flashbacks_dir!r} does not exist")
         if not os.path.isdir(flashbacks_dir):
-            raise Exception("Flashbacks are unavailable: %r is not a directory" % flashbacks_dir)
+            raise Exception(f"Flashbacks are unavailable: {flashbacks_dir!r} is not a directory")
         if not file:
             if not os.listdir(flashbacks_dir):
-                raise Exception("Flashbacks are unavailable: %r is empty" % flashbacks_dir)
+                raise Exception(f"Flashbacks are unavailable: {flashbacks_dir!r} is empty")
             raise Exception("No flashback file selected")
         if '/' in file or '\\' in file or file.startswith('.'):
-            raise Exception("Bad filename: %r" % file)
+            raise Exception(f"Bad filename: {file!r}")
         filename = os.path.join(flashbacks_dir, file)
         if not os.path.isfile(filename):
-            raise Exception("%r does not exist" % filename)
+            raise Exception(f"{filename!r} does not exist")
 
         self.fake_time_msec, self._rpcs = _load_log(filename)
         self._did: set[object] = set()
@@ -109,18 +113,18 @@ class FlashbackClient(BaseClient):
             args = _tuplify(argst)
             found = self._rpcs.get((name, args))
             if not found:
-                raise TimeParadoxError("RPC %s%r did not happen in the flashback" % (name, args))
+                raise TimeParadoxError(f"RPC {_show((name, args))} did not happen in the flashback")
             self._did.add((name, args))
             outcome = None
-            await self.context.log("flashback", "%s candidates" % len(found))
+            await self.context.log("flashback", f"{len(found)} candidates")
             for (condition, outcome_candidate) in found:
                 if condition == None:
                     outcome = outcome_candidate
                 elif condition in self._did:
-                    await self.context.log("flashback", "%s%r already happened" % condition)
+                    await self.context.log("flashback", f"{_show(condition)} already happened")
                     outcome = outcome_candidate
                 else:
-                    await self.context.log("flashback", "%s%r did not happen yet" % condition)
+                    await self.context.log("flashback", f"{_show(condition)} did not happen yet")
 
             # TODO: Configurable sleep.
             await sleep(0.5)

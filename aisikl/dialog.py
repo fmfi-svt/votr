@@ -98,7 +98,7 @@ class Dialog:
 
             type = ct(str, properties.get('t'))
             if type not in component_classes:
-                raise AISParseError("Unsupported component type: %r" % type)
+                raise AISParseError(f"Unsupported component type: {type!r}")
             component = component_classes[type](
                 self, id, type, parent_id, properties, element)
             await component.async_init(element)

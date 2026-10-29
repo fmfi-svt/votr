@@ -97,7 +97,7 @@ def locate(sessid: str) -> str:
     for option in options:
         if os.path.exists(option):
             return str(option)
-    raise ValueError('Log not found: %r' % sessid)
+    raise ValueError(f'Log not found: {sessid!r}')
 
 
 def open_log(filename: str) -> IO[str]:
@@ -177,7 +177,7 @@ def wrap_pager() -> Generator[IO[str]]:
         with contextlib.suppress(BrokenPipeError):
             sp.stdin.close()
         if sp.wait() != 0:
-            raise OSError("Pager return code %s" % sp.returncode)
+            raise OSError(f"Pager return code {sp.returncode}")
     else:
         yield sys.stdout
 
@@ -194,15 +194,15 @@ def cli_tag(*args: str) -> None:
 
     for arg in args:
         if arg.startswith('--'):
-            raise ValueError("Long options not supported: %r" % arg)
+            sys.exit(f"Long options not supported: {arg!r}")
         if arg.startswith('-') and len(arg) <= 2:
-            raise ValueError("Ambiguous short tag: %r" % arg)
+            sys.exit(f"Ambiguous short tag: {arg!r}")
         if arg.startswith('+') or arg.startswith('-'):
             name = arg[1:].lstrip(TAG_PREFIX)
             if not name:
-                raise ValueError("Empty tag: %r" % arg)
+                sys.exit(f"Empty tag: {arg!r}")
             if ' ' in name:
-                raise ValueError("Space in tag name: %r" % arg)
+                sys.exit(f"Space in tag name: {arg!r}")
             tags_to = tags_to_add if arg.startswith('+') else tags_to_remove
             tags_to[name] = True
         else:
@@ -226,32 +226,30 @@ def cli_view(*args: str) -> None:
         if arg == '-c' or arg == '--color':
             color = True
         elif arg.startswith('-'):
-            raise ValueError('Unknown option: %r' % arg)
+            sys.exit(f'Unknown option: {arg!r}')
         elif sessid is not None:
-            raise ValueError('Too many arguments')
+            sys.exit('Too many arguments')
         else:
             sessid = arg
 
     if not sessid:
-        raise ValueError('No sessid or filename given')
+        sys.exit('No sessid or filename given')
 
     filename = locate(sessid)
+
+    def colored(code: str, value: str) -> str:
+        return f"\033[{code}m{value}\033[0m" if color else value
 
     with wrap_pager() as out:
         with open_log(filename) as f:
             for line in f:
                 timestamp, type, message, data = json.loads(line)
                 tm = time.localtime(timestamp)
-                separator = "~" * 80
-                typestr = "<"+type+">"
-                when = '[%4d-%02d-%02d %02d:%02d:%02d = %.7f]' % (
-                    tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, timestamp)
-                if color:
-                    print("\033[1;31m%s\033[0m" % separator, file=out)
-                    print("\033[33m%s\033[0m \033[32m%s\033[0m \033[1;36m%s\033[0m" % (when, typestr, message), file=out)
-                else:
-                    print(separator, file=out)
-                    print(when, typestr, message, file=out)
+                when = f"[{tm.tm_year:04d}-{tm.tm_mon:02d}-{tm.tm_mday:02d} {tm.tm_hour:02d}:{tm.tm_min:02d}:{tm.tm_sec:02d} = {timestamp:.7f}]"
+                print(colored("1;31", "~" * 80), file=out)
+                print(
+                    colored("33", when), colored("32", f"<{type}>"),
+                    colored("1;36", message), file=out)
                 print(repr_log_data(data), file=out)
 
 
@@ -260,15 +258,15 @@ def cli_path(*sessids: str) -> None:
         print(locate(sessid))
 
 
-def format_base(line: Line) -> tuple[str, int, str, str, str]:
+def format_base(line: Line) -> tuple[str, str, str, str, str]:
     tm = time.localtime(line.timestamp)
-    when = '%4d-%02d-%02d %02d:%02d:%02d' % (
-        tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec)
-    tags = ' '.join(TAG_PREFIX + tag for tag in line.tags.split())
-    return (line.sessid, line.lineno, when, tags, line.content)
+    when = f"{tm.tm_year:04d}-{tm.tm_mon:02d}-{tm.tm_mday:02d} {tm.tm_hour:02d}:{tm.tm_min:02d}:{tm.tm_sec:02d}"
+    tags = ' '.join(TAG_PREFIX + tag for tag in line.tags.split()).ljust(20)
+    return (line.sessid, str(line.lineno).ljust(5), when, tags, line.content)
 
 def format_plain(line: Line) -> str:
-    return '%s:%-5s %s %-20s %s' % format_base(line)
+    sessid, lineno, when, tags, content = format_base(line)
+    return f"{sessid}:{lineno} {when} {tags} {content}"
 
 def format_color(line: Line) -> str:
     sessid, lineno, when, tags, content = format_base(line)
@@ -284,13 +282,13 @@ def format_color(line: Line) -> str:
     if len(content) >= 2: content[-2] = '\033[36m' + content[-2] + '\033[0m'
     content = '\\n'.join(content).replace('\x00', '\\\\')
 
-    return '%s:%-5s \033[1;33m%s\033[0m \033[1;34m%-20s\033[0m %s' % (sessid, lineno, when, tags, content)
+    return f"{sessid}:{lineno} \033[1;33m{when}\033[0m \033[1;34m{tags}\033[0m {content}"
 
 def format_sessids(line: Line) -> str:
     return line.sessid
 
 def format_linenos(line: Line) -> str:
-    return '%s:%s' % (line.sessid, line.lineno)
+    return f'{line.sessid}:{line.lineno}'
 
 def format_files(line: Line) -> str:
     return locate(line.sessid)
@@ -308,9 +306,13 @@ def cli_list(*args: str) -> None:
         if arg == '-n' or arg == '--not':
             match_not.append(next(it))
         elif arg == '-F' or arg == '--from':
-            match_from = int(next(it))
+            match_from = next(it)
+            if not re.fullmatch(r'[0-9]{8}', match_from):
+                sys.exit(f'Expected {arg} YYYYMMDD')
         elif arg == '-T' or arg == '--to':
-            match_to = int(next(it))
+            match_to = next(it)
+            if not re.fullmatch(r'[0-9]{8}', match_to):
+                sys.exit(f'Expected {arg} YYYYMMDD')
         elif arg == '-c' or arg == '--color':
             formatter = format_color
         elif arg == '-s' or arg == '--sessids':
@@ -320,7 +322,7 @@ def cli_list(*args: str) -> None:
         elif arg == '-f' or arg == '--files':
             formatter = format_files
         elif arg.startswith('-'):
-            raise ValueError('Unknown option: %r' % arg)
+            sys.exit(f'Unknown option: {arg!r}')
         else:
             match.append(arg)
 
@@ -328,16 +330,16 @@ def cli_list(*args: str) -> None:
     params: list[str] = []
 
     if match_from is None:
-        match_from = 00000000
+        match_from = "00000000"
     else:
         query += " AND timestamp > cast(strftime('%s', ?, '-2 days') as number)"
-        params.append('%04d-%02d-%02d' % (match_from // 10000, match_from // 100 % 100, match_from % 100))
+        params.append(f"{match_from[0:4]}-{match_from[4:6]}-{match_from[6:8]}")
 
     if match_to is None:
-        match_to = 99999999
+        match_to = "99999999"
     else:
         query += " AND timestamp < cast(strftime('%s', ?, '+2 days') as number)"
-        params.append('%04d-%02d-%02d' % (match_to // 10000, match_to // 100 % 100, match_to % 100))
+        params.append(f"{match_to[0:4]}-{match_to[4:6]}-{match_to[6:8]}")
 
     # Patterns are regexps which can match anywhere in the formatted line.
     # But simple patterns like '%foo' also have to match the tags column, to
@@ -357,7 +359,7 @@ def cli_list(*args: str) -> None:
             line = Line(sessid, lineno, tags, content, timestamp)
             plain = format_plain(line)
             tm = time.localtime(line.timestamp)
-            date = int('%d%02d%02d' % (tm.tm_year, tm.tm_mon, tm.tm_mday))
+            date = f"{tm.tm_year:04d}{tm.tm_mon:02d}{tm.tm_mday:02d}"
 
             if (
                 all(re.search(pattern, plain) for pattern in match) and
@@ -369,7 +371,7 @@ def cli_list(*args: str) -> None:
 
 def cli_process(*files: str) -> None:
     if not files:
-        raise ValueError('No files given')
+        sys.exit('No files given')
     logdb = connect_logdb()
     trio.run(process_logfiles, logdb, files)
 

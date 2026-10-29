@@ -155,8 +155,7 @@ class Application[D]:
             alert_match = _alert_re.match(
                 app_soup.script.get_text().strip() if app_soup.script else '')
             if alert_match:
-                raise AISBehaviorError("AIS2 application didn't open: %s" %
-                    alert_match.group(1))
+                raise AISBehaviorError(f"AIS2 application didn't open: {alert_match.group(1)}")
             raise AISParseError("AIS2 application didn't open")
 
         onload = nn(app_soup.body)['onload']
@@ -266,8 +265,7 @@ class Application[D]:
 
         match = _alert_re.match(script.strip())
         if match:
-            raise AISBehaviorError('AIS error in result frame response: %s' %
-                match.group(1))
+            raise AISBehaviorError(f'AIS error in result frame response: {match.group(1)}')
 
         functions = [m.group(1) for m in _functions_re.finditer(script)]
         if ','.join(functions) == 'main' and 'onAppClosedOnServer' in script:
@@ -376,8 +374,7 @@ class Application[D]:
             try:
                 method = getattr(component, '_ais_' + method_name)
             except AttributeError:
-                raise AISParseError("Method %r of %s is not yet implemented." %
-                    (method_name, component.__class__.__name__)) from None
+                raise AISParseError(f"Method {method_name!r} of {component.__class__.__name__} is not yet implemented.") from None
 
             if getattr(method, 'wants_body', False):
                 args = args + [body]
