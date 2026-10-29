@@ -77,6 +77,10 @@ Commands:
   ./x build-docs
     Generates HTML API docs from source code docstrings.
 
+  ./x zensical ZENSICAL-COMMAND [ARGS]
+    Run Zensical (the docs generator).
+    See https://zensical.org/docs/usage/cli/
+
   ./x coverage COVERAGE-COMMAND [ARGS]
     Runs Coverage.py.
     See https://coverage.readthedocs.io/en/latest/commands/
@@ -216,6 +220,7 @@ done
 case "${1:-}" in
 run) set -- uv "$@";;
 coverage) set -- uv run --with coverage "$@";;
+zensical) set -- uv run --with zensical,mkdocstrings-python,griffe-inherited-docstrings,ruff "$@";;
 *.py) set -- python3 "$@";;
 cron) shift; set -- python3 -Pm votrfront.cron "$@";;
 log) shift; set -- python3 -Pm votrfront.logutil "$@";;
@@ -309,7 +314,8 @@ format)
 
 build-docs)
   log_and_cd_to_basedir
-  log_and_run "" "./x uv run --with sphinx,sphinx-rtd-theme make -C docs html"
+  log_and_run "" "./x zensical build --strict"
+  log "Output: $base_dir/site/index.html"
   ;;
 
 install)

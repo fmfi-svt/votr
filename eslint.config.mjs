@@ -185,12 +185,6 @@ export default tseslint.config(
     languageOptions: { globals: globals.node },
   },
   {
-    ignores: [
-      "**/*.tmp*",
-      "**/*env*/",
-      "**/docs/_build",
-      "**/static",
-      "**/var",
-    ],
+    ignores: ["**/*.tmp*", "**/*env*/", "**/site", "**/static", "**/var"],
   },
 );

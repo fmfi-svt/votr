@@ -5,8 +5,8 @@
 *env*/
 .coverage*
 htmlcov
-docs/_build
 local_settings.py
 node_modules
+site
 static
 var

@@ -1,0 +1,47 @@
+/* Distinguish private/internal APIs */
+.doc-object:has(> .doc-heading > .doc-labels > .doc-label-internal) {
+  opacity: 0.7;
+  background: #fff9e640;
+  border: dashed 3px #fc3;
+  border-radius: 2em;
+  padding: 1em 0.6em;
+  margin: 1em -0.6em;
+
+  & > :first-child {
+    margin-top: 0;
+  }
+}
+
+/* Emphasized "internal" badges */
+.doc-label-internal {
+  opacity: 1;
+
+  & > code {
+    border-color: #fc3;
+    color: inherit;
+    font-weight: bold;
+
+    &:after {
+      content: "🔒";
+    }
+  }
+}
+
+/* Compact tables */
+/* Unused for now. This is for docstring_section_style = "table". */
+p:has(> .doc-section-title):has(+ div > .md-typeset__table) {
+  margin-bottom: -0.8em;
+}
+.md-typeset table:not([class]) :is(td, th) {
+  padding: 0.3125em 0.625em;
+}
+
+/* Compact lists */
+p:has(.doc-section-title) + ul {
+  margin-top: -0.8em; /* default is `1em` on both `p` and `ul` */
+}
+
+/* Smaller padding around code */
+.md-typeset code:where(:not(.doc-label *)) {
+  padding: 0.2em;
+}
