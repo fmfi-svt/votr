@@ -38,16 +38,16 @@ class CheckBox(Control):
     async def toggle(self, *, return_ops: bool = False) -> Operations:
         self.selected = not self.selected
         self.smoked = False
-        await self.log('action', '{} {}'.format(
-            'Checking' if self.selected else 'Unchecking', self.id))
+        log_verb = 'Checking' if self.selected else 'Unchecking'
+        await self.log('action', f'{log_verb} {self.id}')
         return await self._fire_event(return_ops=return_ops)
 
     async def set_to(self, value: bool, *, return_ops: bool = False) -> Operations:
         if self.smoked or self.selected != bool(value):
             self.selected = bool(value)
             self.smoked = False
-            await self.log('action', '{} {}'.format(
-                'Checking' if self.selected else 'Unchecking', self.id))
+            log_verb = 'Checking' if self.selected else 'Unchecking'
+            await self.log('action', f'{log_verb} {self.id}')
             return await self._fire_event(return_ops=return_ops)
         else:
             return Operations()

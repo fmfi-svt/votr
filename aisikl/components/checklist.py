@@ -50,8 +50,8 @@ class CheckList(Control):
     async def select_unselect_all(self) -> None:
         if not self.items: return
         new_value = not self.items[0].checked
-        await self.log('action', '{} all items in {}'.format(
-            'Selecting' if new_value else 'Unselecting', self.id))
+        log_verb = 'Selecting' if new_value else 'Unselecting'
+        await self.log('action', f'{log_verb} all items in {self.id}')
         for item in self.items:
             item.checked = new_value
         self._mark_changed()
@@ -63,9 +63,8 @@ class CheckList(Control):
 
     async def toggle(self, index: int) -> None:
         self.items[index].checked = not self.items[index].checked
-        await self.log('action', '{} item "{}" in {}'.format(
-            'Checking' if self.items[index].checked else 'Unchecking',
-            self.items[index].title, self.id))
+        log_verb = 'Checking' if self.items[index].checked else 'Unchecking'
+        await self.log('action', f'{log_verb} item "{self.items[index].title}" in {self.id}')
         self.selected_index = index
         self._mark_changed()
 

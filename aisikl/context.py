@@ -115,8 +115,7 @@ class Context:
         '''
         while True:
             await self.log('benchmark', 'Begin AIS network request')
-            await self.log('http', 'Requesting {} {}'.format(
-                method, url.partition('?')[0]), [url, data])
+            await self.log('http', f'Requesting {method} {url.partition('?')[0]}', [url, data])
 
             url = urljoin(nn(self.ais_url), url)
             response = await self.request_http(
@@ -158,8 +157,7 @@ class Context:
         :return: a dictionary.
         '''
         await self.log('benchmark', 'Begin REST network request')
-        await self.log('http', 'Requesting POST {}'.format(
-            url.partition('?')[0]), [url, data])
+        await self.log('http', f'Requesting POST {url.partition('?')[0]}', [url, data])
 
         url = urljoin(nn(self.rest_url), url)
         response = await self.request_http(method="POST", url=url, data=data)
@@ -174,7 +172,7 @@ class Context:
 
         if response['status'] != 'OK':
             raise RESTServerError(
-                "Status: {status} Error: {error}".format(**response))
+                f"Status: {response["status"]} Error: {response["error"]}")
 
         await self.log('http', 'Parsed JSON data')
         return response['response']

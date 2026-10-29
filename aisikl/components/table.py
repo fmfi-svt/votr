@@ -398,9 +398,11 @@ class Table(Control):
         cdata = ['<root>']
 
         if self.selection_changed or self.active_index_changed:
-            cdata.append("<selection{}>".format(" invertedSelection='true'" if self.inverted_selection else ""))
+            cdata.append("<selection invertedSelection='true'>" if self.inverted_selection else "<selection>")
             cdata.append(f"<activeIndex>{-1 if self.cursor_row_index is None else self.cursor_row_index}</activeIndex>")
-            cdata.append("<selectedIndexes>{}</selectedIndexes>".format(','.join(map(str, self.selected_row_indexes))))
+            cdata.append("<selectedIndexes>")
+            cdata.append(','.join(map(str, self.selected_row_indexes)))
+            cdata.append("</selectedIndexes>")
             cdata.append("</selection>")
             if self.selected_column_alias:
                 cdata.append(f"<selectedColumnAlias>{self.selected_column_alias}</selectedColumnAlias>")
@@ -415,10 +417,12 @@ class Table(Control):
             self.headers_changed = False
 
         if self.scrolled_vertically:
-            cdata.append("<visibleBuffers>{}</visibleBuffers>".format(
-                ','.join(map(str, range(self.num_visible_buffers)))))
-            cdata.append("<loadedBuffers>{}</loadedBuffers>".format(
-                ','.join(map(str, sorted(self.loaded_buffers)))))
+            cdata.append("<visibleBuffers>")
+            cdata.append(','.join(map(str, range(self.num_visible_buffers))))
+            cdata.append("</visibleBuffers>")
+            cdata.append("<loadedBuffers>")
+            cdata.append(','.join(map(str, sorted(self.loaded_buffers))))
+            cdata.append("</loadedBuffers>")
             self.scrolled_vertically = False
 
         if self.edited_cells:
@@ -536,9 +540,8 @@ class Table(Control):
                 self.loaded_rows.append(cast(Row, cast(object, None)))  # For ease of use, lie to the type checker.
             self.loaded_rows[row.id] = row
 
-        await self.log('table', 'Loaded {} rows in {}{}'.format(
-            len(new_rows), self.id,
-            ' (replacing old content)' if really_replaced else ''),
+        log_note = ' (replacing old content)' if really_replaced else ''
+        await self.log('table', f'Loaded {len(new_rows)} rows in {self.id}{log_note}',
             new_rows)
 
     def _load_cell(self, td: Tag) -> Cell:
@@ -643,13 +646,17 @@ class Table(Control):
                 (inverted and len(indexes) == len(self.loaded_rows))):
             raise AISBehaviorError('empty selection not supported for this table')
 
-        await self.log('action', 'Selecting {}{}{} {}{} in {}'.format(
+        log_parts = [
+            'Selecting ',
             f'column {column_alias} of ' if column_alias else '',
             'inverted ' if inverted else '',
-            'rows' if len(indexes) > 1 else 'row',
+            'rows ' if len(indexes) > 1 else 'row ',
             ', '.join(map(str, indexes)),
             f' with cursor at {cursor}' if indexes != [cursor] else '',
-            self.id))
+            ' in ',
+            self.id,
+        ]
+        await self.log('action', ''.join(log_parts))
 
         was_multiple_selection = len(self.selected_row_indexes) > 1
         is_multiple_selection = len(indexes) > 1

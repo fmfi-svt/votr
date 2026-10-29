@@ -28,8 +28,8 @@ class Panel(Control):
     async def toggle_collapsed(self, *, return_ops: bool = False) -> Operations:
         if not self.collapsable: return Operations()
         if not self.parent.is_really_enabled(): return Operations()
-        await self.log('action', '{} {}'.format(
-            'Opening' if self.collapsed else 'Closing', self.id))
+        log_verb = 'Opening' if self.collapsed else 'Closing'
+        await self.log('action', f'{log_verb} {self.id}')
         self.collapsed = not self.collapsed
         return await self._fire_event(return_ops=return_ops)
 
