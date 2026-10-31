@@ -21,10 +21,7 @@ else:
 class WebuiObdobiaMixin(BaseClient):
     @pooled_app
     async def _open_sprava_datumov(self) -> Application[SpravaDatumovDialogsType]:
-        '''Opens 'Správa dátumových akcií' application (VSST010).
-
-        :return: a :class:`~Application` object.
-        '''
+        '''Opens 'Správa dátumových akcií' application (VSST010).'''
         url = '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST010App&fajr=A&kodAplikacie=VSST010&uiLang=SK'
         app, ops = await Application[SpravaDatumovDialogsType].open(self.context, url)
         await ops.expect_one(OpenDialogOp).perform()
@@ -39,9 +36,6 @@ class WebuiObdobiaMixin(BaseClient):
             datumova_akcia_id: The ID of a time range. (Field 'D.a.')
             akademicky_rok: Academic year of the time range in the form of
                 'start/end'. E.g. '2013/2014'. (optional)
-
-        Returns:
-            A :class:`~Obdobie` object.
         '''
         app = await self._open_sprava_datumov()
 
@@ -70,9 +64,6 @@ class WebuiObdobiaMixin(BaseClient):
             semester: Either 'L' for spring of 'Z' for fall.
             akademicky_rok: Academic year of the time range in the form of
                 'start/end'. E.g. '2013/2014'. (optional)
-
-        Returns:
-            A :class:`~Obdobie` object.
         '''
         if semester == "L":
             return await self.get_obdobie('07', akademicky_rok)
@@ -88,9 +79,6 @@ class WebuiObdobiaMixin(BaseClient):
             semester: Either 'L' for spring of 'Z' for fall.
             akademicky_rok: Academic year of the time range in the form of
                 'start/end'. E.g. '2013/2014'. (optional)
-
-        Returns:
-            A :class:`~Obdobie` object.
         '''
         if semester == "L":
             return await self.get_obdobie('08', akademicky_rok)

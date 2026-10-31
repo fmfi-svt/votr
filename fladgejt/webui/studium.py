@@ -296,15 +296,6 @@ class WebuiStudiumMixin(BaseClient):
         await ops.expect_one(OpenDialogOp).perform()
 
     async def get_akademicke_roky_noveho_zapisneho_listu(self, studium_key: str) -> list[Option]:
-        '''Gets available values for the academic year option when creating a
-        new enrollment list.
-
-        Args:
-            studium_key: studium identifier
-
-        Returns:
-            A list of :class: `~Option` objects.
-        '''
         app = await self._open_administracia_studia()
 
         await self.__open_novy_zapisny_list_dialog(app, studium_key)
@@ -316,15 +307,6 @@ class WebuiStudiumMixin(BaseClient):
         return options
 
     async def get_roky_studia_noveho_zapisneho_listu(self, studium_key: str) -> list[Option]:
-        '''Gets available values for the study year option when creating a
-        new enrollment list.
-
-        Args:
-            studium_key: studium identifier
-
-        Returns:
-            A list of :class: `~Option` objects.
-        '''
         app = await self._open_administracia_studia()
 
         await self.__open_novy_zapisny_list_dialog(app, studium_key)
@@ -336,14 +318,6 @@ class WebuiStudiumMixin(BaseClient):
         return options
 
     async def create_zapisny_list(self, studium_key: str, akademicky_rok: str | None, rok_studia: str | None) -> str | None:
-        '''Creates enrollment list.
-
-        Args:
-            studium_key: studium identifier
-            akademicky_rok: Academic year of the time range in the form of
-                'start/end'. E.g. '2013/2014'. (optional)
-            rok_studia: year of the study
-        '''
         app = await self._open_administracia_studia()
 
         await self.__open_novy_zapisny_list_dialog(app, studium_key)
@@ -381,11 +355,6 @@ class WebuiStudiumMixin(BaseClient):
 
     # nepouzita funkcia
     async def delete_zapisny_list(self, zapisny_list_key: str) -> None:
-        '''Deletes enrollment list.
-
-        Args:
-            zapisny_list_key: enrollment list identifier
-        '''
         app = await self._open_administracia_studia()
 
         # Vyberieme zapisny list.
