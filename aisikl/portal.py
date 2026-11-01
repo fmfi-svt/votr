@@ -1,3 +1,14 @@
+"""Functions for listing applications in the AIS portal UI (the old AIS
+interface's main menu).
+
+Warning:
+    It's recommended to use ``aisikl.portal`` only in development (e.g. in
+    IPython notebooks), but avoid it in production. It is surprisingly slow.
+    Application URLs don't change over time, so it's better to find the URL once
+    and hardcode it, rather than getting the URL from the portal every time you
+    want to open it.
+"""
+
 from aisikl.typeutils import ct, nn
 from typing import NamedTuple, TYPE_CHECKING
 
@@ -19,10 +30,9 @@ async def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[Port
     shown on one page are "submodules".
 
     Returns:
-        The list of modules. Every module is returned as a
-            ``(name, submodules)`` tuple, every submodule is returned as a
-            ``(name, apps)`` tuple, and every app is an object with ``id``,
-            ``url``, ``title`` and ``description``.
+        A list of modules. Every module is a tuple of (module name, list of
+            submodules). Every submodule is a tuple of (submodule name, list of
+            [`PortalApp`][]s).
     '''
     await ctx.log('portal', 'Opening main menu')
     front_soup = await ctx.parse_html(
@@ -61,11 +71,10 @@ async def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[Port
 
 async def get_apps(ctx: Context) -> dict[str, PortalApp]:
     '''Downloads the main menu of AIS and returns the visible applications.
+    Menu structure is not preserved.
 
     Returns:
-        The dict of applications. Keys are applications IDs and values are
-            objects with ``id``, ``url``, ``title`` and ``description``. The
-            menu structure is not preserved.
+        A dict of [`PortalApp`][]s keyed by application ID.
     '''
     result: dict[str, PortalApp] = {}
     modules = await get_modules(ctx)

@@ -8,6 +8,12 @@ if TYPE_CHECKING:
 
 
 class Control(Component):
+    """Base class for tangible WebUI components (backed by an HTML element).
+
+    (Except [`DialogBody`][aisikl.components.dialogbody.DialogBody], probably
+    because it doesn't have a parent.)
+    """
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         element = nn(element)
@@ -42,9 +48,15 @@ class Control(Component):
     def _ais_setFontStyle(self, value: object) -> None: pass
 
     def changed_properties(self) -> str:
+        """Internal. Builds the ``<embObjChProps>`` string for this control.
+        Resets changed flags, if any.
+        """
         return ''
 
     def _build_changed_properties(self, **kwargs: str | bool | tuple[bool | None, bool, str | bool]) -> str:
+        """Internal. Helps with the redundant parts of ``<embObjChProps>``
+        string construction.
+        """
         # TODO: This could be shorter.
         result: list[str] = []
         write = result.append
@@ -73,6 +85,9 @@ class Control(Component):
         return ''.join(result)
 
     def update_value_interactives(self, type: str) -> None:
+        """Internal. Corresponds to ``updateValueInteractives`` in webui.js,
+        but it's not yet implemented.
+        """
         pass # TODO
 
     # TODO: We need a method to explicitly request firing a blur event.

@@ -8,13 +8,27 @@ if TYPE_CHECKING:
 
 
 def is_true(value: object) -> bool:
+    """Internal. Parses the AIS server's boolean values in component ``_ais_*``
+    setter methods. Corresponds to the many webui.js setter methods that call
+    ``cmn_toBoolean`` or compute ``value == true || value == "true"``.
+    """
     return value == 'true' or value == True
 
 
-# TODO: Document Component and all subclasses.
-
 class Component:
+    """Base class for WebUI components.
+
+    For the most part, tangible component types (e.g. buttons, tables) inherit
+    from ``Component``'s subclass [`Control`][aisikl.components.control.Control]
+    and intangible component types (e.g. actions, action lists) inherit directly
+    from ``Component``.
+
+    In webui.js, ``Component`` technically has a parent class -- ``JSObject``,
+    but in Aisikl both are merged into ``Component``.
+    """
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+        """Internal."""
         self.dialog = dialog
         self.id = id
         self.component_type = type
@@ -30,12 +44,29 @@ class Component:
             raise AISParseError('STATE_DT is not supported')
 
     async def async_init(self, element: Tag | None) -> None:
+        """Internal."""
         pass
 
     async def log(self, type: str, message: str, data: object=None, /) -> None:
+        """Internal. Calls [`Context.log`][aisikl.context.Context.log] to log a
+        message. Convenience helper to allow shorter log calls.
+        """
         await self.dialog.app.ctx.log(type, message, data)
 
     def is_really_enabled(self) -> bool:
+        """Returns whether this component would be enabled in the AIS UI.
+
+        Because ``ValueInteractive`` and related objects are not yet implemented
+        in Aisikl, the result is only approximate. It might not always perfectly
+        match what you'd get in the AIS UI.
+
+        Due to the above, Aisikl allows you to interact with components even if
+        they're disabled. The usual result is that the AIS server ignores the
+        event (returning no [`Operations`][aisikl.operations.Operations]). You
+        can call ``is_really_enabled`` to predict this in advance.
+
+        Corresponds to ``realizeEnability`` in webui.js, but as a getter.
+        """
         return self.enabled and self.enabled_in_ui
 
     def _ais_setState(self, value: object) -> None:

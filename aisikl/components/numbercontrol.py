@@ -16,6 +16,8 @@ def maybe_float(value: Any) -> float | None:
 
 
 class NumberControl(TextInput):
+    """A WebUI text box widget for numbers."""
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         element = nn(element)
@@ -29,6 +31,10 @@ class NumberControl(TextInput):
         self.show_max_length = ct(int, properties.get('showMaxLength', 0))
         self.edit_max_length = ct(int, properties.get('editMaxLength', 0))
         self.bdvalue = ct_none(str, element.get('bdvalue'))
+        """The value as a canonically formatted string (i.e. with `.` as decimal
+        separator, no thousands separator, etc). "bd" probably stands for "big
+        decimal".
+        """
 
     def _ais_setSeparator1000(self, value: object) -> None:
         self.separator_1000 = ct(str, value)
@@ -70,6 +76,12 @@ class NumberControl(TextInput):
         self.bdvalue = value.replace(self.decimal_point, '.')
 
     async def write(self, bdvalue: str) -> None:
+        """Writes ``bdvalue`` in the box.
+
+        ``bdvalue`` should be canonical, not locale-formatted.
+
+        Aisikl does not check whether the value is valid.
+        """
         await self.log('action', f'Writing {bdvalue!r} in {self.id}')
         self.bdvalue = bdvalue
         self.dialog.component_changes(self, False)

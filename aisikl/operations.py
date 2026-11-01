@@ -1,5 +1,117 @@
 # pyright: reportPrivateUsage=none
 
+"""Operations module.
+
+Operations are records of "big" actions done by AIS that aren't handled by
+Aisikl automatically, and need to be taken care of by the caller. For example:
+
+- Opening a new application or browser window
+- Showing a message box or another modal dialog
+- Opening and closing dialogs
+
+Operations are similar to events, but in the server-to-client direction instead
+of client-to-server.
+
+# The ``return_ops`` argument
+
+Various aisikl functions, such as
+[`Button.click`][aisikl.components.button.Button.click], have a ``return_ops``
+argument.
+
+-   If you expect something to happen, use ``return_ops=True`` to enable
+    "operation collecting mode". The function will return an [`Operations`][]
+    list. You have to check if the operations are what you expected, and *deal
+    with* them. The returned list can be empty if nothing happened.
+
+    ```python
+    # This button should open a dialog. If it does something
+    # different, or nothing at all, an error is raised.
+    ops = await app.d.newDialogOpeningButton.click(return_ops=True)
+    await ops.expect_one(OpenDialogOp).perform()
+    ```
+
+-   Otherwise (without ``return_ops=True``), it means you don't expect anything
+    to happen. The function returns an empty [`Operations`][] list. If something
+    happens anyway, it raises an error.
+
+    ```python
+    # If this button does anything weird (e.g. shows
+    # a message box), an error is raised.
+    await app.d.someInnocentButton.click()
+    ```
+
+# *Dealing with* operations
+
+When you use ``return_ops=True``, you are making a promise to *deal with*
+every [`Operation`][] you get. The way to *deal with* an operation depends on
+its type, but usually it is with a method named ``perform``. *Dealing with*
+operations is necessary to keep Votr and the AIS server on the same page about
+what is going on.
+
+As a developer reminder, ``Operation`` prints a warning if it's
+garbage-collected without having been *dealt with*.
+
+Caveat: It's OK to ignore operations when you raise an error -- including, but
+not limited to, raising an error because the operations you got aren't what you
+expected. The reason why it's OK is that raising an error usually has the
+consequence of closing or abandoning this [`Application`][], so it doesn't
+matter if any desynchronization happens after that point. But for errors you
+raise yourself, you might need to call [`acknowledge`][Operation.acknowledge]
+first, to disable the warning.
+
+# Examples of checking operation types
+
+[`Operations`][] has useful methods to check types of its contents.
+
+When you expect a single operation of a known type, e.g. ``OpenDialogOp``:
+
+```python
+await ops.expect_one(OpenDialogOp).perform()
+```
+
+When you expect two operations of known types, e.g. two ``OpenDialogOp``:
+
+```python
+op1, op2 = ops.expect_two(OpenDialogOp, OpenDialogOp)
+await op1.perform()
+await op2.perform()
+```
+
+When you expect that AIS could EITHER do something specific OR do nothing:
+
+```python
+if ops:
+    await ops.expect_one(OpenDialogOp).perform()
+else:
+    return ...  # nothing happened
+```
+
+When you expect that AIS always does something (e.g. ``CloseDialogOp``), but
+might show a confirm box first:
+
+```python
+if ops.has_types(ConfirmBoxOp):
+    ops = await ops.expect_one(ConfirmBoxOp).reply(
+        ConfirmBoxOp.Option.YES, return_ops=True)
+    # ^ Reassigns ops.
+await ops.expect_one(CloseDialogOp).perform()
+```
+
+When you expect one of three or more possible types:
+
+```python
+if ops.has_types(OpenDialogOp):
+    await ops.expect_one(OpenDialogOp).perform()
+    ...
+elif ops.has_types(CloseDialogOp):
+    await ops.expect_one(CloseDialogOp).perform()
+    ...
+else:
+    await ops.expect_one(AbortBoxOp).perform()
+    ...
+```
+"""
+
 from aisikl.exceptions import AISBehaviorError, AISParseError
 from aisikl.typeutils import ct, ct_none
 from dataclasses import dataclass, field
@@ -17,67 +129,38 @@ if TYPE_CHECKING:
 
 @dataclass
 class Operation:
-    """Record of a "big" action done by AIS that isn't handled automatically
-    and requires some reaction, such as:
-
-    - Opening a new application or browser window
-    - Showing a message box or another modal dialog
-    - Opening and closing dialogs
-
-    Various aisikl functions, e.g. ``Button.click()``, have a ``return_ops``
-    argument:
-
-    - If you expect something to happen, use ``return_ops=True`` to enable
-      "operation collecting mode". It will return an  [`Operations`][] list. You
-      then have to check if the operations are what you expected, and deal with
-      them, usually by calling ``perform()``. The returned list can be empty if
-      nothing happened.
-
-    - Otherwise (without ``return_ops=True``), it means you don't expect
-      anything to happen. If something happens anyway, an error is raised. The
-      function returns an empty [`Operations`][] list.
-
-    For example:
-
-    ```python
-    # If this shows a message box, an error is raised.
-    await app.d.someInnocentButton.click()
-
-    # This button should open a dialog. If it does anything else, or
-    # nothing, an error is raised.
-    ops = await app.d.newDialogOpeningButton.click(return_ops=True)
-    await ops.expect_one(OpenDialogOp).perform()
-    ```
-    """
+    """Base class for operations."""
 
     app: Application[object] = field(repr=False, kw_only=True)
     handled: bool = field(default=True, init=False, repr=False)
 
     def _arm_warning(self) -> None:
+        """Internal. Enables the "not *dealt with*" warning."""
         self.handled = False
 
     def acknowledge(self) -> Self:
-        """Marks the operation as dealt with.
+        """Marks the operation as *dealt with*.
 
-        As a developer aid, operation objects print a warning if you forget to
-        handle them. You can use ``acknowledge()`` to disable this warning,
+        You can use ``acknowledge()`` to disable the "not *dealt with*" warning,
         expressing that you abstained from calling ``perform()`` intentionally
-        and not because you forgot. One such case is if you raise some error
-        before the ``perform()`` call.
+        and not because you forgot. One such case is before you raise an error.
         """
         self.handled = True
         return self
 
     def __del__(self) -> None:
+        """Prints a warning if the operation is garbage-collected without being
+        *dealt with*.
+        """
         if not self.handled:
             warn(f"Unhandled operation {self!r}", stacklevel=2, source=self)
 
 
 @dataclass
 class MessageBoxOp(Operation):
-    """A message box.
+    """AIS wants to show a message.
 
-    You don't have to ``perform()`` or ``acknowledge()`` this operation type.
+    You don't have to *deal with* this operation type.
 
     Message boxes matching [`Application.ignored_messages`][] are ignored: they
     won't appear in [`Operations`][], and won't trigger unexpected operation
@@ -91,23 +174,27 @@ class MessageBoxOp(Operation):
 
     @override
     def _arm_warning(self) -> None:
+        """Internal. Does nothing."""
         pass
 
 
 @dataclass
 class ConfirmBoxOp(Operation):
-    """Blocking modal dialog with multiple buttons. Handle with ``reply()``."""
+    """AIS wants to ask a question."""
 
     message: str
     title: str
     image: str
     buttons: int
+    # Not a bitmask. It's complicated. See /ais/webui2/webui/confirmBox.js
     check: int
     check_box_label: str
     detail: str
     default_button: int
 
     class Option(Enum):
+        """Enum of possible confirm box buttons."""
+        # See /ais/webui2/web/confirmBox.html
         YES_TO_ALL = 4
         YES = 2
         OK = 1
@@ -118,6 +205,7 @@ class ConfirmBoxOp(Operation):
     async def reply(
         self, option: Option, *, return_ops: bool = False
     ) -> Operations:
+        """Answers the question. *Deals with* this operation."""
         self.handled = True
         await self.app.ctx.log(
             'operation', f'Selecting button {option.value} in confirm box')
@@ -158,10 +246,13 @@ class FileXUploadOp(Operation):
 
 @dataclass
 class AbortBoxOp(Operation):
+    """AIS wants us to please wait."""
+
     message: str
     title: str | None = None
 
     async def perform(self, *, return_ops: bool = False) -> Operations:
+        """Waits. *Deals with* this operation."""
         self.handled = True
         await self.app.ctx.log('operation', 'Waiting for abort box')
         return await self.app._send_namevalue_request(
@@ -177,6 +268,8 @@ class EditDocOp(Operation):
 
 @dataclass
 class ShellExecOp(Operation):
+    """AIS wants us to download a file (probably)."""
+
     content_type: str
     file_name: str
     new_window_name: str
@@ -185,11 +278,13 @@ class ShellExecOp(Operation):
 
     async def download(self) -> Response:
         """Downloads a file. Then sends a request to AIS saying that the
-        shellExec was executed.
+        shellExec was executed. *Deals with* this operation.
 
         This method only supports the common use of shellExec -- downloading
-        files. Technically, shellExec can also run custom JavaScript code. If
-        you need that, handle it manually and call [`send_result`][] afterwards.
+        files. In theory, if ``content_type == "webui/execCustomFunction"``,
+        then webui.shellExec() can run custom JavaScript code. But this was
+        never seen. If you need that, simulate it manually and call
+        [`send_result`][] instead of ``download``.
         """
         self.handled = True
 
@@ -213,10 +308,8 @@ class ShellExecOp(Operation):
     async def send_result(
         self, shell_exec_result: str, *, return_ops: bool = False
     ) -> Operations:
-        """Informs AIS that a shellExec operation was executed.
-
-        Args:
-            shell_exec_result: The string value of ``shellExecResult``.
+        """Informs AIS that a shellExec operation was executed. *Deals with*
+        this operation.
         """
         self.handled = True
         return await self.app._send_namevalue_request(
@@ -225,7 +318,9 @@ class ShellExecOp(Operation):
 
 @dataclass
 class ShowHelpOp(Operation):
-    """Opens ``url`` in a new window. Never actually seen yet.
+    """AIS wants to open ``url`` in a new window.
+
+    Rare. Seen e.g. in debug info dialogs of tables on ``ais2-beta``.
 
     There is no ``perform()``. Do something appropriate with the given ``url``
     and call ``acknowledge()``.
@@ -236,6 +331,8 @@ class ShowHelpOp(Operation):
 
 @dataclass
 class StartAppOp(Operation):
+    """AIS wants to open a new AIS application (browser window)."""
+
     url: str
     params: str
 
@@ -245,6 +342,18 @@ class StartAppOp(Operation):
         ignored_messages: list[str] | None = None,
         hint: type[D] | None = None,
     ) -> tuple[Application[D], Operations]:
+        """Opens the application. *Deals with* this operation.
+
+        Args:
+            ignored_messages: Same as in [`Application.open`][].
+            hint: Dialog type hint for static type checkers. Ignored at runtime.
+                (It's a parameter because Python generic functions don't support
+                explicit ``func[T](...)`` call syntax.)
+
+        Returns:
+            app: Same as in [`Application.open`][].
+            ops: Same as in [`Application.open`][] -- see its docs for advice.
+        """
         self.handled = True
 
         from aisikl.app import Application  # Cyclic dependency :(
@@ -255,37 +364,54 @@ class StartAppOp(Operation):
 
 @dataclass
 class ServerCloseApplicationOp(Operation):
-    """Usually (in practice, always) occurs together with CloseApplicationOp.
-    Its original meaning is to enable the wasClosedOnServer flag, which tells
-    the client that it shouldn't send a WebUIKillEvent during cleanup. Votr does
-    not implement it exactly. Instead, CloseApplicationOp.perform() never sends
-    WebUIKillEvent, and Application.force_close() always sends WebUIKillEvent,
-    whether a ServerCloseApplicationOp was received or not.
+    """AIS wants to tell us that we don't have to send a ``WebUIKillEvent``.
 
-    You don't have to ``perform()`` or ``acknowledge()`` this operation type.
+    You don't have to *deal with* this operation type.
+
+    Empirically, this operation is always sent together with
+    [`CloseApplicationOp`][], sometimes with [`MessageBoxOp`][] in between.
+
+    Its original meaning is to enable the ``wasClosedOnServer`` flag, which
+    tells webui.js that it shouldn't send a ``WebUIKillEvent`` during cleanup.
+    Votr does not implement it exactly. Instead of remembering whether a
+    ``ServerCloseApplicationOp`` was received or not, Votr never sends
+    ``WebUIKillEvent`` in [`CloseApplicationOp.perform`][] (because of this
+    empirical observation), and always sends it in
+    [`Application.force_close`][] (because we don't trust the AIS server that
+    much, and sending an extra one is harmless).
     """
 
     @override
     def _arm_warning(self) -> None:
+        """Internal. Does nothing."""
         pass
 
 
 @dataclass
 class CloseApplicationOp(Operation):
-    """Removes DOM elements and closes the window."""
+    """AIS wants to close the application."""
 
     with_browser: bool
 
     async def perform(self) -> None:
+        """Closes the application. *Deals with* this operation.
+
+        In webui.js, this deletes all DOM elements and closes the browser
+        window. In Votr, we can't exactly destroy the [`Application`][] object
+        itself, but we can at least close all its dialogs, making it inert.
+        """
         self.handled = True
         await self.app._close_all_dialogs()
 
 
 @dataclass
 class OpenDialogOp(Operation):
+    """AIS wants to open a dialog."""
+
     props: dict[str, object]
 
     async def perform(self) -> Dialog:
+        """Opens the dialog. *Deals with* this operation."""
         self.handled = True
 
         from aisikl.dialog import Dialog  # Cyclic dependency :(
@@ -333,10 +459,13 @@ class OpenDialogOp(Operation):
 
 @dataclass
 class CloseDialogOp(Operation):
+    """AIS wants to close a dialog."""
+
     name: str
     is_native: bool = False
 
     async def perform(self) -> None:
+        """Closes the dialog. *Deals with* this operation."""
         self.handled = True
 
         if self.is_native:
@@ -365,9 +494,12 @@ class CloseDialogOp(Operation):
 
 @dataclass
 class RefreshDialogOp(Operation):
+    """AIS wants to refresh (i.e. reload the HTML structure of) a dialog."""
+
     name: str
 
     async def perform(self) -> None:
+        """Refreshes the dialog. *Deals with* this operation."""
         self.handled = True
 
         dialog = self.app.dialogs[self.name]
@@ -448,3 +580,6 @@ known_operations = {
     ("dm", "closeDialog"): CloseDialogOp,
     ("dm", "refreshDialog"): RefreshDialogOp,
 }
+"""Internal mapping from webui.js (global object name, method name) pairs to
+Aisikl operation classes.
+"""

@@ -11,6 +11,11 @@ if TYPE_CHECKING:
 
 
 class ActionableControl(Control):
+    """Abstract base class for controls that can trigger an [`Action`][] (except
+    [`Table`][aisikl.components.table.Table] and
+    [`Tree`][aisikl.components.tree.Tree], for some reason).
+    """
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.action_name = ct_none(str, properties.get('an'))
@@ -21,6 +26,12 @@ class ActionableControl(Control):
         return ct(Action, self.dialog.components[self.action_name])
 
     async def try_execute_action(self, *, params: str | None = None, return_ops: bool) -> tuple[bool, Operations]:
+        """Internal. Executes the component's action, if it has one.
+
+        Returns:
+            did: Whether an action was executed.
+            ops: What operations happened.
+        """
         if self.action:
             ops = await self.action.execute(
                 self.id, params, return_ops=return_ops)
@@ -33,6 +44,9 @@ class ActionableControl(Control):
                 self.get_enabled_by_owner_container())
 
     def get_enabled_by_owner_container(self) -> bool:
+        """Internal. Corresponds to ``getEnabledByOwnerContainer`` in
+        webui.js.
+        """
         action = self.action
         if not action: return True
         action_list = action.get_action_list()

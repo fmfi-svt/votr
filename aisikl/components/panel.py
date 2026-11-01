@@ -11,6 +11,8 @@ if TYPE_CHECKING:
 
 
 class Panel(Control):
+    """A mostly-static container for other WebUI widgets."""
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         element = nn(element)
@@ -18,14 +20,19 @@ class Panel(Control):
         self.title = ct_none(str, element.get('name'))
         # We only ever saw shortcut==None, but webui calls toUpperCase().
         self.shortcut = ct_none(str, properties.get('sctp'))
+        """Key shortcut, probably. Empirically, it's always ``None``."""
         self.autoscrolls = ct(bool, properties.get('autoscrolls', False))
+        """Whether the AIS UI shows a scrollbar if the content doesn't fit."""
         self.collapsable = ct(bool, properties.get('collapsable', False))
+        """Whether it is a disclosure widget."""
         self.collapsed = ct(bool, properties.get('collapsed', False))
+        """Whether the disclosure widget is closed."""
 
     def _ais_setCollapsed(self, value: object) -> None:
         self.collapsed = is_true(value)
 
     async def toggle_collapsed(self, *, return_ops: bool = False) -> Operations:
+        """Toggles whether this panel is collapsed, if it's collapsible."""
         if not self.collapsable: return Operations()
         if not self.parent.is_really_enabled(): return Operations()
         log_verb = 'Opening' if self.collapsed else 'Closing'

@@ -9,6 +9,8 @@ if TYPE_CHECKING:
 
 
 class DateControl(TextInput):
+    """A WebUI text box widget for dates and times."""
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.min_value = properties.get('minValue')
@@ -38,6 +40,10 @@ class DateControl(TextInput):
         pass
 
     async def write(self, value: str) -> None:
+        """Writes ``value`` in the box.
+
+        Aisikl does not check whether the value is valid.
+        """
         await self.log('action', f'Writing {value!r} in {self.id}')
         self.value = value
         self.dialog.component_changes(self, False)

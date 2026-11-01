@@ -16,6 +16,13 @@ class Option(NamedTuple):
 
 
 class RadioBox(Control):
+    """An area containing several radio buttons."""
+
+    selected_index: int
+    """Index of the selected option. -1 if none."""
+
+    options: list[Option]
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
 
@@ -26,7 +33,7 @@ class RadioBox(Control):
 
     def _parse_options(self, items: Tag) -> None:
         self.selected_index = -1
-        self.options: list[Option] = []
+        self.options = []
         for index, td in enumerate(items.find_all('td')):
             if self.enabled and td['index'] != str(index):
                 raise AISParseError(
@@ -44,9 +51,13 @@ class RadioBox(Control):
         if self.selected_index == -1: return None
         return self.options[self.selected_index]
 
-    # If self.always_selected == False, select(-1) unselects the current item.
-    # (Votr always allows select(-1), but AIS might not like it.)
     async def select(self, index: int, *, return_ops: bool = False) -> Operations:
+        """Selects the option at ``index``.
+
+        ``select(-1)`` unselects the current item. This is allowed if
+        [`always_selected`][] is false. (Aisikl allows you to do it even if it's
+        true, but the AIS server might not like it.)
+        """
         await self.log('action',
             f'Selecting "{self.options[index].title}" in {self.id}')
         self.selected_index = index

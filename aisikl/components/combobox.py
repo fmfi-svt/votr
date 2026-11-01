@@ -16,14 +16,30 @@ class Option(NamedTuple):
 
 
 class ComboBox(Control):
+    """A WebUI drop-down list widget.
+
+    webui.js calls it "ComboBox", but the text is never editable. So to be
+    pedantic, the "ComboBox" name is wrong: this component is actually a
+    [drop-down list](https://en.wikipedia.org/wiki/Drop-down_list), *not* a
+    [combo box](https://en.wikipedia.org/wiki/Combo_box).
+    """
+
+    selected_index: int
+    """Index of the selected option. -1 if none."""
+
+    options: list[Option]
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.tool_tip_like_data = ct(bool, properties.get('ttld', False))
+        """Whether the AIS UI shows the current [`Option.tool_tip_text`][] when
+        the whole box is hovered. Uninteresting.
+        """
         self._parse_options(nn(element))
 
     def _parse_options(self, element: Tag) -> None:
         self.selected_index = -1
-        self.options: list[Option] = []
+        self.options = []
         for index, option in enumerate(element.find_all('option')):
             self.options.append(Option(
                 title=option.get_text(),
@@ -39,6 +55,7 @@ class ComboBox(Control):
         return self.options[self.selected_index]
 
     async def select(self, index: int, *, return_ops: bool = False) -> Operations:
+        """Selects the option at ``index``."""
         await self.log('action',
             f'Selecting "{self.options[index].title}" in {self.id}')
         self.selected_index = index

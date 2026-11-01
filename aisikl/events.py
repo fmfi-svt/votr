@@ -1,3 +1,5 @@
+"""Internal. Corresponds to the event classes in webui.js."""
+
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -9,24 +11,25 @@ class Event:
 
     Events should be created using the functions below instead of using the
     constructor directly.
-
-    Attributes:
-        source: The component that fired the event.
-        listening: Whether the server actually wants the event. If false,
-            [`Application.send_events`][aisikl.app.Application.send_events]
-            will ignore it.
-        xml: The XML payload.
     '''
     def __init__(self, source: Component, mask_bit: int, xml: str) -> None:
         comp_name = source.id
         dlg_name = source.dialog.name
 
         self.source = source
+        """The component that fired the event."""
+
         self.listening = bool(source.used_listeners_mask & mask_bit)
+        """Whether the server actually wants the event. If false,
+        [`Application.send_events`][aisikl.app.Application.send_events] will
+        ignore it.
+        """
+
         self.xml = _tag('ev',
             _tag('dlgName', dlg_name) +
             ('' if comp_name == dlg_name else _tag('compName', comp_name)) +
             xml)
+        """The XML payload."""
 
 
 def _tag(name: str, value: str) -> str:

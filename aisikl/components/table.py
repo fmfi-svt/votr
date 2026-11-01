@@ -19,15 +19,21 @@ if TYPE_CHECKING:
 
 class Column(NamedTuple):
     alias: str
+    """Column ID."""
     index: int  # pyright: ignore [reportIncompatibleMethodOverride] # TODO: stop using tuples?
     title: str | None
     header: str | None
     sortable: bool
     fixed: bool
+    """Sticky. Doesn't scroll horizontally. Stays visible."""
     width: int
     visible: bool
+    """Useless. Empirically, it's always true, and invisible columns are not
+    present at all.
+    """
     is_checked_selection_column: bool | None
     edited_by: str | None
+    """Editor widget type."""
     combo_box_mode: str | None
     model: str | None
     send_edit_cell: bool
@@ -36,6 +42,7 @@ class Column(NamedTuple):
 
 class Cell(NamedTuple):
     value: str | bool
+    """Cell value. Boolean for cells that contain a checkbox."""
     title: str | None
     edited_by: str | None
     combo_box_mode: str | None
@@ -68,6 +75,9 @@ class Row:
 
 
 def load_script_plain(data_view: Tag, id: str) -> str | None:
+    """Internal. Finds the given script element inside ``data_view`` and returns
+    its content as a plain string.
+    """
     script_element = data_view.find(id=id)
     if not script_element: return None
     if script_element.name != 'script':
@@ -76,12 +86,17 @@ def load_script_plain(data_view: Tag, id: str) -> str | None:
 
 
 def load_script(data_view: Tag, id: str) -> Tag | None:
+    """Internal. Finds the given script element inside ``data_view`` and returns
+    its parsed HTML content.
+    """
     text = load_script_plain(data_view, id)
     if text is None: return None
     return BeautifulSoup(text, 'lxml')   # note: will be wrapped in <html> and <body>
 
 
 class Table(Control):
+    """A WebUI data table widget."""
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
 
@@ -91,21 +106,42 @@ class Table(Control):
         # property is written in the comment.
         self.sortable = ct(bool, properties['sortable'])  # True
         self.always_selected = ct(bool, properties['allwaysSelected'])  # True
+        """If false, it is possible to select zero rows."""
         self.fixed_columns = ct(int, properties.get('fixedColumns', 0))
         self.up_down_enabled = ct(bool, properties['upDownEnabled'])  # False
         self.user_add_remove_rows_enabled = ct(bool, properties['userAddRemoveRowsEnabled'])  # False
         self.supported_events = ct(str, properties.get('se') or '')
         self.multiple_selection = ct(bool, properties['multipleSelection'])  # False
+        """Whether multiple rows can be selected. For example, it's true for
+        ``absolventiTable`` in ``VSES306``.
+        """
         self.cell_selection_mode = ct(bool, properties['cellSelectionMode'])  # False
+        """Whether a single cell can be selected. For example, enabling JAWS
+        mode in ``SSSP003`` enables this mode in all known tables.
+        """
         self.scroll_bottom_enabled = ct(bool, properties['scrollBottomEnabled'])  # False
         self.select_all_enabled = ct(bool, properties['selectAllEnabled'])  # False
+        """Whether it's possible to select all rows with Ctrl+A. Emprically,
+        it's false in all known tables (even those with
+        [`multiple_selection`][]).
+        """
         self.row_numbers_visible = ct(bool, properties['rowNumbersVisible'])  # False
         self.row_numbers_visible_changed = False
         self.status_visible = ct(bool, properties['statusVisible'])  # False
+        """Remnant of an old WebUI version. Tables used to have a toggleable
+        status bar with a series of buttons. This was later replaced with the
+        gear button. <https://ais2.uniba.sk/ais/help/ais.html> still has a
+        screenshot. For some reason, ``status_visible`` is apparently still true
+        for ``rychlaLinkaTable`` in ``SSSP003``, but it doesn't look any
+        different.
+        """
         self.status_visible_changed = False
         self.visible_status_buttons = ct(int, properties['visibleStatusButtons'])  # 0
 
         self.is_end_of_data = False
+        """True if we can't scroll down anymore, either because we got all query
+        results, or because the results are truncated.
+        """
         self.truncated = False
         self.row_count = 0
         self.declared_row_count = 0
@@ -288,12 +324,19 @@ class Table(Control):
         self.buffer_size = 50 if value is None else really_int(value)
 
     async def switch_row_numbers_visible(self) -> None:
+        """Toggles visible row numbers. Equivalent to clicking the "Row numbers"
+        item in the gear button menu. Implemented just for completeness.
+        """
         await self.log('action', f'Switching row numbers visibility in {self.id}')
         self.row_numbers_visible = not self.row_numbers_visible
         self.row_numbers_visible_changed = True
         self.dialog.component_changes(self, True)
 
     async def switch_status_visible(self) -> None:
+        """Toggles status bar visibility. Implemented just for completeness.
+        Corresponds to ``switchStatusVisible`` in webui.js, but this button
+        doesn't exist anymore. See [`status_visible`][].
+        """
         await self.log('action', f'Switching status bar visibility in {self.id}')
         self.status_visible = not self.status_visible
         self.status_visible_changed = True
@@ -350,18 +393,42 @@ class Table(Control):
         return await self._fire_action_command('INSERT_ROW', return_ops=return_ops)
 
     async def control_button_row_count(self, *, return_ops: bool = False) -> Operations:
+        """Clicks the "Record count" button.
+
+        This button has an uppercase sigma icon, and is available for example in
+        ``osobyTable`` in ``LZ014`` if the record count is large.
+
+        Clicking the button usually produces
+        [`AbortBoxOp`][aisikl.operations.AbortBoxOp], after which
+        [`declared_row_count`][] is known.
+        """
         self.dialog.component_changes(self, True)
         return await self._fire_action_command('ROW_COUNT', return_ops=return_ops)
 
     async def control_button_columns(self, *, return_ops: bool = False) -> Operations:
+        """Clicks the "Column settings" item in the gear button menu.
+
+        This opens a dialog where columns can be shown, hidden, or reordered.
+
+        See also [`fladgejt.webui.commonui.show_all_columns`][].
+        """
         self.dialog.component_changes(self, True)
         return await self._fire_action_command('SET_COLUMNS', return_ops=return_ops)
 
     async def control_button_sort(self, *, return_ops: bool = False) -> Operations:
+        """Clicks the "Sorting settings" item in the gear button menu.
+
+        This opens a dialog where row sorting criteria can be set.
+        """
         self.dialog.component_changes(self, True)
         return await self._fire_action_command('SET_SORTING', return_ops=return_ops)
 
     async def control_button_debug_info(self, *, return_ops: bool = False) -> Operations:
+        """Clicks the "Debug info" item in the gear button menu.
+
+        This opens a dialog that shows the underlying SQL query. It is
+        apparently only available on ``ais2-beta``.
+        """
         self.dialog.component_changes(self, True)
         return await self._fire_action_command('DEBUG_INFO', return_ops=return_ops)
 
@@ -384,6 +451,9 @@ class Table(Control):
         return await self.dialog.app.send_events(ev, return_ops=return_ops)
 
     async def button_num_code_click(self, alias: str, row_index: int, value: str | bool, *, return_ops: bool = False) -> Operations:
+        """Does something with cells that have ``edited_by == "buttonNumCode"``,
+        which were not seen yet.
+        """
         await self.edit_cell(alias, row_index, value, _skip_event=True)
 
         self.edited_cells = True
@@ -592,6 +662,11 @@ class Table(Control):
                 ))
 
     async def scroll_down(self, buffers: int=1, *, return_ops: bool = False) -> Operations:
+        """Loads more rows.
+
+        One buffer is [`buffer_size`][] rows (usually 50). Calling
+        ``scroll_down(10)`` should be reasonable.
+        """
         if self.is_end_of_data: return Operations()
         await self.log('action', f'Scrolling down in {self.id}')
         self.num_visible_buffers += buffers
@@ -601,6 +676,21 @@ class Table(Control):
         return await self.dialog.app.send_events(ev, return_ops=return_ops)
 
     async def all_rows(self) -> list[Row]:
+        """Loads and returns all rows of the table. Raises if AIS gave us a
+        truncated query result.
+
+        Many tables in AIS have a 200 row limit. Use ``all_rows`` if you really
+        want all rows. If you can handle truncation, prefer instead:
+
+        ```python
+        while not app.d.foobarTable.is_end_of_data:
+            await app.d.foobarTable.scroll_down(10)
+        if app.d.foobarTable.truncated:
+            message = ...
+        for row in app.d.foobarTable.loaded_rows:
+            ...
+        ```
+        """
         if self.declared_row_count > 0:
             await self.scroll_down(self.declared_row_count // self.buffer_size + 1)
 
@@ -611,6 +701,21 @@ class Table(Control):
         return self.loaded_rows
 
     async def select(self, indexes: int | Iterable[int], cursor: int | None=None, inverted: bool=False, column_alias: str | None=None, *, _skip_event: bool=False, return_ops: bool = False) -> Operations:
+        """Selects table rows or cells.
+
+        Args:
+            indexes: Row index or list of indexes.
+            cursor: Focused row index. It doesn't have to be in ``indexes`` --
+                e.g. Ctrl+clicking a selected row in the AIS UI unselects it,
+                but puts focus on it.
+            inverted: Selects everything *except* ``indexes``. Corresponds to
+                pressing Ctrl+A in the AIS UI, followed by unselecting
+                ``indexes`` (if any). Needs [`multiple_selection`][] and
+                [`select_all_enabled`][].
+            column_alias: Column ID (if [`cell_selection_mode`][]).
+            _skip_event: Internal.
+            return_ops: See [`aisikl.operations`][].
+        """
         if isinstance(indexes, int):
             indexes = [indexes]
         else:
@@ -703,6 +808,7 @@ class Table(Control):
         return operations
 
     async def edit_cell(self, alias: str, row_index: int, value: str | bool, *, _skip_event: bool=False, return_ops: bool = False) -> Operations:
+        """Changes the value of an editable cell."""
         column = self.column_map[alias]
         row = self.loaded_rows[row_index]
         cell = row.cells[column.index]

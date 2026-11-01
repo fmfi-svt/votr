@@ -8,11 +8,14 @@ if TYPE_CHECKING:
 
 
 class TextArea(TextControl):
+    """A multi-line text box widget."""
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.value = nn(element).get_text()
 
     async def write(self, value: str) -> None:
+        """Writes ``value`` in the box."""
         await self.log('action', f'Writing {value!r} in {self.id}')
         self.value = value
         self.dialog.component_changes(self, False)

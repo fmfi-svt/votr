@@ -10,6 +10,8 @@ if TYPE_CHECKING:
 
 
 class TextField(TextInput):
+    """A WebUI text box widget for generic strings."""
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         element = nn(element)
@@ -50,6 +52,11 @@ class TextField(TextInput):
             self.tool_tip_text: str | None = ''
 
     async def write(self, value: str) -> None:
+        """Writes ``value`` in the box.
+
+        Aisikl does not check whether the value is valid (e.g.
+        [`max_length`][aisikl.components.textcontrol.TextControl.max_length]).
+        """
         await self.log('action', f'Writing {value!r} in {self.id}')
         self.value = value
         self._mark_changed()

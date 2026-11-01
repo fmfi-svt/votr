@@ -2,4 +2,4 @@ from aisikl.components.textcontrol import TextControl
 
 
 class TextInput(TextControl):
-    pass
+    """Abstract base class for single-line text box widgets."""

@@ -9,6 +9,8 @@ if TYPE_CHECKING:
 
 
 class TextControl(Control):
+    """Abstract base class for all text box widgets."""
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.max_length = int(ct(str, nn(element).get('maxlength', '65536'))) or 65536

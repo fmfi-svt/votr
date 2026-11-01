@@ -8,6 +8,11 @@ if TYPE_CHECKING:
 
 
 class ActionList(Component):
+    """A group of actions.
+
+    It technically affects enabledness. Otherwise, nothing interesting.
+    """
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         if parent_id is not None: raise TypeError('expected None')

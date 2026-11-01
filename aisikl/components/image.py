@@ -8,9 +8,12 @@ if TYPE_CHECKING:
 
 
 class Image(Control):
+    """A WebUI image."""
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.image = ct(str, nn(nn(element).img).get('src', ''))
+        """Image URL. Can be absolute or root-relative."""
 
     def _ais_setImage(self, value: object) -> None:
         self.image = '/ais/images/' + ct(str, value) + '.png'

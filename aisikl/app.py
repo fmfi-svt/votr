@@ -75,67 +75,134 @@ def _parse_args(args_str: str) -> list[object]:
 
 
 class Application[D]:
-    '''An opened AIS application. (That is, a "browser window".)
+    """An AIS WebUI application, i.e. a browser window.
 
-    Instances cannot be created directly. Use [`open`][] if you know the full
-    URL (e.g. from the [`aisikl.portal`][]), or
-    [`StartAppOp.perform`][aisikl.operations.StartAppOp.perform] when opening an
-    application from another one.
+    To create an ``Application``:
 
-    Attributes:
-        ctx: The [`Context`][].
-        dialogs: The dict of open [`Dialog`][]s.
-        dialog_stack: The ordered list of open [`Dialog`][]s.
-        active_dialog: The currently active dialog.
-        d: The currently active dialog.
-        last_response_time: When did this app last receive a WebUI response.
-        ignored_messages: List of ignored message patterns. When the application
-            receives a [`MessageBoxOp`][] operation whose message contains any
-            of the patterns, the operation will be ignored: it won't be returned
-            in [`Operations`][], and won't cause exceptions if left uncollected.
-            This attribute can be modified.
-    '''
+    -   For applications available directly in the AIS portal (main menu), call
+        [`Application.open`][].
+    -   For applications that are opened from inside another application by e.g.
+        clicking a button, call
+        [`StartAppOp.perform`][aisikl.operations.StartAppOp.perform].
+
+    # Async safety
+
+    Neither ``Application``, nor objects belonging to it, are async task-safe.
+    Don't call their (sync or async) methods from multiple tasks simultaneously.
+
+    # Static type checking
+
+    Applications contain dialogs, which contain components, which are
+    dynamically populated based on the AIS server's whims. To help static Python
+    type checkers understand what component IDs and types you expect to see,
+    define a custom type like this:
+
+    ```python
+    class FoobarDialogsType(ABC, Dialog):
+        fooButton: Button
+        barTable: Table
+        ...
+    ```
+
+    Then create an ``Application[FoobarDialogsType]`` with:
+
+    ```python
+    app, ops = await Application[FoobarDialogsType].open(ctx, "/ais/...")
+    # -or-
+    app, ops = await ops.expect_one(StartAppOp).perform(hint=FoobarDialogsType)
+    ```
+
+    Then you can access ``app.d.fooButton``, ``app.d.barTable``, ...
+
+    This type must contain the union of *all* components in *all* dialogs you
+    want to use. (Hence, *Dialogs*Type rather than *Dialog*Type.) The reason is
+    that when a dialog opens or closes, the active dialog ``app.d`` effectively
+    changes its type, but type checkers don't understand that. They can at least
+    check if you're using component fields and methods correctly, but they don't
+    verify if the current active dialog is the one you expect.
+    """
 
     ctx: Context
+
     dialogs: dict[str, Dialog]
+    """Internal. Map of open dialogs keyed by ID ([`Dialog.name`][])."""
+
     dialog_stack: list[Dialog]
+    """Internal. Ordered list of open dialogs."""
+
     active_dialog: Dialog | None
+    """The currently active dialog."""
+
     last_response_time: float
+    """When did this app last receive a WebUI response."""
+
     ignored_messages: list[str]
+    """List of ignored message patterns.
+
+    When the application receives a [`MessageBoxOp`][] operation whose message
+    contains any of the patterns as a substring, the operation will be ignored:
+    it won't be returned in [`Operations`][], and won't cause exceptions if left
+    uncollected.
+
+    You're allowed to modify this attribute.
+    """
 
     @classmethod
     async def open(cls, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> tuple[Application[D], Operations]:
-        '''Opens a new application.
+        """Opens an application.
 
-        Returns an ``(app, ops)`` tuple containing the new Application instance
-        and the initial list of operations caused by the "INIT" event. This
-        list must be handled as usual -- see
-        [`Operation`][aisikl.operations.Operation]. For example, use
-        ``await ops.expect_one(OpenDialogOp).perform()`` if you expect the
-        application to contain one dialog.
+        Use ``open`` to open applications available directly in the AIS portal
+        (main menu). Hardcode the URL as a string literal. You can find it with
+        "inspect element" on the menu item in the AIS portal UI, or with
+        [`aisikl.portal`][].
+
+        You must handle the returned ``ops`` as usual -- see
+        [`aisikl.operations`][]. Its content is usually one of the following:
+
+        -   <code>[[OpenDialogOp][]]</code> on success. Handle it with:
+            ```python
+            await ops.expect_one(OpenDialogOp).perform()
+            ```
+        -   <code>[[OpenDialogOp][], [OpenDialogOp][]]</code> on success in
+            applications that start with two dialogs. Handle it with:
+            ```python
+            op1, op2 = ops.expect_two(OpenDialogOp, OpenDialogOp)
+            await op1.perform()
+            await op2.perform()
+            ```
+        -   <code>[[ServerCloseApplicationOp][], [MessageBoxOp][],
+            [CloseApplicationOp][]]</code> on error. Read the message, or just
+            let ``expect_one(OpenDialogOp)`` raise an error.
 
         Args:
             ctx: The [`Context`][] to use.
-            url: The main app URL. Can be relative to the server root.
+            url: Application URL. Should be root-relative, i.e. starting with
+                ``"/ais/..."``.
             ignored_messages: The initial value for [`ignored_messages`][].
                 Defaults to [`DEFAULT_IGNORED_MESSAGES`][].
 
         Returns:
             app: The new instance.
-            ops: The initial list of operations.
-        '''
+            ops: The initial list of operations that happened in the new
+                application during its initialization.
+        """
         app = super().__new__(cls)
         ops = await app._open(ctx, url, ignored_messages)
         return app, ops
 
     def __init__(self) -> None:
+        """Internal. Use [`Application.open`][] or
+        [`StartAppOp.perform`][aisikl.operations.StartAppOp.perform] instead.
+        """
         # This is because open() needs to return two values, and __init__ can't
         # change the return value. __new__ could, but we want normal pickling.
         raise Exception(
             "The Application constructor is private, use open() instead")
 
     async def _open(self, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> Operations:
-        '''Actually opens the new instance created by [`open`][].'''
+        """Actually opens the new instance created by [`open`][]. Roughly
+        corresponds to ``WebUI_init`` and ``webui.initApplication`` in webui.js.
+        """
         self.ctx = ctx
         self.serial = 0
         self.req_index = 0
@@ -195,21 +262,22 @@ class Application[D]:
 
     @property
     def d(self) -> D:
+        """The currently active dialog, cast to type ``D``."""
         return cast(D, nn(self.active_dialog))
 
     def activate_dialog(self, name: str) -> None:
-        '''Activates a dialog. This is like clicking a dialog in WebUI.
+        '''Activates a dialog.
 
-        Aisikl doesn't prevent you from accessing inactive dialogs, but it's
-        recommended for users of aisikl to only use ``app.active_dialog``
-        (``app.d``) and call this method to change its value when needed.
+        In theory, you can use ``activate_dialog`` to switch between multiple
+        non-modal dialogs. The dialog becomes available in [`active_dialog`][]
+        and [`d`][].
 
-        However, WebUI only allows changing the active dialog if no modal
-        dialogs are open. So far we've never seen multiple open dialogs where
-        one wasn't modal. This method exists just for completeness.
+        However, ``activate_dialog`` remains purely theoretical. webui.js
+        theoretically contains code for non-main non-modal dialogs, but we've
+        never seen any. This method exists just for completeness.
 
         Args:
-            name: Name of the dialog to activate.
+            name: The ID ([`Dialog.name`][]) of the dialog to activate.
 
         Raises:
             ValueError: Raised if a modal dialog is open.
@@ -222,13 +290,21 @@ class Application[D]:
         self.active_dialog = self.dialogs[name]
 
     def _prepare_url_base(self) -> dict[str, str]:
+        """Internal. Returns common query or POST parameters for HTTP requests
+        related to this application.
+
+        Corresponds to ``RequestManager.prepareUrlBase`` in webui.js.
+        """
         old_req_index = self.req_index
         self.req_index += 1
         return { 'appId': self.app_id, 'antiCache': str(time.time()),
                  'reqIndex': str(old_req_index), 'viewer': 'web' }
 
     async def _do_request(self, body: str, *, return_ops: bool) -> Operations:
-        '''Sends a POST request to AIS and process the response.
+        '''Sends a POST request to AIS and processes the response.
+
+        Roughly corresponds to ``webui.sendRequest`` and ``webui._sendRequest``
+        in webui.js.
 
         Usually called from [`send_events`][].
         '''
@@ -236,6 +312,10 @@ class Application[D]:
         return await self._process_response(soup, return_ops=return_ops)
 
     async def _send_request(self, body: str) -> BeautifulSoup:
+        """Sends a POST request to AIS and returns the HTML response.
+
+        Roughly corresponds to ``RequestManager.sendRequestEvent`` in webui.js.
+        """
         xml_spec = f'<request> <serial>{self.serial}</serial>\n{body}</request>\n'
         self.serial += 1
 
@@ -252,6 +332,7 @@ class Application[D]:
             method='POST', data=data, headers=headers))
 
     async def _process_response(self, soup: BeautifulSoup, *, return_ops: bool) -> Operations:
+        """Parses the ``resultFrame`` HTML document."""
         await self.ctx.log('benchmark', 'Begin response frame processing')
         self.last_response_time = time.time()
 
@@ -392,10 +473,9 @@ class Application[D]:
         return operations
 
     async def send_events(self, *events: Event, return_ops: bool) -> Operations:
-        '''Sends the given events to AIS, if AIS is listening to them.
+        '''Internal. Sends the given events to AIS, if AIS is listening to them.
 
-        Args:
-            *events: The events to send.
+        Corresponds to ``webui.sendEvent`` in webui.js.
         '''
         body = ''.join(e.xml for e in events if e.listening)
         if not body:
@@ -405,13 +485,19 @@ class Application[D]:
             return_ops=return_ops)
 
     async def _send_empty_request(self, return_ops: bool) -> Operations:
-        '''Sends a request without any events to AIS.'''
+        """Internal. Sends a request to AIS which contains component changes,
+        but not any events.
+
+        Corresponds to ``webui.sendEmptyRequest`` in webui.js.
+        """
         return await self._do_request(self._collect_component_changes(), return_ops=return_ops)
 
     async def _send_namevalue_request(self, name: str, value: int | str, return_ops: bool) -> Operations:
-        '''Helper function for small requests sent by some operations.
-        These requests don't contain any events or component changes.
-        '''
+        """Internal. Sends a small request to AIS with a single name-value pair,
+        but without any events or component changes. Doesn't directly correspond
+        to any webui.js function, but it's a convenient helper for many
+        operation types.
+        """
         return await self._do_request(
             '<changedProps><changedProperties><propertyValues><nameValue>' +
             f'<name>{name}</name><value>{value}</value>' +
@@ -421,15 +507,21 @@ class Application[D]:
     async def force_close(self) -> bool:
         '''Tells the server to close the application.
 
-        Human users usually close applications with the exit button in the main
-        dialog. This method disregards open dialogs and just closes everything.
-        It's similar to closing the app's browser popup window (in theory). It
-        also usually works even if the application is already closed.
+        Closing applications is important because the AIS server allows only 10
+        applications to be open at once. They expire after a short period of
+        inactivity, but it could cause issues in the meantime.
+
+        Humans have two ways to close applications in the AIS UI: clicking the
+        red "X" button inside the window (``exitButton``), or just closing the
+        whole browser window. ``force_close`` simulates the latter. It
+        disregards open dialogs and just closes everything.
+
+        ``force_close`` should work even if the application is already closed.
 
         Returns:
-            True if the application is successfully closed, or already was.
-                False if there was an error, e.g. when the server is still busy
-                with an earlier HTTP request.
+            True if we managed to close the application, or if it was already
+                closed. False if there was an error, e.g. because the server is
+                still busy with an earlier HTTP request.
         '''
         await self._close_all_dialogs()
         await self.ctx.log('operation',
@@ -440,7 +532,7 @@ class Application[D]:
         return not soup.script
 
     def _collect_component_changes(self) -> str:
-        '''Returns the <changedProps> string that goes into POST requests.'''
+        """Builds the ``<changedProps>`` string that goes into POST requests."""
         app_changes = ''
         if self.active_dialog:
             app_changes = (
@@ -482,6 +574,10 @@ class Application[D]:
         return True
 
     async def _close_all_dialogs(self) -> None:
+        """Internal. Closes all dialogs.
+
+        Corresponds to ``DialogManager.closeAllDialogs`` in webui.js.
+        """
         if self.dialog_stack:
             await self.ctx.log('operation', 'Closing all dialogs')
         self.dialogs.clear()
@@ -490,6 +586,11 @@ class Application[D]:
 
 
 async def check_connection(context: Context) -> None:
+    """Checks whether the AIS server still recognizes our session cookies.
+
+    Raises:
+        LoggedOutError: If not logged in.
+    """
     # We used to request /ais/portal/changeTab.do?tab=0, but it switches the
     # user to the old interface. Same with / or /ais/start.do. This should work
     # regardless of old vs new student interface, and preserve the user's

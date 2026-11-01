@@ -18,41 +18,51 @@ if TYPE_CHECKING:
 
 
 print_logs = False
-'''Set this to True (either in the source code, or with ``import
-aisikl.context; aisikl.context.print_logs = True``) in order to print all logs
-to stderr.'''
+"""Set this to True -- either by editing the source code, or by running
+```python
+import aisikl.context; aisikl.context.print_logs = True
+```
+to print all logs to stderr.
+"""
 
 
 class Context:
     '''The common context for an AIS session. When one user opens multiple AIS
     applications, they share the same Context. It manages the HTTP cookie jar,
     performs HTTP requests and deals with logs.
-
-    Arguments:
-        ais_url: The AIS server to connect to, e.g. "https://ais2.uniba.sk/".
-        rest_url: The REST server to connect to.
-        dns_overrides: A dict[str, str] of hostname replacements. When sending
-            any https request to K, the socket will connect() to V instead. The
-            SNI name and Host header will still be K.
-        logger: An optional [`Logger`][] instance to use.
     '''
 
     def __init__(self, *, ais_url: str | None=None, rest_url: str | None=None, dns_overrides: dict[str, str] | None=None,
                  logger: Logger | None=None) -> None:
         self.ais_url = ais_url
+        """The AIS server to connect to, e.g. ``"https://ais2.uniba.sk/"``."""
         self.rest_url = rest_url
+        """The REST server to connect to."""
         self.dns_overrides = dns_overrides or {}
+        """A map of hostname replacements. Given ``{K: V}``, when sending any
+        https request to ``K``, the socket will ``connect()`` to ``V`` instead.
+        The SNI name and Host header will still be ``K``.
+
+        Mainly used in Votr Beta to optionally replace ``idp.uniba.sk`` with
+        ``idp.test.uniba.sk``. These requests have to keep their original Host
+        header to pass Andrvotr's Host check. SNI could technically have either
+        value, because this server currently happens to have both SANs, but
+        matching SNI = Host should be more polite and future-proof.
+        """
         self.logger = logger or Logger()
+        """Performs logging."""
         self.cookie_jar = _PickleableCookieJar()
+        """Contains session cookies for outgoing HTTP requests."""
         self._pool: httpcore2.AsyncConnectionPool | None = None
+        """The connection pool, if [`use_connection_pool`][] is active."""
 
     @contextmanager
     def use_connection_pool(
         self, pool: httpcore2.AsyncConnectionPool | None,
     ) -> Generator[None]:
-        '''By default, ``Context`` creates a new TCP connection for each HTTP
-        request. ``use_connection_pool`` makes it use the given pool instead for
-        its duration.
+        '''Uses the given HTTP connection pool for the context manager's
+        duration. By default, without ``use_connection_pool``, ``Context``
+        creates a new TCP connection for each HTTP request.
 
         The purpose of this design is to allow using an effectively process-wide
         pool for efficiency, but not require it in scripts, notebooks and REPLs.
@@ -73,7 +83,7 @@ class Context:
         headers: Mapping[str, str] | None=None,
     ) -> httpx2.Response:
         '''Sends an HTTP request to an arbitrary absolute URL and returns the
-        response. Reads and writes ``self.cookie_jar``.
+        response. Reads and writes [`cookie_jar`][].
 
         ``request_http`` does not log the request, follow redirects, or check
         response HTTP status; the caller should take care of that.
@@ -112,8 +122,7 @@ class Context:
     ) -> httpx2.Response:
         '''Sends a request to AIS and returns the response.
 
-        Args:
-            url: The URL, either absolute or relative to the AIS server.
+        ``url`` can be either absolute or relative to [`ais_url`][].
         '''
         while True:
             await self.log('benchmark', 'Begin AIS network request')
@@ -155,7 +164,7 @@ class Context:
         '''Sends a request to REST API and parses the response as JSON.
 
         Args:
-            url: The URL, either absolute or relative to the REST server.
+            url: The URL, either absolute or relative to [`rest_url`][].
             **data: POST form fields.
 
         Returns:
@@ -279,12 +288,7 @@ class Logger:
 class _BackendWithDnsOverrides(AutoBackend):
     '''A httpcore network backend that overrides the DNS resolution (i.e. the
     socket connect() address). The original hostname is still used in the Host
-    header and SNI name.
-
-    Votr Beta uses this for ``idp.uniba.sk`` vs ``idp.test.uniba.sk``. These
-    requests need to have original Host header to pass Andrvotr's Host check.
-    SNI could technically have either value, because this server currently has
-    both SANs, but matching SNI = Host should be more polite and future-proof.
+    header and SNI name. Used to implement [`Context.dns_overrides`][].
     '''
 
     def __init__(self, dns_overrides: dict[str, str]):
@@ -306,6 +310,8 @@ class _BackendWithDnsOverrides(AutoBackend):
 
 
 class _TransportWithCustomPool(httpx2.AsyncBaseTransport):
+    """A httpx2 transport that uses the specified httpcore2 pool object."""
+
     def __init__(self, pool: httpcore2.AsyncConnectionPool):
         super().__init__()
         self._pool = pool
@@ -326,6 +332,11 @@ class _TransportWithCustomPool(httpx2.AsyncBaseTransport):
 
 
 class _PickleableCookieJar(CookieJar):
+    """A [`CookieJar`][] subclass that can be pickled.
+
+    See also <https://github.com/python/cpython/issues/112144>.
+    """
+
     @override
     def __getstate__(self) -> list[Cookie]:
         return list(self)

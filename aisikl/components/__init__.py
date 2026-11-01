@@ -66,3 +66,4 @@ component_classes = {
     'valueInteractive': Component,  # TODO: implement
     'view': Component,  # TODO: implement
 }
+"""Internal mapping from WebUI component types to Aisikl classes."""

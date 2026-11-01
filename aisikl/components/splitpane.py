@@ -2,4 +2,6 @@ from aisikl.components.control import Control
 
 
 class SplitPane(Control):
-    pass
+    """A resizeable divider separating two areas. Votr doesn't support resizing
+    it.
+    """

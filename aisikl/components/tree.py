@@ -40,6 +40,14 @@ def _synchronizer_to_cdata(sync: dict[str, bool], true_name: str, false_name: st
 
 
 class Tree(Control):
+    """A WebUI tree view widget."""
+
+    selection: list[str]
+    active_id: str | None
+    nodes: dict[str, Node]
+    expansion_synchronizer: dict[str, bool]
+    checked_synchronizer: dict[str, bool]
+
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
 
@@ -70,7 +78,7 @@ class Tree(Control):
             nodes = element
         else:
             nodes = nn(load_script(data_view, 'nodes'))
-            self.nodes: dict[str, Node] = {}
+            self.nodes = {}
 
         if nodes.find(nofilled=True):
             # It shouldn't be too hard to add, but we've never seen it.
@@ -98,8 +106,8 @@ class Tree(Control):
                 if self.nodes[id].expanded:
                     await self.toggle_expansion(id, _send_event=False)
         else:
-            self.expansion_synchronizer: dict[str, bool] = {}
-            self.checked_synchronizer: dict[str, bool] = {}
+            self.expansion_synchronizer = {}
+            self.checked_synchronizer = {}
 
         self.dialog.try_interactive(self, "TreeSelectionEvent")
 
@@ -142,6 +150,18 @@ class Tree(Control):
         return self._build_changed_properties(dataView=(True, True, ''.join(cdata)))
 
     async def double_click(self, *, return_ops: bool = False) -> Operations:
+        """Double-clicks the tree view.
+
+        Implemented for completeness. Empirically, a tree that reacts to
+        double-click events wasn't seen yet.
+
+        Presumably, you're supposed to [`select`][] a node first, then call
+        ``double_click``. This strange API design reflects webui.js, where
+        individual nodes have ``onmousedown`` handlers, and the whole tree has
+        an ``ondblclick`` handler. In fact, webui.js's ``ondblclick`` emits the
+        same event whether you double-click on a tree node or on empty space
+        below the tree, but that might just be a bug.
+        """
         await self.log('action', f'Double-clicking {self.id}')
 
         if self.action_name:
@@ -157,6 +177,10 @@ class Tree(Control):
         self.commands = ct_none(str, value)
 
     async def select(self, ids: str | Iterable[str], active_id: str | None=None, *, return_ops: bool = False) -> Operations:
+        """Selects a tree node. If [`multiple_selection`][] is true, you can
+        select multiple nodes, and optionally choose which node becomes the
+        "active node".
+        """
         if isinstance(ids, str):
             ids = [ids]
         else:
@@ -186,6 +210,13 @@ class Tree(Control):
         return await self.dialog.app.send_events(ev, return_ops=return_ops)
 
     async def toggle_expansion(self, id: str, *, _send_event: bool=True, return_ops: bool = False) -> Operations:
+        """Toggles whether branch node ``id`` is opened or closed.
+
+        Implemented for completeness. You probably don't need to bother with
+        this in most cases. If you find a tree where e.g. the AIS server
+        dynamically populates child nodes when their parents are expanded, then
+        you can call this.
+        """
         node = self.nodes[id]
         if node.expanded is None:
             raise ValueError("this node cannot expand")
@@ -218,6 +249,7 @@ class Tree(Control):
         return operations
 
     async def toggle_checkbox(self, id: str, *, return_ops: bool = False) -> Operations:
+        """Toggles the checkbox of node ``id``."""
         node = self.nodes[id]
         if node.checked is None:
             raise ValueError("this node does not have a checkbox")
