@@ -10,12 +10,13 @@ from aisikl.exceptions import AISParseError, AISBehaviorError, AISApplicationClo
 from aisikl.dialog import Dialog
 from aisikl.operations import CloseApplicationOp, MessageBoxOp, OpenDialogOp, Operations, ServerCloseApplicationOp, known_operations
 from aisikl.typeutils import ct, nn
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, NoReturn, cast
 
 if TYPE_CHECKING:
     from aisikl.context import Context
     from aisikl.events import Event
     from bs4 import BeautifulSoup
+    from collections.abc import Iterable
 
 
 DEFAULT_IGNORED_MESSAGES = [
@@ -133,6 +134,11 @@ class Application[D]:
     active_dialog: Dialog | None
     """The currently active dialog."""
 
+    @property
+    def d(self) -> D:
+        """The currently active dialog, cast to type ``D``."""
+        return cast(D, nn(self.active_dialog))
+
     last_response_time: float
     """When did this app last receive a WebUI response."""
 
@@ -148,7 +154,7 @@ class Application[D]:
     """
 
     @classmethod
-    async def open(cls, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> tuple[Application[D], Operations]:
+    async def open(cls, ctx: Context, url: str, ignored_messages: Iterable[str] | None=None) -> tuple[Application[D], Operations]:
         """Opens an application.
 
         Use ``open`` to open applications available directly in the AIS portal
@@ -190,7 +196,7 @@ class Application[D]:
         ops = await app._open(ctx, url, ignored_messages)
         return app, ops
 
-    def __init__(self) -> None:
+    def __init__(self) -> NoReturn:
         """Internal. Use [`Application.open`][] or
         [`StartAppOp.perform`][aisikl.operations.StartAppOp.perform] instead.
         """
@@ -199,7 +205,7 @@ class Application[D]:
         raise Exception(
             "The Application constructor is private, use open() instead")
 
-    async def _open(self, ctx: Context, url: str, ignored_messages: list[str] | None=None) -> Operations:
+    async def _open(self, ctx: Context, url: str, ignored_messages: Iterable[str] | None=None) -> Operations:
         """Actually opens the new instance created by [`open`][]. Roughly
         corresponds to ``WebUI_init`` and ``webui.initApplication`` in webui.js.
         """
@@ -209,8 +215,9 @@ class Application[D]:
         self.dialogs = {}
         self.dialog_stack = []
         self.active_dialog = None
-        self.ignored_messages = (
-            ignored_messages or DEFAULT_IGNORED_MESSAGES).copy()
+        self.ignored_messages = list(
+            DEFAULT_IGNORED_MESSAGES if ignored_messages is None
+            else ignored_messages)
 
         match = re.search(r'appClassName=([a-zA-Z0-9_\.]*)', url)
         self.class_name = match.group(1) if match else None
@@ -259,11 +266,6 @@ class Application[D]:
             await check_connection(self.ctx)
 
         return ops
-
-    @property
-    def d(self) -> D:
-        """The currently active dialog, cast to type ``D``."""
-        return cast(D, nn(self.active_dialog))
 
     def activate_dialog(self, name: str) -> None:
         '''Activates a dialog.

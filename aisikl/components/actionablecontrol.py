@@ -1,5 +1,4 @@
 from aisikl.components.action import Action
-from aisikl.components.actionlist import ActionList
 from aisikl.components.control import Control
 from aisikl.typeutils import ct, ct_none
 from aisikl.operations import Operations
@@ -51,6 +50,6 @@ class ActionableControl(Control):
         if not action: return True
         action_list = action.get_action_list()
         if not action_list: return True
-        owner_container = ct(ActionList, action_list).owner_container
+        owner_container = action_list.owner_container
         if not owner_container: return True
         return owner_container.is_really_enabled()

@@ -806,7 +806,9 @@ COMPLETE
   tryParentAutosize(), findAutosizeDif(), autosizeHeight(), computeResizeDiff(),
   resizeChildren()
     - IRRELEVANT, because all functions that use it are IRRELEVANT.
-- getTabId() -> self.tab_id
+- getTabId()
+    - IRRELEVANT. It returns the HTML element ID of the visual tab in the tab
+      bar. webui only uses it to synchronize its visual state.
 - getShortCut() -> self.shortcut
 - getMyTabbedPaneJSO(), setComponentStyle()
     - IRRELEVANT

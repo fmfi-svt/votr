@@ -122,6 +122,7 @@ import urllib.parse
 if TYPE_CHECKING:
     from aisikl.app import Application
     from aisikl.dialog import Dialog
+    from collections.abc import Iterable
     from httpx2 import Response
 
 
@@ -337,7 +338,7 @@ class StartAppOp(Operation):
     async def perform[D](
         self,
         *,
-        ignored_messages: list[str] | None = None,
+        ignored_messages: Iterable[str] | None = None,
         hint: type[D] | None = None,
     ) -> tuple[Application[D], Operations]:
         """Opens the application. *Deals with* this operation.

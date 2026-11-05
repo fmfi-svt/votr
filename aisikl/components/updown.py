@@ -3,7 +3,7 @@ from aisikl.components.control import Control
 from aisikl.components.table import Table
 from aisikl.events import action_event
 from aisikl.typeutils import ct, ct_none
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
     from aisikl.dialog import Dialog
@@ -21,10 +21,8 @@ class UpDown(Control):
         self.top_bottom_enabled = ct(bool, properties.get('topBottomEnabled', False))
         """Whether "move to top" and "move to bottom" buttons also exist."""
 
-    async def click(self, command: str, *, return_ops: bool = False) -> Operations:
+    async def click(self, command: Literal["UP", "DOWN", "TOP", "BOTTOM"], *, return_ops: bool = False) -> Operations:
         """Clicks one of the buttons, moving the selected item in the list."""
-        if command not in ('UP', 'DOWN', 'TOP', 'BOTTOM'):
-            raise ValueError('wrong UpDown command')
         await self.log('action', f'Clicking {self.id} {command.lower()}')
         if (
             (udc_id := self.up_downed_component) is not None and

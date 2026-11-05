@@ -16,7 +16,6 @@ class Panel(Control):
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         element = nn(element)
-        self.tab_id = ct_none(str, element.get('tabid'))
         self.title = ct_none(str, element.get('name'))
         # We only ever saw shortcut==None, but webui calls toUpperCase().
         self.shortcut = ct_none(str, properties.get('sctp'))

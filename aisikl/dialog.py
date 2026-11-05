@@ -234,7 +234,7 @@ class Dialog:
         Many dialogs also have a normal button component named ``closeButton``.
         In practice, they usually do the same thing.
         """
-        if not self.closeable:
+        if self.is_main_dialog or not self.closeable:
             raise ValueError(f"Dialog {self.name} has no close button")
         # TODO: Return unless "self.enabled" is True.
 
