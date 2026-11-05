@@ -8,7 +8,7 @@ if TYPE_CHECKING:
     from bs4.element import Tag
 
 
-def maybe_float(value: Any) -> float | None:
+def _maybe_float(value: Any) -> float | None:
     try:
         return float(value)
     except (TypeError, ValueError):
@@ -26,8 +26,8 @@ class NumberControl(TextInput):
         self.scale = ct(int, properties.get('scale', 2))
         self.unit = properties.get('unit')
         self.negative_enabled = ct(bool, properties.get('negativeEnabled', True))
-        self.min_value = maybe_float(ct(str, element.get('minvalue', '')))
-        self.max_value = maybe_float(ct(str, element.get('maxvalue', '')))
+        self.min_value = _maybe_float(ct(str, element.get('minvalue', '')))
+        self.max_value = _maybe_float(ct(str, element.get('maxvalue', '')))
         self.show_max_length = ct(int, properties.get('showMaxLength', 0))
         self.edit_max_length = ct(int, properties.get('editMaxLength', 0))
         self.bdvalue = ct_none(str, element.get('bdvalue'))
@@ -47,9 +47,9 @@ class NumberControl(TextInput):
     def _ais_setNegativeEnabled(self, value: object) -> None:
         self.scale = is_true(value)
     def _ais_setMinValue(self, value: object) -> None:
-        self.min_value = maybe_float(value)
+        self.min_value = _maybe_float(value)
     def _ais_setMaxValue(self, value: object) -> None:
-        self.max_value = maybe_float(value)
+        self.max_value = _maybe_float(value)
     def _ais_setShowMaxLength(self, value: object) -> None:
         self.show_max_length = really_int(value)
     def _ais_setEditMaxLength(self, value: object) -> None:

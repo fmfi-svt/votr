@@ -50,7 +50,7 @@ class MenuItem(ActionableControl):
         """
         await self.log('action', f'Clicking {self.id}')
 
-        did, ops = await self.try_execute_action(return_ops=return_ops)
+        did, ops = await self._try_execute_action(return_ops=return_ops)
         if did:
             return ops
 

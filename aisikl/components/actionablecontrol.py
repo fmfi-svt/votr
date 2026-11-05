@@ -25,7 +25,7 @@ class ActionableControl(Control):
         if not self.action_name: return None
         return ct(Action, self.dialog.components[self.action_name])
 
-    async def try_execute_action(self, *, params: str | None = None, return_ops: bool) -> tuple[bool, Operations]:
+    async def _try_execute_action(self, *, params: str | None = None, return_ops: bool) -> tuple[bool, Operations]:
         """Internal. Executes the component's action, if it has one.
 
         Returns:
@@ -41,9 +41,9 @@ class ActionableControl(Control):
     @override
     def is_really_enabled(self) -> bool:
         return (super().is_really_enabled() and
-                self.get_enabled_by_owner_container())
+                self._get_enabled_by_owner_container())
 
-    def get_enabled_by_owner_container(self) -> bool:
+    def _get_enabled_by_owner_container(self) -> bool:
         """Internal. Corresponds to ``getEnabledByOwnerContainer`` in
         webui.js.
         """

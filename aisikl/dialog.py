@@ -103,12 +103,12 @@ class Dialog:
         self.components: dict[str, Component] = {}
         """Dict of the dialog's components, keyed by component ID."""
 
-        self.changed_components: dict[str, Literal[True]] | None = None
+        self._changed_components: dict[str, Literal[True]] | None = None
         """Internal. Tracks components whose state has changed since the last
         request was sent.
         """
 
-    async def _init(self, url: str) -> None:
+    async def init(self, url: str) -> None:
         """Internal. Retrieves and parses the HTML page with the dialog's body.
 
         Called from [`aisikl.operations.OpenDialogOp.perform`][] and
@@ -130,7 +130,7 @@ class Dialog:
             raise AISParseError("Unexpected dialog body response")
 
         self.components = {}
-        self.changed_components = None
+        self._changed_components = None
 
         last_line = nn(scripts[-1].string).strip().split('\n')[-1].strip()
         match = _properties_re.match(last_line)
@@ -186,15 +186,15 @@ class Dialog:
         """
         # We ignore width, height, x, y, focusedComponent and dtSelection.
         # So there are no <nameValue> pairs, only <embObjChProps>.
-        if self.changed_components is None: return ''
+        if self._changed_components is None: return ''
         result = (
             '<changedProperties><objName>' + self.name + '</objName>\n' +
             '<embObjChProps>\n' +
             ''.join(ct(Control, self.components[id]).changed_properties()
-                    for id in self.changed_components) +
+                    for id in self._changed_components) +
             '</embObjChProps>\n' +
             '</changedProperties>\n')
-        self.changed_components = None
+        self._changed_components = None
         return result
 
     def try_interactive(self, component: Component, type: str) -> None:
@@ -210,19 +210,19 @@ class Dialog:
         # TODO: Eventual support for ChangeGuardInteractive goes here.
         # (is_minor decides whether to set elementsChanged or not.)
 
-        if self.changed_components is None:
+        if self._changed_components is None:
             # Use dict instead of set as it has consistent iteration order in
             # Python 3.7+, unlike set. (https://stackoverflow.com/q/3848091)
             # The server seems to accept any order, but being deterministic is
             # occasionally handy when inspecting or comparing log files.
             #
-            # In theory changed_components == {} means only the dialog itself
+            # In theory _changed_components == {} means only the dialog itself
             # has changed, and None means no change at all. But Votr ignores
             # Dialog properties, and never calls component_changes(None, ...).
-            self.changed_components = {}
+            self._changed_components = {}
 
         if component:
-            self.changed_components[component.id] = True
+            self._changed_components[component.id] = True
             self.try_interactive(component, 'change')
 
     async def click_close_button(self, *, return_ops: Literal[True]) -> Operations:

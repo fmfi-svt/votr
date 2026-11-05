@@ -26,22 +26,22 @@ COMPLETE (removed)
 In AIS, each "component" is represented by a `JSObject` which is mostly
 stateless and only created when it's needed. Current state is stored in the
 componentsProperties variable in the dialog's iframe, or in the actual visible
-DOM elements. Votr creates all components in `Dialog._init()`, and only uses
+DOM elements. Votr creates all components in `Dialog.init()`, and only uses
 componentsProperties and DOM elements for initial parsing.
 
 - cp(), ctid(), ctel()
-    - Read componentsProperties. Inlined into Dialog._init().
+    - Read componentsProperties. Inlined into Dialog.init().
 - initDialogBodyJSO()
-    - Called from the dialog iframe's onload. Inlined into Dialog._init().
+    - Called from the dialog iframe's onload. Inlined into Dialog.init().
 - fd
     - UNSUPPORTED
 - initJSO(), initJSObject()
-    - Creates a JSObject for a DOM element. Inlined into Dialog._init(). The
+    - Creates a JSObject for a DOM element. Inlined into Dialog.init(). The
       distinction between dlgContext and componentContext is IRRELEVANT (it is
       only for temporary components nested inside a table's iframe).
 - initJsonJSO()
     - Creates a JSObject for something which has no DOM element. Inlined into
-      Dialog._init().
+      Dialog.init().
 - ensureJSOBase(), ensureJSO(), ensureJSObject(), getHtmlJSOById(),
   ensureJsonJSOBase(), ensureJsonJSO(), getJsonJSOById(), ensureJSOById(),
   getControlById(), getControl()
@@ -207,8 +207,8 @@ COMPLETE
 
 - getActionName() -> self.action_name
 - getAction() -> self.action
-- tryExecuteAction() -> self.try_execute_action()
-- getEnabledByOwnerContainer() -> self.get_enabled_by_owner_container()
+- tryExecuteAction() -> self._try_execute_action()
+- getEnabledByOwnerContainer() -> self._get_enabled_by_owner_container()
 
 
 
@@ -313,7 +313,7 @@ Note that in webui, getDialogJSObject() returns the DialogBody, not Dialog.
 - resized, getResized()
     - UNSUPPORTED. Votr doesn't send dialog size to AIS.
 - init(), DialogBody_init()
-    - Component initialization is done by Dialog._init().
+    - Component initialization is done by Dialog.init().
     - dtSelectionDiv is UNSUPPORTED.
     - Everything else done by init() is IRRELEVANT, including the call to
       onDialogBodyInit().
@@ -447,9 +447,9 @@ PARTIAL
     - IRRELEVANT
 - retrieveAllComponentIds(), retrieveIdAndComponentType()
     - IRRELEVANT (seems to be unused in webui)
-- init() -> Dialog.__init__(), Dialog._init()
+- init() -> Dialog.__init__(), Dialog.init()
     - Largely IRRELEVANT.
-- refresh() -> Dialog._init()
+- refresh() -> Dialog.init()
 - activate()
     - IRRELEVANT. Only handles focus and whether the dialog visually appears
       active (focused window).
@@ -571,7 +571,7 @@ dialogs that aren't fully loaded, queue waiting dialogs, etc.
       for the last dialog, this no longer happens in practice. Except for native
       dialogs which are IRRELEVANT. See clear() below.
 - closeAllDialogs()
-    - Application._close_all_dialogs()
+    - Application.close_all_dialogs()
     - Only called by webui.clear().
 - canKillApplication()
     - IRRELEVANT. Only used in beforeUnload() to decide whether to show the
@@ -644,7 +644,7 @@ COMPLETE
 - prepareHttpRequest()
     - IRRELEVANT
 - reqIndex -> self.req_index
-- prepareUrlBase() -> Application._prepare_url_base()
+- prepareUrlBase() -> Application.prepare_url_base()
 - prepareUrlDialog()
     - Inlined in Application.open_dialog().
 - sendRequestEvent() -> Application._send_request()
@@ -725,7 +725,7 @@ COMPLETE (removed)
 - updateEnabilityForActionListByOwnerContainer()
     - IRRELEVANT, because realizeEnability() was removed.
 - tryExecuteActionForElement()
-    - Use `self.try_execute_action()` if possible, and inline it if not.
+    - Use `self._try_execute_action()` if possible, and inline it if not.
 
 
 
@@ -1174,7 +1174,7 @@ COMPLETE
     - IRRELEVANT
 - getCanClose()
     - UNSUPPORTED, because we don't actually parse or execute the content.
-- tryExecuteActionFromHtmlArea() -> self.try_execute_action()
+- tryExecuteActionFromHtmlArea() -> self._try_execute_action()
     - with three arguments: tryExecuteActionFromHtmlArea(area, params, action)
       -> action.execute(area.id, params)
 - tryShowPopupMenuFromHtmlArea()
@@ -2034,7 +2034,7 @@ Mostly covered by Application and operations.py. No longer global.
         - In the result frame case, we assume that whenever the result frame
           calls closeApplication, it also calls serverCloseApplication. Hence,
           CloseApplicationOp.perform() never calls Application.force_close()
-          which sends WebUIKillEvent, only Application._close_all_dialogs().
+          which sends WebUIKillEvent, only Application.close_all_dialogs().
         - In the unload() case, represented by Application.force_close(), Votr
           always sends WebUIKillEvent, even if a serverCloseApplication was
           already received. An extra WebUIKillEvent shouldn't hurt (the server

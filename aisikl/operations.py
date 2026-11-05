@@ -1,5 +1,3 @@
-# pyright: reportPrivateUsage=none
-
 """Operations module.
 
 Operations are records of "big" actions done by AIS that aren't handled by
@@ -132,11 +130,11 @@ class Operation:
     """Base class for operations."""
 
     app: Application[object] = field(repr=False, kw_only=True)
-    handled: bool = field(default=True, init=False, repr=False)
+    _handled: bool = field(default=True, init=False, repr=False)
 
-    def _arm_warning(self) -> None:
+    def arm_warning(self) -> None:
         """Internal. Enables the "not *dealt with*" warning."""
-        self.handled = False
+        self._handled = False
 
     def acknowledge(self) -> Self:
         """Marks the operation as *dealt with*.
@@ -145,14 +143,14 @@ class Operation:
         expressing that you abstained from calling ``perform()`` intentionally
         and not because you forgot. One such case is before you raise an error.
         """
-        self.handled = True
+        self._handled = True
         return self
 
     def __del__(self) -> None:
         """Prints a warning if the operation is garbage-collected without being
         *dealt with*.
         """
-        if not self.handled:
+        if not self._handled:
             warn(f"Unhandled operation {self!r}", stacklevel=2, source=self)
 
 
@@ -173,7 +171,7 @@ class MessageBoxOp(Operation):
     detail: str
 
     @override
-    def _arm_warning(self) -> None:
+    def arm_warning(self) -> None:
         """Internal. Does nothing."""
         pass
 
@@ -206,10 +204,10 @@ class ConfirmBoxOp(Operation):
         self, option: Option, *, return_ops: bool = False
     ) -> Operations:
         """Answers the question. *Deals with* this operation."""
-        self.handled = True
+        self._handled = True
         await self.app.ctx.log(
             'operation', f'Selecting button {option.value} in confirm box')
-        return await self.app._send_namevalue_request(
+        return await self.app.send_namevalue_request(
             'confirmResult', option.value, return_ops=return_ops)
 
 
@@ -253,9 +251,9 @@ class AbortBoxOp(Operation):
 
     async def perform(self, *, return_ops: bool = False) -> Operations:
         """Waits. *Deals with* this operation."""
-        self.handled = True
+        self._handled = True
         await self.app.ctx.log('operation', 'Waiting for abort box')
-        return await self.app._send_namevalue_request(
+        return await self.app.send_namevalue_request(
             'confirmResult', -1, return_ops=return_ops)
 
 
@@ -286,7 +284,7 @@ class ShellExecOp(Operation):
         never seen. If you need that, simulate it manually and call
         [`send_result`][] instead of ``download``.
         """
-        self.handled = True
+        self._handled = True
 
         if self.content_type == 'webui/execCustomFunction':
             raise AISParseError("webui/execCustomFunction is not supported")
@@ -311,8 +309,8 @@ class ShellExecOp(Operation):
         """Informs AIS that a shellExec operation was executed. *Deals with*
         this operation.
         """
-        self.handled = True
-        return await self.app._send_namevalue_request(
+        self._handled = True
+        return await self.app.send_namevalue_request(
             'shellExecResult', shell_exec_result, return_ops=return_ops)
 
 
@@ -354,7 +352,7 @@ class StartAppOp(Operation):
             app: Same as in [`Application.open`][].
             ops: Same as in [`Application.open`][] -- see its docs for advice.
         """
-        self.handled = True
+        self._handled = True
 
         from aisikl.app import Application  # Cyclic dependency :(
 
@@ -369,20 +367,20 @@ class ServerCloseApplicationOp(Operation):
     You don't have to *deal with* this operation type.
 
     Empirically, this operation is always sent together with
-    [`CloseApplicationOp`][], sometimes with [`MessageBoxOp`][] in between.
+    [`CloseApplicationOp`][], sometimes with [`MessageBoxOp`][] between the two.
 
     Its original meaning is to enable the ``wasClosedOnServer`` flag, which
     tells webui.js that it shouldn't send a ``WebUIKillEvent`` during cleanup.
     Votr does not implement it exactly. Instead of remembering whether a
     ``ServerCloseApplicationOp`` was received or not, Votr never sends
-    ``WebUIKillEvent`` in [`CloseApplicationOp.perform`][] (because of this
+    ``WebUIKillEvent`` in [`CloseApplicationOp.perform`][] (because of the above
     empirical observation), and always sends it in
     [`Application.force_close`][] (because we don't trust the AIS server that
     much, and sending an extra one is harmless).
     """
 
     @override
-    def _arm_warning(self) -> None:
+    def arm_warning(self) -> None:
         """Internal. Does nothing."""
         pass
 
@@ -400,8 +398,8 @@ class CloseApplicationOp(Operation):
         window. In Votr, we can't exactly destroy the [`Application`][] object
         itself, but we can at least close all its dialogs, making it inert.
         """
-        self.handled = True
-        await self.app._close_all_dialogs()
+        self._handled = True
+        await self.app.close_all_dialogs()
 
 
 @dataclass
@@ -412,7 +410,7 @@ class OpenDialogOp(Operation):
 
     async def perform(self) -> Dialog:
         """Opens the dialog. *Deals with* this operation."""
-        self.handled = True
+        self._handled = True
 
         from aisikl.dialog import Dialog  # Cyclic dependency :(
 
@@ -450,9 +448,9 @@ class OpenDialogOp(Operation):
         app.active_dialog = modals[-1] if modals else dialog
 
         url_params = '&'.join(
-            f'{k}={v}' for k, v in app._prepare_url_base().items())
+            f'{k}={v}' for k, v in app.prepare_url_base().items())
         url = f'/ais/servlets/WebUIServlet?{url_params}&form={name}'
-        await dialog._init(url)
+        await dialog.init(url)
 
         return dialog
 
@@ -466,7 +464,7 @@ class CloseDialogOp(Operation):
 
     async def perform(self) -> None:
         """Closes the dialog. *Deals with* this operation."""
-        self.handled = True
+        self._handled = True
 
         if self.is_native:
             raise AISParseError("closeDialog() with isNative is not supported")
@@ -500,7 +498,7 @@ class RefreshDialogOp(Operation):
 
     async def perform(self) -> None:
         """Refreshes the dialog. *Deals with* this operation."""
-        self.handled = True
+        self._handled = True
 
         dialog = self.app.dialogs[self.name]
 
@@ -508,7 +506,7 @@ class RefreshDialogOp(Operation):
             'operation', f'Refreshing dialog {dialog.name} "{dialog.title}"')
 
         url = f'/ais/servlets/WebUIServlet?appId={self.app.app_id}&form={dialog.name}&antiCache={time.time()}'
-        await dialog._init(url)
+        await dialog.init(url)
 
 
 class Operations(list[Operation]):

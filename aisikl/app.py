@@ -289,7 +289,7 @@ class Application[D]:
                 "Cannot change active dialog while a modal dialog is open")
         self.active_dialog = self.dialogs[name]
 
-    def _prepare_url_base(self) -> dict[str, str]:
+    def prepare_url_base(self) -> dict[str, str]:
         """Internal. Returns common query or POST parameters for HTTP requests
         related to this application.
 
@@ -319,7 +319,7 @@ class Application[D]:
         xml_spec = f'<request> <serial>{self.serial}</serial>\n{body}</request>\n'
         self.serial += 1
 
-        params = self._prepare_url_base()
+        params = self.prepare_url_base()
         data = params.copy()
         data['xml_spec'] = xml_spec
 
@@ -468,7 +468,7 @@ class Application[D]:
         await self.ctx.log('benchmark', 'End response frame processing')
 
         for operation in operations:
-            operation._arm_warning()  # pyright: ignore [reportPrivateUsage]
+            operation.arm_warning()
 
         return operations
 
@@ -492,7 +492,7 @@ class Application[D]:
         """
         return await self._do_request(self._collect_component_changes(), return_ops=return_ops)
 
-    async def _send_namevalue_request(self, name: str, value: int | str, return_ops: bool) -> Operations:
+    async def send_namevalue_request(self, name: str, value: int | str, return_ops: bool) -> Operations:
         """Internal. Sends a small request to AIS with a single name-value pair,
         but without any events or component changes. Doesn't directly correspond
         to any webui.js function, but it's a convenient helper for many
@@ -523,7 +523,7 @@ class Application[D]:
                 closed. False if there was an error, e.g. because the server is
                 still busy with an earlier HTTP request.
         '''
-        await self._close_all_dialogs()
+        await self.close_all_dialogs()
         await self.ctx.log('operation',
             f'Sending WebUIKillEvent to {self.class_name}')
         soup = await self._send_request(
@@ -573,7 +573,7 @@ class Application[D]:
                 return False
         return True
 
-    async def _close_all_dialogs(self) -> None:
+    async def close_all_dialogs(self) -> None:
         """Internal. Closes all dialogs.
 
         Corresponds to ``DialogManager.closeAllDialogs`` in webui.js.
