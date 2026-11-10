@@ -11,6 +11,7 @@ import {
   Loading,
   sendRpc,
 } from "./ajax";
+import { plural } from "./humanizeAISData";
 import { PageLayout, PageTitle } from "./layout";
 import { underSM, underXS } from "./mediaQueries";
 import { getDateNow } from "./now";
@@ -305,6 +306,8 @@ function KalendarUdalosti(props: { eventList: CalendarEvent[] }) {
         date: "Dátum",
         time: "Čas",
         event: "Skúška",
+        showMore: (count) =>
+          `+${count} ${plural(count, "ďalšia", "ďalšie", "ďalších")}`,
       }}
       culture={"sk"}
       eventPropGetter={(event) => ({
