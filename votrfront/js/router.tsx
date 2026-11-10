@@ -95,6 +95,14 @@ export function Link(
     // but React adds event listeners to document so we still see a click event.
     if (event.button != 0) return;
 
+    // Ctrl/Cmd/Shift/Alt+click also fire a click event. Those mean "open in a
+    // new tab/window" or "download", so don't hijack them.
+    if (event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+      return;
+    }
+
+    if (props.target && props.target != "_self") return;
+
     event.preventDefault();
     navigate(href);
   }
