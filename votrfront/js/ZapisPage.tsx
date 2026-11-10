@@ -305,6 +305,7 @@ function ZapisTable({
           type="checkbox"
           name={predmet.predmet_key}
           checked={checked.get(predmet.predmet_key)}
+          disabled={saving}
           onChange={handleChange}
         />
       ),

@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useState } from "react";
 import {
   CacheRequester,
   invalidateRequestCache,
@@ -134,6 +134,8 @@ function PrehladStudiaObdobia() {
 }
 
 function PridatZapisnyListButton({ studium }: { studium: Studium }) {
+  const [pressed, setPressed] = useState(false);
+
   const rok = currentAcademicYear();
 
   if (studium.koniec !== "") {
@@ -154,10 +156,12 @@ function PridatZapisnyListButton({ studium }: { studium: Studium }) {
 
   function handleClick() {
     if (confirm(`Vytvoriť zápisný list pre akademický rok ${rok}?`)) {
+      setPressed(true);
       sendRpc(
         "create_zapisny_list",
         [studium.studium_key, rok, null],
         (message) => {
+          setPressed(false);
           if (message !== null) {
             alert(message);
           } else {
@@ -172,8 +176,8 @@ function PridatZapisnyListButton({ studium }: { studium: Studium }) {
     <button
       type="button"
       className="btn btn-xs btn-success"
-      disabled={uzExistuje}
-      onClick={uzExistuje ? undefined : handleClick}
+      disabled={uzExistuje || pressed}
+      onClick={uzExistuje || pressed ? undefined : handleClick}
     >
       Vytvoriť
     </button>
