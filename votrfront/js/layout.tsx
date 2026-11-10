@@ -434,7 +434,11 @@ export function InfoTooltip({
   const containerRef = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    $(containerRef.current!).tooltip({ title: tooltipHtml, html: true });
+    const $node = $(containerRef.current!);
+    $node.tooltip({ title: tooltipHtml, html: true });
+    return () => {
+      $node.tooltip("destroy");
+    };
   }, [tooltipHtml]);
 
   return (
