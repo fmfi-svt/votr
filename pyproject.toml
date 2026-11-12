@@ -12,6 +12,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "pyrefly>=0",
+    "ruff>=0",
     "watchdog>=0",
 ]
 prod = [
@@ -30,7 +31,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.basedpyright]
-include = ["aisikl", "fladgejt", "nbenv.py", "tests", "votrfront"]
+include = ["aisikl", "fladgejt", "formatter.py", "nbenv.py", "tests", "votrfront"]
 # Disabled for being too annoying.
 reportExplicitAny = "none"
 reportImportCycles = "none"
@@ -64,7 +65,24 @@ include = ["aisikl", "fladgejt"]
 
 [tool.pyrefly]
 preset = "strict"
-project-includes = ["aisikl/**/*.py", "fladgejt/**/*.py", "nbenv.py", "tests/**/*.py", "votrfront/**/*.py"]
+project-includes = ["aisikl/**/*.py", "fladgejt/**/*.py", "formatter.py", "nbenv.py", "tests/**/*.py", "votrfront/**/*.py"]
+
+[tool.ruff]
+line-length = 80
+
+[tool.ruff.lint.isort]
+# Ruff warns this should be the same as skip-magic-trailing-comma (below).
+split-on-trailing-comma = false
+
+[tool.ruff.format]
+# Various improvements, especially "hug_parens_with_braces_and_square_brackets".
+# TODO: Let's try removing this when it stabilizes.
+preview = true
+# It's needed for formatter.py idempotence in some edge cases, such as
+#   https://gist.github.com/TomiBelan/3262c9583f9e5d31a3c7c20e7f6dcba6
+# On our codebase, its effects are mostly tolerable and occasionally positive
+# (there really were a few stray commas).
+skip-magic-trailing-comma = true
 
 [tool.uv]
 default-groups = ["votrfront"]

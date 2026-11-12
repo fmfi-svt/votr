@@ -71,8 +71,10 @@ Commands:
   ./x lint
     Checks for code warnings.
 
+  ./x format-py
+  ./x format-js
   ./x format
-    Autoformats code.
+    Autoformats {Python|JavaScript|both} code.
 
   ./x build-docs
     Generates HTML API docs from source code docstrings.
@@ -220,7 +222,7 @@ done
 case "${1:-}" in
 run) set -- uv "$@";;
 coverage) set -- uv run --with coverage "$@";;
-zensical) set -- uv run --with zensical,mkdocstrings-python,griffe-inherited-docstrings,ruff "$@";;
+zensical) set -- uv run --with zensical,mkdocstrings-python,griffe-inherited-docstrings "$@";;
 *.py) set -- python3 "$@";;
 cron) shift; set -- python3 -Pm votrfront.cron "$@";;
 log) shift; set -- python3 -Pm votrfront.logutil "$@";;
@@ -300,6 +302,7 @@ lint)
     fi
   }
   lint_run "Checking Prettier formatting. " "./x pnpm prettier --check ."
+  lint_run "Checking Python formatting. " "./x formatter.py --check"
   lint_run "Checking TypeScript. " "./x pnpm tsc --noEmit"
   lint_run "Checking ESLint. " "./x pnpm eslint ."
   lint_run "Checking Python types with Pyrefly. " "./x run pyrefly check"
@@ -307,9 +310,20 @@ lint)
   exit "$combined_status"
   ;;
 
-format)
+format-py)
+  log_and_cd_to_basedir
+  log_and_run "" "./x formatter.py"
+  ;;
+
+format-js)
   log_and_cd_to_basedir
   log_and_run "" "./x pnpm prettier --write ."
+  ;;
+
+format)
+  log_and_cd_to_basedir
+  ./x format-py
+  ./x format-js
   ;;
 
 build-docs)
