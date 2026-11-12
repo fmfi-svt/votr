@@ -244,8 +244,9 @@ class Logger:
         # 'benchmark' is excluded from log files. It's too verbose.
         if type != 'benchmark':
             if self.log_file:
-                self.log_file.write(json.dumps([timestamp, type, message, data],
-                                               ensure_ascii=False) + '\n')
+                json_entry = json.dumps(
+                    [timestamp, type, message, data], ensure_ascii=False)
+                self.log_file.write(json_entry + "\n")
 
             _log_to_ipython(type, message, data)
 

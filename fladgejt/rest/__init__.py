@@ -1,9 +1,9 @@
 from fladgejt.base import BaseClient
 from fladgejt.rest.studium import RestStudiumMixin
-#from fladgejt.rest.terminy import RestTerminyMixin
 from typing import override
 
 
+# from fladgejt.rest.terminy import RestTerminyMixin
 # Disable RestTerminyMixin until it gives us all columns.
 
 

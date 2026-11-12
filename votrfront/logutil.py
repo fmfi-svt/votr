@@ -66,17 +66,19 @@ class Line:
 def connect_logdb() -> sqlite3.Connection:
     logdb = sqlite3.connect(var_path('logdb/logdb.sqlite'))
     c = logdb.cursor()
-    # sub(\s+) is just to look nicer when you print ".schema".
-    c.execute(re.sub(r'\s+', ' ', '''
+    lines_schema = """
         CREATE TABLE IF NOT EXISTS lines (
             sessid TEXT,
             lineno INTEGER,
             tags TEXT,
             content TEXT,
-            timestamp INTEGER GENERATED ALWAYS AS (JSON_EXTRACT(content, '$[0]')) STORED,
+            timestamp INTEGER
+                GENERATED ALWAYS AS (JSON_EXTRACT(content, '$[0]')) STORED,
             PRIMARY KEY (sessid, lineno)
         )
-    '''))
+    """
+    # sub(\s+) is just to look nicer when you print ".schema".
+    c.execute(re.sub(r'\s+', ' ', lines_schema))
     c.execute('CREATE INDEX IF NOT EXISTS lines_tags ON lines (tags)')
     c.execute('CREATE INDEX IF NOT EXISTS lines_timestamp ON lines (timestamp)')
     return logdb

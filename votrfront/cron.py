@@ -56,7 +56,8 @@ async def cron(settings: Settings) -> None:
 
     for path in var_path('sessions').iterdir():
         async with sessions.lock(path.name):
-            if not path.exists(): continue  # Logged out just now?
+            if not path.exists():  # Logged out just now?
+                continue
             mtime = path.stat().st_mtime
             if now - mtime > settings.session_max_age:
                 path.unlink()

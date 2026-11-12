@@ -11,7 +11,7 @@ from starlette.requests import Request
 from starlette.responses import Response, HTMLResponse
 from starlette.routing import BaseRoute, Mount
 from starlette.staticfiles import StaticFiles
-from votrfront import login, front, rpc, report
+from votrfront import front, login, report, rpc
 from votrfront.base import ROOT_PATH, Settings, VotrState
 import trio
 from typing import TYPE_CHECKING
@@ -189,10 +189,10 @@ def build_app(
         import votrfront.local_settings as settings
 
     routes: list[BaseRoute] = [
-        *login.routes,
         *front.routes,
-        *rpc.routes,
+        *login.routes,
         *report.routes,
+        *rpc.routes,
     ]
     if static:
         static_dir = ROOT_PATH / "votrfront/static"

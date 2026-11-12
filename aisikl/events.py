@@ -33,7 +33,7 @@ class Event:
 
 
 def _tag(name: str, value: str) -> str:
-    return '<'+name+'>' + value + '</'+name+'>'
+    return f"<{name}>{value}</{name}>"
 
 def _maybetag(name: str, value: str | None) -> str:
     if not value: return ''

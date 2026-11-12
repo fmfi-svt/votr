@@ -24,7 +24,7 @@ class UpDown(Control):
     async def click(self, command: Literal["UP", "DOWN", "TOP", "BOTTOM"], *, return_ops: bool = False) -> Operations:
         """Clicks one of the buttons, moving the selected item in the list."""
         await self.log('action', f'Clicking {self.id} {command.lower()}')
-        if (
+        if (  #
             (udc_id := self.up_downed_component) is not None and
             (udc := self.dialog.components.get(udc_id)) is not None
         ):

@@ -91,7 +91,8 @@ def load_script(data_view: Tag, id: str) -> Tag | None:
     """
     text = load_script_plain(data_view, id)
     if text is None: return None
-    return BeautifulSoup(text, 'lxml')   # note: will be wrapped in <html> and <body>
+    return BeautifulSoup(text, 'lxml')
+    # note: will be wrapped in <html> and <body>
 
 
 class Table(Control):
@@ -168,7 +169,11 @@ class Table(Control):
         self.column_map: dict[str, Column] = {}
         self.num_visible_buffers = 1
         self.loaded_buffers: set[int] = set()
-        self.loaded_rows: list[Row] = []  # That's a lie. It's actually list[Row | None].
+        self.loaded_rows: list[Row] = []
+        """Loaded rows list. Its real type is actually ``list[Row | None]``, but
+        ``None`` doesn't happen in practice, and it would be too inconvenient to
+        check for it everywhere.
+        """
         self.combobox_options: dict[str, list[Option]] = {}
         self.changed_cells: set[tuple[str, int]] = set()
         self.last_changed_row_index: int | None = None
@@ -434,10 +439,13 @@ class Table(Control):
 
     async def up_down_row(self, command: str, *, return_ops: bool = False) -> Operations:
         if not self.up_down_enabled: return Operations()
-        if self._table_model_up_down(command):   # TODO: not implemented yet # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType]
+        if self._table_model_up_down(command):
             self.up_downed_rows = True
             self.dialog.component_changes(self, False)
         return Operations()
+
+    def _table_model_up_down(self, command: str) -> bool:
+        raise NotImplementedError
 
     async def _on_edit_cell(self, send: bool, alias: str, row_index: int, *, return_ops: bool = False) -> Operations:
         self.edited_cells = True
@@ -469,13 +477,17 @@ class Table(Control):
 
         if self.selection_changed or self.active_index_changed:
             cdata.append("<selection invertedSelection='true'>" if self.inverted_selection else "<selection>")
-            cdata.append(f"<activeIndex>{-1 if self.cursor_row_index is None else self.cursor_row_index}</activeIndex>")
+            cdata.append("<activeIndex>")
+            cdata.append(str(-1 if self.cursor_row_index is None else self.cursor_row_index))
+            cdata.append("</activeIndex>")
             cdata.append("<selectedIndexes>")
             cdata.append(','.join(map(str, self.selected_row_indexes)))
             cdata.append("</selectedIndexes>")
             cdata.append("</selection>")
             if self.selected_column_alias:
-                cdata.append(f"<selectedColumnAlias>{self.selected_column_alias}</selectedColumnAlias>")
+                cdata.append("<selectedColumnAlias>")
+                cdata.append(self.selected_column_alias)
+                cdata.append("</selectedColumnAlias>")
             self.selection_changed = False
             # TODO: AIS doesn't do it, but we should probably unset active_index_changed too
 
@@ -518,8 +530,8 @@ class Table(Control):
             self.edited_cells = False
 
         if self.deleted_rows or self.up_downed_rows:
-            cdata.append(f"<upDownedRows>{self._get_rows_ids()}</upDownedRows>")   # TODO: not implemented yet # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType]
-            self._table_model_reset_rows_ids()   # TODO: not implemented yet # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType]
+            cdata.append(f"<upDownedRows>{self._get_rows_ids()}</upDownedRows>")
+            self._table_model_reset_rows_ids()
             self.deleted_rows = False
             self.up_downed_rows = False
 
@@ -538,6 +550,12 @@ class Table(Control):
             self.row_numbers_visible_changed = False
 
         return self._build_changed_properties(**properties)
+
+    def _get_rows_ids(self) -> str:
+        raise NotImplementedError
+
+    def _table_model_reset_rows_ids(self) -> None:
+        raise NotImplementedError
 
     async def _ais_setDataView(self, id: str, body: Tag) -> None:
         data_view = nn(body.find(id=id))
@@ -607,7 +625,8 @@ class Table(Control):
             row = Row(id, rid, cells, self)
 
             while len(self.loaded_rows) <= row.id:
-                self.loaded_rows.append(cast(Row, cast(object, None)))  # For ease of use, lie to the type checker.
+                # For ease of use, lie to the type checker.
+                self.loaded_rows.append(cast(Row, cast(object, None)))
             self.loaded_rows[row.id] = row
 
         log_note = ' (replacing old content)' if really_replaced else ''

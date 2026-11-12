@@ -172,7 +172,8 @@ class WebuiPredmetyMixin(BaseClient):
         predmet_index = find_row(await app.d.zoznamPredmetovTable.all_rows(), skratka=skratka_predmetu)
         await app.d.zoznamPredmetovTable.select(predmet_index)
 
-        predmet_row = (await app.d.zoznamPredmetovTable.all_rows())[predmet_index]
+        predmet_rows = await app.d.zoznamPredmetovTable.all_rows()
+        predmet_row = predmet_rows[predmet_index]
         predmet = RegPredmet(skratka=predmet_row['skratka'],
                              nazov=predmet_row['nazov'],
                              semester=predmet_row['kodSemester'],

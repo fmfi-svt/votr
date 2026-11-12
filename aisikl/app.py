@@ -357,7 +357,7 @@ class Application[D]:
             raise AISParseError("Unexpected script in result frame response")
 
         in_main = False
-        show_dlg_properties = None
+        show_dlg_properties: list[dict[str, object]] | None = None
 
         for r in _multiline_res:
             script = r.sub('', script)
@@ -375,7 +375,7 @@ class Application[D]:
                 if in_main: raise AISParseError("Bad script structure")
                 if show_dlg_properties is not None:
                     raise AISParseError("Duplicate showDlgProperties")
-                show_dlg_properties: list[dict[str, object]] | None = json.loads(line.partition('=')[2])
+                show_dlg_properties = json.loads(line.partition('=')[2])
                 continue
 
             if _main_re.match(line):
@@ -415,8 +415,8 @@ class Application[D]:
                     and isinstance(args[0], str)
                     and any(s in args[0] for s in self.ignored_messages)
                 ):
-                    operations.append(
-                        known_operations[(target, method)](*args, app=self))  # pyrefly: ignore [bad-argument-type] # pyright: ignore [reportArgumentType]
+                    op = known_operations[(target, method)](*args, app=self)  # pyrefly: ignore [bad-argument-type] # pyright: ignore [reportArgumentType]
+                    operations.append(op)
                 continue
 
             match = _update_re.match(line)

@@ -11,8 +11,8 @@ OPEN_APP_LIMIT = 10
 
 
 def pooled_app[S, D, *A](
-    original_method: Callable[[S, Unpack[A]], Awaitable[Application[D]]]
-) ->                 Callable[[S, Unpack[A]], Awaitable[Application[D]]]:
+    original_method: Callable[[S, *A], Awaitable[Application[D]]]
+) ->                 Callable[[S, *A], Awaitable[Application[D]]]:  # fmt: skip
     '''Decorator for methods that return an [`Application`][].
 
     Generally, we don't want to open an application if we've already opened it.

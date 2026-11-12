@@ -229,7 +229,7 @@ class MockRunner:
         if ' failed with ' in amessage and (
             _IGNORE_DETAILS in ct(str, adata) or
             _IGNORE_DETAILS in ct(str, edata)
-        ):
+        ):  # fmt: skip
             self.print(f'INFO: match exception ignoring details: {ajson}')
             return
 
@@ -815,7 +815,7 @@ async def _scenario_main_async(
                 elif (
                     (username := os.getenv('AIS_USERNAME')) and
                     (password := os.getenv('AIS_PASSWORD'))
-                ):
+                ):  # fmt: skip
                     params = ParamsDictSamlPassword(
                         type='saml_password',
                         username=username,

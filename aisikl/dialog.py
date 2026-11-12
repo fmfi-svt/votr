@@ -188,7 +188,7 @@ class Dialog:
         # So there are no <nameValue> pairs, only <embObjChProps>.
         if self._changed_components is None: return ''
         result = (
-            '<changedProperties><objName>' + self.name + '</objName>\n' +
+            f"<changedProperties><objName>{self.name}</objName>\n" +
             '<embObjChProps>\n' +
             ''.join(ct(Control, self.components[id]).changed_properties()
                     for id in self._changed_components) +

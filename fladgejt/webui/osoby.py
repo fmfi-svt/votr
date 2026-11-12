@@ -88,7 +88,8 @@ class WebuiOsobyMixin(BaseClient):
 
             ops = await app.d.odstranitFakultuButton.click(return_ops=True)
             if ops:
-                ops.expect_one(MessageBoxOp)   # "Interna chyba: Nepodarilo sa osetrenie udalosti."
+                ops.expect_one(MessageBoxOp)
+                # "Interna chyba: Nepodarilo sa osetrenie udalosti."
 
             if not await select_ciselnik(app, fakulta or None, app.d.VyberFakultaButton, "skratka"):
                 return 'Fakulta nebola nájdená.'

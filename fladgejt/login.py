@@ -24,7 +24,7 @@ class ServerDict(TypedDict):
     rest_cookie: NotRequired[str]
     dns_overrides: NotRequired[dict[str, str]]
     flashbacks_dir: NotRequired[str]
-    title: NotRequired[str]  #``title` is used only in votrfront, not fladgejt
+    title: NotRequired[str]  # `title` is used only in votrfront, not fladgejt
 
 class ParamsDictSamlPassword(TypedDict):
     type: Literal['saml_password']
@@ -250,8 +250,10 @@ async def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: 
                     continue
 
                 # Handle Shibboleth IdP's password based login form.
-                if (soup.find('input', attrs={'name': 'j_username'}) and
-                        soup.find('input', attrs={'name': 'j_password'})):
+                if (
+                    soup.find("input", attrs={"name": "j_username"}) and
+                    soup.find("input", attrs={"name": "j_password"})
+                ):  # fmt: skip
                     await ctx.log('login', 'Detected a login form page')
                     if tried_saml_password_login:
                         raise Exception('Username and password did not work')
@@ -332,9 +334,7 @@ def _parse_cookie_string(ctx: Context, base_url: str | None, default_name: str |
         if not pair: continue
         if '=' not in pair:
             raise CookieLoginError(
-                'Expected either a single cookie value or a list of '
-                '";"-separated key=value elements, but an element does not '
-                'contain "="')
+                'Expected either a single cookie value or a list of ";"-separated key=value elements, but an element does not contain "="')
         name, _, value = pair.partition('=')
         Cookies(ctx.cookie_jar).set(name, value, domain=domain)
 

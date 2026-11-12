@@ -154,7 +154,10 @@ async def test_log(o: Options, name: str, lines: list[bytes]) -> None:
         failed_rpc = False
 
         for i, entry in enumerate(entries):
-            if entry.type in ('login', 'logout', 'front', 'rpc') and entry.message.endswith(' started'):
+            if (  #
+                entry.type in ('login', 'logout', 'front', 'rpc')
+                and entry.message.endswith(' started')
+            ):
                 if last_start is not None:
                     o.p('  ERROR: skipping bad log structure - request interrupted by another',
                         f'  ... {last_start+1}: {json.dumps(entries[last_start])}',
@@ -166,7 +169,11 @@ async def test_log(o: Options, name: str, lines: list[bytes]) -> None:
                     o.p('  ERROR: skipping bad log structure - end without start',
                         f'  ... {i+1}: {json.dumps(entry)}')
                     return
-                if entry.type != entries[last_start].type or not entry.message.startswith(entries[last_start].message[:-len('started')]):
+                if (  #
+                    entry.type != entries[last_start].type
+                    or not entry.message.startswith(
+                        entries[last_start].message[:-len('started')])
+                ):
                     o.p('  ERROR: skipping bad log structure - end does not match start',
                         f'  ... {last_start+1}: {json.dumps(entries[last_start])}',
                         f'  ... {i+1}: {json.dumps(entry)}')
@@ -233,17 +240,18 @@ async def test_file(o: Options, filename: str) -> None:
 
 async def main(args: list[str]) -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument('log_filename', nargs='+', help=
-        'Input log file(s) to test. Can be compressed. ' +
-        'For tar archives, "file.tar.xz@@aaa..bbb" ' +
-        'can be used to only test sessids from aaa* to bbb*.')
-    parser.add_argument('--old-log', action='store_true', help=
-        'Allow some known differences in log content ' +
-        'between old Votr and current Votr')
-    parser.add_argument('--fail-fast', action='store_true', help=
-        'End each log on the first error/warning, do not try to continue')
-    parser.add_argument('--verbose-pass', action='store_true', help=
-        'Show full details for RPCs/requests which pass')
+    parser.add_argument(
+        "log_filename", nargs="+",
+        help='Input log file(s) to test. Can be compressed. For tar archives, "file.tar.xz@@aaa..bbb" can be used to only test sessids from aaa* to bbb*.')
+    parser.add_argument(
+        "--old-log", action="store_true",
+        help="Allow some known differences in log content between old Votr and current Votr")
+    parser.add_argument(
+        "--fail-fast", action="store_true",
+        help="End each log on the first error/warning, do not try to continue")
+    parser.add_argument(
+        "--verbose-pass", action="store_true",
+        help="Show full details for RPCs/requests which pass")
 
     options = parser.parse_args(args)
 
