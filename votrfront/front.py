@@ -141,7 +141,7 @@ async def app_response(
         nonce=nonce,
         title=settings.instance_title,
         init_json=Markup(
-            json.dumps({"settings": my_data}).replace("</", "<\\/")),
+            json.dumps({"settings": my_data}).replace("<", "\\u003c")),
         css=static_url("style.css"),
         scripts=Markup("\n").join(
             Markup('<script nonce="{}" src="{}"></script>').format(
