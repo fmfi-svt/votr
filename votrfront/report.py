@@ -37,6 +37,4 @@ async def report(request: Request[VotrState]) -> PlainTextResponse:
     return PlainTextResponse("OK")
 
 
-routes = [
-    Route("/report", methods=["POST"], endpoint=report),
-]
+routes = [Route("/report", methods=["POST"], endpoint=report)]

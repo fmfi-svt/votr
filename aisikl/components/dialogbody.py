@@ -9,6 +9,11 @@ class DialogBody(Component):
     useful bits were moved to [`Dialog`][aisikl.dialog.Dialog].
     """
 
-    def _ais_setWidth(self, value: object) -> None: pass
-    def _ais_setHeight(self, value: object) -> None: pass
-    def _ais_setFocusedComponent(self, value: object) -> None: pass
+    def _ais_setWidth(self, value: object) -> None:
+        pass
+
+    def _ais_setHeight(self, value: object) -> None:
+        pass
+
+    def _ais_setFocusedComponent(self, value: object) -> None:
+        pass

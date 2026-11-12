@@ -14,7 +14,15 @@ if TYPE_CHECKING:
 class Button(ActionableControl):
     """A WebUI button."""
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         element = nn(element)
         self.image = ct_none(str, properties.get("img"))
@@ -34,8 +42,10 @@ class Button(ActionableControl):
 
     def _ais_setAccessKey(self, value: object) -> None:
         self.access_key = ct_none(str, value)
+
     def _ais_setImage(self, value: object) -> None:
         self.image = ct_none(str, value)
+
     def _ais_setConfirmQuestion(self, value: object) -> None:
         self.confirm_question = ct_none(str, value)
 

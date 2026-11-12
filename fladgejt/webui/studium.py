@@ -42,6 +42,7 @@ if TYPE_CHECKING:
         zapisPredmetovKredityAction: Action
         enterButton: Button
         odobratZapisnyListButton: Button
+
 else:
     AdministraciaStudiaDialogsType = None
     HodnoteniaPriemeryDialogsType = None
@@ -61,10 +62,15 @@ class GetPrehladKreditovResult(TypedDict):
 
 class WebuiStudiumMixin(BaseClient):
     @pooled_app
-    async def _open_administracia_studia(self) -> Application[AdministraciaStudiaDialogsType]:
+    async def _open_administracia_studia(
+        self,
+    ) -> Application[AdministraciaStudiaDialogsType]:
         url = "/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.es.VSES017App&kodAplikacie=VSES017&uiLang=SK"
-        ignored_messages = DEFAULT_IGNORED_MESSAGES + ["Štúdium je prerušené. Zvoľte aktívne štúdium."]
-        app, ops = await Application[AdministraciaStudiaDialogsType].open(self.context, url, ignored_messages)
+        ignored_messages = DEFAULT_IGNORED_MESSAGES + [
+            "Štúdium je prerušené. Zvoľte aktívne štúdium."
+        ]
+        app, ops = await Application[AdministraciaStudiaDialogsType].open(
+            self.context, url, ignored_messages)
         await ops.expect_one(OpenDialogOp).perform()
         return app
 
@@ -80,47 +86,61 @@ class WebuiStudiumMixin(BaseClient):
     async def get_studia(self) -> list[Studium]:
         app = await self._open_administracia_studia()
 
-        result = [Studium(sp_skratka=row["studijnyProgramSkratka"],
-                          sp_popis=row["studijnyProgramPopis"],
-                          sp_doplnujuce_udaje=row["studijnyProgramDoplnUdaje"],
-                          zaciatok=row["zaciatokStudia"],
-                          koniec=row["koniecStudia"],
-                          sp_dlzka=row["studijnyProgramDlzka"],
-                          sp_cislo=row["studijnyProgramIdProgramCRS"],
-                          rok_studia=row["rokStudia"],
-                          organizacna_jednotka=row["studijnyProgramSkratkaAkreditOJ"])
-                  for row in await app.d.studiaTable.all_rows()]
+        result = [
+            Studium(
+                sp_skratka=row["studijnyProgramSkratka"],
+                sp_popis=row["studijnyProgramPopis"],
+                sp_doplnujuce_udaje=row["studijnyProgramDoplnUdaje"],
+                zaciatok=row["zaciatokStudia"],
+                koniec=row["koniecStudia"],
+                sp_dlzka=row["studijnyProgramDlzka"],
+                sp_cislo=row["studijnyProgramIdProgramCRS"],
+                rok_studia=row["rokStudia"],
+                organizacna_jednotka=row["studijnyProgramSkratkaAkreditOJ"],
+            )
+            for row in await app.d.studiaTable.all_rows()
+        ]
         return result
 
     async def get_zapisne_listy(self, studium_key: str) -> list[ZapisnyList]:
         app = await self._open_administracia_studia()
 
         await self.__vyber_studium(app, studium_key)
-        result = [ZapisnyList(akademicky_rok=row["popisAkadRok"],
-                              rocnik=row["rokRocnik"],
-                              sp_skratka=row["studProgramSkratka"],
-                              sp_popis=row["studProgramPopis"],
-                              datum_zapisu=row["datumZapisu"],
-                              studium_key=studium_key)
-                  for row in await app.d.zapisneListyTable.all_rows()]
+        result = [
+            ZapisnyList(
+                akademicky_rok=row["popisAkadRok"],
+                rocnik=row["rokRocnik"],
+                sp_skratka=row["studProgramSkratka"],
+                sp_popis=row["studProgramPopis"],
+                datum_zapisu=row["datumZapisu"],
+                studium_key=studium_key,
+            )
+            for row in await app.d.zapisneListyTable.all_rows()
+        ]
         return result
 
-    async def zapisny_list_key_to_akademicky_rok(self, zapisny_list_key: str) -> str:
+    async def zapisny_list_key_to_akademicky_rok(
+        self, zapisny_list_key: str
+    ) -> str:
         _studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
         return akademicky_rok
 
-    async def __vyber_studium(self, app: Application[AdministraciaStudiaDialogsType], studium_key: str) -> None:
+    async def __vyber_studium(
+        self, app: Application[AdministraciaStudiaDialogsType], studium_key: str
+    ) -> None:
         sp_skratka, zaciatok = decode_key(studium_key)
 
         # Najdeme studium.
         studium_index = find_row(
             await app.d.studiaTable.all_rows(),
-            studijnyProgramSkratka=sp_skratka,
-            zaciatokStudia=zaciatok)
+            studijnyProgramSkratka=sp_skratka, zaciatokStudia=zaciatok)
 
         # Vyberieme studium a stlacime nacitavaci button (sipku dole).
-        if app.d.studiaTable.selected_row_indexes != [studium_index] or len(await app.d.zapisneListyTable.all_rows()) == 0:
+        if (
+            app.d.studiaTable.selected_row_indexes != [studium_index]
+            or len(await app.d.zapisneListyTable.all_rows()) == 0
+        ):
             ops = await app.d.studiaTable.select(studium_index, return_ops=True)
             if ops:
                 await ops.expect_one(RefreshDialogOp).perform()
@@ -129,7 +149,11 @@ class WebuiStudiumMixin(BaseClient):
             if ops:
                 await ops.expect_one(RefreshDialogOp).perform()
 
-    async def __vyber_zapisny_list(self, app: Application[AdministraciaStudiaDialogsType], zapisny_list_key: str) -> None:
+    async def __vyber_zapisny_list(
+        self,
+        app: Application[AdministraciaStudiaDialogsType],
+        zapisny_list_key: str,
+    ) -> None:
         studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
         # Ak este nie je vybrate spravne studium, vyberieme ho.
@@ -137,11 +161,14 @@ class WebuiStudiumMixin(BaseClient):
 
         # Vyberieme zapisny list.
         zapisny_list_index = find_row(
-            await app.d.zapisneListyTable.all_rows(), popisAkadRok=akademicky_rok)
+            await app.d.zapisneListyTable.all_rows(),
+            popisAkadRok=akademicky_rok)
         await app.d.zapisneListyTable.select(zapisny_list_index)
 
     @pooled_app
-    async def _open_priebezne_hodnotenie_app(self, zapisny_list_key: str) -> Application[PriebezneHodnotenieDialogsType]:
+    async def _open_priebezne_hodnotenie_app(
+        self, zapisny_list_key: str
+    ) -> Application[PriebezneHodnotenieDialogsType]:
         app = await self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
@@ -150,15 +177,19 @@ class WebuiStudiumMixin(BaseClient):
         # Stlacime v menu "Priebezne hodnotenie".
         ops = await app.d.priebezneHodnotenieAction.execute(return_ops=True)
 
-        if not ops: raise CantOpenApplication()
+        if not ops:
+            raise CantOpenApplication()
 
         # Otvori sa nove okno a v nom hlavny dialog.
-        new_app, new_ops = await ops.expect_one(StartAppOp).perform(hint=PriebezneHodnotenieDialogsType)
+        new_app, new_ops = await ops.expect_one(StartAppOp).perform(
+            hint=PriebezneHodnotenieDialogsType)
         await new_ops.expect_one(OpenDialogOp).perform()
         return new_app
 
     @pooled_app
-    async def _open_zapis_predmetov_app(self, zapisny_list_key: str) -> Application[ZapisPredmetovDialogsType]:
+    async def _open_zapis_predmetov_app(
+        self, zapisny_list_key: str
+    ) -> Application[ZapisPredmetovDialogsType]:
         app = await self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
@@ -167,32 +198,40 @@ class WebuiStudiumMixin(BaseClient):
         # Stlacime v menu "Zapis predmetov, kredity".
         ops = await app.d.zapisPredmetovKredityAction.execute(return_ops=True)
 
-        if not ops: raise CantOpenApplication()
+        if not ops:
+            raise CantOpenApplication()
 
         # Otvori sa nove okno a v nom hlavny dialog.
-        new_app, new_ops = await ops.expect_one(StartAppOp).perform(hint=ZapisPredmetovDialogsType)
+        new_app, new_ops = await ops.expect_one(StartAppOp).perform(
+            hint=ZapisPredmetovDialogsType)
         await new_ops.expect_one(OpenDialogOp).perform()
         return new_app
 
     @pooled_app
-    async def _open_terminy_hodnotenia_app(self, zapisny_list_key: str) -> Application[TerminyHodnoteniaDialogsType]:
+    async def _open_terminy_hodnotenia_app(
+        self, zapisny_list_key: str
+    ) -> Application[TerminyHodnoteniaDialogsType]:
         app = await self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
         await self.__vyber_zapisny_list(app, zapisny_list_key)
 
         # Stlacime v menu "Terminy hodnotenia".
-        ops = await app.d.terminyHodnoteniaAction.execute(return_ops = True)
+        ops = await app.d.terminyHodnoteniaAction.execute(return_ops=True)
 
-        if not ops: raise CantOpenApplication()
+        if not ops:
+            raise CantOpenApplication()
 
         # Otvori sa nove okno a v nom hlavny dialog.
-        new_app, new_ops = await ops.expect_one(StartAppOp).perform(hint=TerminyHodnoteniaDialogsType)
+        new_app, new_ops = await ops.expect_one(StartAppOp).perform(
+            hint=TerminyHodnoteniaDialogsType)
         await new_ops.expect_one(OpenDialogOp).perform()
         return new_app
 
     @pooled_app
-    async def _open_hodnotenia_priemery_app(self, zapisny_list_key: str) -> Application[HodnoteniaPriemeryDialogsType]:
+    async def _open_hodnotenia_priemery_app(
+        self, zapisny_list_key: str
+    ) -> Application[HodnoteniaPriemeryDialogsType]:
         app = await self._open_administracia_studia()
 
         # Vyberieme spravne studium a zapisny list.
@@ -201,14 +240,18 @@ class WebuiStudiumMixin(BaseClient):
         # Stlacime v menu "Hodnotenia, priemery".
         ops = await app.d.hodnoteniaPriemeryAction.execute(return_ops=True)
 
-        if not ops: raise CantOpenApplication()
+        if not ops:
+            raise CantOpenApplication()
 
         # Otvori sa nove okno a v nom hlavny dialog.
-        new_app, new_ops = await ops.expect_one(StartAppOp).perform(hint=HodnoteniaPriemeryDialogsType)
+        new_app, new_ops = await ops.expect_one(StartAppOp).perform(
+            hint=HodnoteniaPriemeryDialogsType)
         await new_ops.expect_one(OpenDialogOp).perform()
         return new_app
 
-    async def get_prehlad_kreditov(self, studium_key: str) -> GetPrehladKreditovResult:
+    async def get_prehlad_kreditov(
+        self, studium_key: str
+    ) -> GetPrehladKreditovResult:
         app = await self._open_administracia_studia()
 
         # Vyberieme spravne studium.
@@ -231,21 +274,24 @@ class WebuiStudiumMixin(BaseClient):
         await ops.expect_one(OpenDialogOp).perform()
 
         # Vytiahneme tabulku predmetov.
-        result = [Hodnotenie(akademicky_rok=row["akRok"],
-                             skratka=row["skratka"],
-                             nazov=row["nazov"],
-                             typ_vyucby=row["kodTypVyucbySP"],
-                             semester=row["semester"],
-                             kredit=row["kredit"],
-                             hodn_znamka=row["znamka"],
-                             hodn_termin=row["termin"],
-                             hodn_datum=row["datum"],
-                             hodn_znamka_popis=row["znamkaPopis"],
-                             nahradeny=(row["nahradzaMa"] != ""),
-                             poplatok=row["poplatok"],
-                             zapisny_list_key=encode_key(
-                                (studium_key, row["akRok"])))
-                  for row in await app.d.predmetyTable.all_rows()]
+        result = [
+            Hodnotenie(
+                akademicky_rok=row["akRok"],
+                skratka=row["skratka"],
+                nazov=row["nazov"],
+                typ_vyucby=row["kodTypVyucbySP"],
+                semester=row["semester"],
+                kredit=row["kredit"],
+                hodn_znamka=row["znamka"],
+                hodn_termin=row["termin"],
+                hodn_datum=row["datum"],
+                hodn_znamka_popis=row["znamkaPopis"],
+                nahradeny=(row["nahradzaMa"] != ""),
+                poplatok=row["poplatok"],
+                zapisny_list_key=encode_key((studium_key, row["akRok"])),
+            )
+            for row in await app.d.predmetyTable.all_rows()
+        ]
 
         kredity_ziskane, kredity_zapisane = await self.__get_sucty_kreditov(app)
 
@@ -270,7 +316,9 @@ class WebuiStudiumMixin(BaseClient):
             priemer_vsetkych=priemer_vsetkych,
         )
 
-    async def __get_sucty_kreditov(self, app: Application[AdministraciaStudiaDialogsType]) -> tuple[int | None, int | None]:
+    async def __get_sucty_kreditov(
+        self, app: Application[AdministraciaStudiaDialogsType]
+    ) -> tuple[int | None, int | None]:
         # Najdeme v tabulke suctov kreditov posledny riadok. V prvom stlpci ("Popis") by malo byt "SPOLU".
         rows = await app.d.kredityTable.all_rows()
         if not rows:
@@ -279,17 +327,21 @@ class WebuiStudiumMixin(BaseClient):
 
         last = rows[-1]
         if last["popis"] != "SPOLU":
-            await self.context.log("warning", "kredityTable popis is wrong", last)
+            await self.context.log(
+                "warning", "kredityTable popis is wrong", last)
             return None, None
 
         # V poslednom stlpci "Spolu  (Zapísané/Získané + Uznané + Dovezené)" by mali byt dve cele cisla.
         if not (m := re.fullmatch(r"(\d+) / (\d+)", last["spolus"])):
-            await self.context.log("warning", "kredityTable spolus is unexpected", last)
+            await self.context.log(
+                "warning", "kredityTable spolus is unexpected", last)
             return None, None
 
         return int(m.group(2)), int(m.group(1))
 
-    async def __open_novy_zapisny_list_dialog(self, app: Application[AdministraciaStudiaDialogsType], studium_key: str) -> None:
+    async def __open_novy_zapisny_list_dialog(
+        self, app: Application[AdministraciaStudiaDialogsType], studium_key: str
+    ) -> None:
         # Vyberieme studium.
         await self.__vyber_studium(app, studium_key)
 
@@ -297,7 +349,9 @@ class WebuiStudiumMixin(BaseClient):
         ops = await app.d.pridatZapisnyListButton.click(return_ops=True)
         await ops.expect_one(OpenDialogOp).perform()
 
-    async def get_akademicke_roky_noveho_zapisneho_listu(self, studium_key: str) -> list[Option]:
+    async def get_akademicke_roky_noveho_zapisneho_listu(
+        self, studium_key: str
+    ) -> list[Option]:
         app = await self._open_administracia_studia()
 
         await self.__open_novy_zapisny_list_dialog(app, studium_key)
@@ -308,7 +362,9 @@ class WebuiStudiumMixin(BaseClient):
 
         return options
 
-    async def get_roky_studia_noveho_zapisneho_listu(self, studium_key: str) -> list[Option]:
+    async def get_roky_studia_noveho_zapisneho_listu(
+        self, studium_key: str
+    ) -> list[Option]:
         app = await self._open_administracia_studia()
 
         await self.__open_novy_zapisny_list_dialog(app, studium_key)
@@ -319,7 +375,12 @@ class WebuiStudiumMixin(BaseClient):
 
         return options
 
-    async def create_zapisny_list(self, studium_key: str, akademicky_rok: str | None, rok_studia: str | None) -> str | None:
+    async def create_zapisny_list(
+        self,
+        studium_key: str,
+        akademicky_rok: str | None,
+        rok_studia: str | None,
+    ) -> str | None:
         app = await self._open_administracia_studia()
 
         await self.__open_novy_zapisny_list_dialog(app, studium_key)
@@ -328,12 +389,14 @@ class WebuiStudiumMixin(BaseClient):
 
         # V combo boxe vyberieme rok studia.
         if rok_studia is not None:
-            await app.d.rocnikComboBox.select(find_option(app.d.rocnikComboBox.options, id=str(rok_studia)))
+            await app.d.rocnikComboBox.select(
+                find_option(app.d.rocnikComboBox.options, id=str(rok_studia)))
 
         # Ak je nastaveny akademicky rok, vyberieme ho v combo boxe.
         if akademicky_rok is not None:
             try:
-                option = find_option(app.d.rokComboBox.options, id=akademicky_rok)
+                option = find_option(
+                    app.d.rokComboBox.options, id=akademicky_rok)
             # Snazime sa vytvorit zapisny list na akademicky rok, ktory nie je na vyber v comboBoxe
             except KeyError:
                 ops = await app.d.click_close_button(return_ops=True)

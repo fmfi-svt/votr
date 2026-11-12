@@ -15,7 +15,15 @@ if TYPE_CHECKING:
 class Panel(Control):
     """A mostly-static container for other WebUI widgets."""
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         element = nn(element)
         self.title = ct_none(str, element.get("name"))
@@ -34,8 +42,10 @@ class Panel(Control):
 
     async def toggle_collapsed(self, *, return_ops: bool = False) -> Operations:
         """Toggles whether this panel is collapsed, if it's collapsible."""
-        if not self.collapsable: return Operations()
-        if not self.parent.is_really_enabled(): return Operations()
+        if not self.collapsable:
+            return Operations()
+        if not self.parent.is_really_enabled():
+            return Operations()
         log_verb = "Opening" if self.collapsed else "Closing"
         await self.log("action", f"{log_verb} {self.id}")
         self.collapsed = not self.collapsed

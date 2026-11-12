@@ -37,6 +37,7 @@ if TYPE_CHECKING:
         studentCheckBox: CheckBox
         table: Table
         zamestnanecCheckBox: CheckBox
+
 else:
     RegisterOsobDialogsType = None
 
@@ -45,22 +46,48 @@ class WebuiOsobyMixin(BaseClient):
     @pooled_app
     async def _open_register_osob(self) -> Application[RegisterOsobDialogsType]:
         url = "/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.lz.LZ014App&kodAplikacie=LZ014&uiLang=SK"
-        app, ops = await Application[RegisterOsobDialogsType].open(self.context, url)
+        app, ops = await Application[RegisterOsobDialogsType].open(
+            self.context, url)
         op1, op2 = ops.expect_two(OpenDialogOp, OpenDialogOp)
         await op1.perform()
         await op2.perform()
 
         return app
 
-    async def __query_dialog(self, app: Application[RegisterOsobDialogsType], meno: str | None, priezvisko: str | None, absolvent: bool,
-                       student: bool, zamestnanec: bool, akademicky_rok: str,
-                       fakulta: str | None, studijny_program: str | None, uchadzaci: bool,
-                       prvy_rocnik: bool, druhy_rocnik: bool, treti_rocnik: bool,
-                       stvrty_rocnik: bool, piaty_rocnik: bool, siesty_rocnik: bool,
-                       siedmy_rocnik: bool, osmy_rocnik: bool, absolventi: bool) -> str | None:
-        rocniky = [uchadzaci, prvy_rocnik, druhy_rocnik, treti_rocnik,
-                   stvrty_rocnik, piaty_rocnik, siesty_rocnik,
-                   siedmy_rocnik, osmy_rocnik, absolventi]
+    async def __query_dialog(
+        self,
+        app: Application[RegisterOsobDialogsType],
+        meno: str | None,
+        priezvisko: str | None,
+        absolvent: bool,
+        student: bool,
+        zamestnanec: bool,
+        akademicky_rok: str,
+        fakulta: str | None,
+        studijny_program: str | None,
+        uchadzaci: bool,
+        prvy_rocnik: bool,
+        druhy_rocnik: bool,
+        treti_rocnik: bool,
+        stvrty_rocnik: bool,
+        piaty_rocnik: bool,
+        siesty_rocnik: bool,
+        siedmy_rocnik: bool,
+        osmy_rocnik: bool,
+        absolventi: bool,
+    ) -> str | None:
+        rocniky = [
+            uchadzaci,
+            prvy_rocnik,
+            druhy_rocnik,
+            treti_rocnik,
+            stvrty_rocnik,
+            piaty_rocnik,
+            siesty_rocnik,
+            siedmy_rocnik,
+            osmy_rocnik,
+            absolventi,
+        ]
 
         if any(rocniky) and not (absolvent or student or zamestnanec):
             student = True
@@ -93,23 +120,42 @@ class WebuiOsobyMixin(BaseClient):
                 ops.expect_one(MessageBoxOp)
                 # "Interna chyba: Nepodarilo sa osetrenie udalosti."
 
-            if not await select_ciselnik(app, fakulta or None, app.d.VyberFakultaButton, "skratka"):
+            if not await select_ciselnik(
+                app, fakulta or None, app.d.VyberFakultaButton, "skratka"
+            ):
                 return "Fakulta nebola nájdená."
 
             await app.d.odstranitOdborButton.click()
-            if not await select_ciselnik(app, studijny_program or None, app.d.VyberOdborButton, "skratka"):
+            if not await select_ciselnik(
+                app, studijny_program or None, app.d.VyberOdborButton, "skratka"
+            ):
                 return "Študijný program sa nenašiel, skontrolujte fakultu."
 
             for index, item in enumerate(rocniky):
                 if item != app.d.rocnikCheckList.items[index].checked:
                     await app.d.rocnikCheckList.toggle(index)
 
-    async def vyhladaj_osobu(self, meno: str | None, priezvisko: str | None, absolvent: bool,
-                       student: bool, zamestnanec: bool, akademicky_rok: str,
-                       fakulta: str | None, studijny_program: str | None, uchadzaci: bool,
-                       prvy_rocnik: bool, druhy_rocnik: bool, treti_rocnik: bool,
-                       stvrty_rocnik: bool, piaty_rocnik: bool, siesty_rocnik: bool,
-                       siedmy_rocnik: bool, osmy_rocnik: bool, absolventi: bool) -> tuple[list[RegOsoba], str | None]:
+    async def vyhladaj_osobu(
+        self,
+        meno: str | None,
+        priezvisko: str | None,
+        absolvent: bool,
+        student: bool,
+        zamestnanec: bool,
+        akademicky_rok: str,
+        fakulta: str | None,
+        studijny_program: str | None,
+        uchadzaci: bool,
+        prvy_rocnik: bool,
+        druhy_rocnik: bool,
+        treti_rocnik: bool,
+        stvrty_rocnik: bool,
+        piaty_rocnik: bool,
+        siesty_rocnik: bool,
+        siedmy_rocnik: bool,
+        osmy_rocnik: bool,
+        absolventi: bool,
+    ) -> tuple[list[RegOsoba], str | None]:
         app = await self._open_register_osob()
 
         await self.__open_filter(app)
@@ -132,11 +178,15 @@ class WebuiOsobyMixin(BaseClient):
         if app.d.osobyTable.truncated:
             message = "Neboli načítané všetky dáta. Upresnite kritériá vyhľadávania."
 
-        result = [RegOsoba(meno=row["meno"],
-                           priezvisko=row["priezvisko"],
-                           plne_meno=row["plneMeno"],
-                           email=row["email"])
-                  for row in app.d.osobyTable.loaded_rows]
+        result = [
+            RegOsoba(
+                meno=row["meno"],
+                priezvisko=row["priezvisko"],
+                plne_meno=row["plneMeno"],
+                email=row["email"],
+            )
+            for row in app.d.osobyTable.loaded_rows
+        ]
 
         return (result, message)
 
@@ -155,8 +205,10 @@ class WebuiOsobyMixin(BaseClient):
         ops = await app.d.VyberFakultaButton.click(return_ops=True)
         await ops.expect_one(OpenDialogOp).perform()
 
-        fakulty = [{"id": row["skratka"], "title": row["popis"]}
-                   for row in await app.d.table.all_rows()]
+        fakulty = [
+            {"id": row["skratka"], "title": row["popis"]}
+            for row in await app.d.table.all_rows()
+        ]
 
         fakulty.insert(0, {"id": "", "title": ""})
 
@@ -165,12 +217,16 @@ class WebuiOsobyMixin(BaseClient):
 
         return fakulty
 
-    async def __open_filter(self, app: Application[RegisterOsobDialogsType]) -> None:
+    async def __open_filter(
+        self, app: Application[RegisterOsobDialogsType]
+    ) -> None:
         if app.d.name != "LZ015_VyhladavanieOsobFilterDlg1":
             ops = await app.d.filterAction.execute(return_ops=True)
             await ops.expect_one(OpenDialogOp).perform()
 
-    async def __close_filter(self, app: Application[RegisterOsobDialogsType]) -> None:
+    async def __close_filter(
+        self, app: Application[RegisterOsobDialogsType]
+    ) -> None:
         if app.d.name == "LZ015_VyhladavanieOsobFilterDlg1":
             ops = await app.d.enterButton.click(return_ops=True)
             await ops.expect_one(CloseDialogOp).perform()

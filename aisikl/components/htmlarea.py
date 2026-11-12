@@ -14,7 +14,15 @@ class HtmlArea(ActionableControl):
 
     content: str
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.safe_links = ct(bool, properties.get("safeLinks", False))
         """If false, HTML links will open in a new window."""
@@ -27,6 +35,7 @@ class HtmlArea(ActionableControl):
 
     def _ais_setHtml(self, id: str, body: Tag) -> None:
         self._parse_content(nn(body.find(id=id)))
+
     _ais_setHtml.wants_body = True  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportFunctionMemberAccess]
 
     @override

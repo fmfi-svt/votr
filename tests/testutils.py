@@ -58,8 +58,8 @@ class MockRunner:
         old_log: bool,
         fail_fast: bool,
     ) -> bool:
-        self.expected_logs = deque(_preprocess_expected_logs(
-            expected_logs, old_log))
+        self.expected_logs = deque(
+            _preprocess_expected_logs(expected_logs, old_log))
         self.responses = deque(_prepare_http_responses(self.expected_logs))
         self.print = print
         self.old_log = old_log
@@ -97,7 +97,9 @@ class MockRunner:
     def _mock_time(self) -> float:
         return self.now
 
-    async def _mock_request_http(self, *args: object, **kwargs: object) -> Response:
+    async def _mock_request_http(
+        self, *args: object, **kwargs: object
+    ) -> Response:
         # This doesn't check if the request url or any other args match. It just
         # returns the original responses in the given order.
         # This can lead to confusing output if we diverge too much from the
@@ -106,7 +108,7 @@ class MockRunner:
         return self.responses.popleft()()
 
     async def _mock_send_log(
-        self, atimestamp: float, atype: str, amessage: str, adata: object,
+        self, atimestamp: float, atype: str, amessage: str, adata: object
     ) -> None:
         self._mock_send_log_match(atimestamp, atype, amessage, adata)
 
@@ -128,23 +130,28 @@ class MockRunner:
             # produce the same log sequence.
             if self.expected_logs[0].message.endswith(" failed with Cancelled"):
                 raise Cancelled(
-                    nn(re.search(
-                        r"\ntrio.Cancelled: (.*\S)\n*$",
-                        ct(str, self.expected_logs[0].data),
-                    )).group(1))
+                    nn(
+                        re.search(
+                            r"\ntrio.Cancelled: (.*\S)\n*$",
+                            ct(str, self.expected_logs[0].data))
+                    ).group(1)
+                )
 
             # BrokenPipeError was raised instead of Cancelled before the Trio
             # migration (2026-10-ish).
             if self.old_log and self.expected_logs[0].message.endswith(
-                    " failed with BrokenPipeError"):
+                " failed with BrokenPipeError"
+            ):
                 raise BrokenPipeError(
-                    nn(re.search(
-                        r"\nBrokenPipeError: (.*\S)\n*$",
-                        ct(str, self.expected_logs[0].data),
-                    )).group(1))
+                    nn(
+                        re.search(
+                            r"\nBrokenPipeError: (.*\S)\n*$",
+                            ct(str, self.expected_logs[0].data))
+                    ).group(1)
+                )
 
     def _mock_send_log_match(
-        self, atimestamp: float, atype: str, amessage: str, adata: object,
+        self, atimestamp: float, atype: str, amessage: str, adata: object
     ) -> None:
         if atype == "benchmark":
             return
@@ -168,21 +175,21 @@ class MockRunner:
         # This log call was added in ddcb88f15a (2025-02-28).
         # Hack: Assume every tree component id ends with "Tree".
         if (
-            self.old_log and
-            atype == "action" and
-            amessage.endswith("Tree") and
-            etype == "http"
+            self.old_log
+            and atype == "action"
+            and amessage.endswith("Tree")
+            and etype == "http"
         ):
             self.print(f"INFO: ignoring tree action log: {ajson}")
             return
 
         # This log call was added in 188d762a8a (2025-03-12).
         if (
-            self.old_log and
-            atype == "operation" and
-            amessage == "Closing pooled application" and
-            etype == "operation" and
-            emessage == "Closing all dialogs"
+            self.old_log
+            and atype == "operation"
+            and amessage == "Closing pooled application"
+            and etype == "operation"
+            and emessage == "Closing all dialogs"
         ):
             self.print(f"INFO: ignoring pool log: {ajson}")
             return
@@ -248,7 +255,8 @@ class MockRunner:
 
 
 def _preprocess_expected_logs(
-        entries: Sequence[LogEntry], old_log: bool) -> Iterable[LogEntry]:
+    entries: Sequence[LogEntry], old_log: bool
+) -> Iterable[LogEntry]:
     skip = 0
 
     for i in range(len(entries)):
@@ -260,10 +268,10 @@ def _preprocess_expected_logs(
         # aisikl.app.check_connection().
         # But not aisikl.portal.get_modules(), which requests the same URL.
         if (
-            old_log and
-            entries[i].type == "http" and
-            entries[i].message == "Requesting GET /ais/portal/changeTab.do" and
-            not (i and entries[i-1].message == "Opening main menu")
+            old_log
+            and entries[i].type == "http"
+            and entries[i].message == "Requesting GET /ais/portal/changeTab.do"
+            and not (i and entries[i - 1].message == "Opening main menu")
         ):
             url1 = "/ais/apps/student/sk/main.js"
             yield LogEntry(
@@ -274,20 +282,19 @@ def _preprocess_expected_logs(
             )
 
             if not (
-                i+1 < len(entries) and
-                entries[i+1].type == "http" and
-                entries[i+1].message == "Received response"
+                i + 1 < len(entries)
+                and entries[i + 1].type == "http"
+                and entries[i + 1].message == "Received response"
             ):
                 # Next entry is probably a network error.
                 continue
-            elif (
-                i+2 < len(entries) and
-                entries[i+2].message.endswith(" failed with LoggedOutError")
+            elif i + 2 < len(entries) and entries[i + 2].message.endswith(
+                " failed with LoggedOutError"
             ):
                 # Originally it was a 200 response without a username element,
                 # meaning the user is logged out. Replace with network error.
                 yield LogEntry(
-                    timestamp=entries[i+1].timestamp,
+                    timestamp=entries[i + 1].timestamp,
                     type="http",
                     message="Received response",
                     data=HttpResponseData(
@@ -303,24 +310,22 @@ def _preprocess_expected_logs(
             else:
                 # The connection check was a success.
                 yield LogEntry(
-                    timestamp=entries[i+1].timestamp,
+                    timestamp=entries[i + 1].timestamp,
                     type="http",
                     message="Received response",
                     data=HttpResponseData(
-                        status_code=200,
-                        reason_phrase="",
-                        headers=[],
+                        status_code=200, reason_phrase="", headers=[]
                     ),
                 )
                 url2 = "/ais/rest/apps/get-access-token"
                 yield LogEntry(
-                    timestamp=entries[i+1].timestamp,
+                    timestamp=entries[i + 1].timestamp,
                     type="http",
                     message=f"Requesting GET {url2}",
                     data=[url2, None],
                 )
                 yield LogEntry(
-                    timestamp=entries[i+1].timestamp,
+                    timestamp=entries[i + 1].timestamp,
                     type="http",
                     message="Received response",
                     data=HttpResponseData(
@@ -331,19 +336,17 @@ def _preprocess_expected_logs(
                 )
                 url3 = "/ais/rest/apps/check-session/check-light"
                 yield LogEntry(
-                    timestamp=entries[i+1].timestamp,
+                    timestamp=entries[i + 1].timestamp,
                     type="http",
                     message=f"Requesting GET {url3}",
                     data=[url3, None],
                 )
                 yield LogEntry(
-                    timestamp=entries[i+1].timestamp,
+                    timestamp=entries[i + 1].timestamp,
                     type="http",
                     message="Received response",
                     data=HttpResponseData(
-                        status_code=200,
-                        reason_phrase="",
-                        headers=[],
+                        status_code=200, reason_phrase="", headers=[]
                     ),
                 )
                 # Skip the original "Received response" entry.
@@ -353,15 +356,16 @@ def _preprocess_expected_logs(
         # Match `requests`-based (before 2026-09-ish) responses for
         # fladgejt.login._send_request().
         if (
-            old_log and
-            entries[i].type == "http" and
-            (m := re.fullmatch(r"Received HTTP (\d+) response",
-                entries[i].message))
+            old_log
+            and entries[i].type == "http"
+            and (m := re.fullmatch(
+                r"Received HTTP (\d+) response", entries[i].message))
         ):
-            headers_str, sep, body = ct(str, entries[i].data).partition("\n---\n")
+            headers_str, sep, body = ct(str, entries[i].data).partition(
+                "\n---\n")
             headers = [line.split(": ") for line in headers_str.split("\n")]
             headers = [[k.lower(), v] for k, v in headers]
-            if i and "/ais/sso/samlsso" in entries[i-1].message:
+            if i and "/ais/sso/samlsso" in entries[i - 1].message:
                 # Hack: This fake header is added in fladgejt/login.py, but
                 # previously it wasn't added to the response log.
                 headers.append(["content-type", "text/html; charset=UTF-8"])
@@ -372,7 +376,8 @@ def _preprocess_expected_logs(
                 reason_phrase=_IGNORE_DETAILS,
                 headers=headers,
             )
-            if sep: data["body"] = body
+            if sep:
+                data["body"] = body
             yield LogEntry(
                 timestamp=entries[i].timestamp,
                 type="http",
@@ -385,11 +390,12 @@ def _preprocess_expected_logs(
         # fladgejt.login._send_request(). In this case, we already logged the
         # response before raise_for_status(), but the exception has changed.
         if (
-            old_log and
-            i and
-            entries[i] is entries[-1] and
-            entries[i].message == "Login failed with HTTPError" and
-            re.fullmatch(r"Received HTTP \d+ response", entries[i-1].message)
+            old_log
+            and i
+            and entries[i] is entries[-1]
+            and entries[i].message == "Login failed with HTTPError"
+            and re.fullmatch(
+                r"Received HTTP \d+ response", entries[i - 1].message)
         ):
             yield LogEntry(
                 timestamp=entries[i].timestamp,
@@ -404,13 +410,13 @@ def _preprocess_expected_logs(
         # Match `requests`-based (before 2026-09-ish) expired REST logins in
         # Context.request_json().
         if (
-            old_log and
-            entries[i].type == "http" and
-            entries[i].message == "Received response" and
-            isinstance((d1 := entries[i].data), str) and
-            "login.uniba.sk" in d1 and  # some Cosign error page
-            isinstance((d2 := entries[-1].data), str) and
-            "REST login expired" in d2
+            old_log
+            and entries[i].type == "http"
+            and entries[i].message == "Received response"
+            and isinstance((d1 := entries[i].data), str)
+            and "login.uniba.sk" in d1  # some Cosign error page
+            and isinstance((d2 := entries[-1].data), str)
+            and "REST login expired" in d2
         ):
             yield LogEntry(
                 timestamp=entries[i].timestamp,
@@ -427,10 +433,10 @@ def _preprocess_expected_logs(
         # Match `requests`-based (before 2026-09-ish) successful text responses
         # for Context.request_ais() and Context.request_json().
         if (
-            old_log and
-            entries[i].type == "http" and
-            entries[i].message == "Received response" and
-            isinstance((body := entries[i].data), str)
+            old_log
+            and entries[i].type == "http"
+            and entries[i].message == "Received response"
+            and isinstance((body := entries[i].data), str)
         ):
             yield LogEntry(
                 timestamp=entries[i].timestamp,
@@ -451,10 +457,10 @@ def _preprocess_expected_logs(
         # responses for Context.request_ais(). They will be processed further in
         # _prepare_http_response().
         if (
-            old_log and
-            entries[i].type == "http" and
-            entries[i].message == "Received response (binary data)" and
-            entries[i].data is None
+            old_log
+            and entries[i].type == "http"
+            and entries[i].message == "Received response (binary data)"
+            and entries[i].data is None
         ):
             yield LogEntry(
                 timestamp=entries[i].timestamp,
@@ -472,20 +478,18 @@ def _preprocess_expected_logs(
         # Match `requests`-based (before 2026-09-ish) 401 errors in
         # check_connection() leading to LoggedOutError('AIS login expired.').
         if (
-            old_log and
-            entries[i] is entries[-1] and
-            " failed with " in entries[i].message and
-            "AIS login expired." in ct(str, entries[i].data) and
-            "requests.exceptions.HTTPError" in ct(str, entries[i].data)
+            old_log
+            and entries[i] is entries[-1]
+            and " failed with " in entries[i].message
+            and "AIS login expired." in ct(str, entries[i].data)
+            and "requests.exceptions.HTTPError" in ct(str, entries[i].data)
         ):
             yield LogEntry(
                 timestamp=entries[i].timestamp,
                 type="http",
                 message="Received response",
                 data=HttpResponseData(
-                    status_code=401,
-                    reason_phrase=_IGNORE_DETAILS,
-                    headers=[],
+                    status_code=401, reason_phrase=_IGNORE_DETAILS, headers=[]
                 ),
             )
             yield entries[i]
@@ -494,10 +498,12 @@ def _preprocess_expected_logs(
         # Match AISBehaviorError messages that changed in the Operation refactor
         # (2026-10-ish).
         if (
-            old_log and
-            entries[i].message.endswith(" failed with AISBehaviorError") and
-            ("Operation(target='" in ct(str, entries[i].data) or
-            "We expected ['" in ct(str, entries[i].data))
+            old_log
+            and entries[i].message.endswith(" failed with AISBehaviorError")
+            and (
+                "Operation(target='" in ct(str, entries[i].data)
+                or "We expected ['" in ct(str, entries[i].data)
+            )
         ):
             yield LogEntry(
                 timestamp=entries[i].timestamp,
@@ -509,14 +515,18 @@ def _preprocess_expected_logs(
 
         # openMainDialog was removed in the Operation refactor (2026-10-ish).
         if (
-            old_log and
-            entries[i].message == "Received operation openMainDialog"
+            old_log
+            and entries[i].message == "Received operation openMainDialog"
         ):
             yield LogEntry(
                 timestamp=entries[i].timestamp,
                 type=entries[i].type,
                 message="Received operation openDialog",
-                data=[ct(list, entries[i].data)[0], "openDialog", ct(list, entries[i].data)[2]],
+                data=[
+                    ct(list, entries[i].data)[0],
+                    "openDialog",
+                    ct(list, entries[i].data)[2],
+                ],
             )
             continue
 
@@ -524,7 +534,8 @@ def _preprocess_expected_logs(
 
 
 def _prepare_http_responses(
-        entries: Sequence[LogEntry]) -> Iterable[Callable[[], Response]]:
+    entries: Sequence[LogEntry],
+) -> Iterable[Callable[[], Response]]:
     for i in range(1, len(entries)):
         responder = _prepare_http_response(
             entries[i - 1], entries[i], entries[-1])
@@ -533,24 +544,22 @@ def _prepare_http_responses(
 
 
 def _prepare_http_response(
-        request_entry: LogEntry,
-        response_entry: LogEntry,
-        final_entry: LogEntry,
+    request_entry: LogEntry, response_entry: LogEntry, final_entry: LogEntry
 ) -> Callable[[], Response] | None:
     # Match successfully-received responses for Context.request_ais(),
     # Context.request_json(), and fladgejt.login._send_request().
     if (
-        request_entry.type == "http" and
-        request_entry.message.startswith("Requesting ") and
-        response_entry.type == "http" and
-        response_entry.message == "Received response" and
-        isinstance(response_entry.data, dict)
+        request_entry.type == "http"
+        and request_entry.message.startswith("Requesting ")
+        and response_entry.type == "http"
+        and response_entry.message == "Received response"
+        and isinstance(response_entry.data, dict)
     ):
         _, method, url = request_entry.message.split(" ")
         # url can be relative, but close enough!
 
-        response_data = cast("HttpResponseData",
-            cast("object", response_entry.data))
+        response_data = cast(
+            "HttpResponseData", cast("object", response_entry.data))
 
         content = None
         text = None
@@ -562,8 +571,8 @@ def _prepare_http_response(
             # is freaking huge, but we only look for this fragment.
             text = 'retrieveAccessToken() { setRequestHeader("foo", "bar"); }'
         elif (
-            url.startswith("/ais/files") and
-            final_entry.message == "RPC get_informacny_list finished"
+            url.startswith("/ais/files")
+            and final_entry.message == "RPC get_informacny_list finished"
         ):
             # For PDF files in get_informacny_list(), extract the content from
             # the RPC return value.
@@ -577,7 +586,7 @@ def _prepare_http_response(
             status_code=response_data["status_code"],
             extensions=dict(
                 # For matching the raised message in raise_for_status().
-                reason_phrase=response_data["reason_phrase"].encode(),
+                reason_phrase=response_data["reason_phrase"].encode()
             ),
             text=text,
             content=content,
@@ -586,15 +595,16 @@ def _prepare_http_response(
 
         # Set headers afterwards. If 'Content-Encoding' is given to Response
         # constructor, it affects how `content` is interpreted. :C
-        response.headers = Headers(
-            [(k, v) for k, v in response_data["headers"]])
+        response.headers = Headers([
+            (k, v) for k, v in response_data["headers"]
+        ])
 
         if response.has_redirect_location:
             response.next_request = Request(
                 # Hack: assume the next request is GET.
                 method="GET",
-                url=urljoin(url, response.headers["location"],
-            ))
+                url=urljoin(url, response.headers["location"]),
+            )
 
         return lambda: response
 
@@ -605,14 +615,16 @@ def _prepare_http_response(
     # Old HTTP status errors, which used to be raised before the response was
     # logged, are also treated as if they were network errors.
     if (
-        request_entry.type == "http" and
-        request_entry.message.startswith("Requesting ") and
-        response_entry is final_entry and
-        " failed with " in final_entry.message and
-        (error_class := HTTP_ERRORS.get(final_entry.message.split()[-1]))
+        request_entry.type == "http"
+        and request_entry.message.startswith("Requesting ")
+        and response_entry is final_entry
+        and " failed with " in final_entry.message
+        and (error_class := HTTP_ERRORS.get(final_entry.message.split()[-1]))
     ):
+
         def raise_error() -> Response:
             raise error_class(_IGNORE_DETAILS)
+
         return raise_error
 
 
@@ -632,6 +644,7 @@ def _canonicalize(jsonstr: str, old_log: bool) -> str:
     # Votr uses time.time() as the value.
     def url_remove_anticache(s: str) -> str:
         return re.sub(r"(&antiCache=)\d+\.\d+", r"\1[antiCache redacted]", s)
+
     if message.startswith("Requesting GET "):
         data[0] = url_remove_anticache(data[0])
     if message.startswith("Opening application "):
@@ -677,13 +690,16 @@ def _sort_xml(xml_spec: str, parent: str, item: str) -> str:
     i = re.escape(item)
     pattern1 = rf"(<{p}>\n*)(<{i}[ >].*</{i}>)(\n*</{p}>)"
     pattern2 = rf"(?=<{i}[ >])"
+
     def replacer(m: re.Match[str]) -> str:
         group2 = "".join(sorted(re.split(pattern2, m.group(2))))
         return f"{m.group(1)}[xml sorted]{group2}[/xml sorted]{m.group(3)}"
+
     return re.sub(pattern1, replacer, xml_spec, flags=re.DOTALL)
 
 
-class _FailFast(BaseException): pass
+class _FailFast(BaseException):
+    pass
 
 
 class Cancelled(Exception):
@@ -692,6 +708,7 @@ class Cancelled(Exception):
     having to deal with ``BaseException`` and ``CancelScope`` in test code that
     calls MockRunner.
     """
+
     __module__ = "trio"
 
 
@@ -724,32 +741,35 @@ HTTP_ERRORS = {
 
 
 async def _scenario_main_async(
-    run: Callable[[BaseClient], Awaitable[None]],
-    anonymous: bool,
+    run: Callable[[BaseClient], Awaitable[None]], anonymous: bool
 ) -> None:
     parser = argparse.ArgumentParser()
 
-    parser.add_argument("--save", type=pathlib.Path, metavar="FILENAME",
+    parser.add_argument(
+        "--save", type=pathlib.Path, metavar="FILENAME",
         help="Output log file path")
 
     live_group = parser.add_argument_group(title="live mode options")
-    live_group.add_argument("--ais-url", metavar="URL",
-        help="AIS URL or hostname (required)")
+    live_group.add_argument(
+        "--ais-url", metavar="URL", help="AIS URL or hostname (required)")
     if not anonymous:
-        live_group.add_argument("--params", type=pathlib.Path,
-            metavar="FILENAME",
-            help="Input JSON file with login params, should contain e.g. " +
-            '{"type":"saml_password","username":"...","password":"..."}, ' +
-            "or set $AIS_PARAMS to a JSON string, " +
-            "or set $AIS_USERNAME and $AIS_PASSWORD")
+        live_group.add_argument(
+            "--params", type=pathlib.Path, metavar="FILENAME",
+            help="Input JSON file with login params, should contain e.g. "
+            + '{"type":"saml_password","username":"...","password":"..."}, '
+            + "or set $AIS_PARAMS to a JSON string, "
+            + "or set $AIS_USERNAME and $AIS_PASSWORD")
 
     mock_group = parser.add_argument_group(title="mock mode options")
-    mock_group.add_argument("--load", type=pathlib.Path, metavar="FILENAME",
+    mock_group.add_argument(
+        "--load", type=pathlib.Path, metavar="FILENAME",
         help="Input log file path (required)")
-    mock_group.add_argument("--old-log", action="store_true",
-        help="Allow some known differences in log content " +
-        "between old Votr and current Votr")
-    mock_group.add_argument("--fail-fast", action="store_true",
+    mock_group.add_argument(
+        "--old-log", action="store_true",
+        help="Allow some known differences in log content "
+        + "between old Votr and current Votr")
+    mock_group.add_argument(
+        "--fail-fast", action="store_true",
         help="Do not continue past the first error/warning")
 
     options = parser.parse_args()
@@ -762,8 +782,8 @@ async def _scenario_main_async(
             result = await run(client)
             await client.context.log("scenario", "Scenario finished", result)
         except Exception as e:
-            await client.context.log("scenario",
-                f"Scenario failed with {type(e).__name__}",
+            await client.context.log(
+                "scenario", f"Scenario failed with {type(e).__name__}",
                 traceback.format_exc())
             nonlocal body_failed
             body_failed = True
@@ -789,8 +809,8 @@ async def _scenario_main_async(
                     options.save.open("w"))
 
             ok = await MockRunner().run(
-                body, entries, print=print,
-                old_log=options.old_log, fail_fast=options.fail_fast)
+                body, entries, print=print, old_log=options.old_log,
+                fail_fast=options.fail_fast)
 
             if ok:
                 print("PASS")
@@ -813,7 +833,7 @@ async def _scenario_main_async(
             else:
                 if options.params:
                     params = json.loads(options.params.read_text())
-                elif (params_env := os.getenv("AIS_PARAMS")):
+                elif params_env := os.getenv("AIS_PARAMS"):
                     params = json.loads(params_env)
                 elif (
                     (username := os.getenv("AIS_USERNAME")) and
@@ -825,8 +845,9 @@ async def _scenario_main_async(
                         password=password,
                     )
                 else:
-                    parser.error("either --params or $AIS_PARAMS or " +
-                        "$AIS_USERNAME + $AIS_PASSWORD is required")
+                    parser.error(
+                        "either --params or $AIS_PARAMS or "
+                        + "$AIS_USERNAME + $AIS_PASSWORD is required")
 
                 server = ServerDict(
                     login_types=(params["type"],),
@@ -850,7 +871,6 @@ async def _scenario_main_async(
 
 
 def scenario_main(
-    run: Callable[[BaseClient], Awaitable[None]], *,
-    anonymous: bool=False,
+    run: Callable[[BaseClient], Awaitable[None]], *, anonymous: bool = False
 ) -> None:
     trio.run(_scenario_main_async, run, anonymous)

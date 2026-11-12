@@ -34,8 +34,14 @@ class Context:
     performs HTTP requests and deals with logs.
     """
 
-    def __init__(self, *, ais_url: str | None=None, rest_url: str | None=None, dns_overrides: dict[str, str] | None=None,
-                 logger: Logger | None=None) -> None:
+    def __init__(
+        self,
+        *,
+        ais_url: str | None = None,
+        rest_url: str | None = None,
+        dns_overrides: dict[str, str] | None = None,
+        logger: Logger | None = None,
+    ) -> None:
         self.ais_url = ais_url
         """The AIS server to connect to, e.g. ``"https://ais2.uniba.sk/"``."""
         self.rest_url = rest_url
@@ -60,7 +66,7 @@ class Context:
 
     @contextmanager
     def use_connection_pool(
-        self, pool: httpcore2.AsyncConnectionPool | None,
+        self, pool: httpcore2.AsyncConnectionPool | None
     ) -> Generator[None]:
         """Uses the given HTTP connection pool for the context manager's
         duration. By default, without ``use_connection_pool``, ``Context``
@@ -78,11 +84,12 @@ class Context:
             self._pool = old
 
     async def request_http(
-        self, *,
+        self,
+        *,
         method: str,
         url: str,
-        data: Mapping[str, str] | None=None,
-        headers: Mapping[str, str] | None=None,
+        data: Mapping[str, str] | None = None,
+        headers: Mapping[str, str] | None = None,
     ) -> httpx2.Response:
         """Sends an HTTP request to an arbitrary absolute URL and returns the
         response. Reads and writes [`cookie_jar`][].
@@ -116,11 +123,13 @@ class Context:
                 follow_redirects=False, timeout=None)
 
     async def request_ais(
-        self, url: str, *,
-        method: str="GET",
-        data: Mapping[str, str] | None=None,
-        headers: Mapping[str, str] | None=None,
-        redirects: Literal["raise", "return", "follow"]="raise",
+        self,
+        url: str,
+        *,
+        method: str = "GET",
+        data: Mapping[str, str] | None = None,
+        headers: Mapping[str, str] | None = None,
+        redirects: Literal["raise", "return", "follow"] = "raise",
     ) -> httpx2.Response:
         """Sends a request to AIS and returns the response.
 
@@ -128,7 +137,9 @@ class Context:
         """
         while True:
             await self.log("benchmark", "Begin AIS network request")
-            await self.log("http", f"Requesting {method} {url.partition('?')[0]}", [url, data])
+            await self.log(
+                "http", f"Requesting {method} {url.partition('?')[0]}",
+                [url, data])
 
             url = urljoin(nn(self.ais_url), url)
             response = await self.request_http(
@@ -141,7 +152,8 @@ class Context:
                 next_request = nn(response.next_request)
                 url = str(next_request.url)
                 method = next_request.method
-                if method == "GET": data = None
+                if method == "GET":
+                    data = None
                 headers = next_request.headers
                 continue
                 # Max redirects count is not implemented (not needed so far).
@@ -173,7 +185,8 @@ class Context:
             A dictionary.
         """
         await self.log("benchmark", "Begin REST network request")
-        await self.log("http", f"Requesting POST {url.partition('?')[0]}", [url, data])
+        await self.log(
+            "http", f"Requesting POST {url.partition('?')[0]}", [url, data])
 
         url = urljoin(nn(self.rest_url), url)
         response = await self.request_http(method="POST", url=url, data=data)
@@ -188,7 +201,7 @@ class Context:
 
         if response["status"] != "OK":
             raise RESTServerError(
-                f"Status: {response["status"]} Error: {response["error"]}")
+                f"Status: {response['status']} Error: {response['error']}")
 
         await self.log("http", "Parsed JSON data")
         return response["response"]
@@ -198,8 +211,9 @@ class Context:
             "status_code": response.status_code,
             "reason_phrase": response.reason_phrase,
             "headers": [
-                [k, v] for k, v in response.headers.multi_items()
-                if k.lower() in { "aisauth", "content-type", "location" }
+                [k, v]
+                for k, v in response.headers.multi_items()
+                if k.lower() in {"aisauth", "content-type", "location"}
             ],
         }
         if response.has_redirect_location:
@@ -213,7 +227,7 @@ class Context:
             pass
         await self.log("http", "Received response", log_data)
 
-    async def log(self, type: str, message: str, data: object=None) -> None:
+    async def log(self, type: str, message: str, data: object = None) -> None:
         """Logs a message.
 
         Args:
@@ -240,7 +254,7 @@ class Logger:
     def __getstate__(self) -> dict[object, object]:
         return {}
 
-    async def log(self, type: str, message: str, data: object=None) -> None:
+    async def log(self, type: str, message: str, data: object = None) -> None:
         timestamp = time.time()
 
         # 'benchmark' is excluded from log files. It's too verbose.
@@ -260,6 +274,7 @@ class Logger:
 
         if self.send_log:
             await self.send_log(timestamp, type, message, data)
+
     log.__doc__ = Context.log.__doc__
 
 
@@ -396,15 +411,22 @@ except NameError:
 
     def _log_to_ipython(type: str, message: str, data: object) -> None:
         pass
+
 else:
     from IPython.display import display  # pyrefly: ignore [missing-import] # pyright: ignore [reportMissingImports, reportUnknownVariableType]
     from markupsafe import Markup
 
     def _log_to_ipython(type: str, message: str, data: object) -> None:
-        html = Markup('<span style="background:#FF8"><b>{}</b> {}</span>').format(type, message)
+        html = Markup(
+            '<span style="background:#FF8"><b>{}</b> {}</span>'
+        ).format(type, message)
         if data is not None:
-            html = Markup("<details><summary>{}</summary><pre>{}</pre></details>").format(html, repr_log_data(data))
+            html = Markup(
+                "<details><summary>{}</summary><pre>{}</pre></details>"
+            ).format(html, repr_log_data(data))
         else:
             # Wrap in <div> to make Jupyter's margin-bottom CSS more consistent.
             html = Markup("<div>{}</div>").format(html)
-        display({"text/plain": f"<{type}> {message}", "text/html": str(html)}, raw=True)
+        display(
+            {"text/plain": f"<{type}> {message}", "text/html": str(html)},
+            raw=True)

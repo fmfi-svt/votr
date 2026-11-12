@@ -15,7 +15,15 @@ if TYPE_CHECKING:
 class CheckBox(Control):
     """A WebUI checkbox."""
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         # We only ever saw shortcut==None, but webui calls toUpperCase().
         self.shortcut = ct_none(str, properties.get("sc"))
@@ -28,6 +36,7 @@ class CheckBox(Control):
 
     def _ais_setSmoked(self, value: object) -> None:
         self.smoked = is_true(value)
+
     def _ais_setSelected(self, value: object) -> None:
         self.selected = is_true(value)
         self.dialog.try_interactive(self, "ItemEvent")
@@ -50,7 +59,9 @@ class CheckBox(Control):
         await self.log("action", f"{log_verb} {self.id}")
         return await self._fire_event(return_ops=return_ops)
 
-    async def set_to(self, value: bool, *, return_ops: bool = False) -> Operations:
+    async def set_to(
+        self, value: bool, *, return_ops: bool = False
+    ) -> Operations:
         """Sets the checkbox to ``value`` if it's not already there."""
         if self.smoked or self.selected != bool(value):
             self.selected = bool(value)

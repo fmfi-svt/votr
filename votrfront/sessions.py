@@ -1,4 +1,3 @@
-
 import contextlib
 import fcntl
 import gzip
@@ -34,7 +33,9 @@ def open_log_file(sessid: str) -> TextIO:
     return gzip.open(filename, "at", encoding="utf8")
 
 
-def create(request: Request[VotrState], sessid: str, session: SessionDict) -> str:
+def create(
+    request: Request[VotrState], sessid: str, session: SessionDict
+) -> str:
     check_sessid(sessid)
     with var_path("sessions", sessid).open("xb") as f:
         pickle.dump(session, f, pickle.HIGHEST_PROTOCOL)
@@ -43,8 +44,10 @@ def create(request: Request[VotrState], sessid: str, session: SessionDict) -> st
 
 
 def delete(request: Request[VotrState], sessid: str | None = None) -> None:
-    if not sessid: sessid = get_sessid_from_cookie(request)
-    if not sessid: return
+    if not sessid:
+        sessid = get_sessid_from_cookie(request)
+    if not sessid:
+        return
     check_sessid(sessid)
     try:
         var_path("sessions", sessid).unlink()
@@ -75,8 +78,7 @@ async def lock(sessid: str) -> AsyncGenerator[None]:
         f = open(lock_path, "ab")
         try:
             await trio.to_thread.run_sync(
-                fcntl.flock, f.fileno(), fcntl.LOCK_EX,
-                abandon_on_cancel=True)
+                fcntl.flock, f.fileno(), fcntl.LOCK_EX, abandon_on_cancel=True)
 
             # Lock acquired, but is it still the same file? Compare inodes.
             my_inode = os.fstat(f.fileno()).st_ino
@@ -100,9 +102,13 @@ async def lock(sessid: str) -> AsyncGenerator[None]:
 
 
 @contextlib.asynccontextmanager
-async def transaction(request: Request[VotrState], sessid: str | None = None) -> AsyncGenerator[SessionDict]:
-    if not sessid: sessid = get_sessid_from_cookie(request)
-    if not sessid: raise LoggedOutError("Session cookie not found")
+async def transaction(
+    request: Request[VotrState], sessid: str | None = None
+) -> AsyncGenerator[SessionDict]:
+    if not sessid:
+        sessid = get_sessid_from_cookie(request)
+    if not sessid:
+        raise LoggedOutError("Session cookie not found")
     check_sessid(sessid)
 
     async with lock(sessid):
@@ -114,8 +120,8 @@ async def transaction(request: Request[VotrState], sessid: str | None = None) ->
         with f:
             session = pickle.load(f)
 
-            if (credentials := session.get("credentials")):
-                if (username := credentials.get("username")):
+            if credentials := session.get("credentials"):
+                if username := credentials.get("username"):
                     request.state["votr_log_user"] = username
 
             try:
@@ -131,15 +137,20 @@ async def transaction(request: Request[VotrState], sessid: str | None = None) ->
 
 
 @contextlib.asynccontextmanager
-async def logged_transaction(request: Request[VotrState], sessid: str | None = None) -> AsyncGenerator[SessionDict]:
-    if not sessid: sessid = get_sessid_from_cookie(request)
+async def logged_transaction(
+    request: Request[VotrState], sessid: str | None = None
+) -> AsyncGenerator[SessionDict]:
+    if not sessid:
+        sessid = get_sessid_from_cookie(request)
 
     async with transaction(request, sessid) as session:
         with open_log_file(nn(sessid)) as log_file:
             client = session.get("client")
             if client:
                 client.context.logger.log_file = log_file
-                with client.context.use_connection_pool(request.state["connection_pool"]):
+                with client.context.use_connection_pool(
+                    request.state["connection_pool"]
+                ):
                     yield session
             else:
                 yield session

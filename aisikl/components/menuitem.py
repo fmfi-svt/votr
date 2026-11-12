@@ -14,7 +14,15 @@ if TYPE_CHECKING:
 class MenuItem(ActionableControl):
     """A WebUI popup menu item."""
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.popup_menu_id = properties.get("pmid")
         # We only ever saw confirm_question==None, but webui calls confirm().
@@ -30,10 +38,13 @@ class MenuItem(ActionableControl):
 
     def _ais_setConfirmQuestion(self, value: object) -> None:
         self.confirm_question = ct_none(str, value)
+
     def _ais_setImage(self, value: object) -> None:
         self.image = ct_none(str, value)
 
-    async def click(self, params: str | None=None, *, return_ops: bool = False) -> Operations:
+    async def click(
+        self, params: str | None = None, *, return_ops: bool = False
+    ) -> Operations:
         """Clicks the menu item.
 
         If [`confirm_question`][] is not ``None``, ``click`` ignores it --

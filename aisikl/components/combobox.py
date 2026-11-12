@@ -31,7 +31,15 @@ class ComboBox(Control):
 
     options: list[Option]
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.tool_tip_like_data = ct(bool, properties.get("ttld", False))
         """Whether the AIS UI shows the current [`Option.tool_tip_text`][] when
@@ -53,13 +61,16 @@ class ComboBox(Control):
 
     @property
     def selected_option(self) -> Option | None:
-        if self.selected_index == -1: return None
+        if self.selected_index == -1:
+            return None
         return self.options[self.selected_index]
 
-    async def select(self, index: int, *, return_ops: bool = False) -> Operations:
+    async def select(
+        self, index: int, *, return_ops: bool = False
+    ) -> Operations:
         """Selects the option at ``index``."""
-        await self.log("action",
-            f'Selecting "{self.options[index].title}" in {self.id}')
+        await self.log(
+            "action", f'Selecting "{self.options[index].title}" in {self.id}')
         self.selected_index = index
         return await self._fire_event(return_ops=return_ops)
 
@@ -70,9 +81,11 @@ class ComboBox(Control):
 
     @override
     def changed_properties(self) -> str:
-        cdata = ("<root><selection>"
+        cdata = (
+            "<root><selection>"
             f"<selectedIndexes>{self.selected_index}</selectedIndexes>"
-            "</selection></root>")
+            "</selection></root>"
+        )
         return self._build_changed_properties(dataView=(True, True, cdata))
 
     def _ais_setDataView(self, id: str, body: Tag) -> None:
@@ -83,4 +96,5 @@ class ComboBox(Control):
         else:
             self._parse_options(combo_box_list)
         self.dialog.try_interactive(self, "SelectionEvent")
+
     _ais_setDataView.wants_body = True  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportFunctionMemberAccess]

@@ -12,11 +12,12 @@ if TYPE_CHECKING:
 
 
 async def run(client: BaseClient) -> None:
-    async def call(name: str, *args: object, silent: bool=False) -> Any:
+    async def call(name: str, *args: object, silent: bool = False) -> Any:
         await client.context.log("scenario", f"{name} started", args)
         await client.prepare_for_rpc()
         result = encode_result(await getattr(client, name)(*args))
-        await client.context.log("scenario", f"{name} finished", "silent" if silent else result)
+        await client.context.log(
+            "scenario", f"{name} finished", "silent" if silent else result)
         return result
 
     if await call("get_som_student"):
@@ -64,23 +65,42 @@ async def run(client: BaseClient) -> None:
 
     roky = await call("get_register_osob_akademicky_rok_options")
     await call("get_register_osob_fakulty")
-    await call("vyhladaj_osobu", "", "a", False, False, False, roky[0]["id"], None, None, False, False, False, False, False, False, False, False, False, False)
-    await call("vyhladaj_osobu", "a", "", True, True, True, roky[1]["id"], "FMFI", "INF", True, True, True, True, True, True, True, True, True, True)
+    await call(
+        "vyhladaj_osobu", "", "a", False, False, False, roky[0]["id"], None,
+        None, False, False, False, False, False, False, False, False, False,
+        False)
+    await call(
+        "vyhladaj_osobu", "a", "", True, True, True, roky[1]["id"], "FMFI",
+        "INF", True, True, True, True, True, True, True, True, True, True)
 
     await call("get_register_predmetov_fakulta_options")
     roky = await call("get_register_predmetov_akademicky_rok_options")
     await call("get_register_predmetov_semester_options")
     await call("get_register_predmetov_stupen_options")
-    await call("vyhladaj_predmety", roky[0]["id"], None, None, None, None, "prog", None, None)
-    await call("vyhladaj_predmety", roky[1]["id"], "FMFI", "zle", "zle", "bla", "bla", "Z", "I.")
-    predmety, _ = await call("vyhladaj_predmety", roky[2]["id"], "FMFI", "FMFI.KAI", None, None, None, None, None)
+    await call(
+        "vyhladaj_predmety", roky[0]["id"], None, None, None, None, "prog",
+        None, None)
+    await call(
+        "vyhladaj_predmety", roky[1]["id"], "FMFI", "zle", "zle", "bla", "bla",
+        "Z", "I.")
+    predmety, _ = await call(
+        "vyhladaj_predmety", roky[2]["id"], "FMFI", "FMFI.KAI", None, None,
+        None, None, None)
 
     for predmet in predmety[0:5]:
-        await call("get_informacny_list", predmet["predmet_key"], roky[2]["id"], silent=True)
+        await call(
+            "get_informacny_list", predmet["predmet_key"], roky[2]["id"],
+            silent=True)
 
-        predmet2: Any = (await call("get_studenti_zapisani_na_predmet", predmet["predmet_key"], roky[2]["id"]))["predmet"]
+        predmet2: Any = (
+            await call(
+                "get_studenti_zapisani_na_predmet", predmet["predmet_key"],
+                roky[2]["id"])
+        )["predmet"]
 
-        await call("get_ucitelia_predmetu", predmet["predmet_key"], roky[2]["id"], predmet2["semester"], predmet2["fakulta"])
+        await call(
+            "get_ucitelia_predmetu", predmet["predmet_key"], roky[2]["id"],
+            predmet2["semester"], predmet2["fakulta"])
 
     await call("get_semester_obdobie", "Z")
     await call("get_semester_obdobie", "L")

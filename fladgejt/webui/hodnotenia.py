@@ -22,17 +22,23 @@ if TYPE_CHECKING:
         nacitatHodnotenieButton: Button
         predmetySPriebeznymHodnotenimTable: Table
         refreshButton: Button
+
 else:
     HodnoteniaPriemeryDialogsType = None
     PriebezneHodnotenieDialogsType = None
 
 
 class WebuiHodnoteniaMixin(WebuiStudiumMixin):
-    async def get_hodnotenia(self, zapisny_list_key: str) -> tuple[list[Hodnotenie], str | None]:
+    async def get_hodnotenia(
+        self, zapisny_list_key: str
+    ) -> tuple[list[Hodnotenie], str | None]:
         try:
             app = await self._open_hodnotenia_priemery_app(zapisny_list_key)
         except CantOpenApplication:
-            return ([], "Predmety a hodnotenia pre tento zápisný list nie sú dostupné.")
+            return (
+                [],
+                "Predmety a hodnotenia pre tento zápisný list nie sú dostupné.",
+            )
 
         # Ak uz bola aplikacia otvorena pred tymto volanim, stlacime "Refresh".
         if getattr(app, "freshly_opened", True):
@@ -42,23 +48,29 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
 
         _studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
-        result = [Hodnotenie(akademicky_rok=akademicky_rok,
-                             skratka=row["skratka"],
-                             nazov=row["nazov"],
-                             typ_vyucby=row["kodTypVyucbySP"],
-                             semester=row["semester"],
-                             kredit=row["kredit"],
-                             hodn_znamka=row["znamka"],
-                             hodn_termin=row["termin"],
-                             hodn_datum=row["datum"],
-                             hodn_znamka_popis=row["znamkaPopis"],
-                             nahradeny=(row["nahradzaMa"] != ""),
-                             poplatok=row["poplatok"],
-                             zapisny_list_key=zapisny_list_key)
-                  for row in await app.d.hodnoteniaTable.all_rows()]
+        result = [
+            Hodnotenie(
+                akademicky_rok=akademicky_rok,
+                skratka=row["skratka"],
+                nazov=row["nazov"],
+                typ_vyucby=row["kodTypVyucbySP"],
+                semester=row["semester"],
+                kredit=row["kredit"],
+                hodn_znamka=row["znamka"],
+                hodn_termin=row["termin"],
+                hodn_datum=row["datum"],
+                hodn_znamka_popis=row["znamkaPopis"],
+                nahradeny=(row["nahradzaMa"] != ""),
+                poplatok=row["poplatok"],
+                zapisny_list_key=zapisny_list_key,
+            )
+            for row in await app.d.hodnoteniaTable.all_rows()
+        ]
         return (result, None)
 
-    async def get_priemery(self, zapisny_list_key: str) -> tuple[list[Priemer], str | None]:
+    async def get_priemery(
+        self, zapisny_list_key: str
+    ) -> tuple[list[Priemer], str | None]:
         try:
             app = await self._open_hodnotenia_priemery_app(zapisny_list_key)
         except CantOpenApplication:
@@ -66,24 +78,33 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
 
         app.freshly_opened = False  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue]
 
-        result = [Priemer(akademicky_rok=row["priemerInfoPopisAkadRok"],
-                          nazov=row["priemerNazov"],
-                          semester=row["semesterKodJ"],
-                          ziskany_kredit=row["ziskanyKredit"],
-                          predmetov=row["pocetPredmetov"],
-                          neabsolvovanych=row["pocetNeabs"],
-                          studijny_priemer=row["studPriemer"],
-                          vazeny_priemer=row["vazPriemer"],
-                          pokusy_priemer=row["pokusyPriemer"],
-                          datum_vypoctu=row["priemerInfoDatum"])
-                  for row in await app.d.priemeryTable.all_rows()]
+        result = [
+            Priemer(
+                akademicky_rok=row["priemerInfoPopisAkadRok"],
+                nazov=row["priemerNazov"],
+                semester=row["semesterKodJ"],
+                ziskany_kredit=row["ziskanyKredit"],
+                predmetov=row["pocetPredmetov"],
+                neabsolvovanych=row["pocetNeabs"],
+                studijny_priemer=row["studPriemer"],
+                vazeny_priemer=row["vazPriemer"],
+                pokusy_priemer=row["pokusyPriemer"],
+                datum_vypoctu=row["priemerInfoDatum"],
+            )
+            for row in await app.d.priemeryTable.all_rows()
+        ]
         return (result, None)
 
-    async def get_priebezne_hodnotenia(self, zapisny_list_key: str) -> tuple[list[PriebezneHodnoteniaPredmetu], str | None]:
+    async def get_priebezne_hodnotenia(
+        self, zapisny_list_key: str
+    ) -> tuple[list[PriebezneHodnoteniaPredmetu], str | None]:
         try:
             app = await self._open_priebezne_hodnotenie_app(zapisny_list_key)
         except CantOpenApplication:
-            return ([], "Priebežné hodnotenia pre tento zápisný list nie sú dostupné.")
+            return (
+                [],
+                "Priebežné hodnotenia pre tento zápisný list nie sú dostupné.",
+            )
 
         # Ak uz bola aplikacia otvorena pred tymto volanim, stlacime "Refresh".
         if getattr(app, "freshly_opened", True):
@@ -94,27 +115,36 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
         _studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
         result: list[PriebezneHodnoteniaPredmetu] = []
-        for i, row in enumerate(await app.d.predmetySPriebeznymHodnotenimTable.all_rows()):
+        for i, row in enumerate(
+            await app.d.predmetySPriebeznymHodnotenimTable.all_rows()
+        ):
             # Klikneme na predmet s priebeznym hodnotenim a pockame na nacitanie
-            ops = await app.d.predmetySPriebeznymHodnotenimTable.select(i, return_ops=True)
+            ops = await app.d.predmetySPriebeznymHodnotenimTable.select(
+                i, return_ops=True)
             if ops:
                 await ops.expect_one(RefreshDialogOp).perform()
 
             # Klikneme na button nacitatHodnotenie
             await app.d.nacitatHodnotenieButton.click()
 
-            records = [PriebezneHodnotenie(dovod=prow["dovod"],
-                                           poc_bodov=prow["pocetBodov"],
-                                           maximum=prow["dovodPriebHodHranica"],
-                                           zaevidoval=prow["zapisalPlneMeno"],
-                                           zapocitavat=prow["zapocitat"],
-                                           minimum=prow["dovodPriebHodMinHranica"])
-                       for prow in await app.d.hodnotenieTable.all_rows()]
+            records = [
+                PriebezneHodnotenie(
+                    dovod=prow["dovod"],
+                    poc_bodov=prow["pocetBodov"],
+                    maximum=prow["dovodPriebHodHranica"],
+                    zaevidoval=prow["zapisalPlneMeno"],
+                    zapocitavat=prow["zapocitat"],
+                    minimum=prow["dovodPriebHodMinHranica"],
+                )
+                for prow in await app.d.hodnotenieTable.all_rows()
+            ]
 
-            result.append(PriebezneHodnoteniaPredmetu(akademicky_rok=akademicky_rok,
-                                                      skratka=row["skratka"],
-                                                      nazov=row["predmetNazov"],
-                                                      kredit=row["kredit"],
-                                                      semester=row["semesterKodJ"],
-                                                      zaznamy=records))
+            result.append(PriebezneHodnoteniaPredmetu(
+                akademicky_rok=akademicky_rok,
+                skratka=row["skratka"],
+                nazov=row["predmetNazov"],
+                kredit=row["kredit"],
+                semester=row["semesterKodJ"],
+                zaznamy=records,
+            ))
         return (result, None)

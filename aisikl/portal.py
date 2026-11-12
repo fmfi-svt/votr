@@ -24,7 +24,9 @@ class PortalApp(NamedTuple):
     description: str
 
 
-async def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[PortalApp]]]]]:
+async def get_modules(
+    ctx: Context,
+) -> list[tuple[str, list[tuple[str, list[PortalApp]]]]]:
     """Downloads the main menu of AIS and return the list of modules.
 
     The separate pages of the main menu are called "modules", and the sections
@@ -43,12 +45,14 @@ async def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[Port
 
     for menu_item in front_soup.find_all(class_="left-menu-item"):
         menu_link = nn(menu_item.find("a"))
-        _, _, module = ct(str, menu_link["href"]).partition("changeModul.do?modul=")
-        if not module: continue
+        _, _, module = ct(str, menu_link["href"]).partition(
+            "changeModul.do?modul=")
+        if not module:
+            continue
 
         await ctx.log("portal", f'Opening section "{menu_link.get_text()}"')
-        applist_soup = await ctx.parse_html(await ctx.request_ais(
-            "/ais/portal/changeModul.do?modul=" + module))
+        applist_soup = await ctx.parse_html(
+            await ctx.request_ais("/ais/portal/changeModul.do?modul=" + module))
 
         submodules: list[tuple[str, list[PortalApp]]] = []
         for submodule in applist_soup.find_all(class_="submodul"):
@@ -59,10 +63,14 @@ async def get_modules(ctx: Context) -> list[tuple[str, list[tuple[str, list[Port
                     id=nn(app.find(class_="kod")).get_text(),
                     title=ct(str, app_link["title"]),
                     url=ct(str, app_link["url"]),
-                    description=nn(app.find(class_="popis")).get_text().strip(),
+                    description=nn(app.find(class_="popis"))
+                    .get_text()
+                    .strip(),
                 ))
 
-            submodule_name = nn(submodule.find(class_="submodul-text")).get_text()
+            submodule_name = nn(
+                submodule.find(class_="submodul-text")
+            ).get_text()
             submodules.append((submodule_name, apps))
 
         results.append((menu_link.get_text(), submodules))

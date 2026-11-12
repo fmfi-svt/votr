@@ -25,7 +25,15 @@ class RadioBox(Control):
 
     options: list[Option]
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
 
         items = nn(nn(element).find(id="radioBox_items"))
@@ -50,18 +58,21 @@ class RadioBox(Control):
 
     @property
     def selected_option(self) -> Option | None:
-        if self.selected_index == -1: return None
+        if self.selected_index == -1:
+            return None
         return self.options[self.selected_index]
 
-    async def select(self, index: int, *, return_ops: bool = False) -> Operations:
+    async def select(
+        self, index: int, *, return_ops: bool = False
+    ) -> Operations:
         """Selects the option at ``index``.
 
         ``select(-1)`` unselects the current item. This is allowed if
         [`always_selected`][] is false. (Aisikl allows you to do it even if it's
         true, but the AIS server might not like it.)
         """
-        await self.log("action",
-            f'Selecting "{self.options[index].title}" in {self.id}')
+        await self.log(
+            "action", f'Selecting "{self.options[index].title}" in {self.id}')
         self.selected_index = index
         return await self._fire_event(return_ops=return_ops)
 
@@ -73,9 +84,11 @@ class RadioBox(Control):
     @override
     def changed_properties(self) -> str:
         index = "" if self.selected_index == -1 else self.selected_index
-        cdata = ("<root><selection>"
+        cdata = (
+            "<root><selection>"
             f"<selectedIndexes>{index}</selectedIndexes>"
-            "</selection></root>")
+            "</selection></root>"
+        )
         return self._build_changed_properties(dataView=(True, True, cdata))
 
     def _ais_setDataView(self, id: str, body: Tag) -> None:
@@ -87,4 +100,5 @@ class RadioBox(Control):
             self.selected_index = int(ct(str, container["selectedindex"]))
         else:
             self._parse_options(nn(container.find(id="radioBox_items")))
+
     _ais_setDataView.wants_body = True  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportFunctionMemberAccess]

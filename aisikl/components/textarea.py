@@ -12,7 +12,15 @@ if TYPE_CHECKING:
 class TextArea(TextControl):
     """A multi-line text box widget."""
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.value = nn(element).get_text()
 
@@ -29,7 +37,6 @@ class TextArea(TextControl):
     @override
     def changed_properties(self) -> str:
         if len(self.value) > self.max_length:
-            self.value = self.value[0:self.max_length]
+            self.value = self.value[0 : self.max_length]
 
-        return self._build_changed_properties(
-            text=(None, True, self.value))
+        return self._build_changed_properties(text=(None, True, self.value))

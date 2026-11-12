@@ -27,22 +27,37 @@ _STATEFUL = {
     "create_zapisny_list",
 }
 
+
 def _tuplify(obj: object) -> object:
     if isinstance(obj, (list, tuple)):
         return tuple(_tuplify(mem) for mem in obj)  # pyright: ignore [reportUnknownArgumentType, reportUnknownVariableType]
     return obj
 
+
 def _show(key: tuple[str, object]) -> str:
     name, args = key
     return f"{name}({json.dumps(args, ensure_ascii=False)[1:-1]})"
 
-def _load_log(filename: str) -> tuple[int | None, dict[tuple[str, object], list[tuple[tuple[str, object] | None, tuple[bool, object]]]]]:
+
+def _load_log(
+    filename: str,
+) -> tuple[
+    int | None,
+    dict[
+        tuple[str, object],
+        list[tuple[tuple[str, object] | None, tuple[bool, object]]],
+    ],
+]:
     rpcs: list[tuple[str, object, tuple[bool, object]]] = []
     current_rpc_name: str | None = None
     current_rpc_args: object = None
     fake_time_msec: int | None = None
 
-    with (gzip.open(filename) if filename.endswith(".gz") else open(filename, "rb")) as f:
+    with (
+        gzip.open(filename)
+        if filename.endswith(".gz")
+        else open(filename, "rb")
+    ) as f:
         for linebytes in f:
             line: tuple[float, str, str, object] = json.loads(linebytes)
             if line[1] == "rpc":
@@ -55,19 +70,33 @@ def _load_log(filename: str) -> tuple[int | None, dict[tuple[str, object], list[
                 if words[2] == "finished":
                     assert current_rpc_name
                     assert words[1] == current_rpc_name
-                    rpcs.append((current_rpc_name, current_rpc_args, (True, line[3])))
+                    rpcs.append((
+                        current_rpc_name,
+                        current_rpc_args,
+                        (True, line[3]),
+                    ))
                 if words[2] == "failed":
                     assert current_rpc_name
                     assert words[1] == current_rpc_name
-                    rpcs.append((current_rpc_name, current_rpc_args, (False, line[3])))
+                    rpcs.append((
+                        current_rpc_name,
+                        current_rpc_args,
+                        (False, line[3]),
+                    ))
 
-    grouped: dict[tuple[str, object], list[tuple[tuple[str, object] | None, tuple[bool, object]]]] = {}
+    grouped: dict[
+        tuple[str, object],
+        list[tuple[tuple[str, object] | None, tuple[bool, object]]],
+    ] = {}
     last_stateful = None
     for i, (name, args, outcome) in enumerate(rpcs):
         if (name, args) not in grouped:
             grouped[(name, args)] = [(None, outcome)]
         elif grouped[(name, args)][-1][1] != outcome:
-            grouped[(name, args)].append((rpcs[nn(last_stateful)][0:2], outcome))
+            grouped[(name, args)].append((
+                rpcs[nn(last_stateful)][0:2],
+                outcome,
+            ))
 
         if name in _STATEFUL:
             last_stateful = i
@@ -81,22 +110,30 @@ def _load_log(filename: str) -> tuple[int | None, dict[tuple[str, object], list[
 
     return fake_time_msec, grouped
 
+
 class TimeParadoxError(Exception):
     pass
+
 
 class ReplayedError(Exception):
     pass
 
+
 class FlashbackClient(BaseClient):
-    def __init__(self, context: Context, flashbacks_dir: str, file: str | None) -> None:
+    def __init__(
+        self, context: Context, flashbacks_dir: str, file: str | None
+    ) -> None:
         super().__init__(context)
         if not os.path.exists(flashbacks_dir):
-            raise Exception(f"Flashbacks are unavailable: {flashbacks_dir!r} does not exist")
+            raise Exception(
+                f"Flashbacks are unavailable: {flashbacks_dir!r} does not exist")
         if not os.path.isdir(flashbacks_dir):
-            raise Exception(f"Flashbacks are unavailable: {flashbacks_dir!r} is not a directory")
+            raise Exception(
+                f"Flashbacks are unavailable: {flashbacks_dir!r} is not a directory")
         if not file:
             if not os.listdir(flashbacks_dir):
-                raise Exception(f"Flashbacks are unavailable: {flashbacks_dir!r} is empty")
+                raise Exception(
+                    f"Flashbacks are unavailable: {flashbacks_dir!r} is empty")
             raise Exception("No flashback file selected")
         if "/" in file or "\\" in file or file.startswith("."):
             raise Exception(f"Bad filename: {file!r}")
@@ -115,18 +152,21 @@ class FlashbackClient(BaseClient):
             args = _tuplify(argst)
             found = self._rpcs.get((name, args))
             if not found:
-                raise TimeParadoxError(f"RPC {_show((name, args))} did not happen in the flashback")
+                raise TimeParadoxError(
+                    f"RPC {_show((name, args))} did not happen in the flashback")
             self._did.add((name, args))
             outcome = None
             await self.context.log("flashback", f"{len(found)} candidates")
-            for (condition, outcome_candidate) in found:
+            for condition, outcome_candidate in found:
                 if condition == None:
                     outcome = outcome_candidate
                 elif condition in self._did:
-                    await self.context.log("flashback", f"{_show(condition)} already happened")
+                    await self.context.log(
+                        "flashback", f"{_show(condition)} already happened")
                     outcome = outcome_candidate
                 else:
-                    await self.context.log("flashback", f"{_show(condition)} did not happen yet")
+                    await self.context.log(
+                        "flashback", f"{_show(condition)} did not happen yet")
 
             # TODO: Configurable sleep.
             await sleep(0.5)

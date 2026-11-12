@@ -19,10 +19,11 @@ from fladgejt.login import create_client as create_client
 from votrfront.default_settings import servers as _ds
 
 # Servers. Choose one as the first argument of create_client().
-default_servers = { _s.get("title"): _s for _s in _ds }
+default_servers = {_s.get("title"): _s for _s in _ds}
 ais = default_servers["ais2.uniba.sk"]
 ais_beta = default_servers["ais2-beta.uniba.sk"]
 ais_test = default_servers["ais2-test.uniba.sk"]
+
 
 def get_login_params() -> object:
     import getpass

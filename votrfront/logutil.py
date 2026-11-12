@@ -26,6 +26,7 @@ TAG_PREFIX = "%"
 PAGER = ["less", "-RS"]
 BASE_PATTERN = r'"\w+", "[\w ]+ failed'
 
+
 def classify(line: Line) -> str:
     if "failed with Cancelled" in line.content:
         return "Cancelled"
@@ -47,8 +48,10 @@ def classify(line: Line) -> str:
         return "KnownLoginError"
     if "Login failed with CookieLoginError" in line.content:
         return "KnownLoginError"
-    if ("zapis_plan_vyhladaj" in line.content and
-            "AIS did not return all table rows" in line.content):
+    if (
+        "zapis_plan_vyhladaj" in line.content
+        and "AIS did not return all table rows" in line.content
+    ):
         return "open issue121"
     return "open"
 
@@ -113,21 +116,31 @@ def open_log(filename: str) -> IO[str]:
         return open(filename, encoding="utf8")
 
 
-def set_tags(logdb: sqlite3.Connection, sessid: str, lineno: int, tags_to_add: Iterable[str], tags_to_remove: Iterable[str]) -> None:
+def set_tags(
+    logdb: sqlite3.Connection,
+    sessid: str,
+    lineno: int,
+    tags_to_add: Iterable[str],
+    tags_to_remove: Iterable[str],
+) -> None:
     c = logdb.cursor()
-    c.execute("SELECT tags FROM lines WHERE sessid = ? AND lineno = ?",
+    c.execute(
+        "SELECT tags FROM lines WHERE sessid = ? AND lineno = ?",
         (sessid, lineno))
     old_tags = c.fetchone()[0]
-    tags = { t: True for t in old_tags.split() }
+    tags = {t: True for t in old_tags.split()}
     for tag in tags_to_remove:
         tags.pop(tag, None)
     for tag in tags_to_add:
         tags[tag] = True
-    c.execute("UPDATE lines SET tags = ? WHERE sessid = ? AND lineno = ? AND tags = ?",
+    c.execute(
+        "UPDATE lines SET tags = ? WHERE sessid = ? AND lineno = ? AND tags = ?",
         (" ".join(tags), sessid, lineno, old_tags))
 
 
-async def process_logfiles(logdb: sqlite3.Connection, files: Iterable[str]) -> None:
+async def process_logfiles(
+    logdb: sqlite3.Connection, files: Iterable[str]
+) -> None:
     c = logdb.cursor()
 
     errors: list[tuple[str, str]] = []
@@ -147,7 +160,7 @@ async def process_logfiles(logdb: sqlite3.Connection, files: Iterable[str]) -> N
                                     "INSERT INTO lines (sessid, lineno, tags, content) VALUES (?, ?, ?, ?)",
                                     (sessid, lineno, "new", line.strip()))
                             except sqlite3.IntegrityError:
-                                pass   # row already present
+                                pass  # row already present
                     if lineno == 0:
                         raise Exception("Log file is empty")
             except Exception:
@@ -167,9 +180,10 @@ async def process_logfiles(logdb: sqlite3.Connection, files: Iterable[str]) -> N
         msgs = [f"{len(errors)} errors occurred while processing logs:"]
         for filename, errmsg in errors:
             msgs.append(
-                f"{filename}:\n" +
-                "\n".join("    " + line for line in errmsg.split("\n")))
+                f"{filename}:\n"
+                + "\n".join("    " + line for line in errmsg.split("\n")))
         raise Exception("\n\n".join(msgs))
+
 
 @contextlib.contextmanager
 def wrap_pager() -> Generator[IO[str]]:
@@ -268,9 +282,11 @@ def format_base(line: Line) -> tuple[str, str, str, str, str]:
     tags = " ".join(TAG_PREFIX + tag for tag in line.tags.split()).ljust(20)
     return (line.sessid, str(line.lineno).ljust(5), when, tags, line.content)
 
+
 def format_plain(line: Line) -> str:
     sessid, lineno, when, tags, content = format_base(line)
     return f"{sessid}:{lineno} {when} {tags} {content}"
+
 
 def format_color(line: Line) -> str:
     sessid, lineno, when, tags, content = format_base(line)
@@ -283,16 +299,20 @@ def format_color(line: Line) -> str:
         "\\1\033[1;31m\\2\033[0m\\3\033[1;31m\\4\033[0m\\5", content)
 
     content = content.replace("\\\\", "\x00").split("\\n")
-    if len(content) >= 2: content[-2] = "\033[36m" + content[-2] + "\033[0m"
+    if len(content) >= 2:
+        content[-2] = "\033[36m" + content[-2] + "\033[0m"
     content = "\\n".join(content).replace("\x00", "\\\\")
 
     return f"{sessid}:{lineno} \033[1;33m{when}\033[0m \033[1;34m{tags}\033[0m {content}"
 
+
 def format_sessids(line: Line) -> str:
     return line.sessid
 
+
 def format_linenos(line: Line) -> str:
     return f"{line.sessid}:{line.lineno}"
+
 
 def format_files(line: Line) -> str:
     return locate(line.sessid)
@@ -366,9 +386,9 @@ def cli_list(*args: str) -> None:
             date = f"{tm.tm_year:04d}{tm.tm_mon:02d}{tm.tm_mday:02d}"
 
             if (
-                all(re.search(pattern, plain) for pattern in match) and
-                all(not re.search(pattern, plain) for pattern in match_not) and
-                match_from <= date <= match_to
+                all(re.search(pattern, plain) for pattern in match)
+                and all(not re.search(pattern, plain) for pattern in match_not)
+                and match_from <= date <= match_to
             ):
                 print(formatter(line), file=out)
 

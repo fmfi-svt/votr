@@ -38,7 +38,8 @@ _functions_re = re.compile(r"\nfunction (\w+)")
 _var_re = re.compile(r"^var \w+;\s*")
 _trycatch_re = re.compile(r"^try {\s*|\s*} *catch *\(e\) *{ *(return;)? *}$")
 _multiline_res = [
-    re.compile(r"if *\( *dm\(\) *!= *null *\) *{\s*\n\s*dm\(\)\.checkDialogStacksEmpty\(\);?\s*\n\s*}"),
+    re.compile(
+        r"if *\( *dm\(\) *!= *null *\) *{\s*\n\s*dm\(\)\.checkDialogStacksEmpty\(\);?\s*\n\s*}")
 ]
 _useless_res = [
     re.compile(r"^function [^{]*\{[^}]*\}$"),
@@ -60,9 +61,11 @@ _useless_res = [
 ]
 _main_re = re.compile(r"^function main0?\(\) \{$")
 _operation_re = re.compile(r"^(webui|dm)\(\)\.(\w+)\((.*)\)$")
-_update_re = re.compile(r'^f\(\)\.getControlById\("(\w+)", *(\w+)\)\.(\w+)\((.*)\)$')
+_update_re = re.compile(
+    r'^f\(\)\.getControlById\("(\w+)", *(\w+)\)\.(\w+)\((.*)\)$')
 _dialog_update_re = re.compile(r"^(\w+)\.getDialogJSObject\(\)\.(\w+)\((.*)\)$")
-_access_token_re = re.compile(r'retrieveAccessToken\(\)\s*\{[^{}]*setRequestHeader\("([^\\"]+)",\s*"([^\\"]+)"\)')
+_access_token_re = re.compile(
+    r'retrieveAccessToken\(\)\s*\{[^{}]*setRequestHeader\("([^\\"]+)",\s*"([^\\"]+)"\)')
 
 
 def _parse_args(args_str: str) -> list[object]:
@@ -72,10 +75,12 @@ def _parse_args(args_str: str) -> list[object]:
     # we don't want to touch `\\'`, because that's a valid escape sequence
     # followed by a normal apostrophe. We solve this by temporarily replacing
     # `\\` with an invalid character, ensuring that `\'` is captured correctly.
-    args_str = (args_str
+    args_str = (
+        args_str
         .replace("\\\\", "\x00")
         .replace("\\'", "'")
-        .replace("\x00", "\\\\"))
+        .replace("\x00", "\\\\")
+    )
     return json.loads("[" + args_str + "]")
 
 
@@ -158,7 +163,12 @@ class Application[D]:
     """
 
     @classmethod
-    async def open(cls, ctx: Context, url: str, ignored_messages: Iterable[str] | None=None) -> tuple[Application[D], Operations]:
+    async def open(
+        cls,
+        ctx: Context,
+        url: str,
+        ignored_messages: Iterable[str] | None = None,
+    ) -> tuple[Application[D], Operations]:
         """Opens an application.
 
         Use ``open`` to open applications available directly in the AIS portal
@@ -209,7 +219,12 @@ class Application[D]:
         raise Exception(
             "The Application constructor is private, use open() instead")
 
-    async def _open(self, ctx: Context, url: str, ignored_messages: Iterable[str] | None=None) -> Operations:
+    async def _open(
+        self,
+        ctx: Context,
+        url: str,
+        ignored_messages: Iterable[str] | None = None,
+    ) -> Operations:
         """Actually opens the new instance created by [`open`][]. Roughly
         corresponds to ``WebUI_init`` and ``webui.initApplication`` in webui.js.
         """
@@ -220,19 +235,22 @@ class Application[D]:
         self.dialog_stack = []
         self.active_dialog = None
         self.ignored_messages = list(
-            DEFAULT_IGNORED_MESSAGES if ignored_messages is None
+            DEFAULT_IGNORED_MESSAGES
+            if ignored_messages is None
             else ignored_messages)
 
         match = re.search(r"appClassName=([a-zA-Z0-9_\.]*)", url)
         self.class_name = match.group(1) if match else None
-        await self.ctx.log("operation", f"Opening application {self.class_name}", url)
+        await self.ctx.log(
+            "operation", f"Opening application {self.class_name}", url)
 
         app_soup = await self.ctx.parse_html(await self.ctx.request_ais(url))
         if not app_soup.find(id="webuiProperties"):
             alert_match = _alert_re.match(
                 app_soup.script.get_text().strip() if app_soup.script else "")
             if alert_match:
-                raise AISBehaviorError(f"AIS2 application didn't open: {alert_match.group(1)}")
+                raise AISBehaviorError(
+                    f"AIS2 application didn't open: {alert_match.group(1)}")
             raise AISParseError("AIS2 application didn't open")
 
         onload = nn(app_soup.body)["onload"]
@@ -243,17 +261,21 @@ class Application[D]:
         if not properties_match:
             raise AISParseError("Couldn't get app ID from appProperties")
         properties: dict[str, object] = json.loads(properties_match.group(1))
-        if not (properties.get("appContext") == "ais" and
-                properties.get("webuiContext") == "ais/webui2"):
+        if not (
+            properties.get("appContext") == "ais"
+            and properties.get("webuiContext") == "ais/webui2"
+        ):
             raise AISParseError("Unexpected values in appProperties")
         self.app_id = ct(str, properties["appId"])
 
         if nn(app_soup.find(id="initScript")).get_text() != "<!---->":
             raise AISParseError("initScript is not supported")
 
-        rq = ("<events><ev><event class='avc.ui.event.AVCComponentEvent'>"
-              "<command>INIT</command></event></ev></events>\n" +
-              self._collect_component_changes())
+        rq = (
+            "<events><ev><event class='avc.ui.event.AVCComponentEvent'>"
+            "<command>INIT</command></event></ev></events>\n"
+            + self._collect_component_changes()
+        )
         ops = await self._do_request(rq, return_ops=True)
 
         if (
@@ -303,8 +325,12 @@ class Application[D]:
         """
         old_req_index = self.req_index
         self.req_index += 1
-        return { "appId": self.app_id, "antiCache": str(time.time()),
-                 "reqIndex": str(old_req_index), "viewer": "web" }
+        return {
+            "appId": self.app_id,
+            "antiCache": str(time.time()),
+            "reqIndex": str(old_req_index),
+            "viewer": "web",
+        }
 
     async def _do_request(self, body: str, *, return_ops: bool) -> Operations:
         """Sends a POST request to AIS and processes the response.
@@ -332,12 +358,16 @@ class Application[D]:
         # WebUIServlet needs charset set in Content-Type. Normal POST requests
         # don't have it, but sendRequestEvent manually sets it, so we do the
         # same.
-        headers = {"Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"}
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8"
+        }
         return await self.ctx.parse_html(await self.ctx.request_ais(
             "/ais/servlets/WebUIServlet?" + urllib.parse.urlencode(params),
             method="POST", data=data, headers=headers))
 
-    async def _process_response(self, soup: BeautifulSoup, *, return_ops: bool) -> Operations:
+    async def _process_response(
+        self, soup: BeautifulSoup, *, return_ops: bool
+    ) -> Operations:
         """Parses the ``resultFrame`` HTML document."""
         await self.ctx.log("benchmark", "Begin response frame processing")
         self.last_response_time = time.time()
@@ -352,7 +382,8 @@ class Application[D]:
 
         match = _alert_re.match(script.strip())
         if match:
-            raise AISBehaviorError(f"AIS error in result frame response: {match.group(1)}")
+            raise AISBehaviorError(
+                f"AIS error in result frame response: {match.group(1)}")
 
         functions = [m.group(1) for m in _functions_re.finditer(script)]
         if ",".join(functions) == "main" and "onAppClosedOnServer" in script:
@@ -372,23 +403,28 @@ class Application[D]:
             line = _trycatch_re.sub("", line)
             line = line.strip(";")
 
-            if not line: continue
-            if any(r.match(line) for r in _useless_res): continue
+            if not line:
+                continue
+            if any(r.match(line) for r in _useless_res):
+                continue
 
             if line.startswith("var showDlgProperties ="):
-                if in_main: raise AISParseError("Bad script structure")
+                if in_main:
+                    raise AISParseError("Bad script structure")
                 if show_dlg_properties is not None:
                     raise AISParseError("Duplicate showDlgProperties")
                 show_dlg_properties = json.loads(line.partition("=")[2])
                 continue
 
             if _main_re.match(line):
-                if in_main: raise AISParseError("Bad script structure")
+                if in_main:
+                    raise AISParseError("Bad script structure")
                 in_main = True
                 continue
 
             if line == "}":
-                if not in_main: raise AISParseError("Bad script structure")
+                if not in_main:
+                    raise AISParseError("Bad script structure")
                 in_main = False
                 continue
 
@@ -446,8 +482,8 @@ class Application[D]:
         body = soup.body
 
         if updates:
-            await self.ctx.log("update",
-                f"Updating {len(updates)} components", updates)
+            await self.ctx.log(
+                "update", f"Updating {len(updates)} components", updates)
 
         for dialog_name, component_name, method_name, args in updates:
             if (dialog := self.dialogs.get(dialog_name)) is None:
@@ -455,13 +491,16 @@ class Application[D]:
 
             if (component := dialog.components.get(component_name)) is None:
                 if component_name == "HeaderView":
-                    continue   # a mysterious non-existent component
-                raise AISParseError(f"Component {component_name!r} doesn't exist in {dialog_name!r}.")
+                    continue  # a mysterious non-existent component
+                raise AISParseError(
+                    f"Component {component_name!r} doesn't exist in {dialog_name!r}.")
 
             try:
                 method = getattr(component, "_ais_" + method_name)
             except AttributeError:
-                raise AISParseError(f"Method {method_name!r} of {component.__class__.__name__} is not yet implemented.") from None
+                raise AISParseError(
+                    f"Method {method_name!r} of {component.__class__.__name__} is not yet implemented."
+                ) from None
 
             if getattr(method, "wants_body", False):
                 args = args + [body]
@@ -496,18 +535,21 @@ class Application[D]:
 
         Corresponds to ``webui.sendEmptyRequest`` in webui.js.
         """
-        return await self._do_request(self._collect_component_changes(), return_ops=return_ops)
+        return await self._do_request(
+            self._collect_component_changes(), return_ops=return_ops)
 
-    async def send_namevalue_request(self, name: str, value: int | str, return_ops: bool) -> Operations:
+    async def send_namevalue_request(
+        self, name: str, value: int | str, return_ops: bool
+    ) -> Operations:
         """Internal. Sends a small request to AIS with a single name-value pair,
         but without any events or component changes. Doesn't directly correspond
         to any webui.js function, but it's a convenient helper for many
         operation types.
         """
         return await self._do_request(
-            "<changedProps><changedProperties><propertyValues><nameValue>" +
-            f"<name>{name}</name><value>{value}</value>" +
-            "</nameValue></propertyValues></changedProperties></changedProps>",
+            "<changedProps><changedProperties><propertyValues><nameValue>"
+            + f"<name>{name}</name><value>{value}</value>"
+            + "</nameValue></propertyValues></changedProperties></changedProps>",
             return_ops=return_ops)
 
     async def force_close(self) -> bool:
@@ -530,8 +572,8 @@ class Application[D]:
                 still busy with an earlier HTTP request.
         """
         await self.close_all_dialogs()
-        await self.ctx.log("operation",
-            f"Sending WebUIKillEvent to {self.class_name}")
+        await self.ctx.log(
+            "operation", f"Sending WebUIKillEvent to {self.class_name}")
         soup = await self._send_request(
             "<events><ev><event class='avc.framework.webui.WebUIKillEvent'/>"
             "</ev></events>\n")
@@ -542,16 +584,19 @@ class Application[D]:
         app_changes = ""
         if self.active_dialog:
             app_changes = (
-                "<changedProperties><objName>app</objName><propertyValues>\n" +
-                "<nameValue><name>activeDlgName</name><value>" +
-                self.active_dialog.name +
-                "</value></nameValue>\n" +
-                "</propertyValues></changedProperties>\n")
+                "<changedProperties><objName>app</objName><propertyValues>\n"
+                + "<nameValue><name>activeDlgName</name><value>"
+                + self.active_dialog.name
+                + "</value></nameValue>\n"
+                + "</propertyValues></changedProperties>\n"
+            )
 
-        return ("<changedProps>\n" +
-            app_changes +
-            "".join(d.changed_properties() for d in self.dialog_stack) +
-            "</changedProps>\n")
+        return (
+            "<changedProps>\n"
+            + app_changes
+            + "".join(d.changed_properties() for d in self.dialog_stack)
+            + "</changedProps>\n"
+        )
 
     async def is_still_open(self) -> bool:
         """Checks whether this application is still open.
@@ -566,16 +611,17 @@ class Application[D]:
         Returns:
             True if the server still accepts requests from this application.
         """
-        if not self.dialog_stack: return False
+        if not self.dialog_stack:
+            return False
         THRESHOLD = 5 * 60
         if time.time() - self.last_response_time > THRESHOLD:
-            await self.ctx.log("operation",
-                f"Checking if {self.class_name} is still open")
+            await self.ctx.log(
+                "operation", f"Checking if {self.class_name} is still open")
             try:
                 await self._send_empty_request(return_ops=False)
             except AISApplicationClosedError:
-                await self.ctx.log("operation",
-                    f"Server already closed {self.class_name}")
+                await self.ctx.log(
+                    "operation", f"Server already closed {self.class_name}")
                 return False
         return True
 

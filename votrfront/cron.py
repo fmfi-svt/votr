@@ -28,9 +28,12 @@ def create_archive(prefix: str) -> None:
             for source in sources:
                 with lzma.open(source) as f:
                     last = None
-                    for line in f: last = line
-                    if last is None: raise Exception(source)
-                    if not last.endswith(b"]\n"): raise Exception(source)
+                    for line in f:
+                        last = line
+                    if last is None:
+                        raise Exception(source)
+                    if not last.endswith(b"]\n"):
+                        raise Exception(source)
                     mtime = json.loads(last.decode("utf8"))[0]
                     size = f.tell()
                     f.seek(0)
@@ -65,15 +68,16 @@ async def cron(settings: Settings) -> None:
 
     await logutil.process_logfiles(
         logutil.connect_logdb(),
-        [str(path) for path in var_path("logs").iterdir()],
-    )
+        [str(path) for path in var_path("logs").iterdir()])
 
     for path in var_path("logs").glob("*.gz"):
         sessid = path.name.partition(".")[0]
         async with sessions.lock(sessid):
             mtime = path.stat().st_mtime
-            if not (now - mtime > settings.session_max_age): continue
-            if var_path("sessions", sessid).exists(): continue
+            if not (now - mtime > settings.session_max_age):
+                continue
+            if var_path("sessions", sessid).exists():
+                continue
 
             newpath = var_path("oldlogs", sessid + ".xz")
 
@@ -96,4 +100,5 @@ async def cron(settings: Settings) -> None:
 
 if __name__ == "__main__":
     import votrfront.local_settings as _settings
+
     trio.run(cron, _settings)

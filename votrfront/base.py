@@ -70,6 +70,7 @@ class VotrState(TypedDict):
 
 
 if TYPE_CHECKING:
+
     def _check_settings_type(s: Settings) -> None:
         pass
 

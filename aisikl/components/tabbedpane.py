@@ -15,21 +15,32 @@ if TYPE_CHECKING:
 class TabbedPane(Control):
     """A group of tabs, one of which is visible. Each page is a [`Panel`][]."""
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         element = nn(element)
         self.selected_index = ct(int, properties.get("selectedIndex", 0))
         """Index of the selected tab."""
 
         self.panel_ids: list[str] = []
-        arena = nn(element.find(id=ct(str, element["id"]) + "Arena", recursive=False))
+        arena = nn(
+            element.find(id=ct(str, element["id"]) + "Arena", recursive=False))
         for panel in arena.find_all(id=True, recursive=False):
             self.panel_ids.append(ct(str, panel["id"]))
 
     def _ais_setSelectedIndex(self, value: object) -> None:
         self.selected_index = really_int(value)
 
-    async def select(self, index: int, *, return_ops: bool = False) -> Operations:
+    async def select(
+        self, index: int, *, return_ops: bool = False
+    ) -> Operations:
         """Selects the tab at ``index``."""
         await self.log("action", f"Switching {self.id} to tab {index}")
         self.selected_index = index
@@ -37,6 +48,7 @@ class TabbedPane(Control):
 
     def get_panel(self, index: int) -> Panel:
         return ct(Panel, self.dialog.components[self.panel_ids[index]])
+
     def get_selected_panel(self) -> Panel:
         return self.get_panel(self.selected_index)
 

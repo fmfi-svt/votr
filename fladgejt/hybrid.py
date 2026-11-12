@@ -1,4 +1,3 @@
-
 from fladgejt.rest import RestClient
 from fladgejt.webui import WebuiClient
 

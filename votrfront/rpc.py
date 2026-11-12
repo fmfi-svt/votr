@@ -96,7 +96,7 @@ def encode_result(thing: object) -> object:
     if isinstance(thing, (list, tuple)):
         return [encode_result(item) for item in thing]  # pyright: ignore [reportUnknownArgumentType, reportUnknownVariableType]
     if isinstance(thing, dict):
-        return { key: encode_result(value) for key, value in thing.items() }  # pyright: ignore [reportUnknownArgumentType, reportUnknownVariableType]
+        return {key: encode_result(value) for key, value in thing.items()}  # pyright: ignore [reportUnknownArgumentType, reportUnknownVariableType]
     return thing  # pyright: ignore [reportUnknownVariableType]
 
 
@@ -149,10 +149,7 @@ async def rpc_inner(
             await trio.sleep_forever()  # actually raises Cancelled
 
     async def send_log(
-        timestamp: float,
-        type: str,
-        message: str,
-        data: object,
+        timestamp: float, type: str, message: str, data: object
     ) -> None:
         await send_json({"log": type, "message": message, "time": timestamp})
 
@@ -168,13 +165,12 @@ async def rpc_inner(
 
     current = request.state["settings"].announcement_html
     if current != session.get("last_announcement", None):
-        await send_json({ "announcement_html": current })
+        await send_json({"announcement_html": current})
         session["last_announcement"] = current
 
     client.context.logger.send_log = send_log
 
     for i, (name, args) in enumerate(zip(names, argss, strict=True)):
-
         request.state["votr_log_status"] = f"rpc:{i}:wtf"
 
         # This is the "inner try/except". It handles most RPC exceptions.
@@ -213,7 +209,7 @@ async def rpc_inner(
                 "rpc", f"RPC {name} failed with {exc_name}", exc_trace)
 
             if isinstance(exc, Exception):
-                await send_json({ "error": exc_trace })
+                await send_json({"error": exc_trace})
                 return
             else:
                 raise
@@ -223,7 +219,7 @@ async def rpc_inner(
         # complete success. But oh well.
         await client.context.log("rpc", f"RPC {name} finished", result)
 
-        await send_json({ "result": result })
+        await send_json({"result": result})
 
     request.state["votr_log_status"] = "rpc:ok"
 
@@ -237,9 +233,9 @@ async def rpc_asgi(scope: Scope, receive: Receive, send: Send) -> None:
 
     request.state["votr_log_status"] = "rpc:early_error"
 
-    check_header(request, "Sec-Fetch-Site", { "same-origin" })
-    check_header(request, "Sec-Fetch-Mode", { "cors" })
-    check_header(request, "Sec-Fetch-Dest", { "empty" })
+    check_header(request, "Sec-Fetch-Site", {"same-origin"})
+    check_header(request, "Sec-Fetch-Mode", {"cors"})
+    check_header(request, "Sec-Fetch-Dest", {"empty"})
 
     # Read `names` and `argss`. `names` are sent in the query string (not in the
     # request body) because it's nice to see them in access logs.
@@ -334,9 +330,8 @@ async def rpc_asgi(scope: Scope, receive: Receive, send: Send) -> None:
         # same.
 
     except* Exception as excgroup:
-        request.state["votr_log_status"] += (
-            ":outer_wtf:"
-            + ",".join(type(exc).__name__ for exc in excgroup.exceptions))
+        request.state["votr_log_status"] += ":outer_wtf:" + ",".join(
+            type(exc).__name__ for exc in excgroup.exceptions)
 
         pylogger.exception("RPC fatal error WTF")
 
@@ -367,6 +362,4 @@ async def rpc_endpoint(request: object) -> ASGIApp:
     return rpc_asgi
 
 
-routes = [
-    Route("/rpc", methods=["POST"], endpoint=rpc_endpoint),
-]
+routes = [Route("/rpc", methods=["POST"], endpoint=rpc_endpoint)]

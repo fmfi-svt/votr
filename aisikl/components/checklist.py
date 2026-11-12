@@ -13,7 +13,15 @@ if TYPE_CHECKING:
 
 # Not a namedtuple, because 'checked' can change.
 class Item:
-    def __init__(self, title: str, id: str, sid: str, rid: str, tool_tip_text: str, checked: bool) -> None:
+    def __init__(
+        self,
+        title: str,
+        id: str,
+        sid: str,
+        rid: str,
+        tool_tip_text: str,
+        checked: bool,
+    ) -> None:
         self.title = title
         self.id = id
         self.sid = sid
@@ -36,7 +44,15 @@ class CheckList(Control):
 
     items: list[Item]
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         self.up_down_enabled = ct(bool, properties.get("upDownEnabled", False))
         self._parse_items(nn(element))
@@ -48,18 +64,22 @@ class CheckList(Control):
             td = nn(tr.td)
             self.items.append(Item(
                 title=tr.get_text(),
-                id=ct(str, td["id"]), sid=ct(str, tr["sid"]), rid=ct(str, tr["rid"]),
+                id=ct(str, td["id"]),
+                sid=ct(str, tr["sid"]),
+                rid=ct(str, tr["rid"]),
                 tool_tip_text=ct(str, td["title"]),
                 checked=nn(tr.input).has_attr("checked"),
             ))
             if "selectedListRow" in (tr.get("class") or []):
                 self.selected_index = index
 
-    async def up_down_row(self, command: str, *, return_ops: bool = False) -> Operations:
+    async def up_down_row(
+        self, command: str, *, return_ops: bool = False
+    ) -> Operations:
         """Moves the selected item up or down, if the list supports it. Not yet
         implemented.
         """
-        raise Exception("up_down_row not yet implemented.")   # TODO
+        raise Exception("up_down_row not yet implemented.")  # TODO
 
     async def select_unselect_all(self) -> None:
         """Checks or unchecks the checkbox of all items, depending on the first
@@ -67,7 +87,8 @@ class CheckList(Control):
         """
         # TODO: This method is quite useless. webui.js has selectUnselectAll,
         # and calls it on Ctrl+A, but that doesn't mean Votr needs it too.
-        if not self.items: return
+        if not self.items:
+            return
         new_value = not self.items[0].checked
         log_verb = "Selecting" if new_value else "Unselecting"
         await self.log("action", f"{log_verb} all items in {self.id}")
@@ -81,22 +102,26 @@ class CheckList(Control):
         Implemented for completeness to support the unlikely scenario that AIS
         cares about the selected item.
         """
-        await self.log("action",
-            f'Selecting item "{self.items[index].title}" {self.id}')
+        await self.log(
+            "action", f'Selecting item "{self.items[index].title}" {self.id}')
         self.selected_index = index
 
     async def toggle(self, index: int) -> None:
         """Toggles the checkbox of the item at ``index``, and selects it."""
         self.items[index].checked = not self.items[index].checked
         log_verb = "Checking" if self.items[index].checked else "Unchecking"
-        await self.log("action", f'{log_verb} item "{self.items[index].title}" in {self.id}')
+        await self.log(
+            "action",
+            f'{log_verb} item "{self.items[index].title}" in {self.id}')
         self.selected_index = index
         self._mark_changed()
 
     def _ais_setUpDownEnabled(self, value: object) -> None:
         self.up_down_enabled = is_true(value)
+
     def _ais_setDataView(self, id: str, body: Tag) -> None:
         self._parse_items(nn(body.find(id=id)))
+
     _ais_setDataView.wants_body = True  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportFunctionMemberAccess]
 
     def _mark_changed(self) -> None:
@@ -110,7 +135,9 @@ class CheckList(Control):
         for index, item in enumerate(self.items):
             item.rid = str(index)
 
-        cdata = ("<root><selection>"
+        cdata = (
+            "<root><selection>"
             f"<selectedIndexes>{selection}</selectedIndexes>"
-            "</selection></root>")
+            "</selection></root>"
+        )
         return self._build_changed_properties(dataView=(True, True, cdata))

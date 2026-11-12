@@ -14,7 +14,15 @@ if TYPE_CHECKING:
 class TextField(TextInput):
     """A WebUI text box widget for generic strings."""
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         element = nn(element)
         self.label_display = ct_none(str, element.get("labeldisplay"))
@@ -24,19 +32,25 @@ class TextField(TextInput):
             self.type = "password"
         else:
             self.type = ct_none(str, element.get("xtype"))
-        self.suggestions_enabled = ct(bool, properties.get("suggestionsEnabled", False))
-        self.suggestions_multi_value_enabled = ct(bool, properties.get("suggestionsMultiValueEnabled", True))
+        self.suggestions_enabled = ct(
+            bool, properties.get("suggestionsEnabled", False))
+        self.suggestions_multi_value_enabled = ct(
+            bool, properties.get("suggestionsMultiValueEnabled", True))
         self.tool_tip_changed = False
 
     def _ais_setLabelDisplay(self, value: object) -> None:
         self.label_display = ct_none(str, value)
+
     def _ais_setText(self, value: object) -> None:
         self.value = ct(str, value)
         self.update_value_interactives("change")
+
     def _ais_setType(self, value: object) -> None:
         self.type = ct_none(str, value)
+
     def _ais_setSuggestionsEnabled(self, value: object) -> None:
         self.suggestions_enabled = is_true(value)
+
     def _ais_setSuggestionsMultiValueEnabled(self, value: object) -> None:
         self.suggestions_multi_value_enabled = is_true(value)
 

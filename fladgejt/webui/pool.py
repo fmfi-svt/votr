@@ -39,6 +39,7 @@ def pooled_app[S, D, *A](
     Returns:
         The decorated method.
     """
+
     @wraps(original_method)
     async def wrapper(self: Any, *args: Unpack[A]) -> Application[D]:
         app_pool: Pool = self.app_pool
@@ -46,7 +47,10 @@ def pooled_app[S, D, *A](
         active_keys: set[object] = app_pool.active_keys
         app_key = (original_method.__name__, args)
 
-        if app_key in open_apps and not await open_apps[app_key].is_still_open():
+        if (
+            app_key in open_apps
+            and not await open_apps[app_key].is_still_open()
+        ):
             del open_apps[app_key]
             active_keys.discard(app_key)
 
@@ -68,8 +72,7 @@ class Pool:
 
     async def reserve(self, count: int) -> None:
         sorted_keys = sorted(
-            self.open_apps,
-            key=lambda k: self.open_apps[k].last_response_time)
+            self.open_apps, key=lambda k: self.open_apps[k].last_response_time)
 
         for key in sorted_keys:
             if len(self.open_apps) + count <= OPEN_APP_LIMIT:
@@ -77,7 +80,8 @@ class Pool:
             if key in self.active_keys:
                 continue
 
-            await self.context.log("operation", "Closing pooled application", key)
+            await self.context.log(
+                "operation", "Closing pooled application", key)
             app = self.open_apps.pop(key)
             if not await app.force_close():
                 # force_close() can fail if the AIS server is still busy, e.g.
@@ -94,6 +98,7 @@ class Pool:
         self.active_keys = set()
 
         if last_rpc_failed and self.open_apps:
-            await self.context.log("operation",
+            await self.context.log(
+                "operation",
                 "Closing all open apps because of previous RPC error")
             await self.reserve(OPEN_APP_LIMIT)

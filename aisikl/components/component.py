@@ -38,7 +38,15 @@ class Component:
     but in Aisikl both are merged into ``Component``.
     """
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         """Internal."""
         self.dialog = dialog
         self.id = id
@@ -58,7 +66,9 @@ class Component:
         """Internal."""
         pass
 
-    async def log(self, type: str, message: str, data: object=None, /) -> None:
+    async def log(
+        self, type: str, message: str, data: object = None, /
+    ) -> None:
         """Internal. Calls [`Context.log`][aisikl.context.Context.log] to log a
         message. Convenience helper to allow shorter log calls.
         """
@@ -81,18 +91,26 @@ class Component:
         return self.enabled and self.enabled_in_ui
 
     def _ais_setState(self, value: object) -> None:
-        if really_int(value) == 2: raise AISParseError("STATE_DT is not supported")
+        if really_int(value) == 2:
+            raise AISParseError("STATE_DT is not supported")
+
     def _ais_setUsedListenersMask(self, value: object) -> None:
         self.used_listeners_mask = really_int(value)
+
     def _ais_setEnabled(self, value: object) -> None:
         self.enabled = is_true(value)
+
     def _ais_setEnabledInUI(self, value: object) -> None:
         self.enabled_in_ui = is_true(value)
+
     def _ais_setVisible(self, value: object) -> None:
         self.visible = is_true(value)
+
     def _ais_setVisibleInUI(self, value: object) -> None:
         self.visible_in_ui = is_true(value)
+
     def _ais_setTitle(self, value: object) -> None:
         self.title = ct_none(str, value)
+
     def _ais_setPopupMenu(self, value: object) -> None:
         self.popup_menu = ct_none(str, value)

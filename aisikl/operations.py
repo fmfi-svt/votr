@@ -196,6 +196,7 @@ class ConfirmBoxOp(Operation):
 
     class Option(Enum):
         """Enum of possible confirm box buttons."""
+
         # See /ais/webui2/web/confirmBox.html
         YES_TO_ALL = 4
         YES = 2
@@ -297,7 +298,8 @@ class ShellExecOp(Operation):
         url = (
             f"/ais/files/{urllib.parse.quote(file_name)}"
             f"?appId={self.app.app_id}&contentType={self.content_type}"
-            f"&antiCache={time.time()}&file={urllib.parse.quote(file_name)}")
+            f"&antiCache={time.time()}&file={urllib.parse.quote(file_name)}"
+        )
 
         await self.app.ctx.log("operation", f'Downloading "{file_name}"')
 
@@ -423,11 +425,11 @@ class OpenDialogOp(Operation):
 
         name = ct(str, props["id"])
         await app.ctx.log(
-            "operation", f'Opening dialog {name} "{props['title']}"')
+            "operation", f'Opening dialog {name} "{props["title"]}"')
 
         if props["isMain"] != (len(app.dialog_stack) == 0):
             raise AISBehaviorError(
-                f"Unexpected dialog with isMain = {props["isMain"]!r}")
+                f"Unexpected dialog with isMain = {props['isMain']!r}")
 
         # Ignore properties that only affect visuals: basedOnTheme, style,
         # isDlgDefaultStyleUsed, x, y, w, h, ra (resizeable), ma (minimizeable),

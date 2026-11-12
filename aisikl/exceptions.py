@@ -1,4 +1,3 @@
-
 class AisiklError(Exception):
     """The base class for AIS, REST-related exceptions."""
 

@@ -16,19 +16,34 @@ if TYPE_CHECKING:
 class UpDown(Control):
     """A group of buttons used to change the order of elements in some list."""
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
-        self.up_downed_component = ct_none(str, properties.get("upDownedComponent"))
+        self.up_downed_component = ct_none(
+            str, properties.get("upDownedComponent"))
         """The component ID controlled by these buttons."""
-        self.top_bottom_enabled = ct(bool, properties.get("topBottomEnabled", False))
+        self.top_bottom_enabled = ct(
+            bool, properties.get("topBottomEnabled", False))
         """Whether "move to top" and "move to bottom" buttons also exist."""
 
-    async def click(self, command: Literal["UP", "DOWN", "TOP", "BOTTOM"], *, return_ops: bool = False) -> Operations:
+    async def click(
+        self,
+        command: Literal["UP", "DOWN", "TOP", "BOTTOM"],
+        *,
+        return_ops: bool = False,
+    ) -> Operations:
         """Clicks one of the buttons, moving the selected item in the list."""
         await self.log("action", f"Clicking {self.id} {command.lower()}")
         if (  #
-            (udc_id := self.up_downed_component) is not None and
-            (udc := self.dialog.components.get(udc_id)) is not None
+            (udc_id := self.up_downed_component) is not None
+            and (udc := self.dialog.components.get(udc_id)) is not None
         ):
             if isinstance(udc, (Table, CheckList)):
                 return await udc.up_down_row(command, return_ops=return_ops)

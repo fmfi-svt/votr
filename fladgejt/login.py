@@ -29,10 +29,12 @@ class ServerDict(TypedDict):
     flashbacks_dir: NotRequired[str]
     title: NotRequired[str]  # `title` is used only in votrfront, not fladgejt
 
+
 class ParamsDictSamlPassword(TypedDict):
     type: Literal["saml_password"]
     username: str
     password: str
+
 
 class ParamsDictSamlAndrvotr(TypedDict):
     type: Literal["saml_andrvotr"]
@@ -40,27 +42,41 @@ class ParamsDictSamlAndrvotr(TypedDict):
     andrvotr_api_key: str
     andrvotr_authority_token: str
 
+
 class ParamsDictPlainPassword(TypedDict):
     type: Literal["plain_password"]
     username: str
     password: str
+
 
 class ParamsDictCookie(TypedDict):
     type: Literal["cookie"]
     ais_cookie: NotRequired[str | None]
     rest_cookie: NotRequired[str | None]
 
+
 class ParamsDictFlashback(TypedDict):
     type: Literal["flashback"]
     file: str
 
-ParamsDict = ParamsDictSamlPassword | ParamsDictSamlAndrvotr | ParamsDictPlainPassword | ParamsDictCookie | ParamsDictFlashback
+
+ParamsDict = (
+    ParamsDictSamlPassword
+    | ParamsDictSamlAndrvotr
+    | ParamsDictPlainPassword
+    | ParamsDictCookie
+    | ParamsDictFlashback
+)
 # usually also has `server: str` but fladgejt.login does not need it
 
 
 # Known and somewhat expected errors.
-class PasswordLoginError(Exception): pass
-class CookieLoginError(Exception): pass
+class PasswordLoginError(Exception):
+    pass
+
+
+class CookieLoginError(Exception):
+    pass
 
 
 # Omit cookie values and query string values from logs.
@@ -106,18 +122,23 @@ def _redact_response(response: Response) -> object:
 _samlsso_re = re.compile(r"^https://[^/]+/ais/sso/samlsso\?")
 
 
-async def _send_request(ctx: Context, url: str, data: dict[str, str] | None) -> Response:
+async def _send_request(
+    ctx: Context, url: str, data: dict[str, str] | None
+) -> Response:
     method = "POST" if data else "GET"
 
-    redacted_data = { k: "[...]" for k in data } if data else data
+    redacted_data = {k: "[...]" for k in data} if data else data
     await ctx.log("http", f"Requesting {method} {_redact(url)}", redacted_data)
 
     response = await ctx.request_http(method=method, url=url, data=data)
 
     # Work around a missing Content-Type header on /ais/sso/samlsso.
     # We read the header in _redact_response and _send_request_chain.
-    if (_samlsso_re.match(url) and "content-type" not in response.headers and
-            response.content.startswith(b"<html>")):
+    if (
+        _samlsso_re.match(url)
+        and "content-type" not in response.headers
+        and response.content.startswith(b"<html>")
+    ):
         response.headers["content-type"] = "text/html; charset=UTF-8"
 
     await ctx.log("http", f"Received response", _redact_response(response))
@@ -128,7 +149,9 @@ async def _send_request(ctx: Context, url: str, data: dict[str, str] | None) -> 
     return response
 
 
-def _parse_form(old_url: str, soup: BeautifulSoup) -> tuple[str, dict[str, str]]:
+def _parse_form(
+    old_url: str, soup: BeautifulSoup
+) -> tuple[str, dict[str, str]]:
     forms = soup.find_all("form")
     if len(forms) != 1:
         raise Exception(f"Unexpected number of form elements: {len(forms)}")
@@ -148,7 +171,9 @@ def _parse_form(old_url: str, soup: BeautifulSoup) -> tuple[str, dict[str, str]]
 _idp_profile_re = re.compile(r"^https://[^/]+/idp/profile/")
 
 
-async def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: dict[str, str] | None) -> None:
+async def _send_request_chain(
+    ctx: Context, params: ParamsDict, url: str, data: dict[str, str] | None
+) -> None:
     count = 0
     tried_saml_password_login = False
     while True:
@@ -161,7 +186,8 @@ async def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: 
         if params["type"] == "saml_andrvotr" and _idp_profile_re.match(url):
             idp_host = url.split("/")[2]
             if not url.startswith(
-                    f"https://{idp_host}/idp/profile/SAML2/Redirect/SSO?"):
+                f"https://{idp_host}/idp/profile/SAML2/Redirect/SSO?"
+            ):
                 raise Exception(f"Unexpected IdP request to {_redact(url)}")
             if data:
                 raise Exception(
@@ -187,7 +213,8 @@ async def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: 
 
         # Everything except 200 (and 3xx handled above) is an error.
         if response.status_code != 200:
-            raise Exception(f"Unexpected HTTP {response.status_code} status for url: {_redact(url)}")
+            raise Exception(
+                f"Unexpected HTTP {response.status_code} status for url: {_redact(url)}")
 
         # TODO: Handle successful REST API login. REST API does not support
         # SAML yet.
@@ -203,13 +230,15 @@ async def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: 
 
             # Detect successful AIS login (new student interface).
             if "/ais/apps/student/" in url and soup.find("app-root"):
-                await ctx.log("login", "AIS login successful (new student interface)")
+                await ctx.log(
+                    "login", "AIS login successful (new student interface)")
                 return
 
             # Detect successful AIS login (new teacher interface).
             # Votr functionality may be limited but at least login will work.
             if "/ais/portal2/ucitel/" in url:
-                await ctx.log("login", "AIS login successful (new teacher interface)")
+                await ctx.log(
+                    "login", "AIS login successful (new teacher interface)")
                 return
 
             # Handle login errors for saml_password and plain_password.
@@ -269,7 +298,9 @@ async def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: 
         raise Exception("Unrecognized response during login process")
 
 
-def _create_normal_client(ctx: Context, server: ServerDict, logout_mode: str) -> BaseClient:
+def _create_normal_client(
+    ctx: Context, server: ServerDict, logout_mode: str
+) -> BaseClient:
     if "ais_url" in server and "rest_url" in server:
         return HybridClient(ctx, logout_mode=logout_mode)
     elif "ais_url" in server:
@@ -280,7 +311,9 @@ def _create_normal_client(ctx: Context, server: ServerDict, logout_mode: str) ->
         raise Exception("Neither ais_url nor rest_url is configured")
 
 
-async def _login_with_saml(ctx: Context, server: ServerDict, params: ParamsDict) -> BaseClient:
+async def _login_with_saml(
+    ctx: Context, server: ServerDict, params: ParamsDict
+) -> BaseClient:
     if "ais_url" in server:
         # Simulate clicking the login button. It has
         # onclick="location.href='/ais/sso/samlsso?SAML2.HTTPBinding=HTTP-POST'"
@@ -304,7 +337,9 @@ async def _login_with_saml(ctx: Context, server: ServerDict, params: ParamsDict)
     return _create_normal_client(ctx, server, logout_mode)
 
 
-async def _login_with_plain_password(ctx: Context, server: ServerDict, params: ParamsDictPlainPassword) -> BaseClient:
+async def _login_with_plain_password(
+    ctx: Context, server: ServerDict, params: ParamsDictPlainPassword
+) -> BaseClient:
     if "rest_url" in server:
         raise Exception("plain_password type does not support rest_url")
 
@@ -312,13 +347,18 @@ async def _login_with_plain_password(ctx: Context, server: ServerDict, params: P
     # On both success and failure, it will respond with 302 to ais/start.do.
     # start.do will contain either an error message or the signed in view.
     login_url = server["ais_url"] + "ais/login.do"  # pyright: ignore [reportTypedDictNotRequiredAccess]
-    login_data = { "login": params["username"], "password": params["password"] }
+    login_data = {"login": params["username"], "password": params["password"]}
     await _send_request_chain(ctx, params, login_url, login_data)
 
     return _create_normal_client(ctx, server, WebuiClient.LOGOUT_WITH_REDIRECTS)
 
 
-def _parse_cookie_string(ctx: Context, base_url: str | None, default_name: str | None, cookie_string: str | None) -> None:
+def _parse_cookie_string(
+    ctx: Context,
+    base_url: str | None,
+    default_name: str | None,
+    cookie_string: str | None,
+) -> None:
     # Accept either one or more ';'-separated key=value pairs, or just one
     # cookie value (assume default_name).
 
@@ -334,7 +374,8 @@ def _parse_cookie_string(ctx: Context, base_url: str | None, default_name: str |
 
     for pair in cookie_string.split(";"):
         pair = pair.strip()
-        if not pair: continue
+        if not pair:
+            continue
         if "=" not in pair:
             raise CookieLoginError(
                 'Expected either a single cookie value or a list of ";"-separated key=value elements, but an element does not contain "="')
@@ -342,11 +383,17 @@ def _parse_cookie_string(ctx: Context, base_url: str | None, default_name: str |
         Cookies(ctx.cookie_jar).set(name, value, domain=domain)
 
 
-async def _login_with_cookie(ctx: Context, server: ServerDict, params: ParamsDictCookie) -> BaseClient:
+async def _login_with_cookie(
+    ctx: Context, server: ServerDict, params: ParamsDictCookie
+) -> BaseClient:
     # If login type is "cookie", but we only know ais_cookie, skip REST login.
-    if ("ais_url" in server and "rest_url" in server and
-            not (params.get("rest_cookie") or "").strip()):
-        await ctx.logger.log("login", "Skipping REST login because rest_cookie is empty")
+    if (
+        "ais_url" in server
+        and "rest_url" in server
+        and not (params.get("rest_cookie") or "").strip()
+    ):
+        await ctx.logger.log(
+            "login", "Skipping REST login because rest_cookie is empty")
         server = server.copy()
         server.pop("rest_url", None)
         server.pop("rest_cookie", None)
@@ -363,7 +410,9 @@ async def _login_with_cookie(ctx: Context, server: ServerDict, params: ParamsDic
     return _create_normal_client(ctx, server, WebuiClient.LOGOUT_NOTHING)
 
 
-async def _login_with_flashback(ctx: Context, server: ServerDict, params: ParamsDictFlashback) -> BaseClient:
+async def _login_with_flashback(
+    ctx: Context, server: ServerDict, params: ParamsDictFlashback
+) -> BaseClient:
     if "ais_url" in server:
         raise Exception("flashback type does not support ais_url")
     if "rest_url" in server:
@@ -381,15 +430,24 @@ _handlers = {
 }
 
 
-async def create_client(server: ServerDict, params: ParamsDict, *, connection_pool: AsyncConnectionPool | None = None, logger: Logger | None=None) -> BaseClient:
+async def create_client(
+    server: ServerDict,
+    params: ParamsDict,
+    *,
+    connection_pool: AsyncConnectionPool | None = None,
+    logger: Logger | None = None,
+) -> BaseClient:
     logger = logger or Logger()
 
     if params["type"] not in server["login_types"]:
         raise ValueError("Unsupported login type")
 
     ctx = Context(
-        ais_url=server.get("ais_url"), rest_url=server.get("rest_url"),
-        dns_overrides=server.get("dns_overrides"), logger=logger)
+        ais_url=server.get("ais_url"),
+        rest_url=server.get("rest_url"),
+        dns_overrides=server.get("dns_overrides"),
+        logger=logger,
+    )
 
     with ctx.use_connection_pool(connection_pool):
         handler = _handlers[params["type"]]
@@ -403,6 +461,8 @@ async def create_client(server: ServerDict, params: ParamsDict, *, connection_po
             if params["type"] == "cookie":
                 raise CookieLoginError("Cookie value did not work") from e
             else:
-                raise Exception(f"check_connection failed immediately: {e}") from e
+                raise Exception(
+                    f"check_connection failed immediately: {e}"
+                ) from e
 
     return client

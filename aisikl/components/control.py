@@ -16,7 +16,15 @@ class Control(Component):
     because it doesn't have a parent.)
     """
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         element = nn(element)
         self.parent_id = nn(parent_id)
@@ -34,20 +42,39 @@ class Control(Component):
 
     def _ais_setReadOnly(self, value: object) -> None:
         self.read_only = is_true(value)
+
     def _ais_setTabOrder(self, value: object) -> None:
         self.tab_order = really_int(value)
+
     def _ais_setToolTipText(self, value: object) -> None:
         self.tool_tip_text = ct_none(str, value)
 
-    def _ais_setX(self, value: object) -> None: pass
-    def _ais_setY(self, value: object) -> None: pass
-    def _ais_setWidth(self, value: object) -> None: pass
-    def _ais_setHeight(self, value: object) -> None: pass
-    def _ais_setForeground(self, value: object) -> None: pass
-    def _ais_setBackground(self, value: object) -> None: pass
-    def _ais_setComponentStyle(self, value: object) -> None: pass
-    def _ais_setFontSize(self, value: object) -> None: pass
-    def _ais_setFontStyle(self, value: object) -> None: pass
+    def _ais_setX(self, value: object) -> None:
+        pass
+
+    def _ais_setY(self, value: object) -> None:
+        pass
+
+    def _ais_setWidth(self, value: object) -> None:
+        pass
+
+    def _ais_setHeight(self, value: object) -> None:
+        pass
+
+    def _ais_setForeground(self, value: object) -> None:
+        pass
+
+    def _ais_setBackground(self, value: object) -> None:
+        pass
+
+    def _ais_setComponentStyle(self, value: object) -> None:
+        pass
+
+    def _ais_setFontSize(self, value: object) -> None:
+        pass
+
+    def _ais_setFontStyle(self, value: object) -> None:
+        pass
 
     def changed_properties(self) -> str:
         """Internal. Builds the ``<embObjChProps>`` string for this control.
@@ -55,7 +82,9 @@ class Control(Component):
         """
         return ""
 
-    def _build_changed_properties(self, **kwargs: str | bool | tuple[bool | None, bool, str | bool]) -> str:
+    def _build_changed_properties(
+        self, **kwargs: str | bool | tuple[bool | None, bool, str | bool]
+    ) -> str:
         """Internal. Helps with the redundant parts of ``<embObjChProps>``
         string construction.
         """
@@ -69,10 +98,13 @@ class Control(Component):
 
         for name, value in kwargs.items():
             is_xml = use_cdata = False
-            if isinstance(value, tuple): is_xml, use_cdata, value = value
-            if isinstance(value, bool): value = "true" if value else "false"
+            if isinstance(value, tuple):
+                is_xml, use_cdata, value = value
+            if isinstance(value, bool):
+                value = "true" if value else "false"
 
-            if use_cdata: value = "<![CDATA[" + value + "]]>"
+            if use_cdata:
+                value = "<![CDATA[" + value + "]]>"
             write("<nameValue>")
             write("<name>" + name + "</name>")
             if is_xml is not None:
@@ -90,7 +122,7 @@ class Control(Component):
         """Internal. Corresponds to ``updateValueInteractives`` in webui.js,
         but it's not yet implemented.
         """
-        pass # TODO
+        pass  # TODO
 
     # TODO: We need a method to explicitly request firing a blur event.
     # (Find out which classes can fire it in webui.)

@@ -56,7 +56,9 @@ class Cell(NamedTuple):
 
 
 class Row:
-    def __init__(self, id: int, rid: str, cells: list[Cell], table: Table) -> None:
+    def __init__(
+        self, id: int, rid: str, cells: list[Cell], table: Table
+    ) -> None:
         self.id = id
         self.rid = rid
         self.cells = cells
@@ -83,10 +85,12 @@ def load_script_plain(data_view: Tag, id: str) -> str | None:
     its content as a plain string.
     """
     script_element = data_view.find(id=id)
-    if not script_element: return None
+    if not script_element:
+        return None
     if script_element.name != "script":
-        raise AISParseError(f"Expected {id} to be script instead of {script_element.name}")
-    return script_element.get_text()[4:-3]   # always "<!--" and "-->"
+        raise AISParseError(
+            f"Expected {id} to be script instead of {script_element.name}")
+    return script_element.get_text()[4:-3]  # always "<!--" and "-->"
 
 
 def load_script(data_view: Tag, id: str) -> Tag | None:
@@ -94,7 +98,8 @@ def load_script(data_view: Tag, id: str) -> Tag | None:
     its parsed HTML content.
     """
     text = load_script_plain(data_view, id)
-    if text is None: return None
+    if text is None:
+        return None
     return BeautifulSoup(text, "lxml")
     # note: will be wrapped in <html> and <body>
 
@@ -102,7 +107,15 @@ def load_script(data_view: Tag, id: str) -> Tag | None:
 class Table(Control):
     """A WebUI data table widget."""
 
-    def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
+    def __init__(
+        self,
+        dialog: Dialog,
+        id: str,
+        type: str,
+        parent_id: str | None,
+        properties: dict[str, object],
+        element: Tag | None,
+    ) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
 
         # In the original JavaScript, these properties have default values, but
@@ -114,23 +127,29 @@ class Table(Control):
         """If false, it is possible to select zero rows."""
         self.fixed_columns = ct(int, properties.get("fixedColumns", 0))
         self.up_down_enabled = ct(bool, properties["upDownEnabled"])  # False
-        self.user_add_remove_rows_enabled = ct(bool, properties["userAddRemoveRowsEnabled"])  # False
+        self.user_add_remove_rows_enabled = ct(
+            bool, properties["userAddRemoveRowsEnabled"])  # False
         self.supported_events = ct(str, properties.get("se") or "")
-        self.multiple_selection = ct(bool, properties["multipleSelection"])  # False
+        self.multiple_selection = ct(
+            bool, properties["multipleSelection"])  # False
         """Whether multiple rows can be selected. For example, it's true for
         ``absolventiTable`` in ``VSES306``.
         """
-        self.cell_selection_mode = ct(bool, properties["cellSelectionMode"])  # False
+        self.cell_selection_mode = ct(
+            bool, properties["cellSelectionMode"])  # False
         """Whether a single cell can be selected. For example, enabling JAWS
         mode in ``SSSP003`` enables this mode in all known tables.
         """
-        self.scroll_bottom_enabled = ct(bool, properties["scrollBottomEnabled"])  # False
-        self.select_all_enabled = ct(bool, properties["selectAllEnabled"])  # False
+        self.scroll_bottom_enabled = ct(
+            bool, properties["scrollBottomEnabled"])  # False
+        self.select_all_enabled = ct(
+            bool, properties["selectAllEnabled"])  # False
         """Whether it's possible to select all rows with Ctrl+A. Emprically,
         it's false in all known tables (even those with
         [`multiple_selection`][]).
         """
-        self.row_numbers_visible = ct(bool, properties["rowNumbersVisible"])  # False
+        self.row_numbers_visible = ct(
+            bool, properties["rowNumbersVisible"])  # False
         self.row_numbers_visible_changed = False
         self.status_visible = ct(bool, properties["statusVisible"])  # False
         """Remnant of an old WebUI version. Tables used to have a toggleable
@@ -141,7 +160,8 @@ class Table(Control):
         different.
         """
         self.status_visible_changed = False
-        self.visible_status_buttons = ct(int, properties["visibleStatusButtons"])  # 0
+        self.visible_status_buttons = ct(
+            int, properties["visibleStatusButtons"])  # 0
 
         self.is_end_of_data = False
         """True if we can't scroll down anymore, either because we got all query
@@ -184,10 +204,12 @@ class Table(Control):
 
     @override
     async def async_init(self, element: Tag | None) -> None:
-        await self._init_from_data_view(nn(element).find(id=self.id + "_dataView"))
+        await self._init_from_data_view(
+            nn(element).find(id=self.id + "_dataView"))
 
     async def _init_from_data_view(self, data_view: Tag | None) -> None:
-        if not data_view: return
+        if not data_view:
+            return
 
         self._update_data_position_properties(data_view)
         self._update_selection_model_properties(data_view)
@@ -202,8 +224,9 @@ class Table(Control):
             suffix = "Fixed" if fixed else ""
             header_table = load_script(data_view, "columnModel" + suffix)
             colgroup = load_script(data_view, "dataTabColGroup" + suffix)
-            if not header_table: continue
-            tds = { e["id"]: e for e in header_table.find_all(id=True) }
+            if not header_table:
+                continue
+            tds = {e["id"]: e for e in header_table.find_all(id=True)}
             for col in nn(colgroup).find_all("col"):
                 alias = ct(str, col["id"])
                 col_properties: dict[str, object] = properties["columns"][alias]
@@ -218,47 +241,58 @@ class Table(Control):
                     fixed=fixed,
                     width=width,
                     visible=not col_properties.get("h", False),
-                    is_checked_selection_column=ct_none(bool, col_properties.get("ch")),
+                    is_checked_selection_column=ct_none(
+                        bool, col_properties.get("ch")),
                     edited_by=ct_none(str, col.get("editedby")),
                     combo_box_mode=ct_none(str, col.get("cbmode")),
                     model=ct_none(str, col.get("model")),
-                    send_edit_cell=col.get("sendeditcell", "false") == "true",
+                    send_edit_cell=col.get("sendeditcell", "false")
+                    == "true",
                     default_value=ct_none(str, col.get("defaultvalue")),
                 ))
                 index += 1
 
-        self.column_map = { col.alias: col for col in self.columns }
+        self.column_map = {col.alias: col for col in self.columns}
 
-        await self.log("table", f"Found {len(self.columns)} columns in {self.id}", self.columns)
+        await self.log(
+            "table", f"Found {len(self.columns)} columns in {self.id}",
+            self.columns)
 
-        await self._load_rows(nn(load_script(data_view, "dataTabBodies")),
-                              load_script(data_view, "dataTabBodiesFixed"))
+        await self._load_rows(
+            nn(load_script(data_view, "dataTabBodies")),
+            load_script(data_view, "dataTabBodiesFixed"))
 
         self._load_edit_models(load_script(data_view, "dataTabEditModels"))
 
         # onload calls initTableModel which calls initPropertiesAndModels which calls this:
-        #self._show_control_buttons()
-        #self._table_model_update(-1, -1, False)
+        # self._show_control_buttons()
+        # self._table_model_update(-1, -1, False)
         # TODO remove me but document it
 
     def _update_data_position_properties(self, data_view: Tag | None) -> None:
-        if not data_view: return
+        if not data_view:
+            return
         element = data_view.find(id="dataPositionSpan")
-        if not element: return
+        if not element:
+            return
         self.is_end_of_data = element.get("isend", "false") == "true"
         self.truncated = element.get("truncated", "false") == "true"
         self.fixed_columns = int(ct(str, element.get("fixedcolumns", "0")))
 
     def _update_data_tab_bodies_properties(self, data_view: Tag | None) -> None:
-        if not data_view: return
+        if not data_view:
+            return
         element = data_view.find(id="dataTabBodies")
-        if not element: return
+        if not element:
+            return
         self._ais_setBufferSize(element.get("buffersize"))
 
     def _update_selection_model_properties(self, data_view: Tag | None) -> None:
-        if not data_view: return
+        if not data_view:
+            return
         element = data_view.find(id="selectionModel")
-        if not element: return
+        if not element:
+            return
 
         # TODO: loaded_rows chcem aby isiel po ID-ckach, to jest loaded_rows[0] je row ktory ma id=row_0 a nie nutne najvyssi
         # ledaze by nie??? vyzera ze AIS v tom ma tiez taky bordel ako my
@@ -266,14 +300,19 @@ class Table(Control):
 
         was_multiple_selection = len(self.selected_row_indexes) > 1
 
-        selection = [int(id) for id in ct(str, element.get("selection", "")).split(",") if id]
+        selection = [
+            int(id)
+            for id in ct(str, element.get("selection", "")).split(",")
+            if id
+        ]
         if self.cell_selection_mode:
             selection = selection[0:1] if selection else [0]
         self.selected_row_indexes = selection
 
         if self.cell_selection_mode:
-            self.selected_column_alias = ct_none(str, element.get(
-                "cellselectionalias", self.selected_column_alias))
+            self.selected_column_alias = ct_none(
+                str,
+                element.get("cellselectionalias", self.selected_column_alias))
         else:
             self.selected_column_alias = None
 
@@ -291,8 +330,10 @@ class Table(Control):
         else:
             self.cursor_row_index = None
 
-        self.inverted_selection = (not self.cell_selection_mode and
-            element.get("invertedselection", "false") == "true")
+        self.inverted_selection = (
+            not self.cell_selection_mode
+            and element.get("invertedselection", "false") == "true"
+        )
 
         is_multiple_selection = len(self.selected_row_indexes) > 1
         if was_multiple_selection != is_multiple_selection:
@@ -303,32 +344,46 @@ class Table(Control):
     def _ais_setSortable(self, value: object) -> None:
         self.sortable = is_true(value)
         # TODO: this.tableService.updateStatusControlSortButton
+
     def _ais_setAllwaysSelected(self, value: object) -> None:
         self.always_selected = is_true(value)
+
     def _ais_setFixedColumns(self, value: object) -> None:
         self.fixed_columns = really_int(value)
+
     def _ais_setMinNoFixedColumnsWidth(self, value: object) -> None:
-        pass   # getMinNoFixedColumnsWidth is unused in Votr
+        pass  # getMinNoFixedColumnsWidth is unused in Votr
+
     def _ais_setUpDownEnabled(self, value: object) -> None:
         self.up_down_enabled = is_true(value)
+
     def _ais_setUserAddRemoveRowsEnabled(self, value: object) -> None:
         self.user_add_remove_rows_enabled = is_true(value)
+
     def _ais_setSupportedEvents(self, value: object) -> None:
         self.supported_events = ct(str, value)
+
     def _ais_setMultipleSelection(self, value: object) -> None:
         self.multiple_selection = is_true(value)
+
     def _ais_setCellSelectionMode(self, value: object) -> None:
         self.cell_selection_mode = is_true(value)
+
     def _ais_setScrollBottomEnabled(self, value: object) -> None:
         self.scroll_bottom_enabled = is_true(value)
+
     def _ais_setSelectAllEnabled(self, value: object) -> None:
         self.select_all_enabled = is_true(value)
+
     def _ais_setRowNumbersVisible(self, value: object) -> None:
         self.row_numbers_visible = is_true(value)
+
     def _ais_setStatusVisible(self, value: object) -> None:
         self.status_visible = is_true(value)
+
     def _ais_setVisibleStatusButtons(self, value: object) -> None:
         self.visible_status_buttons = really_int(value)
+
     def _ais_setBufferSize(self, value: object) -> None:
         self.buffer_size = 50 if value is None else really_int(value)
 
@@ -336,7 +391,8 @@ class Table(Control):
         """Toggles visible row numbers. Equivalent to clicking the "Row numbers"
         item in the gear button menu. Implemented just for completeness.
         """
-        await self.log("action", f"Switching row numbers visibility in {self.id}")
+        await self.log(
+            "action", f"Switching row numbers visibility in {self.id}")
         self.row_numbers_visible = not self.row_numbers_visible
         self.row_numbers_visible_changed = True
         self.dialog.component_changes(self, True)
@@ -346,19 +402,31 @@ class Table(Control):
         Corresponds to ``switchStatusVisible`` in webui.js, but this button
         doesn't exist anymore. See [`status_visible`][].
         """
-        await self.log("action", f"Switching status bar visibility in {self.id}")
+        await self.log(
+            "action", f"Switching status bar visibility in {self.id}")
         self.status_visible = not self.status_visible
         self.status_visible_changed = True
         self.dialog.component_changes(self, True)
 
-    async def on_column_move(self, column_alias: str, after_column_alias: str, *, return_ops: bool = False) -> Operations: # TODO inline into actual column move fn
-        await self.log("action", f"Moving {column_alias} to be after {after_column_alias} in {self.id}")
+    async def on_column_move(
+        self,
+        column_alias: str,
+        after_column_alias: str,
+        *,
+        return_ops: bool = False,
+    ) -> Operations:  # TODO inline into actual column move fn
+        await self.log(
+            "action",
+            f"Moving {column_alias} to be after {after_column_alias} in {self.id}")
         ev = table_header_event(
             self, column_alias, after_column_alias, None, "MOVE_COLUMN")
         return await self.dialog.app.send_events(ev, return_ops=return_ops)
 
-    async def _on_edit_row(self, index: int, *, return_ops: bool = False) -> Operations:
-        if not self.edited_cells: return Operations()
+    async def _on_edit_row(
+        self, index: int, *, return_ops: bool = False
+    ) -> Operations:
+        if not self.edited_cells:
+            return Operations()
         self.dialog.component_changes(self, False)
         if "EDITED_ROW|" in self.supported_events:
             self.used_listeners_mask |= 64
@@ -367,25 +435,36 @@ class Table(Control):
         else:
             return Operations()
 
-    async def sort(self, column_alias: str, modifiers: str | None, *, return_ops: bool = False) -> Operations:
+    async def sort(
+        self,
+        column_alias: str,
+        modifiers: str | None,
+        *,
+        return_ops: bool = False,
+    ) -> Operations:
         # TODO: find out if this should be a public function
         ev = table_header_event(
             self, column_alias, None, modifiers, "HEADER_CLICK")
         return await self.dialog.app.send_events(ev, return_ops=return_ops)
 
-    async def _on_data_tab_dbl_click(self, *, return_ops: bool = False) -> Operations:
+    async def _on_data_tab_dbl_click(
+        self, *, return_ops: bool = False
+    ) -> Operations:
         # TODO: rename or inline this appropriately
         if self.action_name:
             action = self.dialog.components[self.action_name]
             if action:
-                return await ct(Action, action).execute(self.id, return_ops=return_ops)
+                return await ct(Action, action).execute(
+                    self.id, return_ops=return_ops)
         if "EMPTY|" in self.supported_events:
             self.used_listeners_mask |= 64
             ev = action_event(self, None, self.id)
             return await self.dialog.app.send_events(ev, return_ops=return_ops)
         return Operations()
 
-    async def _fire_action_command(self, command: str, *, return_ops: bool) -> Operations:
+    async def _fire_action_command(
+        self, command: str, *, return_ops: bool
+    ) -> Operations:
         if command + "|" in self.supported_events:
             self.used_listeners_mask |= 64
             ev = action_event(self, command, self.id)
@@ -395,13 +474,17 @@ class Table(Control):
 
     async def delete_row(self, *, return_ops: bool = False) -> Operations:
         self.dialog.component_changes(self, False)
-        return await self._fire_action_command("DELETE_ROW", return_ops=return_ops)
+        return await self._fire_action_command(
+            "DELETE_ROW", return_ops=return_ops)
 
     async def insert_row(self, *, return_ops: bool = False) -> Operations:
         self.dialog.component_changes(self, False)
-        return await self._fire_action_command("INSERT_ROW", return_ops=return_ops)
+        return await self._fire_action_command(
+            "INSERT_ROW", return_ops=return_ops)
 
-    async def control_button_row_count(self, *, return_ops: bool = False) -> Operations:
+    async def control_button_row_count(
+        self, *, return_ops: bool = False
+    ) -> Operations:
         """Clicks the "Record count" button.
 
         This button has an uppercase sigma icon, and is available for example in
@@ -412,9 +495,12 @@ class Table(Control):
         [`declared_row_count`][] is known.
         """
         self.dialog.component_changes(self, True)
-        return await self._fire_action_command("ROW_COUNT", return_ops=return_ops)
+        return await self._fire_action_command(
+            "ROW_COUNT", return_ops=return_ops)
 
-    async def control_button_columns(self, *, return_ops: bool = False) -> Operations:
+    async def control_button_columns(
+        self, *, return_ops: bool = False
+    ) -> Operations:
         """Clicks the "Column settings" item in the gear button menu.
 
         This opens a dialog where columns can be shown, hidden, or reordered.
@@ -422,27 +508,37 @@ class Table(Control):
         See also [`fladgejt.webui.commonui.show_all_columns`][].
         """
         self.dialog.component_changes(self, True)
-        return await self._fire_action_command("SET_COLUMNS", return_ops=return_ops)
+        return await self._fire_action_command(
+            "SET_COLUMNS", return_ops=return_ops)
 
-    async def control_button_sort(self, *, return_ops: bool = False) -> Operations:
+    async def control_button_sort(
+        self, *, return_ops: bool = False
+    ) -> Operations:
         """Clicks the "Sorting settings" item in the gear button menu.
 
         This opens a dialog where row sorting criteria can be set.
         """
         self.dialog.component_changes(self, True)
-        return await self._fire_action_command("SET_SORTING", return_ops=return_ops)
+        return await self._fire_action_command(
+            "SET_SORTING", return_ops=return_ops)
 
-    async def control_button_debug_info(self, *, return_ops: bool = False) -> Operations:
+    async def control_button_debug_info(
+        self, *, return_ops: bool = False
+    ) -> Operations:
         """Clicks the "Debug info" item in the gear button menu.
 
         This opens a dialog that shows the underlying SQL query. It is
         apparently only available on ``ais2-beta``.
         """
         self.dialog.component_changes(self, True)
-        return await self._fire_action_command("DEBUG_INFO", return_ops=return_ops)
+        return await self._fire_action_command(
+            "DEBUG_INFO", return_ops=return_ops)
 
-    async def up_down_row(self, command: str, *, return_ops: bool = False) -> Operations:
-        if not self.up_down_enabled: return Operations()
+    async def up_down_row(
+        self, command: str, *, return_ops: bool = False
+    ) -> Operations:
+        if not self.up_down_enabled:
+            return Operations()
         if self._table_model_up_down(command):
             self.up_downed_rows = True
             self.dialog.component_changes(self, False)
@@ -451,7 +547,14 @@ class Table(Control):
     def _table_model_up_down(self, command: str) -> bool:
         raise NotImplementedError
 
-    async def _on_edit_cell(self, send: bool, alias: str, row_index: int, *, return_ops: bool = False) -> Operations:
+    async def _on_edit_cell(
+        self,
+        send: bool,
+        alias: str,
+        row_index: int,
+        *,
+        return_ops: bool = False,
+    ) -> Operations:
         self.edited_cells = True
         self.dialog.component_changes(self, False)
         if not send:
@@ -462,7 +565,14 @@ class Table(Control):
         ev = cell_edited_event(self, "EDITED_CELL", alias, row_index)
         return await self.dialog.app.send_events(ev, return_ops=return_ops)
 
-    async def button_num_code_click(self, alias: str, row_index: int, value: str | bool, *, return_ops: bool = False) -> Operations:
+    async def button_num_code_click(
+        self,
+        alias: str,
+        row_index: int,
+        value: str | bool,
+        *,
+        return_ops: bool = False,
+    ) -> Operations:
         """Does something with cells that have ``edited_by == "buttonNumCode"``,
         which were not seen yet.
         """
@@ -470,7 +580,8 @@ class Table(Control):
 
         self.edited_cells = True
         self.dialog.component_changes(self, False)
-        if "BUTTON_NUM_CODE|" not in self.supported_events: return Operations()
+        if "BUTTON_NUM_CODE|" not in self.supported_events:
+            return Operations()
         self.used_listeners_mask |= 64
         ev = cell_edited_event(self, "BUTTON_NUM_CODE", alias, row_index)
         return await self.dialog.app.send_events(ev, return_ops=return_ops)
@@ -480,9 +591,15 @@ class Table(Control):
         cdata = ["<root>"]
 
         if self.selection_changed or self.active_index_changed:
-            cdata.append("<selection invertedSelection='true'>" if self.inverted_selection else "<selection>")
+            cdata.append(
+                "<selection invertedSelection='true'>"
+                if self.inverted_selection
+                else "<selection>")
             cdata.append("<activeIndex>")
-            cdata.append(str(-1 if self.cursor_row_index is None else self.cursor_row_index))
+            cdata.append(str(
+                -1
+                if self.cursor_row_index is None
+                else self.cursor_row_index))
             cdata.append("</activeIndex>")
             cdata.append("<selectedIndexes>")
             cdata.append(",".join(map(str, self.selected_row_indexes)))
@@ -496,9 +613,10 @@ class Table(Control):
             # TODO: AIS doesn't do it, but we should probably unset active_index_changed too
 
         if self.headers_changed:
-            json_columns = json.dumps(
-                [{ "id": column.alias, "width": column.width }
-                 for column in self.columns])
+            json_columns = json.dumps([
+                {"id": column.alias, "width": column.width}
+                for column in self.columns
+            ])
             cdata.append(f"<JSONcolumns>{json_columns}</JSONcolumns>")
             self.headers_changed = False
 
@@ -527,7 +645,8 @@ class Table(Control):
                     type = "number"
                 else:
                     type = "string"
-                cdata.append(f"<cell row='{row_index}' alias='{alias}' type='{type}'>{value}</cell>")
+                cdata.append(
+                    f"<cell row='{row_index}' alias='{alias}' type='{type}'>{value}</cell>")
             cdata.append("</editedCells>")
             self.changed_cells.clear()
             self.last_changed_row_index = None
@@ -550,7 +669,11 @@ class Table(Control):
             self.status_visible_changed = False
 
         if self.row_numbers_visible_changed:
-            properties["rowNumbersVisible"] = (False, False, self.row_numbers_visible)
+            properties["rowNumbersVisible"] = (
+                False,
+                False,
+                self.row_numbers_visible,
+            )
             self.row_numbers_visible_changed = False
 
         return self._build_changed_properties(**properties)
@@ -563,11 +686,13 @@ class Table(Control):
 
     async def _ais_setDataView(self, id: str, body: Tag) -> None:
         data_view = nn(body.find(id=id))
-        if not data_view.contents: return
+        if not data_view.contents:
+            return
         if data_view.find(id="columnModel"):
             await self._init_from_data_view(data_view)
         else:
             await self._update_data(data_view)
+
     _ais_setDataView.wants_body = True  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportFunctionMemberAccess]
 
     async def _update_data(self, data_view: Tag) -> None:
@@ -575,7 +700,8 @@ class Table(Control):
 
         data_tab_bodies = data_view.find(id="dataTabBodies")
         data_tab_bodies_fixed = data_view.find(id="dataTabBodiesFixed")
-        if not data_tab_bodies: return
+        if not data_tab_bodies:
+            return
 
         self._update_data_tab_bodies_properties(data_view)
         self._update_data_position_properties(data_view)
@@ -590,12 +716,18 @@ class Table(Control):
                 # This might be a behavior difference - WebUI actually does
                 # `this.dataSendType == "update";`. We hope they meant `=`.
                 data_send_type = "update"
-            await self._load_rows(data_tab_bodies, data_tab_bodies_fixed,
-                            replace=(data_send_type == "update"))
+            await self._load_rows(
+                data_tab_bodies, data_tab_bodies_fixed,
+                replace=(data_send_type == "update"))
 
         self._load_edit_models(data_view.find(id="dataTabEditModels"))
 
-    async def _load_rows(self, data_tab_bodies: Tag, data_tab_bodies_fixed: Tag | None, replace: bool=True) -> None:
+    async def _load_rows(
+        self,
+        data_tab_bodies: Tag,
+        data_tab_bodies_fixed: Tag | None,
+        replace: bool = True,
+    ) -> None:
         really_replaced = replace and self.loaded_rows
         if replace:
             self.loaded_buffers = set()
@@ -603,7 +735,7 @@ class Table(Control):
             self.num_visible_buffers = 0
 
         for tbody in data_tab_bodies.find_all("tbody"):
-            id = int(ct(str, tbody["id"])[len("dataTabBody"):])
+            id = int(ct(str, tbody["id"])[len("dataTabBody") :])
             self.loaded_buffers.add(id)
             if self.num_visible_buffers < id + 1:
                 self.num_visible_buffers = id + 1
@@ -619,7 +751,7 @@ class Table(Control):
             if tr["id"] == "aria-columns-row":
                 continue
 
-            id = int(ct(str, tr["id"])[len("row_"):])
+            id = int(ct(str, tr["id"])[len("row_") :])
             rid = ct(str, tr["rid"])
             tds = tr.find_all("td")
             if data_tab_bodies_fixed:
@@ -634,12 +766,14 @@ class Table(Control):
             self.loaded_rows[row.id] = row
 
         log_note = " (replacing old content)" if really_replaced else ""
-        await self.log("table", f"Loaded {len(new_rows)} rows in {self.id}{log_note}",
+        await self.log(
+            "table", f"Loaded {len(new_rows)} rows in {self.id}{log_note}",
             new_rows)
 
     def _load_cell(self, td: Tag) -> Cell:
         value = td.get_text()
-        if value == "\xa0": value = ""
+        if value == "\xa0":
+            value = ""
 
         if td.get("datatype") == "boolean":
             value = bool(td.find(class_="booleanCellChecked"))
@@ -670,7 +804,8 @@ class Table(Control):
         )
 
     def _load_edit_models(self, data_tab_edit_models: Tag | None) -> None:
-        if not data_tab_edit_models: return
+        if not data_tab_edit_models:
+            return
 
         self.combobox_options = {}
 
@@ -684,13 +819,16 @@ class Table(Control):
                     tool_tip_text=ct(str, option["title"]),
                 ))
 
-    async def scroll_down(self, buffers: int=1, *, return_ops: bool = False) -> Operations:
+    async def scroll_down(
+        self, buffers: int = 1, *, return_ops: bool = False
+    ) -> Operations:
         """Loads more rows.
 
         One buffer is [`buffer_size`][] rows (usually 50). Calling
         ``scroll_down(10)`` should be reasonable.
         """
-        if self.is_end_of_data: return Operations()
+        if self.is_end_of_data:
+            return Operations()
         await self.log("action", f"Scrolling down in {self.id}")
         self.num_visible_buffers += buffers
         self.scrolled_vertically = True
@@ -715,7 +853,8 @@ class Table(Control):
         ```
         """
         if self.declared_row_count > 0:
-            await self.scroll_down(self.declared_row_count // self.buffer_size + 1)
+            await self.scroll_down(
+                self.declared_row_count // self.buffer_size + 1)
 
         while not self.is_end_of_data:
             await self.scroll_down(10)
@@ -723,7 +862,16 @@ class Table(Control):
             raise AISBehaviorError("AIS did not return all table rows")
         return self.loaded_rows
 
-    async def select(self, indexes: int | Iterable[int], cursor: int | None=None, inverted: bool=False, column_alias: str | None=None, *, _skip_event: bool=False, return_ops: bool = False) -> Operations:
+    async def select(
+        self,
+        indexes: int | Iterable[int],
+        cursor: int | None = None,
+        inverted: bool = False,
+        column_alias: str | None = None,
+        *,
+        _skip_event: bool = False,
+        return_ops: bool = False,
+    ) -> Operations:
         """Selects table rows or cells.
 
         Args:
@@ -761,18 +909,27 @@ class Table(Control):
                 # all tables will be in cell selection mode.
                 column_alias = self.selected_column_alias
             if len(indexes) != 1:
-                raise AISBehaviorError("can't select multiple rows in cell selection mode")
+                raise AISBehaviorError(
+                    "can't select multiple rows in cell selection mode")
         else:
             if column_alias is not None:
-                raise AISBehaviorError("column selection not supported for this table")
+                raise AISBehaviorError(
+                    "column selection not supported for this table")
 
-        if inverted and not (self.multiple_selection and self.select_all_enabled):
-            raise AISBehaviorError("inverted selection not supported for this table")
+        if inverted and not (
+            self.multiple_selection and self.select_all_enabled
+        ):
+            raise AISBehaviorError(
+                "inverted selection not supported for this table")
         if len(indexes) > 1 and not self.multiple_selection:
-            raise AISBehaviorError("multiple selection not supported for this table")
-        if self.always_selected and ((not inverted and len(indexes) == 0) or
-                (inverted and len(indexes) == len(self.loaded_rows))):
-            raise AISBehaviorError("empty selection not supported for this table")
+            raise AISBehaviorError(
+                "multiple selection not supported for this table")
+        if self.always_selected and (
+            (not inverted and len(indexes) == 0)
+            or (inverted and len(indexes) == len(self.loaded_rows))
+        ):
+            raise AISBehaviorError(
+                "empty selection not supported for this table")
 
         log_parts = [
             "Selecting ",
@@ -790,9 +947,10 @@ class Table(Control):
         is_multiple_selection = len(indexes) > 1
         active_index_changed = self.cursor_row_index != cursor
         selection_changed = (
-            self.selected_row_indexes != indexes or
-            self.inverted_selection != inverted or
-            self.selected_column_alias != column_alias)
+            self.selected_row_indexes != indexes
+            or self.inverted_selection != inverted
+            or self.selected_column_alias != column_alias
+        )
 
         self.selected_row_indexes = indexes
         self.cursor_row_index = cursor
@@ -807,7 +965,8 @@ class Table(Control):
         if active_index_changed:
             self.active_index_changed = True
             self.dialog.component_changes(self, True)
-            operations.extend(await self._fire_action_command("ACTIVE_ROW_CHANGE", return_ops=return_ops))
+            operations.extend(await self._fire_action_command(
+                "ACTIVE_ROW_CHANGE", return_ops=return_ops))
 
         if selection_changed:
             self.selection_changed = True
@@ -820,17 +979,27 @@ class Table(Control):
                     self.dialog.component_changes(self, False)
                     if "EDITED_ROW|" in self.supported_events:
                         self.used_listeners_mask |= 64
-                        evs.append(row_edited_event(self, "EDITED_ROW", self.last_changed_row_index))
+                        evs.append(row_edited_event(
+                            self, "EDITED_ROW", self.last_changed_row_index))
             # This only emits a selection event for the final selected row (in
             # case of multiple selection). That is a bit unfortunate, but WebUI
             # already had this "problem" when Shift+selecting, so it should be
             # OK for Votr. You could always call select() many times if needed.
             evs.append(selection_event(self, cursor, cursor in indexes))
-            operations.extend(await self.dialog.app.send_events(*evs, return_ops=return_ops))
+            operations.extend(
+                await self.dialog.app.send_events(*evs, return_ops=return_ops))
 
         return operations
 
-    async def edit_cell(self, alias: str, row_index: int, value: str | bool, *, _skip_event: bool=False, return_ops: bool = False) -> Operations:
+    async def edit_cell(
+        self,
+        alias: str,
+        row_index: int,
+        value: str | bool,
+        *,
+        _skip_event: bool = False,
+        return_ops: bool = False,
+    ) -> Operations:
         """Changes the value of an editable cell."""
         column = self.column_map[alias]
         row = self.loaded_rows[row_index]
@@ -844,12 +1013,14 @@ class Table(Control):
             send_edit_cell = cell.send_edit_cell
             value = bool(value)
 
-        operations = await self.select(row_index,
+        operations = await self.select(
+            row_index,
             column_alias=(alias if self.cell_selection_mode else None),
-            _skip_event=(is_checkbox and send_edit_cell),
-            return_ops=return_ops)
+            _skip_event=(is_checkbox and send_edit_cell), return_ops=return_ops)
 
-        await self.log("action", f"Setting cell {alias} of row {row_index} in {self.id} to {value!r}")
+        await self.log(
+            "action",
+            f"Setting cell {alias} of row {row_index} in {self.id} to {value!r}")
 
         cell = row.cells[column.index] = cell._replace(value=value)
 
@@ -857,6 +1028,7 @@ class Table(Control):
         self.last_changed_row_index = row_index
 
         if not _skip_event:
-            operations.extend(await self._on_edit_cell(send_edit_cell, alias, row_index))
+            operations.extend(
+                await self._on_edit_cell(send_edit_cell, alias, row_index))
 
         return operations

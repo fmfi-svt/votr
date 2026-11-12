@@ -15,6 +15,7 @@ class Studium(TypedDict):
     rok_studia: str
     organizacna_jednotka: str
 
+
 @with_key_fields(zapisny_list_key=["studium_key", "akademicky_rok"])
 class ZapisnyList(TypedDict):
     akademicky_rok: str
@@ -24,6 +25,7 @@ class ZapisnyList(TypedDict):
     datum_zapisu: str
     studium_key: str
 
+
 @with_key_fields(predmet_key=["skratka"])
 class Predmet(TypedDict):
     skratka: str
@@ -31,6 +33,7 @@ class Predmet(TypedDict):
     typ_vyucby: str
     semester: str
     kredit: str
+
 
 @with_key_fields(predmet_key=["skratka"])
 class RegPredmet(TypedDict):
@@ -43,6 +46,7 @@ class RegPredmet(TypedDict):
     rozsah_vyucby: str
     semester: str
     kredit: str
+
 
 @with_key_fields(predmet_key=["skratka"])
 class ZapisPredmet(TypedDict):
@@ -64,11 +68,13 @@ class ZapisPredmet(TypedDict):
     odporucany_rocnik: str | None
     cast: str
 
+
 class ZapisVlastnost(TypedDict):
     skratka: str
     nazov: str
     minimalny_kredit: str
     poznamka: str
+
 
 @with_key_fields(predmet_key=["skratka"])
 class Hodnotenie(TypedDict):
@@ -86,6 +92,7 @@ class Hodnotenie(TypedDict):
     poplatok: str
     zapisny_list_key: str
 
+
 class PriebezneHodnotenie(TypedDict):
     dovod: str
     poc_bodov: str
@@ -93,6 +100,7 @@ class PriebezneHodnotenie(TypedDict):
     zaevidoval: str
     zapocitavat: str
     minimum: str
+
 
 @with_key_fields(predmet_key=["skratka"])
 class PriebezneHodnoteniaPredmetu(TypedDict):
@@ -102,6 +110,7 @@ class PriebezneHodnoteniaPredmetu(TypedDict):
     semester: str
     kredit: str
     zaznamy: list[PriebezneHodnotenie]
+
 
 class Priemer(TypedDict):
     akademicky_rok: str
@@ -115,9 +124,17 @@ class Priemer(TypedDict):
     pokusy_priemer: str
     datum_vypoctu: str
 
+
 @with_key_fields(
     predmet_key=["skratka_predmetu"],
-    termin_key=["zapisny_list_key", "predmet_key", "datum", "cas", "miestnost", "poznamka"],
+    termin_key=[
+        "zapisny_list_key",
+        "predmet_key",
+        "datum",
+        "cas",
+        "miestnost",
+        "poznamka",
+    ],
 )
 class Termin(TypedDict):
     datum: str
@@ -139,6 +156,7 @@ class Termin(TypedDict):
     hodnotenie_predmetu: str
     zapisny_list_key: str
 
+
 class PrihlasenyStudent(TypedDict):
     sp_skratka: str
     datum_prihlasenia: str
@@ -146,14 +164,17 @@ class PrihlasenyStudent(TypedDict):
     rocnik: str
     email: str
 
+
 class Obdobie(TypedDict):
     obdobie_od: str
     obdobie_do: str
     id_akcie: str
 
+
 class RegUcitelPredmetu(TypedDict):
     plne_meno: str
     typ: str
+
 
 class RegOsoba(TypedDict):
     meno: str

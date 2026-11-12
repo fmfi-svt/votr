@@ -38,8 +38,9 @@ def find_row(objects: list[Row], **conditions: str | bool) -> int:
         KeyError: Raised if no such object is found.
     """
     for index, obj in enumerate(objects):
-        if all(obj.cell(key).value == value
-                for key, value in conditions.items()):
+        if all(
+            obj.cell(key).value == value for key, value in conditions.items()
+        ):
             return index
     raise KeyError(f"Object not found: {conditions!r}")
 
@@ -47,8 +48,10 @@ def find_row(objects: list[Row], **conditions: str | bool) -> int:
 def find_row_insensitive(objects: list[Row], **conditions: str) -> int:
     """Same as [`find_row`][] but case insensitive."""
     for index, obj in enumerate(objects):
-        if all(ct(str, obj.cell(key).value).lower() == value.lower()
-               for key, value in conditions.items()):
+        if all(
+            ct(str, obj.cell(key).value).lower() == value.lower()
+            for key, value in conditions.items()
+        ):
             return index
     raise KeyError(f"Object not found: {conditions!r}")
 
@@ -111,6 +114,7 @@ def with_key_fields[T](**key_fields: list[str]) -> Callable[[T], T]:
       even more fake than normal TypedDict classes, whose instances at runtime
       are plain dicts, but they can at least inherit from each other as classes.
     """
+
     def decorator(original_class: T) -> T:
         def dict_maker(**kwargs: str) -> dict[str, str]:
             for output_name, input_names in key_fields.items():

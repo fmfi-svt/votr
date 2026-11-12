@@ -74,15 +74,24 @@ def static_url(filename: str) -> str:
 
 
 def process_server(server: ServerDict) -> object:
-    keep = ["title", "login_types", "ais_url", "ais_cookie",
-            "rest_url", "rest_cookie"]
-    js_server: dict[str, object] = { k: server[k] for k in keep if k in server }
+    keep = [
+        "title",
+        "login_types",
+        "ais_url",
+        "ais_cookie",
+        "rest_url",
+        "rest_cookie",
+    ]
+    js_server: dict[str, object] = {k: server[k] for k in keep if k in server}
     if "flashbacks_dir" in server and os.path.isdir(server["flashbacks_dir"]):
-        js_server["flashback_files"] = sorted(os.listdir(server["flashbacks_dir"]))
+        js_server["flashback_files"] = sorted(
+            os.listdir(server["flashbacks_dir"]))
     return js_server
 
 
-async def app_response(request: Request[VotrState], **my_data: object) -> Response:
+async def app_response(
+    request: Request[VotrState], **my_data: object
+) -> Response:
     settings = request.state["settings"]
     url_root = str(request.base_url)
     instance_id = settings.instance_id
@@ -131,45 +140,49 @@ async def app_response(request: Request[VotrState], **my_data: object) -> Respon
     content = template % dict(
         nonce=nonce,
         title=settings.instance_title,
-        init_json=Markup(json.dumps({ "settings": my_data }).replace("</", "<\\/")),
+        init_json=Markup(
+            json.dumps({"settings": my_data}).replace("</", "<\\/")),
         css=static_url("style.css"),
         scripts=Markup("\n").join(
             Markup('<script nonce="{}" src="{}"></script>').format(
                 nonce, static_url(script))
-            for script in scripts),
+            for script in scripts
+        ),
         analytics=(
-            "" if not settings.ua_code else
-            analytics_template % dict(nonce=nonce, ua_code=settings.ua_code)),
+            ""
+            if not settings.ua_code
+            else analytics_template
+            % dict(nonce=nonce, ua_code=settings.ua_code)
+        ),
     )
 
-    return HTMLResponse(content,
+    return HTMLResponse(
+        content,
         headers={
             # no-store == force refresh even after pressing the back button.
             # http://blog.55minutes.com/2011/10/how-to-defeat-the-browser-back-button-cache/
             "Cache-Control": "no-cache, max-age=0, must-revalidate, no-store",
-
             # based on https://csp.withgoogle.com/docs/strict-csp.html
             # object-src 'self' - they say 'none' may block Chrome's PDF reader.
             # TODO: Revisit object-src if http://crbug.com/271452 gets fixed.
-            "Content-Security-Policy":
-                "object-src 'self'; " +
-                f"script-src 'nonce-{nonce}' 'strict-dynamic' " +
-                "'unsafe-inline' https: http: 'report-sample'; " +
-                "base-uri 'none'; " +
-                f"report-uri {url_root}report?type=csp; " +
-                f"report-to csp_{instance_id}",
-
+            "Content-Security-Policy": "object-src 'self'; "
+            + f"script-src 'nonce-{nonce}' 'strict-dynamic' "
+            + "'unsafe-inline' https: http: 'report-sample'; "
+            + "base-uri 'none'; "
+            + f"report-uri {url_root}report?type=csp; "
+            + f"report-to csp_{instance_id}",
             "Report-To": json.dumps({
                 "group": f"csp_{instance_id}",
                 "max_age": 24 * 60 * 60,
-                "endpoints": [{ "url": f"{url_root}report?type=csp-rt" }],
+                "endpoints": [{"url": f"{url_root}report?type=csp-rt"}],
             }),
-        })
+        },
+    )
 
 
 async def front(request: Request[VotrState]) -> Response:
-    check_header(request, "Sec-Fetch-Mode", { "navigate" })
-    check_header(request, "Sec-Fetch-Dest", { "document" })
+    check_header(request, "Sec-Fetch-Mode", {"navigate"})
+    check_header(request, "Sec-Fetch-Dest", {"document"})
 
     csrf_token = None
     fake_time_msec = None
@@ -184,13 +197,14 @@ async def front(request: Request[VotrState]) -> Response:
         async with sessions.logged_transaction(request) as session:
             log = session["client"].context.log
             try:
-                await log("front", "Front session check started",
-                    str(request.url))
+                await log(
+                    "front", "Front session check started", str(request.url))
                 csrf_token = session["csrf_token"]
                 fake_time_msec = session["client"].fake_time_msec
                 await session["client"].check_connection()
             except BaseException as e:
-                await log("front",
+                await log(
+                    "front",
                     f"Front session check failed with {type(e).__name__}",
                     traceback.format_exc())
                 raise
@@ -205,20 +219,12 @@ async def front(request: Request[VotrState]) -> Response:
     # If the session is real but check_connection() failed, complain.
     if connection_error:
         return await app_response(
-            request,
-            csrf_token=csrf_token,
-            fake_time_msec=fake_time_msec,
-            error=connection_error,
-        )
+            request, csrf_token=csrf_token, fake_time_msec=fake_time_msec,
+            error=connection_error)
 
     # Otherwise, everything works and we can open the app.
     return await app_response(
-        request,
-        csrf_token=csrf_token,
-        fake_time_msec=fake_time_msec,
-    )
+        request, csrf_token=csrf_token, fake_time_msec=fake_time_msec)
 
 
-routes = [
-    Route("/", endpoint=front),
-]
+routes = [Route("/", endpoint=front)]

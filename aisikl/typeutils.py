@@ -10,7 +10,8 @@ def ct[T](cls: type[T], value: object) -> T:
     """
     if isinstance(value, cls):
         return value
-    raise TypeError(f"expected {cls.__name__} instead of {type(value).__name__}: {value!r}")
+    raise TypeError(
+        f"expected {cls.__name__} instead of {type(value).__name__}: {value!r}")
 
 
 def ct_none[T](cls: type[T], value: object) -> T | None:
@@ -19,7 +20,8 @@ def ct_none[T](cls: type[T], value: object) -> T | None:
     """
     if value is None or isinstance(value, cls):
         return value
-    raise TypeError(f"expected {cls.__name__} or None instead of {type(value).__name__}: {value!r}")
+    raise TypeError(
+        f"expected {cls.__name__} or None instead of {type(value).__name__}: {value!r}")
 
 
 def nn[T](value: T | None) -> T:
