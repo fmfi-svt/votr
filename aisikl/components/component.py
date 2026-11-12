@@ -12,7 +12,16 @@ def is_true(value: object) -> bool:
     setter methods. Corresponds to the many webui.js setter methods that call
     ``cmn_toBoolean`` or compute ``value == true || value == "true"``.
     """
-    return value == 'true' or value == True
+    # Let's not actually do `value == true || value == "true"`.
+    # This JavaScript expression allows even 1, "1", [1] because it uses `==`.
+    # But empirically, the AIS server always emits "true" and "false" strings.
+    # `value == true` is probably only for setter calls within webui.js itself.
+    # (This can be relaxed if needed later.)
+    if value == "true":
+        return True
+    if value == "false":
+        return False
+    raise TypeError(f"Expected 'true' or 'false' string, not {value!r}")
 
 
 class Component:
