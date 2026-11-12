@@ -252,6 +252,12 @@ async def rpc_asgi(scope: Scope, receive: Receive, send: Send) -> None:
     if not isinstance(argss, list) or len(argss) != len(names):
         raise HTTPException(400, "argss length does not match names length")
 
+    if not all(
+        name.isascii() and name.isidentifier() and not name.startswith("_")
+        for name in names
+    ):
+        raise HTTPException(400, "Invalid RPC name")
+
     # --------------------------------------------------------------------------
     #
     # Phase 2: Start sending the response now.
