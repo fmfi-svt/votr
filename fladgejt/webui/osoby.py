@@ -42,7 +42,7 @@ else:
 class WebuiOsobyMixin(BaseClient):
     @pooled_app
     async def _open_register_osob(self) -> Application[RegisterOsobDialogsType]:
-        url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.lz.LZ014App&kodAplikacie=LZ014&uiLang=SK'
+        url = "/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.lz.LZ014App&kodAplikacie=LZ014&uiLang=SK"
         app, ops = await Application[RegisterOsobDialogsType].open(self.context, url)
         op1, op2 = ops.expect_two(OpenDialogOp, OpenDialogOp)
         await op1.perform()
@@ -78,9 +78,9 @@ class WebuiOsobyMixin(BaseClient):
 
         await app.d.zamestnanecCheckBox.set_to(zamestnanec)
 
-        await app.d.menoTextField.write(meno or '')
+        await app.d.menoTextField.write(meno or "")
 
-        await app.d.priezviskoTextField.write(priezvisko or '')
+        await app.d.priezviskoTextField.write(priezvisko or "")
 
         if absolvent or student or zamestnanec:
             await app.d.akademickyRokComboBox.select(find_option(
@@ -92,11 +92,11 @@ class WebuiOsobyMixin(BaseClient):
                 # "Interna chyba: Nepodarilo sa osetrenie udalosti."
 
             if not await select_ciselnik(app, fakulta or None, app.d.VyberFakultaButton, "skratka"):
-                return 'Fakulta nebola nájdená.'
+                return "Fakulta nebola nájdená."
 
             await app.d.odstranitOdborButton.click()
             if not await select_ciselnik(app, studijny_program or None, app.d.VyberOdborButton, "skratka"):
-                return 'Študijný program sa nenašiel, skontrolujte fakultu.'
+                return "Študijný program sa nenašiel, skontrolujte fakultu."
 
             for index, item in enumerate(rocniky):
                 if item != app.d.rocnikCheckList.items[index].checked:
@@ -122,7 +122,7 @@ class WebuiOsobyMixin(BaseClient):
 
         await self.__close_filter(app)
 
-        if 'email' not in app.d.osobyTable.column_map:
+        if "email" not in app.d.osobyTable.column_map:
             await show_all_columns(app, app.d.osobyTable)
 
         while not app.d.osobyTable.is_end_of_data:
@@ -130,10 +130,10 @@ class WebuiOsobyMixin(BaseClient):
         if app.d.osobyTable.truncated:
             message = "Neboli načítané všetky dáta. Upresnite kritériá vyhľadávania."
 
-        result = [RegOsoba(meno=row['meno'],
-                           priezvisko=row['priezvisko'],
-                           plne_meno=row['plneMeno'],
-                           email=row['email'])
+        result = [RegOsoba(meno=row["meno"],
+                           priezvisko=row["priezvisko"],
+                           plne_meno=row["plneMeno"],
+                           email=row["email"])
                   for row in app.d.osobyTable.loaded_rows]
 
         return (result, message)
@@ -153,10 +153,10 @@ class WebuiOsobyMixin(BaseClient):
         ops = await app.d.VyberFakultaButton.click(return_ops=True)
         await ops.expect_one(OpenDialogOp).perform()
 
-        fakulty = [{'id': row['skratka'], 'title': row['popis']}
+        fakulty = [{"id": row["skratka"], "title": row["popis"]}
                    for row in await app.d.table.all_rows()]
 
-        fakulty.insert(0, {'id': '', 'title': ''})
+        fakulty.insert(0, {"id": "", "title": ""})
 
         ops = await app.d.closeButton.click(return_ops=True)
         await ops.expect_one(CloseDialogOp).perform()

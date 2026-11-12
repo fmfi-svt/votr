@@ -31,7 +31,7 @@ class ComboBox(Control):
 
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
-        self.tool_tip_like_data = ct(bool, properties.get('ttld', False))
+        self.tool_tip_like_data = ct(bool, properties.get("ttld", False))
         """Whether the AIS UI shows the current [`Option.tool_tip_text`][] when
         the whole box is hovered. Uninteresting.
         """
@@ -40,13 +40,13 @@ class ComboBox(Control):
     def _parse_options(self, element: Tag) -> None:
         self.selected_index = -1
         self.options = []
-        for index, option in enumerate(element.find_all('option')):
+        for index, option in enumerate(element.find_all("option")):
             self.options.append(Option(
                 title=option.get_text(),
-                id=ct(str, option.get('sid', '')),
-                tool_tip_text=ct(str, option.get('title', '')),
+                id=ct(str, option.get("sid", "")),
+                tool_tip_text=ct(str, option.get("title", "")),
             ))
-            if option.has_attr('selected'):
+            if option.has_attr("selected"):
                 self.selected_index = index
 
     @property
@@ -56,7 +56,7 @@ class ComboBox(Control):
 
     async def select(self, index: int, *, return_ops: bool = False) -> Operations:
         """Selects the option at ``index``."""
-        await self.log('action',
+        await self.log("action",
             f'Selecting "{self.options[index].title}" in {self.id}')
         self.selected_index = index
         return await self._fire_event(return_ops=return_ops)
@@ -68,17 +68,17 @@ class ComboBox(Control):
 
     @override
     def changed_properties(self) -> str:
-        cdata = ('<root><selection>'
-            f'<selectedIndexes>{self.selected_index}</selectedIndexes>'
-            '</selection></root>')
+        cdata = ("<root><selection>"
+            f"<selectedIndexes>{self.selected_index}</selectedIndexes>"
+            "</selection></root>")
         return self._build_changed_properties(dataView=(True, True, cdata))
 
     def _ais_setDataView(self, id: str, body: Tag) -> None:
         data_view = nn(body.find(id=id))
-        combo_box_list = nn(data_view.find(id='comboBoxList', recursive=False))
-        if combo_box_list.has_attr('selectedIndex_'):
-            self.selected_index = int(ct(str, combo_box_list['selectedIndex_']))
+        combo_box_list = nn(data_view.find(id="comboBoxList", recursive=False))
+        if combo_box_list.has_attr("selectedIndex_"):
+            self.selected_index = int(ct(str, combo_box_list["selectedIndex_"]))
         else:
             self._parse_options(combo_box_list)
-        self.dialog.try_interactive(self, 'SelectionEvent')
+        self.dialog.try_interactive(self, "SelectionEvent")
     _ais_setDataView.wants_body = True  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportFunctionMemberAccess]

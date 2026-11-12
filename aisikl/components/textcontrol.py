@@ -13,10 +13,10 @@ class TextControl(Control):
 
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
-        self.max_length = int(ct(str, nn(element).get('maxlength', '65536'))) or 65536
-        self.tool_tip_like_text = ct(bool, properties.get('ttlt', False))
-        self.enter_to_next = ct(bool, properties.get('enterToNext', False))
-        self.placeholder = ct_none(str, properties.get('placeHolder'))
+        self.max_length = int(ct(str, nn(element).get("maxlength", "65536"))) or 65536
+        self.tool_tip_like_text = ct(bool, properties.get("ttlt", False))
+        self.enter_to_next = ct(bool, properties.get("enterToNext", False))
+        self.placeholder = ct_none(str, properties.get("placeHolder"))
 
     def _ais_setMaxLength(self, value: object) -> None:
         self.max_length = really_int(value or 65536) or 65536

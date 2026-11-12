@@ -17,7 +17,7 @@ class ActionableControl(Control):
 
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
-        self.action_name = ct_none(str, properties.get('an'))
+        self.action_name = ct_none(str, properties.get("an"))
 
     @property
     def action(self) -> Action | None:

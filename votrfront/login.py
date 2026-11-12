@@ -69,50 +69,50 @@ pylogger = logging.getLogger(__name__)
 
 def build_saml_settings(votr_settings: Settings) -> OneLogin_Saml2_Settings | str:
     if not saml_imported:
-        return 'python3-saml is not installed'
-    idp_metadata_path = var_path('saml/idp-metadata.xml')
+        return "python3-saml is not installed"
+    idp_metadata_path = var_path("saml/idp-metadata.xml")
     if not idp_metadata_path.exists():
-        return 'idp-metadata.xml not found'
+        return "idp-metadata.xml not found"
 
     settings_dict = {
-        'sp': {
-            'entityId': nn(votr_settings.root_url) + 'saml_sp',
-            'assertionConsumerService': {
-                'url': nn(votr_settings.root_url) + 'saml_acs',
+        "sp": {
+            "entityId": nn(votr_settings.root_url) + "saml_sp",
+            "assertionConsumerService": {
+                "url": nn(votr_settings.root_url) + "saml_acs",
             },
-            'singleLogoutService': {
-                'url': nn(votr_settings.root_url) + 'saml_logout',
+            "singleLogoutService": {
+                "url": nn(votr_settings.root_url) + "saml_logout",
             },
         },
-        'security': {
+        "security": {
             # python3-saml default is just 2 days.
-            'metadataValidUntil': '',
+            "metadataValidUntil": "",
             # python3-saml default is "PT604800S" (1 week). I don't really know
             # what it means, but other SAML SPs don't have it.
-            'metadataCacheDuration': '',
+            "metadataCacheDuration": "",
             # "Want" is a too strong word, but if not enabled, python3-saml only
             # generates a <KeyDescriptor use="signing">. Shibboleth IdP fails if
             # a <KeyDescriptor use="encryption"> (or without use="") is missing.
-            'wantAssertionsEncrypted': True,
+            "wantAssertionsEncrypted": True,
             # Rejecting SHA1 sounds like a good idea. I don't know why it isn't
             # enabled by default.
-            'rejectDeprecatedAlgorithm': True,
+            "rejectDeprecatedAlgorithm": True,
             # "The <LogoutRequest> message MUST be signed if the HTTP POST or
             # Redirect binding is used." Shibboleth IdP rejects it if it's not
             # signed. I don't know why this isn't enabled by default.
-            'logoutRequestSigned': True,
-            'logoutResponseSigned': True,
+            "logoutRequestSigned": True,
+            "logoutResponseSigned": True,
         },
-        'organization': {
-            'en': {
-                'name': 'Comenius University in Bratislava',
-                'displayname': 'Comenius University',
-                'url': 'http://uniba.sk/en',
+        "organization": {
+            "en": {
+                "name": "Comenius University in Bratislava",
+                "displayname": "Comenius University",
+                "url": "http://uniba.sk/en",
             },
-            'sk': {
-                'name': 'Univerzita Komenského v Bratislave',
-                'displayname': 'Univerzita Komenského',
-                'url': 'http://uniba.sk/',
+            "sk": {
+                "name": "Univerzita Komenského v Bratislave",
+                "displayname": "Univerzita Komenského",
+                "url": "http://uniba.sk/",
             },
         },
         # Probably not 'debug', because it prints to stdout and changes global
@@ -125,38 +125,38 @@ def build_saml_settings(votr_settings: Settings) -> OneLogin_Saml2_Settings | st
 
     return OneLogin_Saml2_Settings(
         settings=settings_dict,
-        custom_base_path=str(var_path('saml')),
+        custom_base_path=str(var_path("saml")),
     )
 
 
 def build_saml_auth(request: Request[VotrState], *, post_data: Mapping[str, str]) -> OneLogin_Saml2_Auth:
-    saml_settings = request.state['saml_settings']
+    saml_settings = request.state["saml_settings"]
     if isinstance(saml_settings, str):
         raise Exception(saml_settings)
 
     request_data = {
-        'http_host': request.url.hostname,
+        "http_host": request.url.hostname,
 
         # Despite the name, this should be the full path without query string.
         # (Looks like 'path_info' could work too, but that is undocumented.)
-        'script_name': request.url.path,
+        "script_name": request.url.path,
 
         # python3-saml README says `"get_data": "", "post_data": "",` but they
         # really should be dicts.
         # Grepping python3-saml source shows that post_data is only read by
         # OneLogin_Saml2_Auth.process_response(). Elsewhere, {} is enough.
-        'get_data': request.query_params,
-        'post_data': post_data,
+        "get_data": request.query_params,
+        "post_data": post_data,
 
         # It really is 'on'/'off'. Yuck!
-        'https': 'on' if request.url.is_secure else 'off',
+        "https": "on" if request.url.is_secure else "off",
 
         # These are optional according to the python3-saml README, but it should
         # slightly improve proper SAML spec compliance. "The relying party MUST
         # therefore perform the verification step using the original URL-encoded
         # values it received on the query string."
-        'validate_signature_from_qs': True,
-        'query_string': request.url.query,
+        "validate_signature_from_qs": True,
+        "query_string": request.url.query,
 
         # python3-saml README mentions 'request_uri', but it's only read by
         # OneLogin_Saml2_Utils.{get_self_routed_url_no_query,get_self_url} which
@@ -170,8 +170,8 @@ def build_saml_auth(request: Request[VotrState], *, post_data: Mapping[str, str]
 
 
 async def saml_sp(request: Request[VotrState]) -> Response:
-    instance_title = request.state['settings'].instance_title
-    saml_settings = request.state['saml_settings']
+    instance_title = request.state["settings"].instance_title
+    saml_settings = request.state["saml_settings"]
     if isinstance(saml_settings, str):
         raise Exception(saml_settings)
 
@@ -182,27 +182,27 @@ async def saml_sp(request: Request[VotrState]) -> Response:
     # format".
     # Other SPs don't have any <NameIDFormat> in metadata.
     # It can't be removed in python3-saml settings_dict. We must hack it out.
-    metadata = re.sub(br' *<md:NameIDFormat>\S*</md:NameIDFormat>\n', b'',
+    metadata = re.sub(br" *<md:NameIDFormat>\S*</md:NameIDFormat>\n", b"",
         metadata)
 
     # Add mdui:UIInfo manually. python3-saml isn't able to generate it.
-    mdui = f'''
+    mdui = f"""
         <md:Extensions>
             <mdui:UIInfo xmlns:mdui="urn:oasis:names:tc:SAML:metadata:ui">
                 <mdui:DisplayName xml:lang="en">{instance_title}</mdui:DisplayName>
                 <mdui:DisplayName xml:lang="sk">{instance_title}</mdui:DisplayName>
             </mdui:UIInfo>
         </md:Extensions>
-    '''
+    """
     metadata = re.sub(
-        br' *<md:KeyDescriptor',
-        (lambda matchobj: mdui.encode('utf8') + matchobj.group(0)),
+        br" *<md:KeyDescriptor",
+        (lambda matchobj: mdui.encode("utf8") + matchobj.group(0)),
         metadata, count=1, flags=re.DOTALL)
 
     if (errors := saml_settings.validate_metadata(metadata)):
         raise Exception(repr(errors))
 
-    return Response(metadata, media_type='application/samlmetadata+xml')
+    return Response(metadata, media_type="application/samlmetadata+xml")
 
 
 def generate_key() -> str:
@@ -210,20 +210,20 @@ def generate_key() -> str:
 
 
 _TEMPORARY_PARAMS = {
-    'destination',
-    'my_entity_id',
-    'andrvotr_api_key',
-    'andrvotr_authority_token',
+    "destination",
+    "my_entity_id",
+    "andrvotr_api_key",
+    "andrvotr_authority_token",
 }
 
 
 def load_credentials(credentials: Mapping[str, object]) -> dict[str, object]:
-    return {k: b64decode(ct(bytes, v)).decode('utf8') if k == 'password' else v
+    return {k: b64decode(ct(bytes, v)).decode("utf8") if k == "password" else v
             for k, v in credentials.items()}
 
 
 def save_credentials(credentials: Mapping[str, object]) -> dict[str, object]:
-    return {k: b64encode(ct(str, v).encode('utf8')) if k == 'password' else v
+    return {k: b64encode(ct(str, v).encode("utf8")) if k == "password" else v
             for k, v in credentials.items()
             if k not in _TEMPORARY_PARAMS}
 
@@ -233,19 +233,19 @@ async def do_logout(request: Request[VotrState]) -> dict[str, object] | None:
 
     try:
         async with sessions.logged_transaction(request) as session:
-            credentials = load_credentials(session['credentials'])
-            log = session['client'].context.log
+            credentials = load_credentials(session["credentials"])
+            log = session["client"].context.log
             try:
-                await log('logout', 'Logout started', str(request.url))
-                await session['client'].logout()
+                await log("logout", "Logout started", str(request.url))
+                await session["client"].logout()
             except BaseException as e:
-                await log('logout',
-                    f'Logout failed with {type(e).__name__}',
+                await log("logout",
+                    f"Logout failed with {type(e).__name__}",
                     traceback.format_exc())
                 raise
                 # But delete the session anyway.
             else:
-                await log('logout', 'Logout finished')
+                await log("logout", "Logout finished")
             finally:
                 sessions.delete(request)
             # When the `async with` statement ends, the session dict is still
@@ -253,13 +253,13 @@ async def do_logout(request: Request[VotrState]) -> dict[str, object] | None:
     except Exception:
         pass
 
-    request.state['votr_cookie_value'] = {}
+    request.state["votr_cookie_value"] = {}
 
     return credentials
 
 
 async def finish_login(request: Request[VotrState], get_params: Callable[[], Mapping[str, object]]) -> Response:
-    settings = request.state['settings']
+    settings = request.state["settings"]
 
     await do_logout(request)
 
@@ -267,21 +267,21 @@ async def finish_login(request: Request[VotrState], get_params: Callable[[], Map
     server = None
     destination = None
 
-    sessid = datetime.now(UTC).strftime('%Y%m%d_') + generate_key()
+    sessid = datetime.now(UTC).strftime("%Y%m%d_") + generate_key()
     async with AsyncExitStack() as stack:
         await stack.enter_async_context(sessions.lock(sessid))
         logger = Logger()
         logger.log_file = stack.enter_context(sessions.open_log_file(sessid))
 
         try:
-            await logger.log('login', 'Login started')
+            await logger.log("login", "Login started")
             params = get_params()
-            server = settings.servers[int(ct(str, params['server']))]
-            destination = ct(str, params['destination'])
-            await logger.log('login', 'Creating client', {
-                'server_title': server.get('title'),
-                'type': params['type'],
-                'destination': destination,
+            server = settings.servers[int(ct(str, params["server"]))]
+            destination = ct(str, params["destination"])
+            await logger.log("login", "Creating client", {
+                "server_title": server.get("title"),
+                "type": params["type"],
+                "destination": destination,
             })
             client = await create_client(
                 server, cast("ParamsDict", cast("object", params)),
@@ -297,23 +297,23 @@ async def finish_login(request: Request[VotrState], get_params: Callable[[], Map
         except Exception as e:
             error = traceback.format_exc()
             await logger.log(
-                'login', f'Login failed with {type(e).__name__}', error)
-            app_kwargs = { 'error': error, 'destination': destination or '' }
+                "login", f"Login failed with {type(e).__name__}", error)
+            app_kwargs = { "error": error, "destination": destination or "" }
             # Spelled out for the type checker's benefit. `server is not None`
             # can be true only if `params is not None`.
             if server is not None and params is not None:
-                app_kwargs['server'] = ct(str, params['server'])
-                if 'type' in params and params['type'] in server['login_types']:
-                    app_kwargs['type'] = ct(str, params['type'])
+                app_kwargs["server"] = ct(str, params["server"])
+                if "type" in params and params["type"] in server["login_types"]:
+                    app_kwargs["type"] = ct(str, params["type"])
             return await app_response(request, **app_kwargs)
 
-        await logger.log('login', 'Login finished', params.get('username'))
+        await logger.log("login", "Login finished", params.get("username"))
 
-    request.state['votr_cookie_value'] = VotrCookieLoggedIn(sessid=sessid)
+    request.state["votr_cookie_value"] = VotrCookieLoggedIn(sessid=sessid)
 
     # TODO: This condition is duplicated with main.tsx.
     redirect_url = str(request.base_url)
-    if destination and destination.startswith('?'):
+    if destination and destination.startswith("?"):
         redirect_url += destination
     return RedirectResponse(redirect_url, 303)
 
@@ -323,17 +323,17 @@ def _read_saml_attribute(auth: OneLogin_Saml2_Auth, name: str) -> str | None:
     if not values:
         return None
     if len(values) > 1:
-        raise Exception(f'Multiple {name} attribute values')
+        raise Exception(f"Multiple {name} attribute values")
     if not isinstance(values[0], str):
-        raise Exception(f'{name} attribute value is not a string')
+        raise Exception(f"{name} attribute value is not a string")
     return values[0]
 
 
 def build_params_from_saml_response(request: Request[VotrState], post_data: Mapping[str, str], votr_cookie_value: VotrCookie) -> dict[str, object]:
     votr_cookie_value_c = cast("VotrCookieLoggingIn", votr_cookie_value)
-    login_request_id = votr_cookie_value_c['login_request_id']
-    server = votr_cookie_value_c['server']
-    destination = votr_cookie_value_c['destination']
+    login_request_id = votr_cookie_value_c["login_request_id"]
+    server = votr_cookie_value_c["server"]
+    destination = votr_cookie_value_c["destination"]
 
     # Remembering request_id in a cookie protects against "login CSRF". In this
     # attack, the attacker forces a victim to log in to the attacker's account,
@@ -345,25 +345,25 @@ def build_params_from_saml_response(request: Request[VotrState], post_data: Mapp
     if (errors := auth.get_errors()):
         if (error_reason := auth.get_last_error_reason()):
             errors.append(error_reason)
-        raise Exception(f'SAML login failed: {errors!r}')
+        raise Exception(f"SAML login failed: {errors!r}")
 
     andrvotr_authority_token = _read_saml_attribute(
-        auth, 'tag:fmfi-svt.github.io,2024:andrvotr-authority-token')
+        auth, "tag:fmfi-svt.github.io,2024:andrvotr-authority-token")
     if not andrvotr_authority_token:
         raise Exception(
-            'IdP did not provide the Andrvotr authority token')
+            "IdP did not provide the Andrvotr authority token")
 
-    uid = _read_saml_attribute(auth, 'urn:oid:0.9.2342.19200300.100.1.1')
+    uid = _read_saml_attribute(auth, "urn:oid:0.9.2342.19200300.100.1.1")
 
-    andrvotr_api_key = var_path('saml/andrvotr_api_key').read_text().strip()
+    andrvotr_api_key = var_path("saml/andrvotr_api_key").read_text().strip()
 
     # TODO: One day: comply with SessionNotOnOrAfter (get_session_expiration).
 
     return dict(
         server=server,
-        type='saml_andrvotr',
+        type="saml_andrvotr",
         destination=destination,
-        my_entity_id=auth.get_settings().get_sp_data()['entityId'],
+        my_entity_id=auth.get_settings().get_sp_data()["entityId"],
         andrvotr_api_key=andrvotr_api_key,
         andrvotr_authority_token=andrvotr_authority_token,
         username=uid,  # Only used for logging.
@@ -387,13 +387,13 @@ async def _get_form(request: Request[VotrState]) -> Mapping[str, str]:
 
 
 async def saml_acs(request: Request[VotrState]) -> Response:
-    check_header(request, 'Sec-Fetch-Mode', { 'navigate' })
-    check_header(request, 'Sec-Fetch-Dest', { 'document' })
+    check_header(request, "Sec-Fetch-Mode", { "navigate" })
+    check_header(request, "Sec-Fetch-Dest", { "document" })
 
     post_data = await _get_form(request)
 
     # do_logout() overwrites it. Stash the original value.
-    old_votr_cookie_value = request.state['votr_cookie_value']  # pyright: ignore [reportTypedDictNotRequiredAccess]
+    old_votr_cookie_value = request.state["votr_cookie_value"]  # pyright: ignore [reportTypedDictNotRequiredAccess]
 
     # Do all SAML response processing inside finish_login() and use its error
     # handling. If it throws for any reason, we want to write the exception to
@@ -403,15 +403,15 @@ async def saml_acs(request: Request[VotrState]) -> Response:
 
 
 async def start_login(request: Request[VotrState], params: Mapping[str, object]) -> Response:
-    if params['type'] == 'saml_andrvotr':
+    if params["type"] == "saml_andrvotr":
         await do_logout(request)
 
         auth = build_saml_auth(request, post_data={})
-        redirect_url = auth.login('')
-        request.state['votr_cookie_value'] = VotrCookieLoggingIn(
+        redirect_url = auth.login("")
+        request.state["votr_cookie_value"] = VotrCookieLoggingIn(
             login_request_id=nn(auth.get_last_request_id()),
-            server=ct(str, params['server']),
-            destination=ct(str, params['destination']),
+            server=ct(str, params["server"]),
+            destination=ct(str, params["destination"]),
         )
         return RedirectResponse(redirect_url, 303)
 
@@ -419,22 +419,22 @@ async def start_login(request: Request[VotrState], params: Mapping[str, object])
 
 
 async def login(request: Request[VotrState]) -> Response:
-    check_header(request, 'Sec-Fetch-Site', { 'none', 'same-origin' })
-    check_header(request, 'Sec-Fetch-Mode', { 'navigate' })
-    check_header(request, 'Sec-Fetch-Dest', { 'document' })
+    check_header(request, "Sec-Fetch-Site", { "none", "same-origin" })
+    check_header(request, "Sec-Fetch-Mode", { "navigate" })
+    check_header(request, "Sec-Fetch-Dest", { "document" })
 
     post_data = await _get_form(request)
-    params = { 'destination': '', **post_data }
+    params = { "destination": "", **post_data }
     return await start_login(request, params)
 
 
 async def reset(request: Request[VotrState]) -> Response:
-    check_header(request, 'Sec-Fetch-Site', { 'none', 'same-origin' })
-    check_header(request, 'Sec-Fetch-Mode', { 'navigate' })
-    check_header(request, 'Sec-Fetch-Dest', { 'document' })
+    check_header(request, "Sec-Fetch-Site", { "none", "same-origin" })
+    check_header(request, "Sec-Fetch-Mode", { "navigate" })
+    check_header(request, "Sec-Fetch-Dest", { "document" })
 
     try:
-        destination = request.query_params['destination']
+        destination = request.query_params["destination"]
     except KeyError:
         raise HTTPException(400) from None
 
@@ -444,7 +444,7 @@ async def reset(request: Request[VotrState]) -> Response:
         return await app_response(
             request, invalid_session=True, destination=destination)
 
-    params = { **credentials, 'destination': destination }
+    params = { **credentials, "destination": destination }
     return await start_login(request, params)
 
 
@@ -458,7 +458,7 @@ async def saml_logout(request: Request[VotrState]) -> Response:
         if (errors := auth.get_errors()):
             if (error_reason := auth.get_last_error_reason()):
                 errors.append(error_reason)
-            raise Exception(f'SAML logout failed: {errors!r}')
+            raise Exception(f"SAML logout failed: {errors!r}")
 
         if url:
             # https://github.com/fmfi-svt/votr/wiki/SAML#externally-initiated-logout
@@ -466,28 +466,28 @@ async def saml_logout(request: Request[VotrState]) -> Response:
             return RedirectResponse(url, 303)
         else:
             # https://github.com/fmfi-svt/votr/wiki/SAML#votr-initiated-logout
-            return Response('Logout successful.')
+            return Response("Logout successful.")
     except Exception as e:
-        pylogger.exception('/saml_logout failed')
-        raise HTTPException(500, f'Logout error: {e}') from e
+        pylogger.exception("/saml_logout failed")
+        raise HTTPException(500, f"Logout error: {e}") from e
 
 
 async def logout(request: Request[VotrState]) -> Response:
-    check_header(request, 'Sec-Fetch-Site', { 'none', 'same-origin' })
-    check_header(request, 'Sec-Fetch-Mode', { 'navigate' })
-    check_header(request, 'Sec-Fetch-Dest', { 'document' })
+    check_header(request, "Sec-Fetch-Site", { "none", "same-origin" })
+    check_header(request, "Sec-Fetch-Mode", { "navigate" })
+    check_header(request, "Sec-Fetch-Dest", { "document" })
 
     credentials = await do_logout(request)
 
     redirect_url = str(request.base_url)
     if credentials:
-        saml_logout_kwargs = cast("Mapping[str, object] | None", credentials.get('saml_logout_kwargs'))
+        saml_logout_kwargs = cast("Mapping[str, object] | None", credentials.get("saml_logout_kwargs"))
         if saml_logout_kwargs is not None:
             try:
                 auth = build_saml_auth(request, post_data={})
                 redirect_url = auth.logout(**saml_logout_kwargs)
             except Exception:
-                pylogger.exception('SAML auth.logout() failed')
+                pylogger.exception("SAML auth.logout() failed")
                 # Exceptions in building the logout request XML should be rare.
                 # As a low effort compromise, ignore SAML, redirect to our root,
                 # and delete at least our own session.
@@ -496,10 +496,10 @@ async def logout(request: Request[VotrState]) -> Response:
 
 
 routes = [
-    Route('/saml_sp', methods=['GET'], endpoint=saml_sp),
-    Route('/saml_acs', methods=['POST'], endpoint=saml_acs),
-    Route('/saml_logout', methods=['GET'], endpoint=saml_logout),
-    Route('/login', methods=['POST'], endpoint=login),
-    Route('/reset', methods=['POST'], endpoint=reset),
-    Route('/logout', methods=['POST'], endpoint=logout),
+    Route("/saml_sp", methods=["GET"], endpoint=saml_sp),
+    Route("/saml_acs", methods=["POST"], endpoint=saml_acs),
+    Route("/saml_logout", methods=["GET"], endpoint=saml_logout),
+    Route("/login", methods=["POST"], endpoint=login),
+    Route("/reset", methods=["POST"], endpoint=reset),
+    Route("/logout", methods=["POST"], endpoint=logout),
 ]

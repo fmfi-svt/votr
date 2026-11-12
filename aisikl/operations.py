@@ -207,9 +207,9 @@ class ConfirmBoxOp(Operation):
         """Answers the question. *Deals with* this operation."""
         self._handled = True
         await self.app.ctx.log(
-            'operation', f'Selecting button {option.value} in confirm box')
+            "operation", f"Selecting button {option.value} in confirm box")
         return await self.app.send_namevalue_request(
-            'confirmResult', option.value, return_ops=return_ops)
+            "confirmResult", option.value, return_ops=return_ops)
 
 
 @dataclass
@@ -253,9 +253,9 @@ class AbortBoxOp(Operation):
     async def perform(self, *, return_ops: bool = False) -> Operations:
         """Waits. *Deals with* this operation."""
         self._handled = True
-        await self.app.ctx.log('operation', 'Waiting for abort box')
+        await self.app.ctx.log("operation", "Waiting for abort box")
         return await self.app.send_namevalue_request(
-            'confirmResult', -1, return_ops=return_ops)
+            "confirmResult", -1, return_ops=return_ops)
 
 
 @dataclass
@@ -287,20 +287,20 @@ class ShellExecOp(Operation):
         """
         self._handled = True
 
-        if self.content_type == 'webui/execCustomFunction':
+        if self.content_type == "webui/execCustomFunction":
             raise AISParseError("webui/execCustomFunction is not supported")
 
-        file_name = self.file_name.rpartition('/')[2]
+        file_name = self.file_name.rpartition("/")[2]
         url = (
-            f'/ais/files/{urllib.parse.quote(file_name)}'
-            f'?appId={self.app.app_id}&contentType={self.content_type}'
-            f'&antiCache={time.time()}&file={urllib.parse.quote(file_name)}')
+            f"/ais/files/{urllib.parse.quote(file_name)}"
+            f"?appId={self.app.app_id}&contentType={self.content_type}"
+            f"&antiCache={time.time()}&file={urllib.parse.quote(file_name)}")
 
-        await self.app.ctx.log('operation', f'Downloading "{file_name}"')
+        await self.app.ctx.log("operation", f'Downloading "{file_name}"')
 
         response = await self.app.ctx.request_ais(url)
 
-        await self.send_result('', return_ops=False)
+        await self.send_result("", return_ops=False)
 
         return response
 
@@ -312,7 +312,7 @@ class ShellExecOp(Operation):
         """
         self._handled = True
         return await self.app.send_namevalue_request(
-            'shellExecResult', shell_exec_result, return_ops=return_ops)
+            "shellExecResult", shell_exec_result, return_ops=return_ops)
 
 
 @dataclass
@@ -357,7 +357,7 @@ class StartAppOp(Operation):
 
         from aisikl.app import Application  # Cyclic dependency :(
 
-        url = f'/ais/servlets/WebUIServlet?appClassName={self.url}{self.params}&antiCache={time.time()}'
+        url = f"/ais/servlets/WebUIServlet?appClassName={self.url}{self.params}&antiCache={time.time()}"
         return await Application[D].open(self.app.ctx, url, ignored_messages)
 
 
@@ -418,11 +418,11 @@ class OpenDialogOp(Operation):
         app = self.app
         props = self.props
 
-        name = ct(str, props['id'])
+        name = ct(str, props["id"])
         await app.ctx.log(
-            'operation', f'Opening dialog {name} "{props['title']}"')
+            "operation", f'Opening dialog {name} "{props['title']}"')
 
-        if props['isMain'] != (len(app.dialog_stack) == 0):
+        if props["isMain"] != (len(app.dialog_stack) == 0):
             raise AISBehaviorError(
                 f"Unexpected dialog with isMain = {props["isMain"]!r}")
 
@@ -431,13 +431,13 @@ class OpenDialogOp(Operation):
         # minWidth, minHeight, and forControlOfParent.
         dialog = Dialog(
             name=name,
-            title=ct(str, props['title']),
-            code=ct(str, props['code']),
-            parent_dialog_name=ct_none(str, props.get('parentDlgName')),
-            modal=ct(bool, props['modal']),
-            is_main_dialog=ct(bool, props['isMain']),
-            closeable=ct(bool, props['ca']),
-            hide_title_bar=ct(bool, props['htb']),
+            title=ct(str, props["title"]),
+            code=ct(str, props["code"]),
+            parent_dialog_name=ct_none(str, props.get("parentDlgName")),
+            modal=ct(bool, props["modal"]),
+            is_main_dialog=ct(bool, props["isMain"]),
+            closeable=ct(bool, props["ca"]),
+            hide_title_bar=ct(bool, props["htb"]),
             app=app,
         )
         app.dialog_stack.append(dialog)
@@ -448,9 +448,9 @@ class OpenDialogOp(Operation):
         modals = [d for d in app.dialog_stack if d.modal]
         app.active_dialog = modals[-1] if modals else dialog
 
-        url_params = '&'.join(
-            f'{k}={v}' for k, v in app.prepare_url_base().items())
-        url = f'/ais/servlets/WebUIServlet?{url_params}&form={name}'
+        url_params = "&".join(
+            f"{k}={v}" for k, v in app.prepare_url_base().items())
+        url = f"/ais/servlets/WebUIServlet?{url_params}&form={name}"
         await dialog.init(url)
 
         return dialog
@@ -476,7 +476,7 @@ class CloseDialogOp(Operation):
         if not dialog:
             return
 
-        await app.ctx.log('operation', f'Closing dialog {name}')
+        await app.ctx.log("operation", f"Closing dialog {name}")
 
         app.dialog_stack.remove(dialog)
         del app.dialogs[name]
@@ -504,9 +504,9 @@ class RefreshDialogOp(Operation):
         dialog = self.app.dialogs[self.name]
 
         await self.app.ctx.log(
-            'operation', f'Refreshing dialog {dialog.name} "{dialog.title}"')
+            "operation", f'Refreshing dialog {dialog.name} "{dialog.title}"')
 
-        url = f'/ais/servlets/WebUIServlet?appId={self.app.app_id}&form={dialog.name}&antiCache={time.time()}'
+        url = f"/ais/servlets/WebUIServlet?appId={self.app.app_id}&form={dialog.name}&antiCache={time.time()}"
         await dialog.init(url)
 
 

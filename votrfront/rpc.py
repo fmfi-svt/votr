@@ -86,7 +86,7 @@ pylogger = logging.getLogger(__name__)
 
 
 def encode_result(thing: object) -> object:
-    if isinstance(thing, tuple) and hasattr(thing, '_asdict'):  # pyright: ignore [reportUnknownArgumentType]
+    if isinstance(thing, tuple) and hasattr(thing, "_asdict"):  # pyright: ignore [reportUnknownArgumentType]
         thing = thing._asdict()  # pyright: ignore [reportAttributeAccessIssue, reportUnknownMemberType, reportUnknownVariableType]
 
     if isinstance(thing, (list, tuple)):
@@ -97,7 +97,7 @@ def encode_result(thing: object) -> object:
 
 
 def serialize(json_object: object) -> bytes:
-    payload = json.dumps(json_object).encode('ascii') + b'\n'
+    payload = json.dumps(json_object).encode("ascii") + b"\n"
     return b"%010d%s" % (len(payload), payload)
 
 
@@ -140,8 +140,8 @@ async def rpc_inner(
                 # Preventing further send() calls is a good reaction either way.
                 pylogger.exception("send() raised a non-OSError?! WTF")
 
-            exc_message = ''.join(traceback.format_exception_only(exc)).strip()
-            cancel_main_nursery(f'send failed: {exc_message}')  # C3
+            exc_message = "".join(traceback.format_exception_only(exc)).strip()
+            cancel_main_nursery(f"send failed: {exc_message}")  # C3
             await trio.sleep_forever()  # actually raises Cancelled
 
     async def send_log(
@@ -150,28 +150,28 @@ async def rpc_inner(
         message: str,
         data: object,
     ) -> None:
-        await send_json({'log': type, 'message': message, 'time': timestamp})
+        await send_json({"log": type, "message": message, "time": timestamp})
 
-    if not (client := session.get('client')):
-        request.state['votr_log_status'] = 'rpc:session_error'
-        await send_json({'error': 'LoggedOutError: Session is logged out'})
+    if not (client := session.get("client")):
+        request.state["votr_log_status"] = "rpc:session_error"
+        await send_json({"error": "LoggedOutError: Session is logged out"})
         return
 
-    if request.headers.get('X-CSRF-Token') != session['csrf_token']:
-        request.state['votr_log_status'] = 'rpc:session_error'
-        await send_json({'error': 'CsrfTokenError: Bad X-CSRF-Token value'})
+    if request.headers.get("X-CSRF-Token") != session["csrf_token"]:
+        request.state["votr_log_status"] = "rpc:session_error"
+        await send_json({"error": "CsrfTokenError: Bad X-CSRF-Token value"})
         return
 
-    current = request.state['settings'].announcement_html
-    if current != session.get('last_announcement', None):
-        await send_json({ 'announcement_html': current })
-        session['last_announcement'] = current
+    current = request.state["settings"].announcement_html
+    if current != session.get("last_announcement", None):
+        await send_json({ "announcement_html": current })
+        session["last_announcement"] = current
 
     client.context.logger.send_log = send_log
 
     for i, (name, args) in enumerate(zip(names, argss, strict=True)):
 
-        request.state['votr_log_status'] = f'rpc:{i}:wtf'
+        request.state["votr_log_status"] = f"rpc:{i}:wtf"
 
         # This is the "inner try/except". It handles most RPC exceptions.
         #
@@ -190,7 +190,7 @@ async def rpc_inner(
             # It's more likely that step 1 of "RPC started" works, but step 2 of
             # "RPC started" raises Cancelled, in which case we'll want to catch
             # it and write "RPC failed with Cancelled" to the log file.
-            await client.context.log('rpc', f'RPC {name} started', args)
+            await client.context.log("rpc", f"RPC {name} started", args)
 
             await client.prepare_for_rpc()
             method = getattr(client, name)
@@ -201,15 +201,15 @@ async def rpc_inner(
 
             exc_name = type(exc).__name__
             exc_trace = traceback.format_exc()
-            request.state['votr_log_status'] = f'rpc:{i}:error:{exc_name}'
+            request.state["votr_log_status"] = f"rpc:{i}:error:{exc_name}"
 
             # If exc is Cancelled, log() will probably raise another Cancelled,
             # but that's ok.
             await client.context.log(
-                'rpc', f'RPC {name} failed with {exc_name}', exc_trace)
+                "rpc", f"RPC {name} failed with {exc_name}", exc_trace)
 
             if isinstance(exc, Exception):
-                await send_json({ 'error': exc_trace })
+                await send_json({ "error": exc_trace })
                 return
             else:
                 raise
@@ -217,11 +217,11 @@ async def rpc_inner(
         # If writing this to log_file fails, we'll end up with an unmatched "RPC
         # started". And if this send_json fails, log_file will look like a
         # complete success. But oh well.
-        await client.context.log('rpc', f'RPC {name} finished', result)
+        await client.context.log("rpc", f"RPC {name} finished", result)
 
-        await send_json({ 'result': result })
+        await send_json({ "result": result })
 
-    request.state['votr_log_status'] = 'rpc:ok'
+    request.state["votr_log_status"] = "rpc:ok"
 
 
 async def rpc_asgi(scope: Scope, receive: Receive, send: Send) -> None:
@@ -231,26 +231,26 @@ async def rpc_asgi(scope: Scope, receive: Receive, send: Send) -> None:
 
     request: Request[VotrState] = Request(scope, receive)
 
-    request.state['votr_log_status'] = 'rpc:early_error'
+    request.state["votr_log_status"] = "rpc:early_error"
 
-    check_header(request, 'Sec-Fetch-Site', { 'same-origin' })
-    check_header(request, 'Sec-Fetch-Mode', { 'cors' })
-    check_header(request, 'Sec-Fetch-Dest', { 'empty' })
+    check_header(request, "Sec-Fetch-Site", { "same-origin" })
+    check_header(request, "Sec-Fetch-Mode", { "cors" })
+    check_header(request, "Sec-Fetch-Dest", { "empty" })
 
     # Read `names` and `argss`. `names` are sent in the query string (not in the
     # request body) because it's nice to see them in access logs.
     try:
-        names = request.query_params['names'].split(',')
+        names = request.query_params["names"].split(",")
         argss: list[list[object]] | None = await request.json()
     except HTTPException:
         # Just in case. RequestBodyLimitMiddleware might raise this, maybe.
         raise
     except Exception as exc:
-        exc_message = ''.join(traceback.format_exception_only(exc)).strip()
+        exc_message = "".join(traceback.format_exception_only(exc)).strip()
         raise HTTPException(400, exc_message) from exc
 
     if not isinstance(argss, list) or len(argss) != len(names):
-        raise HTTPException(400, 'argss length does not match names length')
+        raise HTTPException(400, "argss length does not match names length")
 
     # --------------------------------------------------------------------------
     #
@@ -262,28 +262,28 @@ async def rpc_asgi(scope: Scope, receive: Receive, send: Send) -> None:
     # If this first send() raises OSError in ASGI>=2.4 because the client
     # disconnected just now, just let it propagate. No cleanup needed.
     await send({
-        'type': 'http.response.start',
-        'status': 200,
-        'headers': [
-            (b'content-type', b'text/plain'),
+        "type": "http.response.start",
+        "status": 200,
+        "headers": [
+            (b"content-type", b"text/plain"),
             # Prevent https://code.google.com/p/chromium/issues/detail?id=2016
             # (onprogress only happening after the client receives 1024 bytes)
             # See also: ShouldSniffContent(), kMaxBytesToSniff
-            (b'x-content-type-options', b'nosniff'),
+            (b"x-content-type-options", b"nosniff"),
         ],
     })
 
-    request.state['votr_log_status'] = 'rpc:setup_wtf'
+    request.state["votr_log_status"] = "rpc:setup_wtf"
 
-    last_chunk = b''
+    last_chunk = b""
 
     async def listen_for_disconnect() -> None:
         while True:
             message = await receive()
-            if message['type'] == 'http.disconnect':
+            if message["type"] == "http.disconnect":
                 break
 
-        main_nursery.cancel_scope.cancel('received http.disconnect')  # C2
+        main_nursery.cancel_scope.cancel("received http.disconnect")  # C2
 
     # This is the "outer try/except". In theory, it catches e.g. unexpected
     # errors when loading/saving sessions. In practice, it should rarely if ever
@@ -318,8 +318,8 @@ async def rpc_asgi(scope: Scope, receive: Receive, send: Send) -> None:
                 # Catch expected session loading errors: "Invalid sessid",
                 # "Session cookie not found", "Votr session does not exist".
                 if not transaction_started:
-                    request.state['votr_log_status'] = 'rpc:session_error'
-                    last_chunk = serialize({'error': traceback.format_exc()})
+                    request.state["votr_log_status"] = "rpc:session_error"
+                    last_chunk = serialize({"error": traceback.format_exc()})
                 else:
                     raise
 
@@ -330,13 +330,13 @@ async def rpc_asgi(scope: Scope, receive: Receive, send: Send) -> None:
         # same.
 
     except* Exception as excgroup:
-        request.state['votr_log_status'] += (
-            ':outer_wtf:'
-            + ','.join(type(exc).__name__ for exc in excgroup.exceptions))
+        request.state["votr_log_status"] += (
+            ":outer_wtf:"
+            + ",".join(type(exc).__name__ for exc in excgroup.exceptions))
 
-        pylogger.exception('RPC fatal error WTF')
+        pylogger.exception("RPC fatal error WTF")
 
-        last_chunk = serialize({'error': traceback.format_exc()})
+        last_chunk = serialize({"error": traceback.format_exc()})
 
     # --------------------------------------------------------------------------
     #
@@ -353,9 +353,9 @@ async def rpc_asgi(scope: Scope, receive: Receive, send: Send) -> None:
     # logged; `last_chunk` is a nice-to-have.
 
     await send({
-        'type': 'http.response.body',
-        'body': last_chunk,
-        'more_body': False,
+        "type": "http.response.body",
+        "body": last_chunk,
+        "more_body": False,
     })
 
 
@@ -364,5 +364,5 @@ async def rpc_endpoint(request: object) -> ASGIApp:
 
 
 routes = [
-    Route('/rpc', methods=['POST'], endpoint=rpc_endpoint),
+    Route("/rpc", methods=["POST"], endpoint=rpc_endpoint),
 ]

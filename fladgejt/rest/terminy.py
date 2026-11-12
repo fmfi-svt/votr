@@ -15,11 +15,11 @@ class RestTerminyMixin(BaseClient):
             zaciatokStudia=zaciatok,
             akademickyRok=akademicky_rok)
 
-        result = [Predmet(skratka=row['skratka'],
-                          nazov=row['nazov'],
-                          typ_vyucby=row['kodTypVyucby'],
-                          semester=row['semester'],
-                          kredit=row['kredit'])
+        result = [Predmet(skratka=row["skratka"],
+                          nazov=row["nazov"],
+                          typ_vyucby=row["kodTypVyucby"],
+                          semester=row["semester"],
+                          kredit=row["kredit"])
                   for row in predmety]
         return result
 
@@ -33,26 +33,26 @@ class RestTerminyMixin(BaseClient):
             zaciatokStudia=zaciatok,
             akademickyRok=akademicky_rok)
 
-        result = [Termin(datum=row['dat'],
-                         cas=row['cas'],
-                         miestnost=row['miestnosti'],
-                         pocet_prihlasenych=row['pocetPrihlasenych'],
-                         maximalne_prihlasenych=row['maxPocet'],
-                         hodnotiaci=row['hodnotiaci'],
-                         prihlasovanie=row['prihlasovanie'],
-                         odhlasovanie=row['odhlasovanie'],
-                         poznamka=row['poznamka'],
-                         skratka_predmetu=row['skratkaPredmetu'],
-                         nazov_predmetu=row['nazovPredmetu'],
-                         hodnotenie_terminu=row['hodnotenieTerminu'],
-                         hodnotenie_predmetu=row['hodnoteniePredmetu'],
-                         moznost_prihlasit=row['moznostPrihlasenia'],
-                         datum_prihlasenia=row['datumPrihlasenia'],
-                         datum_odhlasenia=row['datumOdhlasenia'],
+        result = [Termin(datum=row["dat"],
+                         cas=row["cas"],
+                         miestnost=row["miestnosti"],
+                         pocet_prihlasenych=row["pocetPrihlasenych"],
+                         maximalne_prihlasenych=row["maxPocet"],
+                         hodnotiaci=row["hodnotiaci"],
+                         prihlasovanie=row["prihlasovanie"],
+                         odhlasovanie=row["odhlasovanie"],
+                         poznamka=row["poznamka"],
+                         skratka_predmetu=row["skratkaPredmetu"],
+                         nazov_predmetu=row["nazovPredmetu"],
+                         hodnotenie_terminu=row["hodnotenieTerminu"],
+                         hodnotenie_predmetu=row["hodnoteniePredmetu"],
+                         moznost_prihlasit=row["moznostPrihlasenia"],
+                         datum_prihlasenia=row["datumPrihlasenia"],
+                         datum_odhlasenia=row["datumOdhlasenia"],
                          akademicky_rok=akademicky_rok,
                          zapisny_list_key=zapisny_list_key)
                   for row in terminy
-                  if not row['datumOdhlasenia']]
+                  if not row["datumOdhlasenia"]]
         return result
 
     async def get_vypisane_terminy(self, zapisny_list_key: str) -> list[Termin]:
@@ -62,7 +62,7 @@ class RestTerminyMixin(BaseClient):
 
         for row in predmety:
             result.extend(await self.get_vypisane_terminy_predmetu(
-                zapisny_list_key, cast(Any, row)['predmet_key']))
+                zapisny_list_key, cast(Any, row)["predmet_key"]))
 
         return result
 
@@ -78,20 +78,20 @@ class RestTerminyMixin(BaseClient):
             akademickyRok=akademicky_rok,
             skratkaPredmetu=skratka)
 
-        result = [Termin(datum=row['dat'],
-                         cas=row['cas'],
-                         miestnost=row['miestnosti'],
-                         pocet_prihlasenych=row['pocetPrihlasenych'],
-                         maximalne_prihlasenych=row['maxPocet'],
-                         hodnotiaci=row['hodnotiaci'],
-                         prihlasovanie=row['prihlasovanie'],
-                         odhlasovanie=row['odhlasovanie'],
-                         poznamka=row['poznamka'],
-                         skratka_predmetu=row['skratkaPredmetu'],
-                         nazov_predmetu=row['nazovPredmetu'],
-                         hodnotenie_terminu=row['hodnotenieTerminu'],
-                         hodnotenie_predmetu=row['hodnoteniePredmetu'],
-                         moznost_prihlasit=row['moznostPrihlasenia'],
+        result = [Termin(datum=row["dat"],
+                         cas=row["cas"],
+                         miestnost=row["miestnosti"],
+                         pocet_prihlasenych=row["pocetPrihlasenych"],
+                         maximalne_prihlasenych=row["maxPocet"],
+                         hodnotiaci=row["hodnotiaci"],
+                         prihlasovanie=row["prihlasovanie"],
+                         odhlasovanie=row["odhlasovanie"],
+                         poznamka=row["poznamka"],
+                         skratka_predmetu=row["skratkaPredmetu"],
+                         nazov_predmetu=row["nazovPredmetu"],
+                         hodnotenie_terminu=row["hodnotenieTerminu"],
+                         hodnotenie_predmetu=row["hodnoteniePredmetu"],
+                         moznost_prihlasit=row["moznostPrihlasenia"],
                          datum_prihlasenia="",
                          datum_odhlasenia="",
                          akademicky_rok=akademicky_rok,

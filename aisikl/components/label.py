@@ -13,10 +13,10 @@ class Label(Control):
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         element = nn(element)
-        self.shortcut = properties.get('sc')
+        self.shortcut = properties.get("sc")
         """Key shortcut, probably. Empirically, it's always ``None``."""
-        self.title_like_text = ct_none(str, element.get('titleliketext'))
-        self.for_ = ct_none(str, element.get('for'))
+        self.title_like_text = ct_none(str, element.get("titleliketext"))
+        self.for_ = ct_none(str, element.get("for"))
         """The component ID to focus when clicking the label in the AIS UI."""
         self.text = element.get_text()
         """Label content."""

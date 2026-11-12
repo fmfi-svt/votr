@@ -26,24 +26,24 @@ class RadioBox(Control):
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
 
-        items = nn(nn(element).find(id='radioBox_items'))
-        self.always_selected = items.get('allwaysselected', 'false') == 'true'
+        items = nn(nn(element).find(id="radioBox_items"))
+        self.always_selected = items.get("allwaysselected", "false") == "true"
 
         self._parse_options(items)
 
     def _parse_options(self, items: Tag) -> None:
         self.selected_index = -1
         self.options = []
-        for index, td in enumerate(items.find_all('td')):
-            if self.enabled and td['index'] != str(index):
+        for index, td in enumerate(items.find_all("td")):
+            if self.enabled and td["index"] != str(index):
                 raise AISParseError(
                     f"RadioBox '{self.id}' item #{index} "
                     "has unexpected index attribute.")
             self.options.append(Option(
                 title=nn(td.label).get_text(),
-                id=ct_none(str, nn(td.input).get('sid')),
+                id=ct_none(str, nn(td.input).get("sid")),
             ))
-            if nn(td.input).has_attr('checked'):
+            if nn(td.input).has_attr("checked"):
                 self.selected_index = index
 
     @property
@@ -58,7 +58,7 @@ class RadioBox(Control):
         [`always_selected`][] is false. (Aisikl allows you to do it even if it's
         true, but the AIS server might not like it.)
         """
-        await self.log('action',
+        await self.log("action",
             f'Selecting "{self.options[index].title}" in {self.id}')
         self.selected_index = index
         return await self._fire_event(return_ops=return_ops)
@@ -70,19 +70,19 @@ class RadioBox(Control):
 
     @override
     def changed_properties(self) -> str:
-        index = '' if self.selected_index == -1 else self.selected_index
-        cdata = ('<root><selection>'
-            f'<selectedIndexes>{index}</selectedIndexes>'
-            '</selection></root>')
+        index = "" if self.selected_index == -1 else self.selected_index
+        cdata = ("<root><selection>"
+            f"<selectedIndexes>{index}</selectedIndexes>"
+            "</selection></root>")
         return self._build_changed_properties(dataView=(True, True, cdata))
 
     def _ais_setDataView(self, id: str, body: Tag) -> None:
         data_view = nn(body.find(id=id))
-        container = data_view.find(id='radioBox_container', recursive=False)
+        container = data_view.find(id="radioBox_container", recursive=False)
         if not container:
             raise AISParseError("Expected radioBox_container")
-        if container.name == 'span':
-            self.selected_index = int(ct(str, container['selectedindex']))
+        if container.name == "span":
+            self.selected_index = int(ct(str, container["selectedindex"]))
         else:
-            self._parse_options(nn(container.find(id='radioBox_items')))
+            self._parse_options(nn(container.find(id="radioBox_items")))
     _ais_setDataView.wants_body = True  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportFunctionMemberAccess]

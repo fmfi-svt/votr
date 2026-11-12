@@ -13,7 +13,7 @@ OPEN_APP_LIMIT = 10
 def pooled_app[S, D, *A](
     original_method: Callable[[S, *A], Awaitable[Application[D]]]
 ) ->                 Callable[[S, *A], Awaitable[Application[D]]]:  # fmt: skip
-    '''Decorator for methods that return an [`Application`][].
+    """Decorator for methods that return an [`Application`][].
 
     Generally, we don't want to open an application if we've already opened it.
     We want to store and reuse opened applications. But if an application
@@ -37,7 +37,7 @@ def pooled_app[S, D, *A](
 
     Returns:
         The decorated method.
-    '''
+    """
     @wraps(original_method)
     async def wrapper(self: Any, *args: Unpack[A]) -> Application[D]:
         app_pool: Pool = self.app_pool
@@ -76,7 +76,7 @@ class Pool:
             if key in self.active_keys:
                 continue
 
-            await self.context.log('operation', 'Closing pooled application', key)
+            await self.context.log("operation", "Closing pooled application", key)
             app = self.open_apps.pop(key)
             if not await app.force_close():
                 # force_close() can fail if the AIS server is still busy, e.g.
@@ -84,7 +84,7 @@ class Pool:
                 # OPEN_APP_LIMIT, but right now it's in an unusable state for
                 # us. We can try again next time.
                 for i in range(len(sorted_keys)):
-                    new_key = ('_failed_to_close', key, i)
+                    new_key = ("_failed_to_close", key, i)
                     if new_key not in self.open_apps:
                         self.open_apps[new_key] = app
                         break
@@ -93,6 +93,6 @@ class Pool:
         self.active_keys = set()
 
         if last_rpc_failed and self.open_apps:
-            await self.context.log('operation',
-                'Closing all open apps because of previous RPC error')
+            await self.context.log("operation",
+                "Closing all open apps because of previous RPC error")
             await self.reserve(OPEN_APP_LIMIT)

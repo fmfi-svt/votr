@@ -40,7 +40,7 @@ def _load_log(filename: str) -> tuple[int | None, dict[tuple[str, object], list[
     current_rpc_args: object = None
     fake_time_msec: int | None = None
 
-    with (gzip.open(filename) if filename.endswith('.gz') else open(filename, 'rb')) as f:
+    with (gzip.open(filename) if filename.endswith(".gz") else open(filename, "rb")) as f:
         for linebytes in f:
             line: tuple[float, str, str, object] = json.loads(linebytes)
             if line[1] == "rpc":
@@ -96,7 +96,7 @@ class FlashbackClient(BaseClient):
             if not os.listdir(flashbacks_dir):
                 raise Exception(f"Flashbacks are unavailable: {flashbacks_dir!r} is empty")
             raise Exception("No flashback file selected")
-        if '/' in file or '\\' in file or file.startswith('.'):
+        if "/" in file or "\\" in file or file.startswith("."):
             raise Exception(f"Bad filename: {file!r}")
         filename = os.path.join(flashbacks_dir, file)
         if not os.path.isfile(filename):
@@ -106,7 +106,7 @@ class FlashbackClient(BaseClient):
         self._did: set[object] = set()
 
     def __getattr__(self, name: str) -> object:
-        if name.startswith('_'):
+        if name.startswith("_"):
             raise AttributeError(name)
 
         async def rpc_method(*argst: object) -> object:

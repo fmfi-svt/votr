@@ -2,7 +2,7 @@ from fladgejt.helpers import with_key_fields
 from typing import TypedDict
 
 
-@with_key_fields(studium_key=['sp_skratka', 'zaciatok'])
+@with_key_fields(studium_key=["sp_skratka", "zaciatok"])
 class Studium(TypedDict):
     sp_skratka: str
     sp_popis: str
@@ -14,7 +14,7 @@ class Studium(TypedDict):
     rok_studia: str
     organizacna_jednotka: str
 
-@with_key_fields(zapisny_list_key=['studium_key', 'akademicky_rok'])
+@with_key_fields(zapisny_list_key=["studium_key", "akademicky_rok"])
 class ZapisnyList(TypedDict):
     akademicky_rok: str
     rocnik: str
@@ -23,7 +23,7 @@ class ZapisnyList(TypedDict):
     datum_zapisu: str
     studium_key: str
 
-@with_key_fields(predmet_key=['skratka'])
+@with_key_fields(predmet_key=["skratka"])
 class Predmet(TypedDict):
     skratka: str
     nazov: str
@@ -31,7 +31,7 @@ class Predmet(TypedDict):
     semester: str
     kredit: str
 
-@with_key_fields(predmet_key=['skratka'])
+@with_key_fields(predmet_key=["skratka"])
 class RegPredmet(TypedDict):
     skratka: str
     nazov: str
@@ -43,7 +43,7 @@ class RegPredmet(TypedDict):
     semester: str
     kredit: str
 
-@with_key_fields(predmet_key=['skratka'])
+@with_key_fields(predmet_key=["skratka"])
 class ZapisPredmet(TypedDict):
     skratka: str
     nazov: str
@@ -69,7 +69,7 @@ class ZapisVlastnost(TypedDict):
     minimalny_kredit: str
     poznamka: str
 
-@with_key_fields(predmet_key=['skratka'])
+@with_key_fields(predmet_key=["skratka"])
 class Hodnotenie(TypedDict):
     akademicky_rok: str
     skratka: str
@@ -93,7 +93,7 @@ class PriebezneHodnotenie(TypedDict):
     zapocitavat: str
     minimum: str
 
-@with_key_fields(predmet_key=['skratka'])
+@with_key_fields(predmet_key=["skratka"])
 class PriebezneHodnoteniaPredmetu(TypedDict):
     akademicky_rok: str
     skratka: str
@@ -115,8 +115,8 @@ class Priemer(TypedDict):
     datum_vypoctu: str
 
 @with_key_fields(
-    predmet_key=['skratka_predmetu'],
-    termin_key=['zapisny_list_key', 'predmet_key', 'datum', 'cas', 'miestnost', 'poznamka'],
+    predmet_key=["skratka_predmetu"],
+    termin_key=["zapisny_list_key", "predmet_key", "datum", "cas", "miestnost", "poznamka"],
 )
 class Termin(TypedDict):
     datum: str

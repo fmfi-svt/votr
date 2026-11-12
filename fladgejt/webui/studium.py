@@ -60,8 +60,8 @@ class GetPrehladKreditovResult(TypedDict):
 class WebuiStudiumMixin(BaseClient):
     @pooled_app
     async def _open_administracia_studia(self) -> Application[AdministraciaStudiaDialogsType]:
-        url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.es.VSES017App&kodAplikacie=VSES017&uiLang=SK'
-        ignored_messages = DEFAULT_IGNORED_MESSAGES + ['Štúdium je prerušené. Zvoľte aktívne štúdium.']
+        url = "/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.es.VSES017App&kodAplikacie=VSES017&uiLang=SK"
+        ignored_messages = DEFAULT_IGNORED_MESSAGES + ["Štúdium je prerušené. Zvoľte aktívne štúdium."]
         app, ops = await Application[AdministraciaStudiaDialogsType].open(self.context, url, ignored_messages)
         await ops.expect_one(OpenDialogOp).perform()
         return app
@@ -70,7 +70,7 @@ class WebuiStudiumMixin(BaseClient):
         try:
             await self._open_administracia_studia()
         except AISBehaviorError as e:
-            if 'Neautorizovaný prístup!' in str(e):
+            if "Neautorizovaný prístup!" in str(e):
                 return False
             raise
         return True
@@ -78,15 +78,15 @@ class WebuiStudiumMixin(BaseClient):
     async def get_studia(self) -> list[Studium]:
         app = await self._open_administracia_studia()
 
-        result = [Studium(sp_skratka=row['studijnyProgramSkratka'],
-                          sp_popis=row['studijnyProgramPopis'],
-                          sp_doplnujuce_udaje=row['studijnyProgramDoplnUdaje'],
-                          zaciatok=row['zaciatokStudia'],
-                          koniec=row['koniecStudia'],
-                          sp_dlzka=row['studijnyProgramDlzka'],
-                          sp_cislo=row['studijnyProgramIdProgramCRS'],
-                          rok_studia=row['rokStudia'],
-                          organizacna_jednotka=row['studijnyProgramSkratkaAkreditOJ'])
+        result = [Studium(sp_skratka=row["studijnyProgramSkratka"],
+                          sp_popis=row["studijnyProgramPopis"],
+                          sp_doplnujuce_udaje=row["studijnyProgramDoplnUdaje"],
+                          zaciatok=row["zaciatokStudia"],
+                          koniec=row["koniecStudia"],
+                          sp_dlzka=row["studijnyProgramDlzka"],
+                          sp_cislo=row["studijnyProgramIdProgramCRS"],
+                          rok_studia=row["rokStudia"],
+                          organizacna_jednotka=row["studijnyProgramSkratkaAkreditOJ"])
                   for row in await app.d.studiaTable.all_rows()]
         return result
 
@@ -94,11 +94,11 @@ class WebuiStudiumMixin(BaseClient):
         app = await self._open_administracia_studia()
 
         await self.__vyber_studium(app, studium_key)
-        result = [ZapisnyList(akademicky_rok=row['popisAkadRok'],
-                              rocnik=row['rokRocnik'],
-                              sp_skratka=row['studProgramSkratka'],
-                              sp_popis=row['studProgramPopis'],
-                              datum_zapisu=row['datumZapisu'],
+        result = [ZapisnyList(akademicky_rok=row["popisAkadRok"],
+                              rocnik=row["rokRocnik"],
+                              sp_skratka=row["studProgramSkratka"],
+                              sp_popis=row["studProgramPopis"],
+                              datum_zapisu=row["datumZapisu"],
                               studium_key=studium_key)
                   for row in await app.d.zapisneListyTable.all_rows()]
         return result
@@ -229,20 +229,20 @@ class WebuiStudiumMixin(BaseClient):
         await ops.expect_one(OpenDialogOp).perform()
 
         # Vytiahneme tabulku predmetov.
-        result = [Hodnotenie(akademicky_rok=row['akRok'],
-                             skratka=row['skratka'],
-                             nazov=row['nazov'],
-                             typ_vyucby=row['kodTypVyucbySP'],
-                             semester=row['semester'],
-                             kredit=row['kredit'],
-                             hodn_znamka=row['znamka'],
-                             hodn_termin=row['termin'],
-                             hodn_datum=row['datum'],
-                             hodn_znamka_popis=row['znamkaPopis'],
-                             nahradeny=(row['nahradzaMa'] != ''),
-                             poplatok=row['poplatok'],
+        result = [Hodnotenie(akademicky_rok=row["akRok"],
+                             skratka=row["skratka"],
+                             nazov=row["nazov"],
+                             typ_vyucby=row["kodTypVyucbySP"],
+                             semester=row["semester"],
+                             kredit=row["kredit"],
+                             hodn_znamka=row["znamka"],
+                             hodn_termin=row["termin"],
+                             hodn_datum=row["datum"],
+                             hodn_znamka_popis=row["znamkaPopis"],
+                             nahradeny=(row["nahradzaMa"] != ""),
+                             poplatok=row["poplatok"],
                              zapisny_list_key=encode_key(
-                                (studium_key, row['akRok'])))
+                                (studium_key, row["akRok"])))
                   for row in await app.d.predmetyTable.all_rows()]
 
         kredity_ziskane, kredity_zapisane = await self.__get_sucty_kreditov(app)
@@ -272,17 +272,17 @@ class WebuiStudiumMixin(BaseClient):
         # Najdeme v tabulke suctov kreditov posledny riadok. V prvom stlpci ("Popis") by malo byt "SPOLU".
         rows = await app.d.kredityTable.all_rows()
         if not rows:
-            await self.context.log('warning', 'kredityTable is empty')
+            await self.context.log("warning", "kredityTable is empty")
             return None, None
 
         last = rows[-1]
-        if last['popis'] != 'SPOLU':
-            await self.context.log('warning', 'kredityTable popis is wrong', last)
+        if last["popis"] != "SPOLU":
+            await self.context.log("warning", "kredityTable popis is wrong", last)
             return None, None
 
         # V poslednom stlpci "Spolu  (Zapísané/Získané + Uznané + Dovezené)" by mali byt dve cele cisla.
-        if not (m := re.fullmatch(r'(\d+) / (\d+)', last['spolus'])):
-            await self.context.log('warning', 'kredityTable spolus is unexpected', last)
+        if not (m := re.fullmatch(r"(\d+) / (\d+)", last["spolus"])):
+            await self.context.log("warning", "kredityTable spolus is unexpected", last)
             return None, None
 
         return int(m.group(2)), int(m.group(1))

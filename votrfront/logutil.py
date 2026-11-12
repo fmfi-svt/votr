@@ -20,35 +20,35 @@ if TYPE_CHECKING:
     from collections.abc import Generator, Iterable
 
 
-TAG_PREFIX = '%'
-PAGER = ['less', '-RS']
+TAG_PREFIX = "%"
+PAGER = ["less", "-RS"]
 BASE_PATTERN = r'"\w+", "[\w ]+ failed'
 
 def classify(line: Line) -> str:
     if "failed with Cancelled" in line.content:
-        return 'Cancelled'
+        return "Cancelled"
     if "base.ps.PSException: Nie je connection" in line.content:
-        return 'SQLError'
+        return "SQLError"
     if "java.sql.SQLException: Connection is not valid" in line.content:
-        return 'SQLError'
+        return "SQLError"
     if "args=['Nie je connection.'" in line.content:
-        return 'SQLError'
+        return "SQLError"
     if "args=['Nastala SQL chyba" in line.content:
-        return 'SQLError'
+        return "SQLError"
     if "failed with ConnectError" in line.content:
-        return 'ConnectionError'
+        return "ConnectionError"
     if "failed with HTTPStatusError" in line.content:
-        return 'HTTPError'
+        return "HTTPError"
     if "failed with LoggedOutError" in line.content:
-        return 'LoggedOutError'
+        return "LoggedOutError"
     if "Login failed with PasswordLoginError" in line.content:
-        return 'KnownLoginError'
+        return "KnownLoginError"
     if "Login failed with CookieLoginError" in line.content:
-        return 'KnownLoginError'
+        return "KnownLoginError"
     if ("zapis_plan_vyhladaj" in line.content and
             "AIS did not return all table rows" in line.content):
-        return 'open issue121'
-    return 'open'
+        return "open issue121"
+    return "open"
 
 
 # ----------------------------------------
@@ -64,7 +64,7 @@ class Line:
 
 
 def connect_logdb() -> sqlite3.Connection:
-    logdb = sqlite3.connect(var_path('logdb/logdb.sqlite'))
+    logdb = sqlite3.connect(var_path("logdb/logdb.sqlite"))
     c = logdb.cursor()
     lines_schema = """
         CREATE TABLE IF NOT EXISTS lines (
@@ -78,42 +78,42 @@ def connect_logdb() -> sqlite3.Connection:
         )
     """
     # sub(\s+) is just to look nicer when you print ".schema".
-    c.execute(re.sub(r'\s+', ' ', lines_schema))
-    c.execute('CREATE INDEX IF NOT EXISTS lines_tags ON lines (tags)')
-    c.execute('CREATE INDEX IF NOT EXISTS lines_timestamp ON lines (timestamp)')
+    c.execute(re.sub(r"\s+", " ", lines_schema))
+    c.execute("CREATE INDEX IF NOT EXISTS lines_tags ON lines (tags)")
+    c.execute("CREATE INDEX IF NOT EXISTS lines_timestamp ON lines (timestamp)")
     return logdb
 
 
 def locate(sessid: str) -> str:
     sessid = str(sessid)
-    if '/' in sessid:
+    if "/" in sessid:
         options = [sessid]
     else:
         options = [
-            var_path('logs', sessid),  # legacy
-            var_path('logs', sessid + '.gz'),
-            var_path('oldlogs', sessid[0:2], sessid + '.gz'),  # legacy
-            var_path('oldlogs', sessid + '.xz'),
+            var_path("logs", sessid),  # legacy
+            var_path("logs", sessid + ".gz"),
+            var_path("oldlogs", sessid[0:2], sessid + ".gz"),  # legacy
+            var_path("oldlogs", sessid + ".xz"),
             sessid,
         ]
     for option in options:
         if os.path.exists(option):
             return str(option)
-    raise ValueError(f'Log not found: {sessid!r}')
+    raise ValueError(f"Log not found: {sessid!r}")
 
 
 def open_log(filename: str) -> IO[str]:
-    if str(filename).endswith('.gz'):
-        return gzip.open(filename, 'rt', encoding='utf8')
-    elif str(filename).endswith('.xz'):
-        return lzma.open(filename, 'rt', encoding='utf8')
+    if str(filename).endswith(".gz"):
+        return gzip.open(filename, "rt", encoding="utf8")
+    elif str(filename).endswith(".xz"):
+        return lzma.open(filename, "rt", encoding="utf8")
     else:
-        return open(filename, encoding='utf8')
+        return open(filename, encoding="utf8")
 
 
 def set_tags(logdb: sqlite3.Connection, sessid: str, lineno: int, tags_to_add: Iterable[str], tags_to_remove: Iterable[str]) -> None:
     c = logdb.cursor()
-    c.execute('SELECT tags FROM lines WHERE sessid = ? AND lineno = ?',
+    c.execute("SELECT tags FROM lines WHERE sessid = ? AND lineno = ?",
         (sessid, lineno))
     old_tags = c.fetchone()[0]
     tags = { t: True for t in old_tags.split() }
@@ -121,8 +121,8 @@ def set_tags(logdb: sqlite3.Connection, sessid: str, lineno: int, tags_to_add: I
         tags.pop(tag, None)
     for tag in tags_to_add:
         tags[tag] = True
-    c.execute('UPDATE lines SET tags = ? WHERE sessid = ? AND lineno = ? AND tags = ?',
-        (' '.join(tags), sessid, lineno, old_tags))
+    c.execute("UPDATE lines SET tags = ? WHERE sessid = ? AND lineno = ? AND tags = ?",
+        (" ".join(tags), sessid, lineno, old_tags))
 
 
 async def process_logfiles(logdb: sqlite3.Connection, files: Iterable[str]) -> None:
@@ -131,7 +131,7 @@ async def process_logfiles(logdb: sqlite3.Connection, files: Iterable[str]) -> N
     errors: list[tuple[str, str]] = []
 
     for filename in files:
-        sessid = os.path.basename(filename).partition('.')[0]
+        sessid = os.path.basename(filename).partition(".")[0]
         async with sessions.lock(sessid):
             try:
                 with open_log(filename) as f:
@@ -142,14 +142,14 @@ async def process_logfiles(logdb: sqlite3.Connection, files: Iterable[str]) -> N
                         if re.search(BASE_PATTERN, line):
                             try:
                                 c.execute(
-                                    'INSERT INTO lines (sessid, lineno, tags, content) VALUES (?, ?, ?, ?)',
-                                    (sessid, lineno, 'new', line.strip()))
+                                    "INSERT INTO lines (sessid, lineno, tags, content) VALUES (?, ?, ?, ?)",
+                                    (sessid, lineno, "new", line.strip()))
                             except sqlite3.IntegrityError:
                                 pass   # row already present
                     if lineno == 0:
-                        raise Exception('Log file is empty')
+                        raise Exception("Log file is empty")
             except Exception:
-                errmsg = ''.join(traceback.format_exc())
+                errmsg = "".join(traceback.format_exc())
                 errors.append((filename, errmsg))
 
     c.execute("SELECT * FROM lines WHERE tags = 'new'")
@@ -157,22 +157,22 @@ async def process_logfiles(logdb: sqlite3.Connection, files: Iterable[str]) -> N
         line = Line(sessid, lineno, tags, content, timestamp)
         new_tags = classify(line).split()
         if new_tags:
-            set_tags(logdb, sessid, lineno, new_tags, ['new'])
+            set_tags(logdb, sessid, lineno, new_tags, ["new"])
 
     logdb.commit()
 
     if errors:
-        msgs = [f'{len(errors)} errors occurred while processing logs:']
+        msgs = [f"{len(errors)} errors occurred while processing logs:"]
         for filename, errmsg in errors:
             msgs.append(
-                f'{filename}:\n' +
-                '\n'.join('    ' + line for line in errmsg.split('\n')))
-        raise Exception('\n\n'.join(msgs))
+                f"{filename}:\n" +
+                "\n".join("    " + line for line in errmsg.split("\n")))
+        raise Exception("\n\n".join(msgs))
 
 @contextlib.contextmanager
 def wrap_pager() -> Generator[IO[str]]:
     if os.isatty(0) and os.isatty(1):
-        sp = subprocess.Popen(PAGER, stdin=subprocess.PIPE, encoding='utf8')
+        sp = subprocess.Popen(PAGER, stdin=subprocess.PIPE, encoding="utf8")
         assert sp.stdin
         with contextlib.suppress(BrokenPipeError):
             yield sp.stdin
@@ -195,17 +195,17 @@ def cli_tag(*args: str) -> None:
     tags_to_remove: dict[str, Literal[True]] = {}
 
     for arg in args:
-        if arg.startswith('--'):
+        if arg.startswith("--"):
             sys.exit(f"Long options not supported: {arg!r}")
-        if arg.startswith('-') and len(arg) <= 2:
+        if arg.startswith("-") and len(arg) <= 2:
             sys.exit(f"Ambiguous short tag: {arg!r}")
-        if arg.startswith('+') or arg.startswith('-'):
+        if arg.startswith("+") or arg.startswith("-"):
             name = arg[1:].lstrip(TAG_PREFIX)
             if not name:
                 sys.exit(f"Empty tag: {arg!r}")
-            if ' ' in name:
+            if " " in name:
                 sys.exit(f"Space in tag name: {arg!r}")
-            tags_to = tags_to_add if arg.startswith('+') else tags_to_remove
+            tags_to = tags_to_add if arg.startswith("+") else tags_to_remove
             tags_to[name] = True
         else:
             targets[arg] = True
@@ -213,7 +213,7 @@ def cli_tag(*args: str) -> None:
     logdb = connect_logdb()
 
     for target in targets:
-        sessid, _, lineno = target.partition(':')
+        sessid, _, lineno = target.partition(":")
         set_tags(logdb, sessid, int(lineno), tags_to_add, tags_to_remove)
 
     logdb.commit()
@@ -225,17 +225,17 @@ def cli_view(*args: str) -> None:
 
     it = iter(args)
     for arg in it:
-        if arg == '-c' or arg == '--color':
+        if arg == "-c" or arg == "--color":
             color = True
-        elif arg.startswith('-'):
-            sys.exit(f'Unknown option: {arg!r}')
+        elif arg.startswith("-"):
+            sys.exit(f"Unknown option: {arg!r}")
         elif sessid is not None:
-            sys.exit('Too many arguments')
+            sys.exit("Too many arguments")
         else:
             sessid = arg
 
     if not sessid:
-        sys.exit('No sessid or filename given')
+        sys.exit("No sessid or filename given")
 
     filename = locate(sessid)
 
@@ -263,7 +263,7 @@ def cli_path(*sessids: str) -> None:
 def format_base(line: Line) -> tuple[str, str, str, str, str]:
     tm = time.localtime(line.timestamp)
     when = f"{tm.tm_year:04d}-{tm.tm_mon:02d}-{tm.tm_mday:02d} {tm.tm_hour:02d}:{tm.tm_min:02d}:{tm.tm_sec:02d}"
-    tags = ' '.join(TAG_PREFIX + tag for tag in line.tags.split()).ljust(20)
+    tags = " ".join(TAG_PREFIX + tag for tag in line.tags.split()).ljust(20)
     return (line.sessid, str(line.lineno).ljust(5), when, tags, line.content)
 
 def format_plain(line: Line) -> str:
@@ -275,14 +275,14 @@ def format_color(line: Line) -> str:
 
     content = re.sub(
         r'( "RPC )(\w+)( failed with )(\w+)(")',
-        '\\1\033[1;31m\\2\033[0m\\3\033[1;31m\\4\033[0m\\5', content)
+        "\\1\033[1;31m\\2\033[0m\\3\033[1;31m\\4\033[0m\\5", content)
     content = re.sub(
         r'( ")([\w ]+)( failed with )(\w+)(")',
-        '\\1\033[1;31m\\2\033[0m\\3\033[1;31m\\4\033[0m\\5', content)
+        "\\1\033[1;31m\\2\033[0m\\3\033[1;31m\\4\033[0m\\5", content)
 
-    content = content.replace('\\\\', '\x00').split('\\n')
-    if len(content) >= 2: content[-2] = '\033[36m' + content[-2] + '\033[0m'
-    content = '\\n'.join(content).replace('\x00', '\\\\')
+    content = content.replace("\\\\", "\x00").split("\\n")
+    if len(content) >= 2: content[-2] = "\033[36m" + content[-2] + "\033[0m"
+    content = "\\n".join(content).replace("\x00", "\\\\")
 
     return f"{sessid}:{lineno} \033[1;33m{when}\033[0m \033[1;34m{tags}\033[0m {content}"
 
@@ -290,7 +290,7 @@ def format_sessids(line: Line) -> str:
     return line.sessid
 
 def format_linenos(line: Line) -> str:
-    return f'{line.sessid}:{line.lineno}'
+    return f"{line.sessid}:{line.lineno}"
 
 def format_files(line: Line) -> str:
     return locate(line.sessid)
@@ -305,30 +305,30 @@ def cli_list(*args: str) -> None:
 
     it = iter(args)
     for arg in it:
-        if arg == '-n' or arg == '--not':
+        if arg == "-n" or arg == "--not":
             match_not.append(next(it))
-        elif arg == '-F' or arg == '--from':
+        elif arg == "-F" or arg == "--from":
             match_from = next(it)
-            if not re.fullmatch(r'[0-9]{8}', match_from):
-                sys.exit(f'Expected {arg} YYYYMMDD')
-        elif arg == '-T' or arg == '--to':
+            if not re.fullmatch(r"[0-9]{8}", match_from):
+                sys.exit(f"Expected {arg} YYYYMMDD")
+        elif arg == "-T" or arg == "--to":
             match_to = next(it)
-            if not re.fullmatch(r'[0-9]{8}', match_to):
-                sys.exit(f'Expected {arg} YYYYMMDD')
-        elif arg == '-c' or arg == '--color':
+            if not re.fullmatch(r"[0-9]{8}", match_to):
+                sys.exit(f"Expected {arg} YYYYMMDD")
+        elif arg == "-c" or arg == "--color":
             formatter = format_color
-        elif arg == '-s' or arg == '--sessids':
+        elif arg == "-s" or arg == "--sessids":
             formatter = format_sessids
-        elif arg == '-l' or arg == '--linenos':
+        elif arg == "-l" or arg == "--linenos":
             formatter = format_linenos
-        elif arg == '-f' or arg == '--files':
+        elif arg == "-f" or arg == "--files":
             formatter = format_files
-        elif arg.startswith('-'):
-            sys.exit(f'Unknown option: {arg!r}')
+        elif arg.startswith("-"):
+            sys.exit(f"Unknown option: {arg!r}")
         else:
             match.append(arg)
 
-    query = 'SELECT * FROM lines WHERE 1'
+    query = "SELECT * FROM lines WHERE 1"
     params: list[str] = []
 
     if match_from is None:
@@ -347,11 +347,11 @@ def cli_list(*args: str) -> None:
     # But simple patterns like '%foo' also have to match the tags column, to
     # keep things fast. Wrap it in '()' if you really want whole line regexp.
     for pattern in match:
-        if re.match(r'^T\w+$'.replace('T', re.escape(TAG_PREFIX)), pattern):
-            query += ' AND tags LIKE ?'
-            params.append('%' + pattern[1:] + '%')
+        if re.match(r"^T\w+$".replace("T", re.escape(TAG_PREFIX)), pattern):
+            query += " AND tags LIKE ?"
+            params.append("%" + pattern[1:] + "%")
 
-    query += ' ORDER BY timestamp'
+    query += " ORDER BY timestamp"
 
     logdb = connect_logdb()
     c = logdb.cursor()
@@ -373,27 +373,27 @@ def cli_list(*args: str) -> None:
 
 def cli_process(*files: str) -> None:
     if not files:
-        sys.exit('No files given')
+        sys.exit("No files given")
     logdb = connect_logdb()
     trio.run(process_logfiles, logdb, files)
 
 
 log_commands = {
-    'tag': cli_tag,
-    'view': cli_view,
-    'path': cli_path,
-    'list': cli_list,
-    'process': cli_process,
+    "tag": cli_tag,
+    "view": cli_view,
+    "path": cli_path,
+    "list": cli_list,
+    "process": cli_process,
 }
 
 
 def cli(*args: str) -> None:
     if not args:
-        sys.exit('Missing log subcommand\nTry: ./x --help')
+        sys.exit("Missing log subcommand\nTry: ./x --help")
     if args[0] not in log_commands:
-        sys.exit('Unknown log subcommand\nTry: ./x --help')
+        sys.exit("Unknown log subcommand\nTry: ./x --help")
     log_commands[args[0]](*args[1:])
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     cli(*sys.argv[1:])

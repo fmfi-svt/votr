@@ -15,20 +15,20 @@ class Button(ActionableControl):
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
         element = nn(element)
-        self.image = ct_none(str, properties.get('img'))
+        self.image = ct_none(str, properties.get("img"))
         """Button icon symbolic name. E.g. "run" for the runner icon."""
         # We only ever saw shortcut==None, but webui calls toUpperCase().
-        self.shortcut = ct_none(str, properties.get('sc'))
+        self.shortcut = ct_none(str, properties.get("sc"))
         """Key shortcut, probably. Empirically, it's always ``None``."""
-        self.confirm_question = ct_none(str, element.get('confirmquestion'))
+        self.confirm_question = ct_none(str, element.get("confirmquestion"))
         """AIS UI asks this question when the button is clicked, before sending
         the event. Empirically, it's always ``None``. The AIS UI generally uses
         [`ConfirmBoxOp`][aisikl.operations.ConfirmBoxOp] instead.
         """
-        self.access_key = element.get('accesskey')
+        self.access_key = element.get("accesskey")
         """Key shortcut (with ``Alt``)."""
         if isinstance(self.access_key, list):
-            self.access_key = ' '.join(self.access_key)  # BeautifulSoup :(
+            self.access_key = " ".join(self.access_key)  # BeautifulSoup :(
 
     def _ais_setAccessKey(self, value: object) -> None:
         self.access_key = ct_none(str, value)
@@ -47,7 +47,7 @@ class Button(ActionableControl):
         effectively answering "yes". You should show your own confirmation UI
         before dangerous actions.
         """
-        await self.log('action', f'Clicking {self.id}')
+        await self.log("action", f"Clicking {self.id}")
 
         did, ops = await self._try_execute_action(return_ops=return_ops)
         if did:

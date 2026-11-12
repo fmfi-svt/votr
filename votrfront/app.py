@@ -74,11 +74,11 @@ class SessionCookieMiddleware:
             return
 
         request = Request(scope)
-        cookie_prefix = '__Host-' if request.url.is_secure else ''
-        cookie_name = f'{cookie_prefix}{self.settings.instance_id}_csession'
+        cookie_prefix = "__Host-" if request.url.is_secure else ""
+        cookie_name = f"{cookie_prefix}{self.settings.instance_id}_csession"
         cookie_str = request.cookies.get(cookie_name)
         try:
-            qs = parse_qs(cookie_str or '', keep_blank_values=True)
+            qs = parse_qs(cookie_str or "", keep_blank_values=True)
             cookie_dict = {k: v[0] for k, v in qs.items()}
         except Exception:
             cookie_dict: dict[str, str] = {}

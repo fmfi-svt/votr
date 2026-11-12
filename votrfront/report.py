@@ -16,24 +16,24 @@ if TYPE_CHECKING:
 async def report(request: Request[VotrState]) -> PlainTextResponse:
     try:
         body = await request.json()
-        type = request.query_params['type']
+        type = request.query_params["type"]
     except Exception as e:
         raise HTTPException(400, repr(e)) from e
 
     payload = {
-        'body': body,
-        'type': type,
-        'ua': request.headers.get('user-agent', ''),
-        'sessid': get_sessid_from_cookie(request),
-        'time': int(time.time()),
+        "body": body,
+        "type": type,
+        "ua": request.headers.get("user-agent", ""),
+        "sessid": get_sessid_from_cookie(request),
+        "time": int(time.time()),
     }
 
-    filename = datetime.now(UTC).strftime('%Y%m')
-    with var_path('reportlogs', filename).open('at') as f:
-        f.write(json.dumps(payload, sort_keys=True) + '\n')
-    return PlainTextResponse('OK')
+    filename = datetime.now(UTC).strftime("%Y%m")
+    with var_path("reportlogs", filename).open("at") as f:
+        f.write(json.dumps(payload, sort_keys=True) + "\n")
+    return PlainTextResponse("OK")
 
 
 routes = [
-    Route('/report', methods=['POST'], endpoint=report),
+    Route("/report", methods=["POST"], endpoint=report),
 ]

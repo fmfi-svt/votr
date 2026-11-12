@@ -15,19 +15,19 @@ def check_header(request: Request[VotrState], name: str, allowed_values: set[str
         # TODO: Temporary log. Decide what to do with it once we see the data.
         # Either remove it or make it per-month. Maybe merge with reportlogs.
         payload = {
-            'type': 'fetchmeta',
-            'name': name,
-            'value': value,
-            'allowed_values': sorted(allowed_values),
-            'time': int(time.time()),
-            'url': str(request.url),
-            'client': request.scope['client'],
-            'headers': [
-                [k.decode('latin1'), v.decode('latin1')]
-                for k, v in request.scope['headers']
+            "type": "fetchmeta",
+            "name": name,
+            "value": value,
+            "allowed_values": sorted(allowed_values),
+            "time": int(time.time()),
+            "url": str(request.url),
+            "client": request.scope["client"],
+            "headers": [
+                [k.decode("latin1"), v.decode("latin1")]
+                for k, v in request.scope["headers"]
             ],
         }
-        with var_path('fetchmetalog').open('at') as f:
-            f.write(json.dumps(payload, sort_keys=True) + '\n')
+        with var_path("fetchmetalog").open("at") as f:
+            f.write(json.dumps(payload, sort_keys=True) + "\n")
 
-        raise HTTPException(403, f'Unexpected {name} header value')
+        raise HTTPException(403, f"Unexpected {name} header value")

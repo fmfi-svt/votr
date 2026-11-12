@@ -18,9 +18,9 @@ class Control(Component):
         super().__init__(dialog, id, type, parent_id, properties, element)
         element = nn(element)
         self.parent_id = nn(parent_id)
-        self.read_only = ct(bool, properties.get('ro', False))
-        self.tab_order = int(ct(str, element.get('tabindex', '0')))
-        self.tool_tip_text = ct_none(str, element.get('title'))
+        self.read_only = ct(bool, properties.get("ro", False))
+        self.tab_order = int(ct(str, element.get("tabindex", "0")))
+        self.tool_tip_text = ct_none(str, element.get("title"))
 
     @property
     def parent(self) -> Component:
@@ -51,7 +51,7 @@ class Control(Component):
         """Internal. Builds the ``<embObjChProps>`` string for this control.
         Resets changed flags, if any.
         """
-        return ''
+        return ""
 
     def _build_changed_properties(self, **kwargs: str | bool | tuple[bool | None, bool, str | bool]) -> str:
         """Internal. Helps with the redundant parts of ``<embObjChProps>``
@@ -68,7 +68,7 @@ class Control(Component):
         for name, value in kwargs.items():
             is_xml = use_cdata = False
             if isinstance(value, tuple): is_xml, use_cdata, value = value
-            if isinstance(value, bool): value = 'true' if value else 'false'
+            if isinstance(value, bool): value = "true" if value else "false"
 
             if use_cdata: value = "<![CDATA[" + value + "]]>"
             write("<nameValue>")
@@ -82,7 +82,7 @@ class Control(Component):
         write("<embObjChProps isNull='true'/>")
         write("</changedProperties>")
 
-        return ''.join(result)
+        return "".join(result)
 
     def update_value_interactives(self, type: str) -> None:
         """Internal. Corresponds to ``updateValueInteractives`` in webui.js,

@@ -27,10 +27,10 @@ to print all logs to stderr.
 
 
 class Context:
-    '''The common context for an AIS session. When one user opens multiple AIS
+    """The common context for an AIS session. When one user opens multiple AIS
     applications, they share the same Context. It manages the HTTP cookie jar,
     performs HTTP requests and deals with logs.
-    '''
+    """
 
     def __init__(self, *, ais_url: str | None=None, rest_url: str | None=None, dns_overrides: dict[str, str] | None=None,
                  logger: Logger | None=None) -> None:
@@ -60,7 +60,7 @@ class Context:
     def use_connection_pool(
         self, pool: httpcore2.AsyncConnectionPool | None,
     ) -> Generator[None]:
-        '''Uses the given HTTP connection pool for the context manager's
+        """Uses the given HTTP connection pool for the context manager's
         duration. By default, without ``use_connection_pool``, ``Context``
         creates a new TCP connection for each HTTP request.
 
@@ -68,7 +68,7 @@ class Context:
         pool for efficiency, but not require it in scripts, notebooks and REPLs.
 
         If ``dns_overrides`` are enabled, ``use_connection_pool`` has no effect.
-        '''
+        """
         old, self._pool = self._pool, pool
         try:
             yield
@@ -82,12 +82,12 @@ class Context:
         data: Mapping[str, str] | None=None,
         headers: Mapping[str, str] | None=None,
     ) -> httpx2.Response:
-        '''Sends an HTTP request to an arbitrary absolute URL and returns the
+        """Sends an HTTP request to an arbitrary absolute URL and returns the
         response. Reads and writes [`cookie_jar`][].
 
         ``request_http`` does not log the request, follow redirects, or check
         response HTTP status; the caller should take care of that.
-        '''
+        """
         async with AsyncExitStack() as stack:
             if self.dns_overrides:
                 backend = _BackendWithDnsOverrides(self.dns_overrides)
@@ -115,38 +115,38 @@ class Context:
 
     async def request_ais(
         self, url: str, *,
-        method: str='GET',
+        method: str="GET",
         data: Mapping[str, str] | None=None,
         headers: Mapping[str, str] | None=None,
-        redirects: Literal['raise', 'return', 'follow']='raise',
+        redirects: Literal["raise", "return", "follow"]="raise",
     ) -> httpx2.Response:
-        '''Sends a request to AIS and returns the response.
+        """Sends a request to AIS and returns the response.
 
         ``url`` can be either absolute or relative to [`ais_url`][].
-        '''
+        """
         while True:
-            await self.log('benchmark', 'Begin AIS network request')
-            await self.log('http', f'Requesting {method} {url.partition('?')[0]}', [url, data])
+            await self.log("benchmark", "Begin AIS network request")
+            await self.log("http", f"Requesting {method} {url.partition('?')[0]}", [url, data])
 
             url = urljoin(nn(self.ais_url), url)
             response = await self.request_http(
                 method=method, url=url, data=data, headers=headers)
 
             await self._log_response(response)
-            await self.log('benchmark', 'End AIS network request')
+            await self.log("benchmark", "End AIS network request")
 
-            if response.has_redirect_location and redirects == 'follow':
+            if response.has_redirect_location and redirects == "follow":
                 next_request = nn(response.next_request)
                 url = str(next_request.url)
                 method = next_request.method
-                if method == 'GET': data = None
+                if method == "GET": data = None
                 headers = next_request.headers
                 continue
                 # Max redirects count is not implemented (not needed so far).
             else:
                 break
 
-        if response.has_redirect_location and redirects == 'return':
+        if response.has_redirect_location and redirects == "return":
             return response
         else:
             # httpx2.Response.raise_for_status() succeeds only on 2xx. Note this
@@ -155,13 +155,13 @@ class Context:
             return response
 
     async def parse_html(self, response: httpx2.Response) -> BeautifulSoup:
-        await self.log('benchmark', 'Begin HTML parsing')
-        soup = BeautifulSoup(response.text, 'lxml')
-        await self.log('benchmark', 'End HTML parsing')
+        await self.log("benchmark", "Begin HTML parsing")
+        soup = BeautifulSoup(response.text, "lxml")
+        await self.log("benchmark", "End HTML parsing")
         return soup
 
     async def request_json(self, url: str, **data: str) -> Any:
-        '''Sends a request to REST API and parses the response as JSON.
+        """Sends a request to REST API and parses the response as JSON.
 
         Args:
             url: The URL, either absolute or relative to [`rest_url`][].
@@ -169,70 +169,70 @@ class Context:
 
         Returns:
             A dictionary.
-        '''
-        await self.log('benchmark', 'Begin REST network request')
-        await self.log('http', f'Requesting POST {url.partition('?')[0]}', [url, data])
+        """
+        await self.log("benchmark", "Begin REST network request")
+        await self.log("http", f"Requesting POST {url.partition('?')[0]}", [url, data])
 
         url = urljoin(nn(self.rest_url), url)
         response = await self.request_http(method="POST", url=url, data=data)
 
         await self._log_response(response)
-        await self.log('benchmark', 'End REST network request')
+        await self.log("benchmark", "End REST network request")
 
         if response.has_redirect_location:
-            raise LoggedOutError('REST login expired.')
+            raise LoggedOutError("REST login expired.")
         response.raise_for_status()
         response = json.loads(response.text)
 
-        if response['status'] != 'OK':
+        if response["status"] != "OK":
             raise RESTServerError(
                 f"Status: {response["status"]} Error: {response["error"]}")
 
-        await self.log('http', 'Parsed JSON data')
-        return response['response']
+        await self.log("http", "Parsed JSON data")
+        return response["response"]
 
     async def _log_response(self, response: httpx2.Response) -> None:
         log_data = {
-            'status_code': response.status_code,
-            'reason_phrase': response.reason_phrase,
-            'headers': [
+            "status_code": response.status_code,
+            "reason_phrase": response.reason_phrase,
+            "headers": [
                 [k, v] for k, v in response.headers.multi_items()
-                if k.lower() in { 'aisauth', 'content-type', 'location' }
+                if k.lower() in { "aisauth", "content-type", "location" }
             ],
         }
         if response.has_redirect_location:
             pass
-        elif response.headers.get('content-type', '').startswith('text'):
-            log_data['body'] = response.text
+        elif response.headers.get("content-type", "").startswith("text"):
+            log_data["body"] = response.text
         else:
             # We could log base64 content here... it would simplify testutils.py
             # slightly... But '/ais/apps/student/sk/main.js' is freaking huge,
             # so let's not.
             pass
-        await self.log('http', 'Received response', log_data)
+        await self.log("http", "Received response", log_data)
 
     async def log(self, type: str, message: str, data: object=None) -> None:
-        '''Logs a message.
+        """Logs a message.
 
         Args:
             type: String used to group similar messages together.
             message: The log message. Should be a single line.
             data: A JSON-serializable object containing more details.
-        '''
+        """
         await self.logger.log(type, message, data)
 
 
 class Logger:
-    '''Logs messages to various destinations.'''
+    """Logs messages to various destinations."""
 
     log_file: TextIO | None = None
-    '''An open file to write log entries to. Votrfront sets it to a per-session
-    log file on every request. The value is not preserved between requests.'''
+    """An open file to write log entries to. Votrfront sets it to a per-session
+    log file on every request. The value is not preserved between requests."""
 
     send_log: Callable[[float, str, str, object], Awaitable[None]] | None = None
-    '''A function that will be called with (timestamp, type, message, data) for
+    """A function that will be called with (timestamp, type, message, data) for
     every log entry. Votrfront uses it to send JSON logs to the client during a
-    RPC request. The value is not preserved between requests.'''
+    RPC request. The value is not preserved between requests."""
 
     @override
     def __getstate__(self) -> dict[object, object]:
@@ -242,7 +242,7 @@ class Logger:
         timestamp = time.time()
 
         # 'benchmark' is excluded from log files. It's too verbose.
-        if type != 'benchmark':
+        if type != "benchmark":
             if self.log_file:
                 json_entry = json.dumps(
                     [timestamp, type, message, data], ensure_ascii=False)
@@ -287,10 +287,10 @@ class Logger:
 
 
 class _BackendWithDnsOverrides(AutoBackend):
-    '''A httpcore network backend that overrides the DNS resolution (i.e. the
+    """A httpcore network backend that overrides the DNS resolution (i.e. the
     socket connect() address). The original hostname is still used in the Host
     header and SNI name. Used to implement [`Context.dns_overrides`][].
-    '''
+    """
 
     def __init__(self, dns_overrides: dict[str, str]):
         super().__init__()
@@ -401,8 +401,8 @@ else:
     def _log_to_ipython(type: str, message: str, data: object) -> None:
         html = Markup('<span style="background:#FF8"><b>{}</b> {}</span>').format(type, message)
         if data is not None:
-            html = Markup('<details><summary>{}</summary><pre>{}</pre></details>').format(html, repr_log_data(data))
+            html = Markup("<details><summary>{}</summary><pre>{}</pre></details>").format(html, repr_log_data(data))
         else:
             # Wrap in <div> to make Jupyter's margin-bottom CSS more consistent.
-            html = Markup('<div>{}</div>').format(html)
+            html = Markup("<div>{}</div>").format(html)
         display({"text/plain": f"<{type}> {message}", "text/html": str(html)}, raw=True)

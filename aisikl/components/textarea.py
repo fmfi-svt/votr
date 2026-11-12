@@ -16,13 +16,13 @@ class TextArea(TextControl):
 
     async def write(self, value: str) -> None:
         """Writes ``value`` in the box."""
-        await self.log('action', f'Writing {value!r} in {self.id}')
+        await self.log("action", f"Writing {value!r} in {self.id}")
         self.value = value
         self.dialog.component_changes(self, False)
 
     def _ais_setText(self, value: object) -> None:
         self.value = ct(str, value)
-        self.update_value_interactives('change')
+        self.update_value_interactives("change")
 
     @override
     def changed_properties(self) -> str:

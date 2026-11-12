@@ -14,7 +14,7 @@ if TYPE_CHECKING:
     from aisikl.components.component import Component
     from aisikl.operations import Operations
 
-_properties_re = re.compile(r'^var componentsProperties\s*=\s*(.*);$')
+_properties_re = re.compile(r"^var componentsProperties\s*=\s*(.*);$")
 
 class Dialog:
     """An artificial "window within a window" in the AIS UI.
@@ -116,45 +116,45 @@ class Dialog:
         """
         dialog_soup = await self.app.ctx.parse_html(
             await self.app.ctx.request_ais(url))
-        await self.app.ctx.log('benchmark', 'Begin dialog initialization')
+        await self.app.ctx.log("benchmark", "Begin dialog initialization")
 
         body = nn(dialog_soup.body)
         first_element_child = body.find(True)
-        scripts = dialog_soup.find_all('script')
-        if not (body.get('id') == self.name and
-                'jsct' not in body and
-                'dialogBody' in (body.get('class') or []) and
+        scripts = dialog_soup.find_all("script")
+        if not (body.get("id") == self.name and
+                "jsct" not in body and
+                "dialogBody" in (body.get("class") or []) and
                 first_element_child and
-                first_element_child.get('id') == 'dialogComponentsArea' and
+                first_element_child.get("id") == "dialogComponentsArea" and
                 scripts):
             raise AISParseError("Unexpected dialog body response")
 
         self.components = {}
         self._changed_components = None
 
-        last_line = nn(scripts[-1].string).strip().split('\n')[-1].strip()
+        last_line = nn(scripts[-1].string).strip().split("\n")[-1].strip()
         match = _properties_re.match(last_line)
         if not match:
             raise AISParseError("Couldn't find dialog componentProperties")
         component_properties: dict[str, dict[str, object]] = json.loads(match.group(1))
 
-        elements = { e['id']: e for e in dialog_soup.find_all(id=True) }
-        if 'dt_selection' in elements or 'dt_selection_area' in elements:
+        elements = { e["id"]: e for e in dialog_soup.find_all(id=True) }
+        if "dt_selection" in elements or "dt_selection_area" in elements:
             raise AISParseError("#dt_selection is not supported")
 
         for id, properties in component_properties.items():
-            if properties.get('tmp'): continue
-            if id == 'suggestionsArea': continue
+            if properties.get("tmp"): continue
+            if id == "suggestionsArea": continue
 
             element = elements.get(id)
             parent_id = None
             if element:
                 parent = element.find_parent(
-                    lambda p: p.get('id') in component_properties)
+                    lambda p: p.get("id") in component_properties)
                 if parent:
-                    parent_id = ct(str, parent['id'])
+                    parent_id = ct(str, parent["id"])
 
-            type = ct(str, properties.get('t'))
+            type = ct(str, properties.get("t"))
             if type not in component_classes:
                 raise AISParseError(f"Unsupported component type: {type!r}")
             component = component_classes[type](
@@ -165,12 +165,12 @@ class Dialog:
 
         self.body = self.components[self.name]
 
-        await self.app.ctx.log('benchmark', 'End dialog initialization')
+        await self.app.ctx.log("benchmark", "End dialog initialization")
 
     if not TYPE_CHECKING:
         def __getattr__(self, name: str) -> Component:
             """Accesses the dialog's components as attributes."""
-            if 'components' in self.__dict__ and name in self.components:
+            if "components" in self.__dict__ and name in self.components:
                 return self.components[name]
             raise AttributeError(name)
 
@@ -186,14 +186,14 @@ class Dialog:
         """
         # We ignore width, height, x, y, focusedComponent and dtSelection.
         # So there are no <nameValue> pairs, only <embObjChProps>.
-        if self._changed_components is None: return ''
+        if self._changed_components is None: return ""
         result = (
             f"<changedProperties><objName>{self.name}</objName>\n" +
-            '<embObjChProps>\n' +
-            ''.join(ct(Control, self.components[id]).changed_properties()
+            "<embObjChProps>\n" +
+            "".join(ct(Control, self.components[id]).changed_properties()
                     for id in self._changed_components) +
-            '</embObjChProps>\n' +
-            '</changedProperties>\n')
+            "</embObjChProps>\n" +
+            "</changedProperties>\n")
         self._changed_components = None
         return result
 
@@ -223,7 +223,7 @@ class Dialog:
 
         if component:
             self._changed_components[component.id] = True
-            self.try_interactive(component, 'change')
+            self.try_interactive(component, "change")
 
     async def click_close_button(self, *, return_ops: Literal[True]) -> Operations:
         """Clicks the close button.
@@ -238,7 +238,7 @@ class Dialog:
             raise ValueError(f"Dialog {self.name} has no close button")
         # TODO: Return unless "self.enabled" is True.
 
-        await self.app.ctx.log('action',
-            f'Pressing close button of {self.name}')
-        ev = component_event(self.body, 'close', 'CLOSE')
+        await self.app.ctx.log("action",
+            f"Pressing close button of {self.name}")
+        ev = component_event(self.body, "close", "CLOSE")
         return await self.app.send_events(ev, return_ops=return_ops)

@@ -16,24 +16,24 @@ if TYPE_CHECKING:
 
 
 def get_sessid_from_cookie(request: Request[VotrState]) -> str | None:
-    return ct_none(str, request.state['votr_cookie_value'].get('sessid'))  # pyright: ignore [reportTypedDictNotRequiredAccess]
+    return ct_none(str, request.state["votr_cookie_value"].get("sessid"))  # pyright: ignore [reportTypedDictNotRequiredAccess]
 
 
 def check_sessid(sessid: str) -> None:
     for ch in sessid:
-        if ch not in '0123456789abcdef_':
-            raise LoggedOutError('Invalid sessid')
+        if ch not in "0123456789abcdef_":
+            raise LoggedOutError("Invalid sessid")
 
 
 def open_log_file(sessid: str) -> TextIO:
     check_sessid(sessid)
-    filename = var_path('logs', sessid + '.gz')
-    return gzip.open(filename, 'at', encoding='utf8')
+    filename = var_path("logs", sessid + ".gz")
+    return gzip.open(filename, "at", encoding="utf8")
 
 
 def create(request: Request[VotrState], sessid: str, session: SessionDict) -> str:
     check_sessid(sessid)
-    with var_path('sessions', sessid).open('xb') as f:
+    with var_path("sessions", sessid).open("xb") as f:
         pickle.dump(session, f, pickle.HIGHEST_PROTOCOL)
 
     return sessid
@@ -44,7 +44,7 @@ def delete(request: Request[VotrState], sessid: str | None = None) -> None:
     if not sessid: return
     check_sessid(sessid)
     try:
-        var_path('sessions', sessid).unlink()
+        var_path("sessions", sessid).unlink()
     except FileNotFoundError:
         pass
 
@@ -67,9 +67,9 @@ async def lock(sessid: str) -> AsyncGenerator[None]:
     # conditions when one thread deletes the file but another thread already has
     # it open and is trying to lock it.
     check_sessid(sessid)
-    lock_path = var_path('locks', sessid)
+    lock_path = var_path("locks", sessid)
     while True:
-        f = open(lock_path, 'ab')
+        f = open(lock_path, "ab")
         try:
             await trio.to_thread.run_sync(
                 fcntl.flock, f.fileno(), fcntl.LOCK_EX,
@@ -99,21 +99,21 @@ async def lock(sessid: str) -> AsyncGenerator[None]:
 @contextlib.asynccontextmanager
 async def transaction(request: Request[VotrState], sessid: str | None = None) -> AsyncGenerator[SessionDict]:
     if not sessid: sessid = get_sessid_from_cookie(request)
-    if not sessid: raise LoggedOutError('Session cookie not found')
+    if not sessid: raise LoggedOutError("Session cookie not found")
     check_sessid(sessid)
 
     async with lock(sessid):
         try:
-            f = var_path('sessions', sessid).open('r+b')
+            f = var_path("sessions", sessid).open("r+b")
         except FileNotFoundError as e:
-            raise LoggedOutError('Votr session does not exist') from e
+            raise LoggedOutError("Votr session does not exist") from e
 
         with f:
             session = pickle.load(f)
 
-            if (credentials := session.get('credentials')):
-                if (username := credentials.get('username')):
-                    request.state['votr_log_user'] = username
+            if (credentials := session.get("credentials")):
+                if (username := credentials.get("username")):
+                    request.state["votr_log_user"] = username
 
             try:
                 yield session
@@ -133,10 +133,10 @@ async def logged_transaction(request: Request[VotrState], sessid: str | None = N
 
     async with transaction(request, sessid) as session:
         with open_log_file(nn(sessid)) as log_file:
-            client = session.get('client')
+            client = session.get("client")
             if client:
                 client.context.logger.log_file = log_file
-                with client.context.use_connection_pool(request.state['connection_pool']):
+                with client.context.use_connection_pool(request.state["connection_pool"]):
                     yield session
             else:
                 yield session

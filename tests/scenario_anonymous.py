@@ -39,14 +39,14 @@ async def run(client: BaseClient) -> None:
 
     # 2. "VSST178 - Študijné plány, informačné listy, ... študijných programov"
 
-    app, ops = await Application[TestDialogsType].open(client.context, '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST178App&kodAplikacie=VSST178&uiLang=SK')
+    app, ops = await Application[TestDialogsType].open(client.context, "/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST178App&kodAplikacie=VSST178&uiLang=SK")
     await ops.expect_one(OpenDialogOp).perform()
 
     await app.d.fakultaComboBox.select(find_option(
-        app.d.fakultaComboBox.options, id='FMFI'))
+        app.d.fakultaComboBox.options, id="FMFI"))
     await app.d.zobrazitPreFakultuButton.click()
     await app.d.fakultaComboBox.select(find_option(
-        app.d.fakultaComboBox.options, id='UK'))
+        app.d.fakultaComboBox.options, id="UK"))
     await app.d.zobrazitPreFakultuButton.click()
     await app.d.zobrazitPreStudiumButton.click()
 
@@ -78,5 +78,5 @@ async def run(client: BaseClient) -> None:
     # Same if you open infoListyMenuItem and click enterButton in that dialog,
     # which also uses progressBar.setMaximum().
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     scenario_main(run, anonymous=True)

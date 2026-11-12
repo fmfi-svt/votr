@@ -24,12 +24,12 @@ class PopupMenu(Control):
 
     async def show(self, *, return_ops: bool = False) -> Operations:
         """Opens the menu. Usually not needed, see above."""
-        await self.log('action', f'Opening {self.id}')
-        ev = component_event(self, 'init', 'INIT')
+        await self.log("action", f"Opening {self.id}")
+        ev = component_event(self, "init", "INIT")
         return await self.dialog.app.send_events(ev, return_ops=return_ops)
 
     async def hide(self, *, return_ops: bool = False) -> Operations:
         """Closes the menu. Usually not needed, see above."""
-        await self.log('action', f'Closing {self.id}')
-        ev = component_event(self, 'beforeclose', 'BEFORECLOSE')
+        await self.log("action", f"Closing {self.id}")
+        ev = component_event(self, "beforeclose", "BEFORECLOSE")
         return await self.dialog.app.send_events(ev, return_ops=return_ops)

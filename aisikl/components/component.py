@@ -41,16 +41,16 @@ class Component:
         self.dialog = dialog
         self.id = id
         self.component_type = type
-        self.used_listeners_mask = ct(int, properties.get('ulm', 0))
-        self.enabled = ct(bool, properties.get('e', True))
-        self.enabled_in_ui = ct(bool, properties.get('enabledInUI', True))
-        self.visible = ct(bool, properties.get('v', True))
-        self.visible_in_ui = ct(bool, properties.get('visibleInUI', True))
-        self.title = ct_none(str, properties.get('title'))
-        self.popup_menu = ct_none(str, properties.get('pm'))
+        self.used_listeners_mask = ct(int, properties.get("ulm", 0))
+        self.enabled = ct(bool, properties.get("e", True))
+        self.enabled_in_ui = ct(bool, properties.get("enabledInUI", True))
+        self.visible = ct(bool, properties.get("v", True))
+        self.visible_in_ui = ct(bool, properties.get("visibleInUI", True))
+        self.title = ct_none(str, properties.get("title"))
+        self.popup_menu = ct_none(str, properties.get("pm"))
 
-        if properties.get('state', 1) == 2:
-            raise AISParseError('STATE_DT is not supported')
+        if properties.get("state", 1) == 2:
+            raise AISParseError("STATE_DT is not supported")
 
     async def async_init(self, element: Tag | None) -> None:
         """Internal."""
@@ -79,7 +79,7 @@ class Component:
         return self.enabled and self.enabled_in_ui
 
     def _ais_setState(self, value: object) -> None:
-        if really_int(value) == 2: raise AISParseError('STATE_DT is not supported')
+        if really_int(value) == 2: raise AISParseError("STATE_DT is not supported")
     def _ais_setUsedListenersMask(self, value: object) -> None:
         self.used_listeners_mask = really_int(value)
     def _ais_setEnabled(self, value: object) -> None:

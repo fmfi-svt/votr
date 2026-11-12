@@ -36,7 +36,7 @@ else:
 
 class WebuiTerminyMixin(WebuiStudiumMixin):
     async def __vyber_oba_semestre(self, app: Application[TerminyHodnoteniaDialogsType]) -> None:
-        index = find_option(app.d.semesterComboBox.options, title='')
+        index = find_option(app.d.semesterComboBox.options, title="")
         if app.d.semesterComboBox.selected_index != index:
             await app.d.semesterComboBox.select(index)
             await app.d.filterAction.execute()
@@ -53,11 +53,11 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
 
         await self.__vyber_oba_semestre(app)
 
-        result = [Predmet(skratka=row['skratka'],
-                          nazov=row['nazov'],
-                          typ_vyucby=row['kodTypVyucby'],
-                          semester=row['semester'],
-                          kredit=row['kredit'])
+        result = [Predmet(skratka=row["skratka"],
+                          nazov=row["nazov"],
+                          typ_vyucby=row["kodTypVyucby"],
+                          semester=row["semester"],
+                          kredit=row["kredit"])
                   for row in await app.d.predmetyTable.all_rows()]
         return result
 
@@ -73,26 +73,26 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
         _studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
         # Vytiahneme tabulku terminov.
-        result = [Termin(datum=row['dat'],
-                         cas=row['cas'],
-                         miestnost=row['miestnosti'],
-                         pocet_prihlasenych=row['pocetPrihlasenych'],
-                         maximalne_prihlasenych=row['maxPocet'],
-                         hodnotiaci=row['hodnotiaci'],
-                         prihlasovanie=row['prihlasovanie'],
-                         odhlasovanie=row['odhlasovanie'],
-                         poznamka=row['poznamka'],
-                         skratka_predmetu=row['predmetSkratka'],
-                         nazov_predmetu=row['predmetNazov'],
-                         hodnotenie_terminu=row['znamka'],
-                         hodnotenie_predmetu=row['hodnPredmetu'],
-                         moznost_prihlasit=row['moznostPrihlasenia'],
-                         datum_prihlasenia=row['datumPrihlas'],
-                         datum_odhlasenia=row['datumOdhlas'],
+        result = [Termin(datum=row["dat"],
+                         cas=row["cas"],
+                         miestnost=row["miestnosti"],
+                         pocet_prihlasenych=row["pocetPrihlasenych"],
+                         maximalne_prihlasenych=row["maxPocet"],
+                         hodnotiaci=row["hodnotiaci"],
+                         prihlasovanie=row["prihlasovanie"],
+                         odhlasovanie=row["odhlasovanie"],
+                         poznamka=row["poznamka"],
+                         skratka_predmetu=row["predmetSkratka"],
+                         nazov_predmetu=row["predmetNazov"],
+                         hodnotenie_terminu=row["znamka"],
+                         hodnotenie_predmetu=row["hodnPredmetu"],
+                         moznost_prihlasit=row["moznostPrihlasenia"],
+                         datum_prihlasenia=row["datumPrihlas"],
+                         datum_odhlasenia=row["datumOdhlas"],
                          akademicky_rok=akademicky_rok,
                          zapisny_list_key=zapisny_list_key)
                   for row in await app.d.terminyTable.all_rows()
-                  if not row['datumOdhlas']]
+                  if not row["datumOdhlas"]]
         return result
 
     async def get_vypisane_terminy(self, zapisny_list_key: str) -> list[Termin]:
@@ -103,9 +103,9 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
         result: list[Termin] = []
 
         for row in await app.d.predmetyTable.all_rows():
-            if row['pocetAktualnychTerminov'] == '0': continue
+            if row["pocetAktualnychTerminov"] == "0": continue
             result.extend(await self.get_vypisane_terminy_predmetu(
-                zapisny_list_key, encode_key((row['skratka'],))))
+                zapisny_list_key, encode_key((row["skratka"],))))
 
         return result
 
@@ -136,20 +136,20 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
 
         _studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
-        result = [Termin(datum=row['dat'],
-                         cas=row['cas'],
-                         miestnost=row['miestnosti'],
-                         pocet_prihlasenych=row['pocetPrihlasenych'],
-                         maximalne_prihlasenych=row['maxPocet'],
-                         hodnotiaci=row['hodnotiaci'],
-                         prihlasovanie=row['prihlasovanie'],
-                         odhlasovanie=row['odhlasovanie'],
-                         poznamka=row['poznamka'],
-                         skratka_predmetu=predmet_row['skratka'],
-                         nazov_predmetu=predmet_row['nazov'],
+        result = [Termin(datum=row["dat"],
+                         cas=row["cas"],
+                         miestnost=row["miestnosti"],
+                         pocet_prihlasenych=row["pocetPrihlasenych"],
+                         maximalne_prihlasenych=row["maxPocet"],
+                         hodnotiaci=row["hodnotiaci"],
+                         prihlasovanie=row["prihlasovanie"],
+                         odhlasovanie=row["odhlasovanie"],
+                         poznamka=row["poznamka"],
+                         skratka_predmetu=predmet_row["skratka"],
+                         nazov_predmetu=predmet_row["nazov"],
                          hodnotenie_terminu="",
                          hodnotenie_predmetu="",
-                         moznost_prihlasit=row['moznostPrihlasenia'],
+                         moznost_prihlasit=row["moznostPrihlasenia"],
                          datum_prihlasenia="",
                          datum_odhlasenia="",
                          akademicky_rok=akademicky_rok,
@@ -235,11 +235,11 @@ class WebuiTerminyMixin(WebuiStudiumMixin):
 
     async def __process_prihlaseni_studenti_list(self, app: Application[TerminyHodnoteniaDialogsType]) -> list[PrihlasenyStudent]:
         # Vytiahneme data z tabulky.
-        result = [PrihlasenyStudent(sp_skratka=row['skratka'],
-                                    datum_prihlasenia=row['datumPrihlas'],
-                                    plne_meno=row['plneMeno'],
-                                    rocnik=row['rocnik'],
-                                    email=row['email'])
+        result = [PrihlasenyStudent(sp_skratka=row["skratka"],
+                                    datum_prihlasenia=row["datumPrihlas"],
+                                    plne_meno=row["plneMeno"],
+                                    rocnik=row["rocnik"],
+                                    email=row["email"])
                   for row in await app.d.prihlaseniTable.all_rows()]
 
         # Stlacime zatvaraci button na zozname prihlasenych.

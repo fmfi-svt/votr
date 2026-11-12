@@ -21,14 +21,14 @@ else:
 class WebuiObdobiaMixin(BaseClient):
     @pooled_app
     async def _open_sprava_datumov(self) -> Application[SpravaDatumovDialogsType]:
-        '''Opens 'Správa dátumových akcií' application (VSST010).'''
-        url = '/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST010App&fajr=A&kodAplikacie=VSST010&uiLang=SK'
+        """Opens 'Správa dátumových akcií' application (VSST010)."""
+        url = "/ais/servlets/WebUIServlet?appClassName=ais.gui.vs.st.VSST010App&fajr=A&kodAplikacie=VSST010&uiLang=SK"
         app, ops = await Application[SpravaDatumovDialogsType].open(self.context, url)
         await ops.expect_one(OpenDialogOp).perform()
         return app
 
     async def get_obdobie(self, datumova_akcia_id: str, akademicky_rok: str | None=None) -> Obdobie:
-        '''Returns a time range defined by a given datumova_akcia_id. The
+        """Returns a time range defined by a given datumova_akcia_id. The
         academic year of such action can be changed with optional parameter
         akademicky_rok.
 
@@ -36,7 +36,7 @@ class WebuiObdobiaMixin(BaseClient):
             datumova_akcia_id: The ID of a time range. (Field 'D.a.')
             akademicky_rok: Academic year of the time range in the form of
                 'start/end'. E.g. '2013/2014'. (optional)
-        '''
+        """
         app = await self._open_sprava_datumov()
 
         # shortname pre 'D.a.' je pochopitelne 'kod'
@@ -53,36 +53,36 @@ class WebuiObdobiaMixin(BaseClient):
 
         row = (await app.d.detailAkcieTable.all_rows())[detail_index]
 
-        return Obdobie(obdobie_od=row['odDatumu'],
-                       obdobie_do=row['doDatumu'],
+        return Obdobie(obdobie_od=row["odDatumu"],
+                       obdobie_do=row["doDatumu"],
                        id_akcie=datumova_akcia_id)
 
     async def get_semester_obdobie(self, semester: str, akademicky_rok: str | None=None) -> Obdobie:
-        '''Returns a time range of a given semester.
+        """Returns a time range of a given semester.
 
         Args:
             semester: Either 'L' for spring of 'Z' for fall.
             akademicky_rok: Academic year of the time range in the form of
                 'start/end'. E.g. '2013/2014'. (optional)
-        '''
+        """
         if semester == "L":
-            return await self.get_obdobie('07', akademicky_rok)
+            return await self.get_obdobie("07", akademicky_rok)
         elif semester == "Z":
-            return await self.get_obdobie('05', akademicky_rok)
+            return await self.get_obdobie("05", akademicky_rok)
         else:
             raise ValueError(f'Wrong type of semester "{semester}"')
 
     async def get_skuskove_obdobie(self, semester: str, akademicky_rok: str | None=None) -> Obdobie:
-        '''Returns a time range of a given examination period.
+        """Returns a time range of a given examination period.
 
         Args:
             semester: Either 'L' for spring of 'Z' for fall.
             akademicky_rok: Academic year of the time range in the form of
                 'start/end'. E.g. '2013/2014'. (optional)
-        '''
+        """
         if semester == "L":
-            return await self.get_obdobie('08', akademicky_rok)
+            return await self.get_obdobie("08", akademicky_rok)
         elif semester == "Z":
-            return await self.get_obdobie('06', akademicky_rok)
+            return await self.get_obdobie("06", akademicky_rok)
         else:
             raise ValueError(f'Wrong type of semester "{semester}"')

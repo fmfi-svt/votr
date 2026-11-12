@@ -69,7 +69,7 @@ class GetStudentiZapisaniNaPredmetResult(TypedDict):
 class WebuiPredmetyMixin(BaseClient):
     @pooled_app
     async def _open_register_predmetov(self) -> Application[RegisterPredmetovDialogsType]:
-        url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.st.VSST060App&kodAplikacie=VSST060&uiLang=SK'
+        url = "/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.st.VSST060App&kodAplikacie=VSST060&uiLang=SK"
         app, ops = await Application[RegisterPredmetovDialogsType].open(self.context, url)
         await ops.expect_one(OpenDialogOp).perform()
         return app
@@ -77,8 +77,8 @@ class WebuiPredmetyMixin(BaseClient):
     async def get_informacny_list(self, kod_predmetu: str, akademicky_rok: str) -> str | None:
         app = await self._open_register_predmetov()
 
-        stredisko, _, zvysok = decode_key(kod_predmetu)[0].partition('/')
-        skratka = zvysok.rpartition('/')[0]
+        stredisko, _, zvysok = decode_key(kod_predmetu)[0].partition("/")
+        skratka = zvysok.rpartition("/")[0]
 
         # Napiseme stredisko a skratku predmetu.
         await self.__query_dialog(app, akademicky_rok, stredisko=stredisko,
@@ -121,31 +121,31 @@ class WebuiPredmetyMixin(BaseClient):
                        stredisko: str | None=None, skratka_sp: str | None=None) -> str | None:
         message: list[str] = []
 
-        await app.d.fakultaUniverzitaComboBox.select(find_option(app.d.fakultaUniverzitaComboBox.options, id=(fakulta or '')))
+        await app.d.fakultaUniverzitaComboBox.select(find_option(app.d.fakultaUniverzitaComboBox.options, id=(fakulta or "")))
 
-        await app.d.semesterComboBox.select(find_option(app.d.semesterComboBox.options, id=(semester or '')))
+        await app.d.semesterComboBox.select(find_option(app.d.semesterComboBox.options, id=(semester or "")))
 
-        await app.d.stupenPredmetuComboBox.select(find_option(app.d.stupenPredmetuComboBox.options, id=(stupen_predmetu or '')))
+        await app.d.stupenPredmetuComboBox.select(find_option(app.d.stupenPredmetuComboBox.options, id=(stupen_predmetu or "")))
 
-        await app.d.typPredmetuComboBox.select(find_option(app.d.typPredmetuComboBox.options, id=(typ_predmetu or '')))
+        await app.d.typPredmetuComboBox.select(find_option(app.d.typPredmetuComboBox.options, id=(typ_predmetu or "")))
 
-        await app.d.zobrazitLenComboBox.select(find_option(app.d.zobrazitLenComboBox.options, id=(zobrazit_len or '')))
+        await app.d.zobrazitLenComboBox.select(find_option(app.d.zobrazitLenComboBox.options, id=(zobrazit_len or "")))
 
-        await app.d.skratkaPredmetuTextField.write(skratka_predmetu or '')
+        await app.d.skratkaPredmetuTextField.write(skratka_predmetu or "")
 
-        await app.d.nazovPredmetuTextField.write(nazov_predmetu or '')
+        await app.d.nazovPredmetuTextField.write(nazov_predmetu or "")
 
-        await app.d.cisloPredmetuNumberControl.write(cislo_predmetu or '')
+        await app.d.cisloPredmetuNumberControl.write(cislo_predmetu or "")
 
         if not await select_text_ciselnik(
                 app, stredisko, app.d.skratkaStrediskaTextField,
-                app.d.zmazatStrediskoButton, app.d.vybratStrediskoButton, 'skratka'):
+                app.d.zmazatStrediskoButton, app.d.vybratStrediskoButton, "skratka"):
             message.append("Stredisko neexistuje.")
 
         if not await select_text_ciselnik(
                 app, skratka_sp, app.d.skratkaStudProgramuTextField,
                 app.d.zmazatStudProgramButton, app.d.vybratStudProogramButton,
-                'skratka'):
+                "skratka"):
             message.append("Študijný program neexistuje.")
 
         if app.d.vyucujuciTextField.value:
@@ -154,13 +154,13 @@ class WebuiPredmetyMixin(BaseClient):
         await app.d.akRokComboBox.select(
             find_option(app.d.akRokComboBox.options, id=akademicky_rok))
 
-        return ' '.join(message) or None
+        return " ".join(message) or None
 
     async def get_studenti_zapisani_na_predmet(self, predmet_key: str, akademicky_rok: str) -> GetStudentiZapisaniNaPredmetResult:
         (skratka_predmetu,) = decode_key(predmet_key)
         app = await self._open_register_predmetov()
 
-        await self.__query_dialog(app, akademicky_rok, skratka_predmetu='/'.join(skratka_predmetu.split('/')[1:-1]))
+        await self.__query_dialog(app, akademicky_rok, skratka_predmetu="/".join(skratka_predmetu.split("/")[1:-1]))
 
         await app.d.zobrazitPredmetyButton.click()
 
@@ -174,15 +174,15 @@ class WebuiPredmetyMixin(BaseClient):
 
         predmet_rows = await app.d.zoznamPredmetovTable.all_rows()
         predmet_row = predmet_rows[predmet_index]
-        predmet = RegPredmet(skratka=predmet_row['skratka'],
-                             nazov=predmet_row['nazov'],
-                             semester=predmet_row['kodSemester'],
-                             stredisko=predmet_row['stredisko'],
-                             fakulta=predmet_row['FakUniv'],
-                             rozsah_vyucby=predmet_row['rozsah'],
-                             konanie=predmet_row['konanie'],
-                             cudzi_nazov=predmet_row['nazovJ'],
-                             kredit=predmet_row['kredit'])
+        predmet = RegPredmet(skratka=predmet_row["skratka"],
+                             nazov=predmet_row["nazov"],
+                             semester=predmet_row["kodSemester"],
+                             stredisko=predmet_row["stredisko"],
+                             fakulta=predmet_row["FakUniv"],
+                             rozsah_vyucby=predmet_row["rozsah"],
+                             konanie=predmet_row["konanie"],
+                             cudzi_nazov=predmet_row["nazovJ"],
+                             kredit=predmet_row["kredit"])
         ops = await app.d.zoznamStudentovAction.execute(return_ops=True)
 
         if ops.has_types(MessageBoxOp):
@@ -190,11 +190,11 @@ class WebuiPredmetyMixin(BaseClient):
 
         await ops.expect_one(OpenDialogOp).perform()
 
-        studenti = [PrihlasenyStudent(sp_skratka=row['studProgSkratka'],
-                                      datum_prihlasenia=row['datumZapisania'],
-                                      plne_meno=row['plneMeno'],
-                                      rocnik=row['rokRocnik'],
-                                      email=row['email'])
+        studenti = [PrihlasenyStudent(sp_skratka=row["studProgSkratka"],
+                                      datum_prihlasenia=row["datumZapisania"],
+                                      plne_meno=row["plneMeno"],
+                                      rocnik=row["rokRocnik"],
+                                      email=row["email"])
                     for row in await app.d.zaradeniStudentiTable.all_rows()]
 
         # zatvarame dialog so zoznamom studentov
@@ -206,7 +206,7 @@ class WebuiPredmetyMixin(BaseClient):
 
     @pooled_app
     async def _open_nastenka_predmetu(self) -> Application[NastenkaPredmetuDialogsType]:
-        url = '/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.st.VSST157App&kodAplikacie=VSST157&uiLang=SK'
+        url = "/ais/servlets/WebUIServlet?fajr=A&appClassName=ais.gui.vs.st.VSST157App&kodAplikacie=VSST157&uiLang=SK"
         app, ops = await Application[NastenkaPredmetuDialogsType].open(self.context, url)
         await ops.expect_one(OpenDialogOp).perform()
         return app
@@ -216,7 +216,7 @@ class WebuiPredmetyMixin(BaseClient):
 
         app = await self._open_nastenka_predmetu()
 
-        fakulta = fakulty.split(',')[0]
+        fakulta = fakulty.split(",")[0]
         fakulta_index = find_option(app.d.fakultaComboBox.options, id=fakulta)
         if app.d.fakultaComboBox.selected_index != fakulta_index:
             await app.d.fakultaComboBox.select(fakulta_index)
@@ -246,8 +246,8 @@ class WebuiPredmetyMixin(BaseClient):
                 await app.d.skupinaPredmetovTable.select(
                     find_row(await app.d.skupinaPredmetovTable.all_rows(), skratka=skratka_predmetu))
 
-                ucitelia = [RegUcitelPredmetu(plne_meno=row['plneMeno'],
-                                              typ=row['typVyucujuceho'])
+                ucitelia = [RegUcitelPredmetu(plne_meno=row["plneMeno"],
+                                              typ=row["typVyucujuceho"])
                             for row in await app.d.vyucujuciTable.all_rows()]
                 return ucitelia
 
@@ -277,15 +277,15 @@ class WebuiPredmetyMixin(BaseClient):
         if app.d.zoznamPredmetovTable.truncated:
             message = "Neboli načítané všetky dáta. Upresnite kritériá vyhľadávania."
 
-        predmety = [RegPredmet(skratka=row['skratka'],
-                               nazov=row['nazov'],
-                               semester=row['kodSemester'],
-                               stredisko=row['stredisko'],
-                               fakulta=row['FakUniv'],
-                               rozsah_vyucby=row['rozsah'],
-                               konanie=row['konanie'],
-                               cudzi_nazov=row['nazovJ'],
-                               kredit=row['kredit'])
+        predmety = [RegPredmet(skratka=row["skratka"],
+                               nazov=row["nazov"],
+                               semester=row["kodSemester"],
+                               stredisko=row["stredisko"],
+                               fakulta=row["FakUniv"],
+                               rozsah_vyucby=row["rozsah"],
+                               konanie=row["konanie"],
+                               cudzi_nazov=row["nazovJ"],
+                               kredit=row["kredit"])
                     for row in app.d.zoznamPredmetovTable.loaded_rows]
 
         return (predmety, message)

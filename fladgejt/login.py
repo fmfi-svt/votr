@@ -27,28 +27,28 @@ class ServerDict(TypedDict):
     title: NotRequired[str]  # `title` is used only in votrfront, not fladgejt
 
 class ParamsDictSamlPassword(TypedDict):
-    type: Literal['saml_password']
+    type: Literal["saml_password"]
     username: str
     password: str
 
 class ParamsDictSamlAndrvotr(TypedDict):
-    type: Literal['saml_andrvotr']
+    type: Literal["saml_andrvotr"]
     my_entity_id: str
     andrvotr_api_key: str
     andrvotr_authority_token: str
 
 class ParamsDictPlainPassword(TypedDict):
-    type: Literal['plain_password']
+    type: Literal["plain_password"]
     username: str
     password: str
 
 class ParamsDictCookie(TypedDict):
-    type: Literal['cookie']
+    type: Literal["cookie"]
     ais_cookie: NotRequired[str | None]
     rest_cookie: NotRequired[str | None]
 
 class ParamsDictFlashback(TypedDict):
-    type: Literal['flashback']
+    type: Literal["flashback"]
     file: str
 
 ParamsDict = ParamsDictSamlPassword | ParamsDictSamlAndrvotr | ParamsDictPlainPassword | ParamsDictCookie | ParamsDictFlashback
@@ -61,13 +61,13 @@ class CookieLoginError(Exception): pass
 
 
 # Omit cookie values and query string values from logs.
-_redact_values_re = re.compile(r'=[^?&;]{10,}')
-_redact_values_sub = r'=[...]'
+_redact_values_re = re.compile(r"=[^?&;]{10,}")
+_redact_values_sub = r"=[...]"
 
 
 # Log most cookie names, but omit some known non-constant names, just in case.
-_redact_names_re = re.compile(r'(pastr-|opensaml_req_ss|shibsession_)[^=]*=')
-_redact_names_sub = r'\1[...]='
+_redact_names_re = re.compile(r"(pastr-|opensaml_req_ss|shibsession_)[^=]*=")
+_redact_names_sub = r"\1[...]="
 
 
 def _redact(string: str) -> str:
@@ -85,39 +85,39 @@ _value_attr_a_sub = r"\1='[...]'"
 
 def _redact_response(response: Response) -> object:
     log_data = {
-        'status_code': response.status_code,
-        'reason_phrase': response.reason_phrase,
-        'headers': [[k, _redact(v)] for k, v in response.headers.multi_items()],
+        "status_code": response.status_code,
+        "reason_phrase": response.reason_phrase,
+        "headers": [[k, _redact(v)] for k, v in response.headers.multi_items()],
     }
     if response.has_redirect_location:
         return log_data
-    if not response.headers.get('content-type', '').startswith('text/'):
+    if not response.headers.get("content-type", "").startswith("text/"):
         return log_data
     text = response.text
     text = _value_attr_q_re.sub(_value_attr_q_sub, text)
     text = _value_attr_a_re.sub(_value_attr_a_sub, text)
-    log_data['body'] = text
+    log_data["body"] = text
     return log_data
 
 
-_samlsso_re = re.compile(r'^https://[^/]+/ais/sso/samlsso\?')
+_samlsso_re = re.compile(r"^https://[^/]+/ais/sso/samlsso\?")
 
 
 async def _send_request(ctx: Context, url: str, data: dict[str, str] | None) -> Response:
-    method = 'POST' if data else 'GET'
+    method = "POST" if data else "GET"
 
-    redacted_data = { k: '[...]' for k in data } if data else data
-    await ctx.log('http', f'Requesting {method} {_redact(url)}', redacted_data)
+    redacted_data = { k: "[...]" for k in data } if data else data
+    await ctx.log("http", f"Requesting {method} {_redact(url)}", redacted_data)
 
     response = await ctx.request_http(method=method, url=url, data=data)
 
     # Work around a missing Content-Type header on /ais/sso/samlsso.
     # We read the header in _redact_response and _send_request_chain.
-    if (_samlsso_re.match(url) and 'content-type' not in response.headers and
-            response.content.startswith(b'<html>')):
-        response.headers['content-type'] = 'text/html; charset=UTF-8'
+    if (_samlsso_re.match(url) and "content-type" not in response.headers and
+            response.content.startswith(b"<html>")):
+        response.headers["content-type"] = "text/html; charset=UTF-8"
 
-    await ctx.log('http', f'Received response', _redact_response(response))
+    await ctx.log("http", f"Received response", _redact_response(response))
 
     if not response.has_redirect_location:
         response.raise_for_status()
@@ -126,23 +126,23 @@ async def _send_request(ctx: Context, url: str, data: dict[str, str] | None) -> 
 
 
 def _parse_form(old_url: str, soup: BeautifulSoup) -> tuple[str, dict[str, str]]:
-    forms = soup.find_all('form')
+    forms = soup.find_all("form")
     if len(forms) != 1:
-        raise Exception(f'Unexpected number of form elements: {len(forms)}')
-    url = urljoin(old_url, ct(str, forms[0]['action']))
+        raise Exception(f"Unexpected number of form elements: {len(forms)}")
+    url = urljoin(old_url, ct(str, forms[0]["action"]))
     data: dict[str, str] = {}
-    for elem in forms[0].find_all('input'):
-        if elem.get('type') == 'hidden':
-            data[ct(str, elem['name'])] = ct(str, elem.get('value', ''))
-    for elem in forms[0].find_all('input') + forms[0].find_all('button'):
-        if elem.get('type') == 'submit':
-            if elem.get('name'):
-                data[ct(str, elem['name'])] = ct(str, elem.get('value', ''))
+    for elem in forms[0].find_all("input"):
+        if elem.get("type") == "hidden":
+            data[ct(str, elem["name"])] = ct(str, elem.get("value", ""))
+    for elem in forms[0].find_all("input") + forms[0].find_all("button"):
+        if elem.get("type") == "submit":
+            if elem.get("name"):
+                data[ct(str, elem["name"])] = ct(str, elem.get("value", ""))
             break
     return url, data
 
 
-_idp_profile_re = re.compile(r'^https://[^/]+/idp/profile/')
+_idp_profile_re = re.compile(r"^https://[^/]+/idp/profile/")
 
 
 async def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: dict[str, str] | None) -> None:
@@ -151,102 +151,102 @@ async def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: 
     while True:
         count += 1
         if count > 30:
-            raise Exception('Too many redirects')
+            raise Exception("Too many redirects")
 
         # If using Andrvotr, rewrite all requests of GET .../Redirect/SSO to
         # POST .../andrvotr/fabricate, with the necessary POST parameters.
-        if params['type'] == 'saml_andrvotr' and _idp_profile_re.match(url):
-            idp_host = url.split('/')[2]
+        if params["type"] == "saml_andrvotr" and _idp_profile_re.match(url):
+            idp_host = url.split("/")[2]
             if not url.startswith(
-                    f'https://{idp_host}/idp/profile/SAML2/Redirect/SSO?'):
-                raise Exception(f'Unexpected IdP request to {_redact(url)}')
+                    f"https://{idp_host}/idp/profile/SAML2/Redirect/SSO?"):
+                raise Exception(f"Unexpected IdP request to {_redact(url)}")
             if data:
                 raise Exception(
-                    f'Unexpected POST data for IdP request to {_redact(url)}')
+                    f"Unexpected POST data for IdP request to {_redact(url)}")
             old_url = url
-            url = f'https://{idp_host}/idp/profile/andrvotr/fabricate'
+            url = f"https://{idp_host}/idp/profile/andrvotr/fabricate"
             data = {
-                'front_entity_id': params['my_entity_id'],
-                'api_key': params['andrvotr_api_key'],
-                'andrvotr_authority_token': params['andrvotr_authority_token'],
-                'target_url': old_url,
+                "front_entity_id": params["my_entity_id"],
+                "api_key": params["andrvotr_api_key"],
+                "andrvotr_authority_token": params["andrvotr_authority_token"],
+                "target_url": old_url,
             }
-            await ctx.log('login', 'Going andrvotr', [_redact(old_url), url])
+            await ctx.log("login", "Going andrvotr", [_redact(old_url), url])
 
         response = await _send_request(ctx, url, data)
 
         # Handle real HTTP 3xx redirects.
         if response.has_redirect_location:
             url = str(nn(response.next_request).url)
-            if nn(response.next_request).method == 'GET':
+            if nn(response.next_request).method == "GET":
                 data = None
             continue
 
         # Everything except 200 (and 3xx handled above) is an error.
         if response.status_code != 200:
-            raise Exception(f'Unexpected HTTP {response.status_code} status for url: {_redact(url)}')
+            raise Exception(f"Unexpected HTTP {response.status_code} status for url: {_redact(url)}")
 
         # TODO: Handle successful REST API login. REST API does not support
         # SAML yet.
 
-        if response.headers.get('content-type', '').startswith('text/html'):
+        if response.headers.get("content-type", "").startswith("text/html"):
             soup = await ctx.parse_html(response)
 
             # Detect successful AIS login (old interface).
-            username_element = soup.find(class_='user-name')
+            username_element = soup.find(class_="user-name")
             if username_element and username_element.get_text().strip():
-                await ctx.log('login', 'AIS login successful (old interface)')
+                await ctx.log("login", "AIS login successful (old interface)")
                 return
 
             # Detect successful AIS login (new student interface).
-            if '/ais/apps/student/' in url and soup.find('app-root'):
-                await ctx.log('login', 'AIS login successful (new student interface)')
+            if "/ais/apps/student/" in url and soup.find("app-root"):
+                await ctx.log("login", "AIS login successful (new student interface)")
                 return
 
             # Detect successful AIS login (new teacher interface).
             # Votr functionality may be limited but at least login will work.
-            if '/ais/portal2/ucitel/' in url:
-                await ctx.log('login', 'AIS login successful (new teacher interface)')
+            if "/ais/portal2/ucitel/" in url:
+                await ctx.log("login", "AIS login successful (new teacher interface)")
                 return
 
             # Handle login errors for saml_password and plain_password.
             for error_class in [
-                'login-error',  # used by login.do with plain_password
-                'output--error',  # used by upstream Shibboleth IdP
-                'error-message',  # specific to Uniba Shibboleth IdP
+                "login-error",  # used by login.do with plain_password
+                "output--error",  # used by upstream Shibboleth IdP
+                "error-message",  # specific to Uniba Shibboleth IdP
             ]:
                 error_element = soup.find(class_=error_class)
                 if error_element:
                     error_text = error_element.get_text().strip()
                     if error_text:
-                        if params['type'].endswith('_password'):
+                        if params["type"].endswith("_password"):
                             raise PasswordLoginError(error_text)
                         else:
                             # Could happen even with type saml_andrvotr if AIS
                             # servers are having database connection issues.
                             raise Exception(
-                                f'Unexpected login error: {error_text}')
+                                f"Unexpected login error: {error_text}")
 
             # Handle "fake redirects" - HTML pages with JavaScript code that
             # instantly submits a POST form.
-            js_submit = 'document.forms[0].submit()'
-            onload = (soup.body and soup.body.get('onload')) or ''
-            script = (soup.script and soup.script.get_text()) or ''
+            js_submit = "document.forms[0].submit()"
+            onload = (soup.body and soup.body.get("onload")) or ""
+            script = (soup.script and soup.script.get_text()) or ""
             if js_submit in onload or js_submit in script:
-                await ctx.log('login', 'Detected a POST page')
+                await ctx.log("login", "Detected a POST page")
                 url, data = _parse_form(url, soup)
                 continue
 
-            if params['type'] == 'saml_password':
+            if params["type"] == "saml_password":
                 # Handle Shibboleth IdP's "Loading Session Information" page.
-                if soup.find('input', attrs={'name': 'shib_idp_ls_supported'}):
+                if soup.find("input", attrs={"name": "shib_idp_ls_supported"}):
                     url, data = _parse_form(url, soup)
                     # Real browsers set some fields to "true". Let's cargo cult.
-                    data['shib_idp_ls_supported'] = 'true'
+                    data["shib_idp_ls_supported"] = "true"
                     for k in data:
-                        if k.startswith('shib_idp_ls_success.'):
-                            data[k] = 'true'
-                    await ctx.log('login', 'Detected a local storage page')
+                        if k.startswith("shib_idp_ls_success."):
+                            data[k] = "true"
+                    await ctx.log("login", "Detected a local storage page")
                     continue
 
                 # Handle Shibboleth IdP's password based login form.
@@ -254,62 +254,62 @@ async def _send_request_chain(ctx: Context, params: ParamsDict, url: str, data: 
                     soup.find("input", attrs={"name": "j_username"}) and
                     soup.find("input", attrs={"name": "j_password"})
                 ):  # fmt: skip
-                    await ctx.log('login', 'Detected a login form page')
+                    await ctx.log("login", "Detected a login form page")
                     if tried_saml_password_login:
-                        raise Exception('Username and password did not work')
+                        raise Exception("Username and password did not work")
                     tried_saml_password_login = True
                     url, data = _parse_form(url, soup)
-                    data['j_username'] = params['username']
-                    data['j_password'] = params['password']
+                    data["j_username"] = params["username"]
+                    data["j_password"] = params["password"]
                     continue
 
-        raise Exception('Unrecognized response during login process')
+        raise Exception("Unrecognized response during login process")
 
 
 def _create_normal_client(ctx: Context, server: ServerDict, logout_mode: str) -> BaseClient:
-    if 'ais_url' in server and 'rest_url' in server:
+    if "ais_url" in server and "rest_url" in server:
         return HybridClient(ctx, logout_mode=logout_mode)
-    elif 'ais_url' in server:
+    elif "ais_url" in server:
         return WebuiClient(ctx, logout_mode=logout_mode)
-    elif 'rest_url' in server:
+    elif "rest_url" in server:
         return RestClient(ctx)
     else:
-        raise Exception('Neither ais_url nor rest_url is configured')
+        raise Exception("Neither ais_url nor rest_url is configured")
 
 
 async def _login_with_saml(ctx: Context, server: ServerDict, params: ParamsDict) -> BaseClient:
-    if 'ais_url' in server:
+    if "ais_url" in server:
         # Simulate clicking the login button. It has
         # onclick="location.href='/ais/sso/samlsso?SAML2.HTTPBinding=HTTP-POST'"
-        url = server['ais_url'] + 'ais/sso/samlsso?SAML2.HTTPBinding=HTTP-POST'
+        url = server["ais_url"] + "ais/sso/samlsso?SAML2.HTTPBinding=HTTP-POST"
         await _send_request_chain(ctx, params, url, None)
 
-    if 'rest_url' in server:
+    if "rest_url" in server:
         # TODO: This is purely theoretical. REST API does not support SAML yet.
-        await _send_request_chain(ctx, params, server['rest_url'], None)
+        await _send_request_chain(ctx, params, server["rest_url"], None)
 
     logout_mode = {
         # End the AIS session, just to be polite and free up resources. But
         # don't end the IdP session we're a part of. That's up to the user and
         # should happen in their browser, especially if they also signed in to
         # other services.
-        'saml_andrvotr': WebuiClient.LOGOUT_WITHOUT_REDIRECTS,
+        "saml_andrvotr": WebuiClient.LOGOUT_WITHOUT_REDIRECTS,
         # End the IdP session too, just to be polite. But don't run JavaScript
         # on the IdP logout page, that would be too much.
-        'saml_password': WebuiClient.LOGOUT_WITH_REDIRECTS,
-    }[params['type']]
+        "saml_password": WebuiClient.LOGOUT_WITH_REDIRECTS,
+    }[params["type"]]
     return _create_normal_client(ctx, server, logout_mode)
 
 
 async def _login_with_plain_password(ctx: Context, server: ServerDict, params: ParamsDictPlainPassword) -> BaseClient:
-    if 'rest_url' in server:
-        raise Exception('plain_password type does not support rest_url')
+    if "rest_url" in server:
+        raise Exception("plain_password type does not support rest_url")
 
     # Submit the login form. It has action="/ais/login.do".
     # On both success and failure, it will respond with 302 to ais/start.do.
     # start.do will contain either an error message or the signed in view.
-    login_url = server['ais_url'] + 'ais/login.do'  # pyright: ignore [reportTypedDictNotRequiredAccess]
-    login_data = { 'login': params['username'], 'password': params['password'] }
+    login_url = server["ais_url"] + "ais/login.do"  # pyright: ignore [reportTypedDictNotRequiredAccess]
+    login_data = { "login": params["username"], "password": params["password"] }
     await _send_request_chain(ctx, params, login_url, login_data)
 
     return _create_normal_client(ctx, server, WebuiClient.LOGOUT_WITH_REDIRECTS)
@@ -322,74 +322,74 @@ def _parse_cookie_string(ctx: Context, base_url: str | None, default_name: str |
     if not (base_url and default_name and cookie_string):
         return
 
-    domain = base_url.split('/')[2].split(':')[0]
+    domain = base_url.split("/")[2].split(":")[0]
 
     cookie_string = cookie_string.strip()
 
-    if cookie_string and '=' not in cookie_string and ';' not in cookie_string:
-        cookie_string = default_name + '=' + cookie_string
+    if cookie_string and "=" not in cookie_string and ";" not in cookie_string:
+        cookie_string = default_name + "=" + cookie_string
 
-    for pair in cookie_string.split(';'):
+    for pair in cookie_string.split(";"):
         pair = pair.strip()
         if not pair: continue
-        if '=' not in pair:
+        if "=" not in pair:
             raise CookieLoginError(
                 'Expected either a single cookie value or a list of ";"-separated key=value elements, but an element does not contain "="')
-        name, _, value = pair.partition('=')
+        name, _, value = pair.partition("=")
         Cookies(ctx.cookie_jar).set(name, value, domain=domain)
 
 
 async def _login_with_cookie(ctx: Context, server: ServerDict, params: ParamsDictCookie) -> BaseClient:
     # If login type is "cookie", but we only know ais_cookie, skip REST login.
-    if ('ais_url' in server and 'rest_url' in server and
-            not (params.get('rest_cookie') or '').strip()):
-        await ctx.logger.log('login', 'Skipping REST login because rest_cookie is empty')
+    if ("ais_url" in server and "rest_url" in server and
+            not (params.get("rest_cookie") or "").strip()):
+        await ctx.logger.log("login", "Skipping REST login because rest_cookie is empty")
         server = server.copy()
-        server.pop('rest_url', None)
-        server.pop('rest_cookie', None)
+        server.pop("rest_url", None)
+        server.pop("rest_cookie", None)
         ctx.rest_url = None
 
     _parse_cookie_string(
-        ctx, server.get('ais_url'), server.get('ais_cookie'),
-        params.get('ais_cookie'))
+        ctx, server.get("ais_url"), server.get("ais_cookie"),
+        params.get("ais_cookie"))
 
     _parse_cookie_string(
-        ctx, server.get('rest_url'), server.get('rest_cookie'),
-        params.get('rest_cookie'))
+        ctx, server.get("rest_url"), server.get("rest_cookie"),
+        params.get("rest_cookie"))
 
     return _create_normal_client(ctx, server, WebuiClient.LOGOUT_NOTHING)
 
 
 async def _login_with_flashback(ctx: Context, server: ServerDict, params: ParamsDictFlashback) -> BaseClient:
-    if 'ais_url' in server:
-        raise Exception('flashback type does not support ais_url')
-    if 'rest_url' in server:
-        raise Exception('flashback type does not support rest_url')
+    if "ais_url" in server:
+        raise Exception("flashback type does not support ais_url")
+    if "rest_url" in server:
+        raise Exception("flashback type does not support rest_url")
 
-    return FlashbackClient(ctx, server['flashbacks_dir'], params['file'])  # pyright: ignore [reportTypedDictNotRequiredAccess]
+    return FlashbackClient(ctx, server["flashbacks_dir"], params["file"])  # pyright: ignore [reportTypedDictNotRequiredAccess]
 
 
 _handlers = {
-    'saml_andrvotr': _login_with_saml,
-    'saml_password': _login_with_saml,
-    'plain_password': _login_with_plain_password,
-    'cookie': _login_with_cookie,
-    'flashback': _login_with_flashback,
+    "saml_andrvotr": _login_with_saml,
+    "saml_password": _login_with_saml,
+    "plain_password": _login_with_plain_password,
+    "cookie": _login_with_cookie,
+    "flashback": _login_with_flashback,
 }
 
 
 async def create_client(server: ServerDict, params: ParamsDict, *, connection_pool: AsyncConnectionPool | None = None, logger: Logger | None=None) -> BaseClient:
     logger = logger or Logger()
 
-    if params['type'] not in server['login_types']:
+    if params["type"] not in server["login_types"]:
         raise ValueError("Unsupported login type")
 
     ctx = Context(
-        ais_url=server.get('ais_url'), rest_url=server.get('rest_url'),
-        dns_overrides=server.get('dns_overrides'), logger=logger)
+        ais_url=server.get("ais_url"), rest_url=server.get("rest_url"),
+        dns_overrides=server.get("dns_overrides"), logger=logger)
 
     with ctx.use_connection_pool(connection_pool):
-        handler = _handlers[params['type']]
+        handler = _handlers[params["type"]]
         # pyrefly: ignore [bad-argument-type]
         client = await handler(ctx, server, params)  # pyright: ignore [reportArgumentType]
 
@@ -397,9 +397,9 @@ async def create_client(server: ServerDict, params: ParamsDict, *, connection_po
         try:
             await client.check_connection()
         except Exception as e:
-            if params['type'] == 'cookie':
-                raise CookieLoginError('Cookie value did not work') from e
+            if params["type"] == "cookie":
+                raise CookieLoginError("Cookie value did not work") from e
             else:
-                raise Exception(f'check_connection failed immediately: {e}') from e
+                raise Exception(f"check_connection failed immediately: {e}") from e
 
     return client

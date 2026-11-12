@@ -13,20 +13,20 @@ class DateControl(TextInput):
 
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
-        self.min_value = properties.get('minValue')
-        self.max_value = properties.get('maxValue')
-        self.substitute_char = ct(str, properties.get('substituteChar', '_'))
-        self.substitute_mask = ct(str, properties.get('substituteMask', '__.__.____'))
-        self.mask = ct(str, properties.get('mask', 'dd.MM.yyyy'))
-        self.calendar_enabled = ct(bool, properties.get('calendarEnabled', False))
-        val = ct(str, nn(element).get('value', ''))
-        self.value = '' if val == self.substitute_mask else val
+        self.min_value = properties.get("minValue")
+        self.max_value = properties.get("maxValue")
+        self.substitute_char = ct(str, properties.get("substituteChar", "_"))
+        self.substitute_mask = ct(str, properties.get("substituteMask", "__.__.____"))
+        self.mask = ct(str, properties.get("mask", "dd.MM.yyyy"))
+        self.calendar_enabled = ct(bool, properties.get("calendarEnabled", False))
+        val = ct(str, nn(element).get("value", ""))
+        self.value = "" if val == self.substitute_mask else val
 
     def _ais_setText(self, value: object) -> None:
         self.value = ct(str, value)
-        self.update_value_interactives('change')
+        self.update_value_interactives("change")
     def _ais_setSubstituteChar(self, value: object) -> None:
-        self.substitute_char = ct(str, value or '_')[0:1]
+        self.substitute_char = ct(str, value or "_")[0:1]
     def _ais_setSubstituteMask(self, value: object) -> None:
         if value:
             value = ct(str, value)
@@ -44,7 +44,7 @@ class DateControl(TextInput):
 
         Aisikl does not check whether the value is valid.
         """
-        await self.log('action', f'Writing {value!r} in {self.id}')
+        await self.log("action", f"Writing {value!r} in {self.id}")
         self.value = value
         self.dialog.component_changes(self, False)
 

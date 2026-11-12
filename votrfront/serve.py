@@ -91,13 +91,13 @@ def cli(args: list[str]) -> None:
     from votrfront.app import build_app
     from votrfront.base import var_path
 
-    os.makedirs(var_path('locks'), exist_ok=True)
-    os.makedirs(var_path('logs'), exist_ok=True)
-    os.makedirs(var_path('logdb'), exist_ok=True)
-    os.makedirs(var_path('oldlogs'), exist_ok=True)
-    os.makedirs(var_path('logarchive'), exist_ok=True)
-    os.makedirs(var_path('sessions'), exist_ok=True)
-    os.makedirs(var_path('reportlogs'), exist_ok=True)
+    os.makedirs(var_path("locks"), exist_ok=True)
+    os.makedirs(var_path("logs"), exist_ok=True)
+    os.makedirs(var_path("logdb"), exist_ok=True)
+    os.makedirs(var_path("oldlogs"), exist_ok=True)
+    os.makedirs(var_path("logarchive"), exist_ok=True)
+    os.makedirs(var_path("sessions"), exist_ok=True)
+    os.makedirs(var_path("reportlogs"), exist_ok=True)
 
     config = anycorn.Config.from_object(VotrConfig)
     config.bind = options.bind or ["127.0.0.1:5000"]
@@ -115,9 +115,9 @@ def cli(args: list[str]) -> None:
     if options.https:
         if not var_path("ssl.crt").exists():
             subprocess.check_call([
-                'openssl', 'req', '-x509', '-newkey', 'rsa:4096',
-                '-keyout', 'ssl.key', '-out', 'ssl.crt',
-                '-sha256', '-days', '365', '-nodes', '-subj', '/CN=*',
+                "openssl", "req", "-x509", "-newkey", "rsa:4096",
+                "-keyout", "ssl.key", "-out", "ssl.crt",
+                "-sha256", "-days", "365", "-nodes", "-subj", "/CN=*",
             ], cwd=var_path())  # fmt: skip
 
         config.certfile = str(var_path("ssl.crt"))

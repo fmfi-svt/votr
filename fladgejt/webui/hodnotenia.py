@@ -33,7 +33,7 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
             return ([], "Predmety a hodnotenia pre tento zápisný list nie sú dostupné.")
 
         # Ak uz bola aplikacia otvorena pred tymto volanim, stlacime "Refresh".
-        if getattr(app, 'freshly_opened', True):
+        if getattr(app, "freshly_opened", True):
             app.freshly_opened = False  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue]
         else:
             await app.d.refreshButton.click()
@@ -41,17 +41,17 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
         _studium_key, akademicky_rok = decode_key(zapisny_list_key)
 
         result = [Hodnotenie(akademicky_rok=akademicky_rok,
-                             skratka=row['skratka'],
-                             nazov=row['nazov'],
-                             typ_vyucby=row['kodTypVyucbySP'],
-                             semester=row['semester'],
-                             kredit=row['kredit'],
-                             hodn_znamka=row['znamka'],
-                             hodn_termin=row['termin'],
-                             hodn_datum=row['datum'],
-                             hodn_znamka_popis=row['znamkaPopis'],
-                             nahradeny=(row['nahradzaMa'] != ''),
-                             poplatok=row['poplatok'],
+                             skratka=row["skratka"],
+                             nazov=row["nazov"],
+                             typ_vyucby=row["kodTypVyucbySP"],
+                             semester=row["semester"],
+                             kredit=row["kredit"],
+                             hodn_znamka=row["znamka"],
+                             hodn_termin=row["termin"],
+                             hodn_datum=row["datum"],
+                             hodn_znamka_popis=row["znamkaPopis"],
+                             nahradeny=(row["nahradzaMa"] != ""),
+                             poplatok=row["poplatok"],
                              zapisny_list_key=zapisny_list_key)
                   for row in await app.d.hodnoteniaTable.all_rows()]
         return (result, None)
@@ -64,16 +64,16 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
 
         app.freshly_opened = False  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue]
 
-        result = [Priemer(akademicky_rok=row['priemerInfoPopisAkadRok'],
-                          nazov=row['priemerNazov'],
-                          semester=row['semesterKodJ'],
-                          ziskany_kredit=row['ziskanyKredit'],
-                          predmetov=row['pocetPredmetov'],
-                          neabsolvovanych=row['pocetNeabs'],
-                          studijny_priemer=row['studPriemer'],
-                          vazeny_priemer=row['vazPriemer'],
-                          pokusy_priemer=row['pokusyPriemer'],
-                          datum_vypoctu=row['priemerInfoDatum'])
+        result = [Priemer(akademicky_rok=row["priemerInfoPopisAkadRok"],
+                          nazov=row["priemerNazov"],
+                          semester=row["semesterKodJ"],
+                          ziskany_kredit=row["ziskanyKredit"],
+                          predmetov=row["pocetPredmetov"],
+                          neabsolvovanych=row["pocetNeabs"],
+                          studijny_priemer=row["studPriemer"],
+                          vazeny_priemer=row["vazPriemer"],
+                          pokusy_priemer=row["pokusyPriemer"],
+                          datum_vypoctu=row["priemerInfoDatum"])
                   for row in await app.d.priemeryTable.all_rows()]
         return (result, None)
 
@@ -84,7 +84,7 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
             return ([], "Priebežné hodnotenia pre tento zápisný list nie sú dostupné.")
 
         # Ak uz bola aplikacia otvorena pred tymto volanim, stlacime "Refresh".
-        if getattr(app, 'freshly_opened', True):
+        if getattr(app, "freshly_opened", True):
             app.freshly_opened = False  # pyrefly: ignore [missing-attribute] # pyright: ignore [reportAttributeAccessIssue]
         else:
             await app.d.refreshButton.click()
@@ -101,18 +101,18 @@ class WebuiHodnoteniaMixin(WebuiStudiumMixin):
             # Klikneme na button nacitatHodnotenie
             await app.d.nacitatHodnotenieButton.click()
 
-            records = [PriebezneHodnotenie(dovod=prow['dovod'],
-                                           poc_bodov=prow['pocetBodov'],
-                                           maximum=prow['dovodPriebHodHranica'],
-                                           zaevidoval=prow['zapisalPlneMeno'],
-                                           zapocitavat=prow['zapocitat'],
-                                           minimum=prow['dovodPriebHodMinHranica'])
+            records = [PriebezneHodnotenie(dovod=prow["dovod"],
+                                           poc_bodov=prow["pocetBodov"],
+                                           maximum=prow["dovodPriebHodHranica"],
+                                           zaevidoval=prow["zapisalPlneMeno"],
+                                           zapocitavat=prow["zapocitat"],
+                                           minimum=prow["dovodPriebHodMinHranica"])
                        for prow in await app.d.hodnotenieTable.all_rows()]
 
             result.append(PriebezneHodnoteniaPredmetu(akademicky_rok=akademicky_rok,
-                                                      skratka=row['skratka'],
-                                                      nazov=row['predmetNazov'],
-                                                      kredit=row['kredit'],
-                                                      semester=row['semesterKodJ'],
+                                                      skratka=row["skratka"],
+                                                      nazov=row["predmetNazov"],
+                                                      kredit=row["kredit"],
+                                                      semester=row["semesterKodJ"],
                                                       zaznamy=records))
         return (result, None)

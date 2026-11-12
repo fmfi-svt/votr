@@ -28,7 +28,7 @@ class Node:
 
     @override
     def __repr__(self) -> str:
-        return f'<{self.__class__.__name__} {self.__dict__!r}>'
+        return f"<{self.__class__.__name__} {self.__dict__!r}>"
 
 
 def _synchronizer_to_cdata(sync: dict[str, bool], true_name: str, false_name: str) -> str:
@@ -51,10 +51,10 @@ class Tree(Control):
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
 
-        self.multiple_selection = ct(bool, properties.get('multipleSelection', False))
-        self.commands = ct_none(str, properties.get('commands'))
-        self.border_width = ct(int, properties.get('borderWidth', 1))
-        self.action_name = ct_none(str, properties.get('an'))
+        self.multiple_selection = ct(bool, properties.get("multipleSelection", False))
+        self.commands = ct_none(str, properties.get("commands"))
+        self.border_width = ct(int, properties.get("borderWidth", 1))
+        self.action_name = ct_none(str, properties.get("an"))
 
         self.selection_changed = False
         self.expansion_changed = False
@@ -62,47 +62,47 @@ class Tree(Control):
 
     @override
     async def async_init(self, element: Tag | None) -> None:
-        await self._init_from_data_view(nn(element).find(id=self.id + '_dataView'))
+        await self._init_from_data_view(nn(element).find(id=self.id + "_dataView"))
 
     async def _init_from_data_view(self, data_view: Tag | None, updating: bool=False) -> None:
         if not data_view: return
 
-        element = nn(data_view.find(id='nodes'))
-        selection = ct(str, element['selection'])
-        self.selection = selection.split(',') if selection else []
-        self.active_id = ct(str, element['activepath']) or None
+        element = nn(data_view.find(id="nodes"))
+        selection = ct(str, element["selection"])
+        self.selection = selection.split(",") if selection else []
+        self.active_id = ct(str, element["activepath"]) or None
 
-        properties: dict[str, list[str]] = json.loads(nn(load_script_plain(data_view, 'json')))
+        properties: dict[str, list[str]] = json.loads(nn(load_script_plain(data_view, "json")))
 
         if updating:
             nodes = element
         else:
-            nodes = nn(load_script(data_view, 'nodes'))
+            nodes = nn(load_script(data_view, "nodes"))
             self.nodes = {}
 
         if nodes.find(nofilled=True):
             # It shouldn't be too hard to add, but we've never seen it.
             raise ValueError("noFilled attribute is not supported yet")
 
-        for node_div in nodes.find_all(class_='nodeDiv'):
+        for node_div in nodes.find_all(class_="nodeDiv"):
             node_element = nn(node_div.parent)
 
-            id = ct(str, node_element['id'])
-            is_leaf = node_element['isleaf'] == 'true'
-            type = ct(str, node_element['type'])
-            expander = node_div.find(id='nodeExpanderImage')
-            expanded = ('expanded' in expander['class']) if expander else None
-            checkbox = node_div.find('input', type='checkbox')
-            checked = checkbox.has_attr('checked') if checkbox else None
-            title = nn(node_div.find(id='nodeText')).get_text().replace('\xa0', ' ')
+            id = ct(str, node_element["id"])
+            is_leaf = node_element["isleaf"] == "true"
+            type = ct(str, node_element["type"])
+            expander = node_div.find(id="nodeExpanderImage")
+            expanded = ("expanded" in expander["class"]) if expander else None
+            checkbox = node_div.find("input", type="checkbox")
+            checked = checkbox.has_attr("checked") if checkbox else None
+            title = nn(node_div.find(id="nodeText")).get_text().replace("\xa0", " ")
 
             self.nodes[id] = Node(id, is_leaf, type, expanded, checked, title)
 
         if updating:
-            for id in properties['expand']:
+            for id in properties["expand"]:
                 if not self.nodes[id].expanded:
                     await self.toggle_expansion(id, _send_event=False)
-            for id in properties['collapse']:
+            for id in properties["collapse"]:
                 if self.nodes[id].expanded:
                     await self.toggle_expansion(id, _send_event=False)
         else:
@@ -115,7 +115,7 @@ class Tree(Control):
         data_view = nn(body.find(id=id))
         if not data_view.contents: return
 
-        if nn(data_view.find(id='nodes')).name == 'script':
+        if nn(data_view.find(id="nodes")).name == "script":
             await self._init_from_data_view(data_view)
         else:
             await self._init_from_data_view(data_view, updating=True)
@@ -123,10 +123,10 @@ class Tree(Control):
 
     @override
     def changed_properties(self) -> str:
-        cdata = ['<root>']
+        cdata = ["<root>"]
 
         if self.selection_changed:
-            selected_paths = '|'.join(id[1:] for id in self.selection)
+            selected_paths = "|".join(id[1:] for id in self.selection)
             cdata.append(f"<selectedPaths>{selected_paths}</selectedPaths>")
             self.selection_changed = False
 
@@ -145,9 +145,9 @@ class Tree(Control):
             self.checked_changed = False
             self.checked_synchronizer.clear()
 
-        cdata.append('</root>')
+        cdata.append("</root>")
 
-        return self._build_changed_properties(dataView=(True, True, ''.join(cdata)))
+        return self._build_changed_properties(dataView=(True, True, "".join(cdata)))
 
     async def double_click(self, *, return_ops: bool = False) -> Operations:
         """Double-clicks the tree view.
@@ -162,7 +162,7 @@ class Tree(Control):
         same event whether you double-click on a tree node or on empty space
         below the tree, but that might just be a bug.
         """
-        await self.log('action', f'Double-clicking {self.id}')
+        await self.log("action", f"Double-clicking {self.id}")
 
         if self.action_name:
             action = self.dialog.components[self.action_name]
@@ -186,20 +186,20 @@ class Tree(Control):
         else:
             ids = sorted(set(ids))
 
-        await self.log('action',
-            'Selecting ' +
-            (f'node {ids[0]!r} ' if len(ids) == 1 else f'nodes {ids!r} ') +
-            (f'with active id {active_id!r} ' if active_id else '') +
-            f'in {self.id}')
+        await self.log("action",
+            "Selecting " +
+            (f"node {ids[0]!r} " if len(ids) == 1 else f"nodes {ids!r} ") +
+            (f"with active id {active_id!r} " if active_id else "") +
+            f"in {self.id}")
 
         if not ids:
-            raise ValueError('empty tree selection is not supported')
+            raise ValueError("empty tree selection is not supported")
 
         # Pick an arbitrary active node if it doesn't matter to the caller.
         if not active_id: active_id = ids[-1]
 
         if len(ids) > 1 and not self.multiple_selection:
-            raise ValueError('multiple selection not supported for this tree')
+            raise ValueError("multiple selection not supported for this tree")
 
         self.selection = ids
         self.active_id = active_id
@@ -222,9 +222,9 @@ class Tree(Control):
             raise ValueError("this node cannot expand")
         node.expanded = not node.expanded
 
-        await self.log('action',
-            ('Expanding ' if node.expanded else 'Collapsing ') +
-            f'node {id!r} in {self.id}')
+        await self.log("action",
+            ("Expanding " if node.expanded else "Collapsing ") +
+            f"node {id!r} in {self.id}")
 
         path = id[1:]
         if self.expansion_synchronizer.get(path) == (not node.expanded):
@@ -255,9 +255,9 @@ class Tree(Control):
             raise ValueError("this node does not have a checkbox")
         node.checked = not node.checked
 
-        await self.log('action',
-            ('Checking ' if node.checked else 'Unchecking ') +
-            f'node {id!r} in {self.id}')
+        await self.log("action",
+            ("Checking " if node.checked else "Unchecking ") +
+            f"node {id!r} in {self.id}")
 
         path = id[1:]
         if self.checked_synchronizer.get(path) == (not node.checked):
@@ -268,10 +268,10 @@ class Tree(Control):
 
             self.checked_changed = True
             self.dialog.component_changes(self, False)
-            if 'CHECK_CHANGE_COMMAND|' not in (self.commands or ''):
+            if "CHECK_CHANGE_COMMAND|" not in (self.commands or ""):
                 return Operations()
             self.used_listeners_mask |= 64
-            ev = action_event(self, 'CHECK_CHANGE_COMMAND', self.id)
+            ev = action_event(self, "CHECK_CHANGE_COMMAND", self.id)
             return await self.dialog.app.send_events(ev, return_ops=return_ops)
         else:
             return Operations()

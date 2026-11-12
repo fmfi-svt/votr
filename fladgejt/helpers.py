@@ -9,17 +9,17 @@ if TYPE_CHECKING:
 
 
 class CantOpenApplication(Exception):
-    '''AIS didn't open the application we wanted.
+    """AIS didn't open the application we wanted.
 
     Thrown from ``_open_...`` methods if AIS refuses to open the application
     (e.g. the menu item is disabled for this user). The caller should catch
     this and show a message to the user. This is only used when we know it can
     happen -- unknown AIS behavior will cause an AISBehaviorError.
-    '''
+    """
 
 
 def find_row(objects: list[Row], **conditions: str | bool) -> int:
-    '''Searches the list of objects for one that matches all given conditions.
+    """Searches the list of objects for one that matches all given conditions.
 
     ``obj.cell('foo').value == bar`` must be true for all ``foo=bar`` keyword arguments
     for ``obj`` to match. The index of the first matching object is returned.
@@ -34,7 +34,7 @@ def find_row(objects: list[Row], **conditions: str | bool) -> int:
 
     Raises:
         KeyError: Raised if no such object is found.
-    '''
+    """
     for index, obj in enumerate(objects):
         if all(obj.cell(key).value == value
                 for key, value in conditions.items()):
@@ -43,7 +43,7 @@ def find_row(objects: list[Row], **conditions: str | bool) -> int:
 
 
 def find_row_insensitive(objects: list[Row], **conditions: str) -> int:
-    '''Same as [`find_row`][] but case insensitive.'''
+    """Same as [`find_row`][] but case insensitive."""
     for index, obj in enumerate(objects):
         if all(ct(str, obj.cell(key).value).lower() == value.lower()
                for key, value in conditions.items()):
@@ -52,7 +52,7 @@ def find_row_insensitive(objects: list[Row], **conditions: str) -> int:
 
 
 def find_option(objects: list[Option], **conditions: object) -> int:
-    '''Searches the list of objects for one that matches all given conditions.
+    """Searches the list of objects for one that matches all given conditions.
 
     ``obj.foo == bar`` must be true for all ``foo=bar`` keyword arguments for
     ``obj`` to match. The index of the first matching object is returned. This
@@ -67,7 +67,7 @@ def find_option(objects: list[Option], **conditions: object) -> int:
 
     Raises:
         KeyError: Raised if no such object is found.
-    '''
+    """
     for index, obj in enumerate(objects):
         if all(getattr(obj, key) == value for key, value in conditions.items()):
             return index
@@ -75,7 +75,7 @@ def find_option(objects: list[Option], **conditions: object) -> int:
 
 
 def with_key_fields[T](**key_fields: list[str]) -> Callable[[T], T]:
-    '''Adds special "key fields" to a TypedDict.
+    """Adds special "key fields" to a TypedDict.
 
     "Key fields" are additional fields automatically added to the dict. Their
     value is automatically computed using [`encode_key`][] from other fields,
@@ -108,7 +108,7 @@ def with_key_fields[T](**key_fields: list[str]) -> Callable[[T], T]:
       class. You can't use it in any way except calling (constructing) it. It's
       even more fake than normal TypedDict classes, whose instances at runtime
       are plain dicts, but they can at least inherit from each other as classes.
-    '''
+    """
     def decorator(original_class: T) -> T:
         def dict_maker(**kwargs: str) -> dict[str, str]:
             for output_name, input_names in key_fields.items():
@@ -123,7 +123,7 @@ def with_key_fields[T](**key_fields: list[str]) -> Callable[[T], T]:
 
 
 def encode_key(tuple: tuple[str, ...]) -> str:
-    '''Reversibly encode a tuple of strings into a single string.
+    """Reversibly encode a tuple of strings into a single string.
 
     See [`with_key_fields`][] for the rationale.
 
@@ -137,19 +137,19 @@ def encode_key(tuple: tuple[str, ...]) -> str:
 
     Returns:
         A string ``s`` such that ``decode_key(s)`` produces the original tuple.
-    '''
+    """
     result: list[str] = []
     for part in tuple:
-        part = part.encode('utf8')
+        part = part.encode("utf8")
         part = urlsafe_b64encode(part)
-        part = part.rstrip(b'=')
-        part = part.decode('ascii')
+        part = part.rstrip(b"=")
+        part = part.decode("ascii")
         result.append(part)
-    return '.'.join(result)
+    return ".".join(result)
 
 
 def decode_key(string: str) -> tuple[str, ...]:
-    '''Decode the output of [`encode_key`][] back into a tuple of strings.
+    """Decode the output of [`encode_key`][] back into a tuple of strings.
 
     See [`with_key_fields`][] for the rationale.
 
@@ -158,12 +158,12 @@ def decode_key(string: str) -> tuple[str, ...]:
 
     Returns:
         The tuple of strings that was originally given to [`encode_key`][].
-    '''
+    """
     result: list[str] = []
-    for part in string.split('.'):
-        part = part.encode('ascii')
-        part += b'=' * (-len(part) % 4)
+    for part in string.split("."):
+        part = part.encode("ascii")
+        part += b"=" * (-len(part) % 4)
         part = urlsafe_b64decode(part)
-        part = part.decode('utf8')
+        part = part.decode("utf8")
         result.append(part)
     return tuple(result)

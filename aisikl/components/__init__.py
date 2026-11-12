@@ -29,41 +29,41 @@ from aisikl.components.updown import UpDown
 
 
 component_classes = {
-    'action': Action,
-    'actionList': ActionList,
-    'body': DialogBody,
-    'button': Button,
-    'changeGuardInteractive': Component,  # TODO: implement
-    'checkBox': CheckBox,
-    'checkList': CheckList,
-    'comboBox': ComboBox,
-    'dateControl': DateControl,
-    'eventInteractive': Component,  # TODO: implement
-    'fileInput': Component,  # TODO: implement
-    'htmlArea': HtmlArea,
-    'htmlList': Component,  # TODO: implement
-    'image': Image,
-    'label': Label,
-    'list': List,
-    'listBox': Component,  # TODO: implement
-    'menuItem': MenuItem,
-    'numberControl': NumberControl,
-    'panel': Panel,
-    'popupMenu': PopupMenu,
-    'progressBar': ProgressBar,
-    'radioBox': RadioBox,
-    'radioButton': Component,  # TODO: implement
-    'radioGroup': Component,  # TODO: implement
-    'separator': Separator,
-    'splitPane': SplitPane,
-    'stackedPane': StackedPane,
-    'tabbedPane': TabbedPane,
-    'table': Table,
-    'textArea': TextArea,
-    'textField': TextField,
-    'tree': Tree,
-    'upDown': UpDown,
-    'valueInteractive': Component,  # TODO: implement
-    'view': Component,  # TODO: implement
+    "action": Action,
+    "actionList": ActionList,
+    "body": DialogBody,
+    "button": Button,
+    "changeGuardInteractive": Component,  # TODO: implement
+    "checkBox": CheckBox,
+    "checkList": CheckList,
+    "comboBox": ComboBox,
+    "dateControl": DateControl,
+    "eventInteractive": Component,  # TODO: implement
+    "fileInput": Component,  # TODO: implement
+    "htmlArea": HtmlArea,
+    "htmlList": Component,  # TODO: implement
+    "image": Image,
+    "label": Label,
+    "list": List,
+    "listBox": Component,  # TODO: implement
+    "menuItem": MenuItem,
+    "numberControl": NumberControl,
+    "panel": Panel,
+    "popupMenu": PopupMenu,
+    "progressBar": ProgressBar,
+    "radioBox": RadioBox,
+    "radioButton": Component,  # TODO: implement
+    "radioGroup": Component,  # TODO: implement
+    "separator": Separator,
+    "splitPane": SplitPane,
+    "stackedPane": StackedPane,
+    "tabbedPane": TabbedPane,
+    "table": Table,
+    "textArea": TextArea,
+    "textField": TextField,
+    "tree": Tree,
+    "upDown": UpDown,
+    "valueInteractive": Component,  # TODO: implement
+    "view": Component,  # TODO: implement
 }
 """Internal mapping from WebUI component types to Aisikl classes."""

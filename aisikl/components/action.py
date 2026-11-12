@@ -22,21 +22,21 @@ class Action(Component):
     """
     def __init__(self, dialog: Dialog, id: str, type: str, parent_id: str | None, properties: dict[str, object], element: Tag | None) -> None:
         super().__init__(dialog, id, type, parent_id, properties, element)
-        if parent_id is not None: raise TypeError('expected None')
-        if element is not None: raise TypeError('expected None')
-        self.accessible = ct(bool, properties.get('accessible', True))
-        self.tool_tip_text = ct_none(str, properties.get('toolTipText'))
+        if parent_id is not None: raise TypeError("expected None")
+        if element is not None: raise TypeError("expected None")
+        self.accessible = ct(bool, properties.get("accessible", True))
+        self.tool_tip_text = ct_none(str, properties.get("toolTipText"))
         # We only ever saw shortcut==None, but webui calls toUpperCase().
-        self.shortcut = ct_none(str, properties.get('sc'))
+        self.shortcut = ct_none(str, properties.get("sc"))
         """Key shortcut, probably. Empirically, it's always ``None``."""
-        self.action_list_id = ct_none(str, properties.get('actionListId'))
+        self.action_list_id = ct_none(str, properties.get("actionListId"))
         # We only ever saw confirm_question==None, but webui calls confirm().
-        self.confirm_question = ct_none(str, properties.get('confirmQuestion'))
+        self.confirm_question = ct_none(str, properties.get("confirmQuestion"))
         """AIS UI asks this question when the action is executed, before sending
         the event. Empirically, it's always ``None``. The AIS UI generally uses
         [`ConfirmBoxOp`][aisikl.operations.ConfirmBoxOp] instead.
         """
-        self.component_ids: list[str] = ct(list, properties.get('cids') or [])
+        self.component_ids: list[str] = ct(list, properties.get("cids") or [])
 
     def get_action_list(self) -> ActionList | None:
         """Returns the [`ActionList`][] this action belongs to."""
@@ -49,8 +49,8 @@ class Action(Component):
 
     def get_buttons_and_menu_items(self) -> list[Button | MenuItem]:
         """Returns the buttons and menu items that can trigger this action."""
-        return [cast('Button | MenuItem', o) for o in self.get_components()
-                if o.component_type in ('button', 'menuItem')]
+        return [cast("Button | MenuItem", o) for o in self.get_components()
+                if o.component_type in ("button", "menuItem")]
 
     async def execute(self, original_source_name: str | None=None, params: str | None=None, *, return_ops: bool = False) -> Operations:
         """Executes the action and emits the appropriate event.
@@ -78,7 +78,7 @@ class Action(Component):
             pass
 
         if not original_source_name:
-            await self.log('action', f'Executing {self.id}')
+            await self.log("action", f"Executing {self.id}")
 
         ev = action_event(self, None, original_source_name or self.id, params)
         return await self.dialog.app.send_events(ev, return_ops=return_ops)
