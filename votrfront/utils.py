@@ -1,11 +1,14 @@
 import json
 import time
-from starlette.exceptions import HTTPException
 from typing import TYPE_CHECKING
+
+from starlette.exceptions import HTTPException
+
 from votrfront.base import var_path
 
 if TYPE_CHECKING:
     from starlette.requests import Request
+
     from votrfront.base import VotrState
 
 

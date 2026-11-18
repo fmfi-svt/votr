@@ -27,7 +27,6 @@ from aisikl.components.textfield import TextField
 from aisikl.components.tree import Tree
 from aisikl.components.updown import UpDown
 
-
 component_classes = {
     "action": Action,
     "actionList": ActionList,

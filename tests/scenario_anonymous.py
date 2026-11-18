@@ -5,14 +5,16 @@ around in it. Can be used to test Votr without an account, and verify that
 Aisikl is still able to parse common AIS GUI components.
 """
 
+from typing import TYPE_CHECKING
+
 from aisikl.app import Application
 from aisikl.operations import AbortBoxOp, CloseDialogOp, OpenDialogOp, ShellExecOp
 from fladgejt.helpers import find_option
 from tests.testutils import scenario_main
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from abc import ABC
+
     from aisikl.components.button import Button
     from aisikl.components.combobox import ComboBox
     from aisikl.components.menuitem import MenuItem

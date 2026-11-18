@@ -1,11 +1,13 @@
+from typing import TYPE_CHECKING
+
 from aisikl.operations import RefreshDialogOp
 from fladgejt.helpers import CantOpenApplication, decode_key
-from fladgejt.structures import Hodnotenie, Priemer, PriebezneHodnotenie, PriebezneHodnoteniaPredmetu
+from fladgejt.structures import Hodnotenie, PriebezneHodnoteniaPredmetu, PriebezneHodnotenie, Priemer
 from fladgejt.webui.studium import WebuiStudiumMixin
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from abc import ABC
+
     from aisikl.components.button import Button
     from aisikl.components.table import Table
     from aisikl.dialog import Dialog

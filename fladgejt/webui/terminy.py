@@ -1,11 +1,13 @@
-from aisikl.operations import CloseDialogOp, ConfirmBoxOp, MessageBoxOp, OpenDialogOp
-from fladgejt.helpers import CantOpenApplication, find_row, find_option, encode_key, decode_key
-from fladgejt.structures import Predmet, Termin, PrihlasenyStudent
-from fladgejt.webui.studium import WebuiStudiumMixin
 from typing import TYPE_CHECKING
+
+from aisikl.operations import CloseDialogOp, ConfirmBoxOp, MessageBoxOp, OpenDialogOp
+from fladgejt.helpers import CantOpenApplication, decode_key, encode_key, find_option, find_row
+from fladgejt.structures import Predmet, PrihlasenyStudent, Termin
+from fladgejt.webui.studium import WebuiStudiumMixin
 
 if TYPE_CHECKING:
     from abc import ABC
+
     from aisikl.app import Application
     from aisikl.components.action import Action
     from aisikl.components.button import Button

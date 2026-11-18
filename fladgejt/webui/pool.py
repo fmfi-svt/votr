@@ -1,10 +1,11 @@
 from functools import wraps
-from typing import Any, TYPE_CHECKING, Unpack
+from typing import TYPE_CHECKING, Any, Unpack
 
 if TYPE_CHECKING:
+    from collections.abc import Awaitable, Callable
+
     from aisikl.app import Application
     from aisikl.context import Context
-    from collections.abc import Awaitable, Callable
 
 
 OPEN_APP_LIMIT = 10

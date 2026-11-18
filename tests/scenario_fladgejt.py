@@ -2,9 +2,10 @@
 
 """Calls most read-only Fladgejt RPCs."""
 
+from typing import TYPE_CHECKING, Any
+
 from tests.testutils import scenario_main
 from votrfront.rpc import encode_result
-from typing import Any, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from fladgejt.base import BaseClient

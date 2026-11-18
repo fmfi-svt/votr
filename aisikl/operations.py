@@ -110,20 +110,23 @@ else:
 ```
 """
 
-from aisikl.exceptions import AISBehaviorError, AISParseError
-from aisikl.typeutils import ct, ct_none
+import time
+import urllib.parse
 from dataclasses import dataclass, field
 from enum import Enum
-import time
-from typing import cast, override, Self, TYPE_CHECKING
+from typing import TYPE_CHECKING, Self, cast, override
 from warnings import warn
-import urllib.parse
+
+from aisikl.exceptions import AISBehaviorError, AISParseError
+from aisikl.typeutils import ct, ct_none
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from httpx2 import Response
+
     from aisikl.app import Application
     from aisikl.dialog import Dialog
-    from collections.abc import Iterable
-    from httpx2 import Response
 
 
 @dataclass

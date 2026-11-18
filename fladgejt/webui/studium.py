@@ -1,20 +1,22 @@
 import re
-from aisikl.app import Application, DEFAULT_IGNORED_MESSAGES
+from typing import TYPE_CHECKING, TypedDict
+
+from aisikl.app import DEFAULT_IGNORED_MESSAGES, Application
 from aisikl.exceptions import AISBehaviorError
 from aisikl.operations import CloseDialogOp, ConfirmBoxOp, MessageBoxOp, OpenDialogOp, RefreshDialogOp, StartAppOp
 from fladgejt.base import BaseClient
-from fladgejt.helpers import CantOpenApplication, find_row, find_option, encode_key, decode_key
-from fladgejt.structures import Studium, ZapisnyList, Hodnotenie
+from fladgejt.helpers import CantOpenApplication, decode_key, encode_key, find_option, find_row
+from fladgejt.structures import Hodnotenie, Studium, ZapisnyList
 from fladgejt.webui.pool import pooled_app
-from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
     from abc import ABC
+
+    from aisikl.components.action import Action
     from aisikl.components.button import Button
+    from aisikl.components.combobox import ComboBox, Option
     from aisikl.components.label import Label
     from aisikl.components.menuitem import MenuItem
-    from aisikl.components.action import Action
-    from aisikl.components.combobox import ComboBox, Option
     from aisikl.components.table import Table
     from aisikl.dialog import Dialog
     from fladgejt.webui.hodnotenia import HodnoteniaPriemeryDialogsType, PriebezneHodnotenieDialogsType

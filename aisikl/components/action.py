@@ -1,15 +1,17 @@
-from aisikl.events import action_event
-from aisikl.components.actionlist import ActionList
-from aisikl.components.component import Component, is_true
-from aisikl.typeutils import ct, ct_none
 from typing import TYPE_CHECKING, cast, override
 
+from aisikl.components.actionlist import ActionList
+from aisikl.components.component import Component, is_true
+from aisikl.events import action_event
+from aisikl.typeutils import ct, ct_none
+
 if TYPE_CHECKING:
+    from bs4.element import Tag
+
     from aisikl.components.button import Button
     from aisikl.components.menuitem import MenuItem
     from aisikl.dialog import Dialog
     from aisikl.operations import Operations
-    from bs4.element import Tag
 
 
 class Action(Component):

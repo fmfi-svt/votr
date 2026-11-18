@@ -1,12 +1,14 @@
-from aisikl.events import action_event
-from aisikl.components.actionablecontrol import ActionableControl
-from aisikl.typeutils import ct_none, nn
 from typing import TYPE_CHECKING
 
+from aisikl.components.actionablecontrol import ActionableControl
+from aisikl.events import action_event
+from aisikl.typeutils import ct_none, nn
+
 if TYPE_CHECKING:
+    from bs4.element import Tag
+
     from aisikl.dialog import Dialog
     from aisikl.operations import Operations
-    from bs4.element import Tag
 
 
 class Button(ActionableControl):

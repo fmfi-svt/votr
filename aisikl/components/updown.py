@@ -1,14 +1,16 @@
+from typing import TYPE_CHECKING, Literal
+
 from aisikl.components.checklist import CheckList
 from aisikl.components.control import Control
 from aisikl.components.table import Table
 from aisikl.events import action_event
 from aisikl.typeutils import ct, ct_none
-from typing import TYPE_CHECKING, Literal
 
 if TYPE_CHECKING:
+    from bs4.element import Tag
+
     from aisikl.dialog import Dialog
     from aisikl.operations import Operations
-    from bs4.element import Tag
 
 
 class UpDown(Control):

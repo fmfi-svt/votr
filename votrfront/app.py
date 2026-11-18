@@ -1,24 +1,27 @@
 import logging
-from anycorn.middleware import ProxyFixMiddleware
 from contextlib import asynccontextmanager
 from http import HTTPStatus
+from typing import TYPE_CHECKING
+from urllib.parse import parse_qs, urlencode
+
+import trio
+from anycorn.middleware import ProxyFixMiddleware
 from httpcore2 import AsyncConnectionPool
 from markupsafe import Markup
 from starlette.applications import Starlette
 from starlette.exceptions import HTTPException
 from starlette.middleware import Middleware
 from starlette.requests import Request
-from starlette.responses import Response, HTMLResponse
+from starlette.responses import HTMLResponse, Response
 from starlette.routing import BaseRoute, Mount
 from starlette.staticfiles import StaticFiles
+
 from votrfront import front, login, report, rpc
 from votrfront.base import ROOT_PATH, Settings, VotrState
-import trio
-from typing import TYPE_CHECKING
-from urllib.parse import parse_qs, urlencode
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
+
     from starlette.types import ASGIApp, Message, Receive, Scope, Send
 
 pylogger = logging.getLogger(__name__)

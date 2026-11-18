@@ -9,8 +9,9 @@ Warning:
     want to open it.
 """
 
+from typing import TYPE_CHECKING, NamedTuple
+
 from aisikl.typeutils import ct, nn
-from typing import NamedTuple, TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.context import Context

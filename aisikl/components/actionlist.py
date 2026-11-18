@@ -1,10 +1,12 @@
-from aisikl.components.component import Component
-from aisikl.typeutils import ct_none
 from typing import TYPE_CHECKING
 
+from aisikl.components.component import Component
+from aisikl.typeutils import ct_none
+
 if TYPE_CHECKING:
-    from aisikl.dialog import Dialog
     from bs4.element import Tag
+
+    from aisikl.dialog import Dialog
 
 
 class ActionList(Component):

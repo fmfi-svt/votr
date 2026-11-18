@@ -1,11 +1,13 @@
+from typing import TYPE_CHECKING, override
+
 from aisikl.components.component import is_true
 from aisikl.components.textinput import TextInput
 from aisikl.typeutils import ct, nn
-from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
-    from aisikl.dialog import Dialog
     from bs4.element import Tag
+
+    from aisikl.dialog import Dialog
 
 
 class DateControl(TextInput):

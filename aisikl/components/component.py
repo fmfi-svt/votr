@@ -1,10 +1,12 @@
-from aisikl.exceptions import AISParseError
-from aisikl.typeutils import ct, ct_none, really_int
 from typing import TYPE_CHECKING
 
+from aisikl.exceptions import AISParseError
+from aisikl.typeutils import ct, ct_none, really_int
+
 if TYPE_CHECKING:
-    from aisikl.dialog import Dialog
     from bs4.element import Tag
+
+    from aisikl.dialog import Dialog
 
 
 def is_true(value: object) -> bool:

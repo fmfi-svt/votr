@@ -1,14 +1,15 @@
-from datetime import datetime, UTC
 import gzip
 import json
 import lzma
 import shutil
 import tarfile
 import time
-import trio
+from datetime import UTC, datetime
 from typing import TYPE_CHECKING
-from votrfront import logutil
-from votrfront import sessions
+
+import trio
+
+from votrfront import logutil, sessions
 from votrfront.base import var_path
 
 if TYPE_CHECKING:

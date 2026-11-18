@@ -1,11 +1,13 @@
 from pathlib import Path
-from typing import Final, NotRequired, Protocol, TYPE_CHECKING, TypedDict
+from typing import TYPE_CHECKING, Final, NotRequired, Protocol, TypedDict
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
+
+    from httpcore2 import AsyncConnectionPool
+
     from fladgejt.base import BaseClient
     from fladgejt.login import ServerDict
-    from httpcore2 import AsyncConnectionPool
     from votrfront.login import OneLogin_Saml2_Settings
 
 

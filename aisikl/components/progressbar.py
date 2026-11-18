@@ -1,10 +1,12 @@
-from aisikl.components.control import Control
-from aisikl.typeutils import ct, really_int
 from typing import TYPE_CHECKING
 
+from aisikl.components.control import Control
+from aisikl.typeutils import ct, really_int
+
 if TYPE_CHECKING:
-    from aisikl.dialog import Dialog
     from bs4.element import Tag
+
+    from aisikl.dialog import Dialog
 
 
 class ProgressBar(Control):

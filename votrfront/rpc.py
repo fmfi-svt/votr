@@ -65,21 +65,25 @@ It is assumed that the environment is reasonable, e.g. `logging` calls can't
 fail. That's of course not quite true, but it's sufficiently true.
 """
 
-from aisikl.exceptions import LoggedOutError
 import json
 import logging
 import traceback
+from typing import TYPE_CHECKING
+
 import trio
 from starlette.exceptions import HTTPException
-from starlette.routing import Route
 from starlette.requests import Request
+from starlette.routing import Route
+
+from aisikl.exceptions import LoggedOutError
 from votrfront import sessions
 from votrfront.utils import check_header
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from collections.abc import Callable
-    from starlette.types import ASGIApp, Scope, Receive, Send
+
+    from starlette.types import ASGIApp, Receive, Scope, Send
+
     from votrfront.base import SessionDict, VotrState
 
 pylogger = logging.getLogger(__name__)

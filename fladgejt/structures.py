@@ -1,5 +1,6 @@
-from fladgejt.helpers import with_key_fields
 from typing import TypedDict
+
+from fladgejt.helpers import with_key_fields
 
 
 @with_key_fields(studium_key=["sp_skratka", "zaciatok"])

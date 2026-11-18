@@ -1,10 +1,12 @@
+from typing import TYPE_CHECKING, cast
+
 from aisikl.exceptions import AISBehaviorError
 from aisikl.operations import CloseDialogOp, MessageBoxOp, OpenDialogOp
 from fladgejt.helpers import find_row_insensitive
-from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from abc import ABC
+
     from aisikl.app import Application
     from aisikl.components.button import Button
     from aisikl.components.table import Table

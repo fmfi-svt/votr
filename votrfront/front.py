@@ -1,20 +1,23 @@
 import base64
 import datetime
-import os
 import json
+import os
 import traceback
-import trio
 from typing import TYPE_CHECKING
+
+import trio
 from markupsafe import Markup
 from starlette.responses import HTMLResponse, PlainTextResponse
 from starlette.routing import Route
+
 from votrfront import sessions
 from votrfront.utils import check_header
 
 if TYPE_CHECKING:
-    from fladgejt.login import ServerDict
     from starlette.requests import Request
     from starlette.responses import Response
+
+    from fladgejt.login import ServerDict
     from votrfront.base import VotrState
 
 

@@ -5,7 +5,6 @@ from typing import override
 
 import griffe
 
-
 _internal_re = re.compile(r"(^|\n)\s*Internal\b")
 
 

@@ -1,15 +1,17 @@
+import base64
+from typing import TYPE_CHECKING, TypedDict
+
 from aisikl.app import Application
 from aisikl.operations import AbortBoxOp, CloseDialogOp, MessageBoxOp, OpenDialogOp, ShellExecOp
-import base64
 from fladgejt.base import BaseClient
+from fladgejt.helpers import decode_key, find_option, find_row
+from fladgejt.structures import PrihlasenyStudent, RegPredmet, RegUcitelPredmetu
 from fladgejt.webui.commonui import select_text_ciselnik
 from fladgejt.webui.pool import pooled_app
-from fladgejt.helpers import find_option, find_row, decode_key
-from fladgejt.structures import RegUcitelPredmetu, PrihlasenyStudent, RegPredmet
-from typing import TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
     from abc import ABC
+
     from aisikl.components.action import Action
     from aisikl.components.button import Button
     from aisikl.components.combobox import ComboBox, Option

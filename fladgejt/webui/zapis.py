@@ -1,15 +1,17 @@
+from typing import TYPE_CHECKING
+
 from aisikl.components.button import Button
 from aisikl.operations import CloseDialogOp, ConfirmBoxOp, MessageBoxOp, OpenDialogOp
 from aisikl.typeutils import ct, nn
 from fladgejt.base import BaseClient
-from fladgejt.helpers import CantOpenApplication, find_row, find_option, decode_key
+from fladgejt.helpers import CantOpenApplication, decode_key, find_option, find_row
 from fladgejt.structures import ZapisPredmet, ZapisVlastnost
 from fladgejt.webui.commonui import select_text_ciselnik, show_all_columns
 from fladgejt.webui.studium import WebuiStudiumMixin
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from abc import ABC
+
     from aisikl.app import Application
     from aisikl.components.action import Action
     from aisikl.components.combobox import ComboBox, Option

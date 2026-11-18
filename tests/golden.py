@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
 import argparse
-from collections import Counter
-from dataclasses import dataclass
 import json
 import re
 import sys
 import traceback
+from collections import Counter
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, cast
+
 import trio
-from typing import Any, TYPE_CHECKING, cast
+
 from aisikl.context import Context, Logger
 from aisikl.typeutils import nn
 from fladgejt.hybrid import HybridClient

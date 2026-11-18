@@ -1,19 +1,22 @@
-from httpx2 import Cookies
 import re
+from typing import TYPE_CHECKING, Literal, NotRequired, TypedDict
 from urllib.parse import urljoin
+
+from httpx2 import Cookies
+
 from aisikl.context import Context, Logger
 from aisikl.typeutils import ct, nn
 from fladgejt.flashback import FlashbackClient
 from fladgejt.hybrid import HybridClient
 from fladgejt.rest import RestClient
 from fladgejt.webui import WebuiClient
-from typing import Literal, NotRequired, TYPE_CHECKING, TypedDict
 
 if TYPE_CHECKING:
     from bs4 import BeautifulSoup
-    from fladgejt.base import BaseClient
     from httpcore2 import AsyncConnectionPool
     from httpx2 import Response
+
+    from fladgejt.base import BaseClient
 
 
 class ServerDict(TypedDict):

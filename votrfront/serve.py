@@ -4,12 +4,13 @@ anycorn.serve() instead of anycorn's own process supervisor, and various other
 notes on Votr's production setup.
 """
 
-from argparse import ArgumentParser, BooleanOptionalAction as BoolAction
 import os
 import signal
 import subprocess
 import sys
-from typing import cast, NoReturn, TYPE_CHECKING
+from argparse import ArgumentParser
+from argparse import BooleanOptionalAction as BoolAction
+from typing import TYPE_CHECKING, NoReturn, cast
 
 if TYPE_CHECKING:
     from anycorn.typing import ASGIFramework
@@ -83,9 +84,11 @@ def cli(args: list[str]) -> None:
 
         os.execvp(cmd[0], cmd)
 
-    import anycorn
     import logging
+
+    import anycorn
     import trio
+
     from votrfront import local_settings
     from votrfront.anycorn_config import VotrConfig, VotrLogger
     from votrfront.app import build_app

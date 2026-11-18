@@ -2,13 +2,15 @@ import gzip
 import json
 import os
 import sys
-from aisikl.typeutils import nn
-from fladgejt.base import BaseClient
 from typing import TYPE_CHECKING
 
+from aisikl.typeutils import nn
+from fladgejt.base import BaseClient
+
 if TYPE_CHECKING:
-    from aisikl.context import Context
     from asyncio import sleep
+
+    from aisikl.context import Context
 else:
     try:
         from anyio import sleep

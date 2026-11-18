@@ -1,22 +1,26 @@
 # pyright: reportUninitializedInstanceVariable=none
 
-from httpx2 import HTTPStatusError
-from inspect import iscoroutinefunction
 import json
 import re
 import time
 import urllib.parse
-from aisikl.exceptions import AISParseError, AISBehaviorError, AISApplicationClosedError, LoggedOutError
-from aisikl.dialog import Dialog
-from aisikl.operations import CloseApplicationOp, MessageBoxOp, OpenDialogOp, Operations, ServerCloseApplicationOp, known_operations
-from aisikl.typeutils import ct, nn
+from inspect import iscoroutinefunction
 from typing import TYPE_CHECKING, NoReturn, cast
 
+from httpx2 import HTTPStatusError
+
+from aisikl.dialog import Dialog
+from aisikl.exceptions import AISApplicationClosedError, AISBehaviorError, AISParseError, LoggedOutError
+from aisikl.operations import CloseApplicationOp, MessageBoxOp, OpenDialogOp, Operations, ServerCloseApplicationOp, known_operations
+from aisikl.typeutils import ct, nn
+
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from bs4 import BeautifulSoup
+
     from aisikl.context import Context
     from aisikl.events import Event
-    from bs4 import BeautifulSoup
-    from collections.abc import Iterable
 
 
 DEFAULT_IGNORED_MESSAGES = [

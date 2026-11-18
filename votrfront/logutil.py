@@ -1,6 +1,4 @@
-from aisikl.context import repr_log_data
 import contextlib
-from dataclasses import dataclass
 import gzip
 import json
 import lzma
@@ -11,8 +9,12 @@ import subprocess
 import sys
 import time
 import traceback
+from dataclasses import dataclass
+from typing import IO, TYPE_CHECKING, Literal
+
 import trio
-from typing import IO, Literal, TYPE_CHECKING
+
+from aisikl.context import repr_log_data
 from votrfront import sessions
 from votrfront.base import var_path
 

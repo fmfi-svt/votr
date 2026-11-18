@@ -1,19 +1,22 @@
 # pyright: reportUninitializedInstanceVariable=none
 
 import json
-from aisikl.components.component import is_true
-from aisikl.components.action import Action
-from aisikl.components.control import Control
-from aisikl.components.table import load_script_plain, load_script
-from aisikl.events import (action_event, tree_expansion_event, tree_expansion_action_event, tree_selection_event)
-from aisikl.operations import Operations
-from aisikl.typeutils import ct, ct_none, nn
 from typing import TYPE_CHECKING, override
 
+from aisikl.components.action import Action
+from aisikl.components.component import is_true
+from aisikl.components.control import Control
+from aisikl.components.table import load_script, load_script_plain
+from aisikl.events import action_event, tree_expansion_action_event, tree_expansion_event, tree_selection_event
+from aisikl.operations import Operations
+from aisikl.typeutils import ct, ct_none, nn
+
 if TYPE_CHECKING:
-    from aisikl.dialog import Dialog
-    from bs4.element import Tag
     from collections.abc import Iterable
+
+    from bs4.element import Tag
+
+    from aisikl.dialog import Dialog
 
 
 # Not a namedtuple, because 'expanded' and 'checked' can change.

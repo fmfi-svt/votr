@@ -1,7 +1,8 @@
+from typing import Any, cast
+
 from fladgejt.base import BaseClient
 from fladgejt.helpers import decode_key
 from fladgejt.structures import Predmet, Termin
-from typing import Any, cast
 
 
 class RestTerminyMixin(BaseClient):

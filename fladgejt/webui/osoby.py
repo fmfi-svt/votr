@@ -1,14 +1,16 @@
+from typing import TYPE_CHECKING
+
 from aisikl.app import Application
 from aisikl.operations import CloseDialogOp, MessageBoxOp, OpenDialogOp
 from fladgejt.base import BaseClient
-from fladgejt.webui.commonui import select_ciselnik, show_all_columns
-from fladgejt.webui.pool import pooled_app
 from fladgejt.helpers import find_option
 from fladgejt.structures import RegOsoba
-from typing import TYPE_CHECKING
+from fladgejt.webui.commonui import select_ciselnik, show_all_columns
+from fladgejt.webui.pool import pooled_app
 
 if TYPE_CHECKING:
     from abc import ABC
+
     from aisikl.components.action import Action
     from aisikl.components.button import Button
     from aisikl.components.checkbox import CheckBox

@@ -2,12 +2,13 @@
 
 import json
 import re
-from aisikl.exceptions import AISParseError
+from typing import TYPE_CHECKING, Literal, override
+
 from aisikl.components import component_classes
 from aisikl.components.control import Control
 from aisikl.events import component_event
+from aisikl.exceptions import AISParseError
 from aisikl.typeutils import ct, nn
-from typing import Literal, TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from aisikl.app import Application

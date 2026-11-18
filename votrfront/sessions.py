@@ -4,14 +4,17 @@ import fcntl
 import gzip
 import os
 import pickle
+from typing import TYPE_CHECKING, TextIO
+
 import trio
-from typing import TextIO, TYPE_CHECKING
-from aisikl.typeutils import ct_none, nn
+
 from aisikl.exceptions import LoggedOutError
+from aisikl.typeutils import ct_none, nn
 from votrfront.base import SessionDict, VotrState, var_path
 
 if TYPE_CHECKING:
     from collections.abc import AsyncGenerator
+
     from starlette.requests import Request
 
 

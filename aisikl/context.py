@@ -1,16 +1,18 @@
-from bs4 import BeautifulSoup
-from contextlib import contextmanager, AsyncExitStack
-from http.cookiejar import CookieJar
-import httpcore2
-from httpcore2._backends.auto import AutoBackend  # TODO: Replace with public import after https://github.com/pydantic/httpx2/issues/1131
-import httpx2
+import json
 import sys
 import time
-import json
+from contextlib import AsyncExitStack, contextmanager
+from http.cookiejar import CookieJar
+from typing import TYPE_CHECKING, Any, Literal, TextIO, TypeIs, override
 from urllib.parse import urljoin
-from aisikl.exceptions import RESTServerError, LoggedOutError
+
+import httpcore2
+import httpx2
+from bs4 import BeautifulSoup
+from httpcore2._backends.auto import AutoBackend  # TODO: Replace with public import after https://github.com/pydantic/httpx2/issues/1131
+
+from aisikl.exceptions import LoggedOutError, RESTServerError
 from aisikl.typeutils import nn
-from typing import Any, Literal, TYPE_CHECKING, TextIO, TypeIs, override
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Generator, Iterable, Mapping, Sequence
@@ -395,8 +397,8 @@ except NameError:
     def _log_to_ipython(type: str, message: str, data: object) -> None:
         pass
 else:
-    from markupsafe import Markup
     from IPython.display import display  # pyrefly: ignore [missing-import] # pyright: ignore [reportMissingImports, reportUnknownVariableType]
+    from markupsafe import Markup
 
     def _log_to_ipython(type: str, message: str, data: object) -> None:
         html = Markup('<span style="background:#FF8"><b>{}</b> {}</span>').format(type, message)

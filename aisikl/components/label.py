@@ -1,10 +1,12 @@
-from aisikl.components.control import Control
-from aisikl.typeutils import ct_none, nn
 from typing import TYPE_CHECKING
 
+from aisikl.components.control import Control
+from aisikl.typeutils import ct_none, nn
+
 if TYPE_CHECKING:
-    from aisikl.dialog import Dialog
     from bs4.element import Tag
+
+    from aisikl.dialog import Dialog
 
 
 class Label(Control):

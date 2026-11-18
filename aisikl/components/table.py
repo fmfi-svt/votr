@@ -1,20 +1,24 @@
 import json
+from typing import TYPE_CHECKING, NamedTuple, cast, override
+
 from bs4 import BeautifulSoup
+
 from aisikl.components.action import Action
+from aisikl.components.combobox import Option
 from aisikl.components.component import is_true
 from aisikl.components.control import Control
-from aisikl.components.combobox import Option
-from aisikl.events import cell_edited_event, row_edited_event, action_event, selection_event, cursor_event, table_header_event
-from aisikl.exceptions import AISParseError, AISBehaviorError
+from aisikl.events import action_event, cell_edited_event, cursor_event, row_edited_event, selection_event, table_header_event
+from aisikl.exceptions import AISBehaviorError, AISParseError
 from aisikl.operations import Operations
 from aisikl.typeutils import ct, ct_none, nn, really_int
-from typing import NamedTuple, TYPE_CHECKING, cast, override
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
+    from bs4.element import Tag
+
     from aisikl.dialog import Dialog
     from aisikl.events import Event
-    from bs4.element import Tag
-    from collections.abc import Iterable
 
 
 class Column(NamedTuple):

@@ -1,13 +1,15 @@
+from typing import TYPE_CHECKING, override
+
 from aisikl.components.control import Control
 from aisikl.components.panel import Panel
 from aisikl.events import change_action_event
 from aisikl.typeutils import ct, nn, really_int
-from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
+    from bs4.element import Tag
+
     from aisikl.dialog import Dialog
     from aisikl.operations import Operations
-    from bs4.element import Tag
 
 
 class TabbedPane(Control):

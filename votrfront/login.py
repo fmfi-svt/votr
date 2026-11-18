@@ -1,18 +1,20 @@
-from aisikl.typeutils import ct, nn
-from base64 import b64decode, b64encode
-from contextlib import AsyncExitStack
-from datetime import datetime, UTC
 import hashlib
 import logging
 import os
-import traceback
 import re
+import traceback
+from base64 import b64decode, b64encode
+from contextlib import AsyncExitStack
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Literal, cast
+
 from starlette.exceptions import HTTPException
+from starlette.responses import RedirectResponse, Response
 from starlette.routing import Route
-from starlette.responses import Response, RedirectResponse
+
 from aisikl.context import Logger
+from aisikl.typeutils import ct, nn
 from fladgejt.login import create_client
-from typing import Literal, TYPE_CHECKING, cast
 from votrfront import sessions
 from votrfront.base import SessionDict, Settings, VotrCookie, VotrCookieLoggedIn, VotrCookieLoggingIn, VotrState, var_path
 from votrfront.front import app_response
@@ -20,8 +22,10 @@ from votrfront.utils import check_header
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping, Sequence
-    from fladgejt.login import ParamsDict
+
     from starlette.requests import Request
+
+    from fladgejt.login import ParamsDict
 
     # python3-saml 1) does not have type stubs, 2) might not be installed.
 
@@ -58,8 +62,8 @@ if TYPE_CHECKING:
 else:
     try:
         from onelogin.saml2.auth import OneLogin_Saml2_Auth
-        from onelogin.saml2.settings import OneLogin_Saml2_Settings
         from onelogin.saml2.idp_metadata_parser import OneLogin_Saml2_IdPMetadataParser
+        from onelogin.saml2.settings import OneLogin_Saml2_Settings
         saml_imported = True
     except ImportError:
         saml_imported = False

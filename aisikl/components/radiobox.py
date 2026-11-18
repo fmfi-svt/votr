@@ -1,13 +1,15 @@
+from typing import TYPE_CHECKING, NamedTuple, override
+
 from aisikl.components.control import Control
 from aisikl.events import selection_event
 from aisikl.exceptions import AISParseError
 from aisikl.typeutils import ct, ct_none, nn
-from typing import NamedTuple, TYPE_CHECKING, override
 
 if TYPE_CHECKING:
+    from bs4.element import Tag
+
     from aisikl.dialog import Dialog
     from aisikl.operations import Operations
-    from bs4.element import Tag
 
 
 class Option(NamedTuple):

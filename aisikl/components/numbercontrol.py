@@ -1,11 +1,13 @@
+from typing import TYPE_CHECKING, Any, override
+
 from aisikl.components.component import is_true
 from aisikl.components.textinput import TextInput
 from aisikl.typeutils import ct, ct_none, nn, really_int
-from typing import TYPE_CHECKING, Any, override
 
 if TYPE_CHECKING:
-    from aisikl.dialog import Dialog
     from bs4.element import Tag
+
+    from aisikl.dialog import Dialog
 
 
 def _maybe_float(value: Any) -> float | None:

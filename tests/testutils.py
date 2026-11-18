@@ -2,9 +2,7 @@
 
 import argparse
 import base64
-from collections import deque
 import contextlib
-from httpx2 import Headers, Request, Response
 import json
 import os
 import pathlib
@@ -12,9 +10,13 @@ import re
 import sys
 import time
 import traceback
-import trio
-from typing import Any, NamedTuple, NotRequired, TYPE_CHECKING, TypedDict, cast
+from collections import deque
+from typing import TYPE_CHECKING, Any, NamedTuple, NotRequired, TypedDict, cast
 from urllib.parse import urljoin
+
+import trio
+from httpx2 import Headers, Request, Response
+
 from aisikl.context import Context, Logger
 from aisikl.typeutils import ct, nn
 from fladgejt.login import ParamsDictSamlPassword, ServerDict, create_client
@@ -22,6 +24,7 @@ from fladgejt.webui import WebuiClient
 
 if TYPE_CHECKING:
     from collections.abc import Awaitable, Callable, Iterable, Sequence
+
     from fladgejt.base import BaseClient
 
 

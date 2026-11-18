@@ -1,11 +1,13 @@
-from aisikl.typeutils import ct
-from base64 import urlsafe_b64encode, urlsafe_b64decode
+from base64 import urlsafe_b64decode, urlsafe_b64encode
 from typing import TYPE_CHECKING, cast
 
+from aisikl.typeutils import ct
+
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from aisikl.components.combobox import Option
     from aisikl.components.table import Row
-    from collections.abc import Callable
 
 
 class CantOpenApplication(Exception):

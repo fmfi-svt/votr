@@ -1,13 +1,15 @@
+from typing import TYPE_CHECKING
+
 from aisikl.app import Application
 from aisikl.operations import OpenDialogOp
 from fladgejt.base import BaseClient
 from fladgejt.helpers import find_row
 from fladgejt.structures import Obdobie
 from fladgejt.webui.pool import pooled_app
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from abc import ABC
+
     from aisikl.components.table import Table
     from aisikl.dialog import Dialog
 

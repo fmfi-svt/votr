@@ -1,12 +1,14 @@
+from typing import TYPE_CHECKING, override
+
 from aisikl.components.component import is_true
 from aisikl.components.control import Control
 from aisikl.typeutils import ct, nn
-from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
+    from bs4.element import Tag
+
     from aisikl.dialog import Dialog
     from aisikl.operations import Operations
-    from bs4.element import Tag
 
 
 # Not a namedtuple, because 'checked' can change.

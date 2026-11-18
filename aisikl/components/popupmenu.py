@@ -1,6 +1,7 @@
+from typing import TYPE_CHECKING
+
 from aisikl.components.control import Control
 from aisikl.events import component_event
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from aisikl.operations import Operations

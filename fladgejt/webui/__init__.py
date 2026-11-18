@@ -1,3 +1,5 @@
+from typing import TYPE_CHECKING, override
+
 from aisikl.app import check_connection
 from fladgejt.base import BaseClient
 from fladgejt.webui.hodnotenia import WebuiHodnoteniaMixin
@@ -8,7 +10,6 @@ from fladgejt.webui.predmety import WebuiPredmetyMixin
 from fladgejt.webui.studium import WebuiStudiumMixin
 from fladgejt.webui.terminy import WebuiTerminyMixin
 from fladgejt.webui.zapis import WebuiZapisMixin
-from typing import TYPE_CHECKING, override
 
 if TYPE_CHECKING:
     from aisikl.context import Context
