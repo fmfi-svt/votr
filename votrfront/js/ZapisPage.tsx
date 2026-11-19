@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { isEmpty, pickBy, sortBy } from "lodash-es";
+import { sortBy } from "lodash-es";
 import React, { useContext, useState } from "react";
 import {
   CacheRequester,
@@ -79,7 +79,7 @@ function ZapisMenu() {
 
 function ZapisTableFooter(props: {
   predmety: Map<string, ZapisPredmet>;
-  moje: Record<string, boolean>;
+  moje: Map<string, boolean>;
   size: ScreenSize;
 }) {
   const { predmety, moje, size } = props;
@@ -95,9 +95,9 @@ function ZapisTableFooter(props: {
       if (blok_nazov) blokNazvy.set(blok_skratka, blok_nazov);
       let list = blokMoje.get(blok_skratka);
       if (!list) blokMoje.set(blok_skratka, (list = []));
-      if (moje[predmet_key]) list.push(predmet);
+      if (moje.get(predmet_key)) list.push(predmet);
     }
-    if (moje[predmet_key]) vsetkyMoje.push(predmet);
+    if (moje.get(predmet_key)) vsetkyMoje.push(predmet);
   }
 
   const zoradene = sortBy(Array.from(blokMoje.entries()), 0);
@@ -175,8 +175,8 @@ function ZapisTable({
   tableMessage: string | null | undefined;
 }) {
   const [saving, setSaving] = useState(false);
-  const [changes, setChanges] = useState<Record<string, boolean | undefined>>(
-    {},
+  const [changes, setChanges] = useState(
+    () => new Map<string, boolean | undefined>(),
   );
 
   // Chceme, aby sa pre ZapisTable zachoval state aj vtedy, ked tabulku
@@ -195,7 +195,7 @@ function ZapisTable({
       predmet.moje && !event.target.checked ? false
       : !predmet.moje && event.target.checked ? true
       : undefined;
-    setChanges((changes) => ({ ...changes, [predmetKey]: want }));
+    setChanges((changes) => new Map([...changes, [predmetKey, want]]));
   };
 
   const handleSave = (event: React.FormEvent) => {
@@ -206,10 +206,10 @@ function ZapisTable({
     const odoberanePredmety: ZapisPredmet[] = [],
       pridavanePredmety: ZapisPredmet[] = [];
     for (const predmet of predmety.values()) {
-      if (changes[predmet.predmet_key] === false && predmet.moje) {
+      if (changes.get(predmet.predmet_key) === false && predmet.moje) {
         odoberanePredmety.push(predmet);
       }
-      if (changes[predmet.predmet_key] === true && !predmet.moje) {
+      if (changes.get(predmet.predmet_key) === true && !predmet.moje) {
         pridavanePredmety.push(predmet);
       }
     }
@@ -223,14 +223,20 @@ function ZapisTable({
         for (const predmet of odoberanePredmety) {
           pocetPrihlasenychJeStaryStore.add(predmet.predmet_key);
         }
-        setChanges((changes) => pickBy(changes, (value) => value === true));
+        setChanges(
+          (changes) =>
+            new Map([...changes].filter(([, value]) => value === true)),
+        );
       }
 
       if (pridal) {
         for (const predmet of pridavanePredmety) {
           pocetPrihlasenychJeStaryStore.add(predmet.predmet_key);
         }
-        setChanges((changes) => pickBy(changes, (value) => value === false));
+        setChanges(
+          (changes) =>
+            new Map([...changes].filter(([, value]) => value === false)),
+        );
       }
 
       // Aj ked skoncime neuspechom, je mozne, ze niektore predmety sa zapisali.
@@ -258,18 +264,18 @@ function ZapisTable({
     });
   };
 
-  const classes: Record<string, string> = {},
-    checked: Record<string, boolean> = {};
+  const classes = new Map<string, string>(),
+    checked = new Map<string, boolean>();
   for (const predmet of predmety.values()) {
     const predmetKey = predmet.predmet_key;
-    checked[predmetKey] = predmet.moje;
-    if (changes[predmetKey] === false && predmet.moje) {
-      classes[predmetKey] = "danger";
-      checked[predmetKey] = false;
+    checked.set(predmetKey, predmet.moje);
+    if (changes.get(predmetKey) === false && predmet.moje) {
+      classes.set(predmetKey, "danger");
+      checked.set(predmetKey, false);
     }
-    if (changes[predmetKey] === true && !predmet.moje) {
-      classes[predmetKey] = "success";
-      checked[predmetKey] = true;
+    if (changes.get(predmetKey) === true && !predmet.moje) {
+      classes.set(predmetKey, "success");
+      checked.set(predmetKey, true);
     }
   }
 
@@ -278,7 +284,7 @@ function ZapisTable({
       <button
         type="submit"
         className="btn btn-primary"
-        disabled={isEmpty(classes)}
+        disabled={classes.size === 0}
       >
         {saving ?
           <Loading />
@@ -298,7 +304,7 @@ function ZapisTable({
         <input
           type="checkbox"
           name={predmet.predmet_key}
-          checked={checked[predmet.predmet_key]}
+          checked={checked.get(predmet.predmet_key)}
           onChange={handleChange}
         />
       ),

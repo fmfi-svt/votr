@@ -8,11 +8,12 @@ function LogViewerContent(props: {
   modeButton: React.ReactNode;
 }) {
   const { closeButton, modeButton } = props;
-  const [hidden, setHidden] = useState<Record<string, boolean>>({
+  // prettier-ignore
+  const [hidden, setHidden] = useState(() => new Map(Object.entries({
     benchmark: true,
     http: true,
     table: true,
-  });
+  })));
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const lastTimeRef = useRef<number | null>(null);
@@ -20,7 +21,7 @@ function LogViewerContent(props: {
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     const name = e.target.name;
     const value = !e.target.checked;
-    setHidden((hidden) => ({ ...hidden, [name]: value }));
+    setHidden((hidden) => new Map([...hidden, [name, value]]));
   }
 
   useEffect(() => {
@@ -47,7 +48,7 @@ function LogViewerContent(props: {
                 <input
                   type="checkbox"
                   name={type}
-                  checked={!hidden[type]}
+                  checked={!hidden.get(type)}
                   onChange={handleChange}
                 />
                 {` ${type} (${count})`}
@@ -62,7 +63,7 @@ function LogViewerContent(props: {
           <tbody>
             {ajaxLogs.map(
               (entry, index) =>
-                !hidden[entry.log] && (
+                !hidden.get(entry.log) && (
                   <tr key={index}>
                     <td className="text-right v-LogViewer-cell">
                       {(entry.time - ajaxLogs[0]!.time).toFixed(3)}

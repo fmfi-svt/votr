@@ -1,6 +1,7 @@
 function humanizeWith(table: Record<string, string>) {
+  const map = new Map(Object.entries(table));
   return function (value: string) {
-    return table[value] || value;
+    return map.get(value) || value;
   };
 }
 

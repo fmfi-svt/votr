@@ -24,45 +24,52 @@ function makeNotFoundPage() {
   );
 }
 
-const actions: Record<string, () => React.ReactNode> = {
-  priebezneHodnotenia: makePriebezneHodnoteniaPage,
-  mojeHodnotenia: makeMojeHodnoteniaPage,
-  mojePredmety: makeMojePredmetyPage,
-  mojeSkusky: makeMojeSkuskyPage,
-  prehladStudia: makePrehladStudiaPage,
-  registerOsob: makeRegisterOsobPage,
-  registerPredmetov: makeRegisterPredmetovPage,
-  zapisZPlanu: makeZapisZPlanuPage,
-  zapisZPonuky: makeZapisZPonukyPage,
-};
+const actions = new Map(
+  Object.entries({
+    priebezneHodnotenia: makePriebezneHodnoteniaPage,
+    mojeHodnotenia: makeMojeHodnoteniaPage,
+    mojePredmety: makeMojePredmetyPage,
+    mojeSkusky: makeMojeSkuskyPage,
+    prehladStudia: makePrehladStudiaPage,
+    registerOsob: makeRegisterOsobPage,
+    registerPredmetov: makeRegisterPredmetovPage,
+    zapisZPlanu: makeZapisZPlanuPage,
+    zapisZPonuky: makeZapisZPonukyPage,
+  }),
+);
 
 // TODO: Reduce code duplication of page titles.
 // TODO: Set document.title immediately even if a ...Selector is loading.
-export const actionTitles: Record<string, string> = {
-  priebezneHodnotenia: "Priebežné hodnotenia",
-  mojeHodnotenia: "Moje hodnotenia",
-  mojePredmety: "Moje predmety",
-  mojeSkusky: "Moje skúšky",
-  prehladStudia: "Prehľad štúdia",
-  registerOsob: "Register osôb",
-  registerPredmetov: "Register predmetov",
-  zapisZPlanu: "Zápis predmetov",
-  zapisZPonuky: "Zápis predmetov",
-};
+export const actionTitles = new Map(
+  Object.entries({
+    priebezneHodnotenia: "Priebežné hodnotenia",
+    mojeHodnotenia: "Moje hodnotenia",
+    mojePredmety: "Moje predmety",
+    mojeSkusky: "Moje skúšky",
+    prehladStudia: "Prehľad štúdia",
+    registerOsob: "Register osôb",
+    registerPredmetov: "Register predmetov",
+    zapisZPlanu: "Zápis predmetov",
+    zapisZPonuky: "Zápis predmetov",
+  }),
+);
 
-const modalActions: Record<string, React.ComponentType> = {
-  about: AboutModal,
-  detailPredmetu: DetailPredmetuModal,
-  zoznamPrihlasenychNaTermin: ZoznamPrihlasenychNaTerminModal,
-};
+const modalActions = new Map(
+  Object.entries({
+    about: AboutModal,
+    detailPredmetu: DetailPredmetuModal,
+    zoznamPrihlasenychNaTermin: ZoznamPrihlasenychNaTerminModal,
+  }),
+);
 
 export function App() {
   const query = useContext(QueryContext);
   const action = query.action;
-  const maker = action ? actions[action] || makeNotFoundPage : makeIndexPage;
+  const maker =
+    action ? actions.get(action) || makeNotFoundPage : makeIndexPage;
   const modalComponent =
     Votr.ajaxError ? ErrorModal
-    : query.modal ? modalActions[query.modal]
+    : query.modal ? modalActions.get(query.modal)
     : undefined;
 
   function handleClose() {

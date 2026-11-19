@@ -16,7 +16,7 @@ const TYPE_NAMES: Record<string, string> = {
 function DestinationCheckbox() {
   const query = useContext(QueryContext);
   const { action, modal } = query;
-  const actionTitle = action && actionTitles[action];
+  const actionTitle = action && actionTitles.get(action);
 
   // Don't show the checkbox if the query string is empty or it only contains
   // foreign params (?fbclid=...).

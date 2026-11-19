@@ -342,10 +342,14 @@ function MojeSkuskyPageContent() {
     return <Loading requests={cache.missing} />;
   }
 
-  const terminMap: Record<string, Termin> = {};
-  for (const termin of terminyVypisane) terminMap[termin.termin_key] = termin;
-  for (const termin of terminyPrihlasene) terminMap[termin.termin_key] = termin;
-  const terminy = Object.values(terminMap);
+  const terminMap = new Map<string, Termin>();
+  for (const termin of terminyVypisane) {
+    terminMap.set(termin.termin_key, termin);
+  }
+  for (const termin of terminyPrihlasene) {
+    terminMap.set(termin.termin_key, termin);
+  }
+  const terminy = Array.from(terminMap.values());
 
   const message =
     terminy.length ? null : "Zatiaľ nie sú vypísané žiadne termíny.";
