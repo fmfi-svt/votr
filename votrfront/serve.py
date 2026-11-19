@@ -51,6 +51,7 @@ def cli(args: list[str]) -> None:
     parser.add_argument("--watch-py", action=BoolAction, default=True)
     parser.add_argument("--proxy-fix", action=BoolAction, default=False)
     parser.add_argument("--https", action=BoolAction, default=False)
+    parser.add_argument("--check-syntax", action=BoolAction, default=False)
     parser.add_argument("--root-path")
     parser.add_argument("--access-logfile")
     parser.add_argument("--error-logfile")
@@ -58,6 +59,9 @@ def cli(args: list[str]) -> None:
     parser.add_argument("--log-label")
 
     options = parser.parse_args(args)
+
+    if options.check_syntax:
+        options.watch_js = options.watch_py = False
 
     if options.watch_js:
         concurrently(
@@ -93,6 +97,10 @@ def cli(args: list[str]) -> None:
     from votrfront.anycorn_config import VotrConfig, VotrLogger
     from votrfront.app import build_app
     from votrfront.base import var_path
+
+    if options.check_syntax:
+        print("OK")
+        return
 
     os.makedirs(var_path("locks"), exist_ok=True)
     os.makedirs(var_path("logs"), exist_ok=True)

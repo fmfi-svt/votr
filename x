@@ -103,6 +103,7 @@ Commands:
       --no-watch-py            don'\''t reload Python code on change
       --proxy-fix              read X-Forwarded-... headers
       --https                  serve HTTPS with a self-signed cert
+      --check-syntax           just import Python code and exit
       --root-path=PREFIX       URL path prefix
       --access-logfile=FILE    where to write access logs (default: stderr)
       --error-logfile=FILE     where to write error logs (default: stderr)
