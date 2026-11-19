@@ -13,6 +13,23 @@ More information: https://github.com/fmfi-svt/votr/wiki/Praca-s-ipythonom-(sk)
 # Convenience imports.
 import aisikl.portal  # noqa: F401 # pyright: ignore [reportUnusedImport]
 from aisikl.app import Application as Application
+from aisikl.operations import AbortBoxOp as AbortBoxOp
+from aisikl.operations import CalendarBoxOp as CalendarBoxOp
+from aisikl.operations import CloseApplicationOp as CloseApplicationOp
+from aisikl.operations import CloseDialogOp as CloseDialogOp
+from aisikl.operations import ConfirmBoxOp as ConfirmBoxOp
+from aisikl.operations import EditDocOp as EditDocOp
+from aisikl.operations import FileUploadOp as FileUploadOp
+from aisikl.operations import FileXUploadOp as FileXUploadOp
+from aisikl.operations import MessageBoxOp as MessageBoxOp
+from aisikl.operations import OpenDialogOp as OpenDialogOp
+from aisikl.operations import Operation as Operation
+from aisikl.operations import Operations as Operations
+from aisikl.operations import RefreshDialogOp as RefreshDialogOp
+from aisikl.operations import ServerCloseApplicationOp as ServerCloseApplicationOp
+from aisikl.operations import ShellExecOp as ShellExecOp
+from aisikl.operations import ShowHelpOp as ShowHelpOp
+from aisikl.operations import StartAppOp as StartAppOp
 from fladgejt.login import create_client as create_client
 
 # Internal imports.
