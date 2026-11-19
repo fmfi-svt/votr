@@ -436,7 +436,7 @@ install)
     log "votrfront/local_settings.py already exists. Keeping it."
   else
     log "Creating votrfront/local_settings.py."
-    printf "'''Add custom settings here. Defaults can be seen in default_settings.py.'''\nfrom .default_settings import *\n" > votrfront/local_settings.py
+    printf '"""Add custom settings here. Defaults can be seen in default_settings.py."""\n\nfrom .default_settings import *\n' > votrfront/local_settings.py
   fi
 
   log "Success!"
