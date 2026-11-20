@@ -1,10 +1,6 @@
-import json
-import time
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from starlette.exceptions import HTTPException
-
-from votrfront.base import var_path
 
 if TYPE_CHECKING:
     from starlette.requests import Request
@@ -12,27 +8,25 @@ if TYPE_CHECKING:
     from votrfront.base import VotrState
 
 
+def fetch_metadata_debug_status(request: Request[VotrState]) -> str:
+    """Returns a compact debug representation of fetch metadata headers."""
+    return ":".join([
+        request.headers.get("Sec-Fetch-Site", "~"),
+        request.headers.get("Sec-Fetch-Mode", "~"),
+        request.headers.get("Sec-Fetch-Dest", "~"),
+        request.headers.get("Sec-Fetch-User", "~"),
+        "cY" if request.headers.get("Cookie") else "cN",
+    ])
+
+
 def check_header(
-    request: Request[VotrState], name: str, allowed_values: set[str]
+    request: Request[VotrState],
+    name: Literal["Sec-Fetch-Site", "Sec-Fetch-Mode", "Sec-Fetch-Dest"],
+    allowed_values: set[str],
 ) -> None:
     value = request.headers.get(name)
     if value is not None and value not in allowed_values:
-        # TODO: Temporary log. Decide what to do with it once we see the data.
-        # Either remove it or make it per-month. Maybe merge with reportlogs.
-        payload = {
-            "type": "fetchmeta",
-            "name": name,
-            "value": value,
-            "allowed_values": sorted(allowed_values),
-            "time": int(time.time()),
-            "url": str(request.url),
-            "client": request.scope["client"],
-            "headers": [
-                [k.decode("latin1"), v.decode("latin1")]
-                for k, v in request.scope["headers"]
-            ],
-        }
-        with var_path("fetchmetalog").open("at") as f:
-            f.write(json.dumps(payload, sort_keys=True) + "\n")
-
+        request.state["votr_log_status"] = (
+            "badsecfetch:" + fetch_metadata_debug_status(request)
+        )
         raise HTTPException(403, f"Unexpected {name} header value")

@@ -11,7 +11,7 @@ from starlette.responses import HTMLResponse, PlainTextResponse
 from starlette.routing import Route
 
 from votrfront import sessions
-from votrfront.utils import check_header
+from votrfront.utils import check_header, fetch_metadata_debug_status
 
 if TYPE_CHECKING:
     from starlette.requests import Request
@@ -181,6 +181,21 @@ async def app_response(
 
 
 async def front(request: Request[VotrState]) -> Response:
+    if (
+        request.headers.get("Sec-Fetch-Site") == "none"
+        and request.headers.get("Sec-Fetch-Mode") in ("cors", "no-cors")
+        and request.headers.get("Sec-Fetch-Dest") == "empty"
+    ):
+        # Besides navigate+document, these also happen. Logs suggest it's O(1)
+        # users who have browser extensions that fetch() URLs from history or
+        # open tabs, who knows why, and some kind of favicon fetcher in Opera.
+        # Graciously indulge them halfway: respond 200, but ignore cookies. No
+        # need for a session check if it only affects JSON data they won't read.
+        request.state["votr_log_status"] = (
+            "front:weirdsecfetch:" + fetch_metadata_debug_status(request)
+        )
+        return await app_response(request)
+
     check_header(request, "Sec-Fetch-Mode", {"navigate"})
     check_header(request, "Sec-Fetch-Dest", {"document"})
 
