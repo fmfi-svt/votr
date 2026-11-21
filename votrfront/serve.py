@@ -73,7 +73,7 @@ def cli(args: list[str]) -> None:
 
         cmd = [
             "watchmedo", "auto-restart",
-            "--pattern=*.py",
+            "--pattern=**/*.py",
             "--recursive",
             "--debounce-interval=0.5",
             # on import/syntax errors, don't retry until the next edit

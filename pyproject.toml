@@ -64,6 +64,7 @@ extra_css = "coverage_extra.css"
 include = ["aisikl", "fladgejt"]
 
 [tool.pyrefly]
+errors.unnecessary-type-conversion = false # For now. TODO: Consider enabling it.
 preset = "strict"
 project-includes = ["aisikl/**/*.py", "fladgejt/**/*.py", "formatter.py", "nbenv.py", "tests/**/*.py", "votrfront/**/*.py"]
 

@@ -185,7 +185,7 @@ install_local_pnpm() {
   if [[ -e .venv/bin/pnpm && -e .venv/lib/node_modules/pnpm && "$(uv run pnpm --version || true)" == "$(< .pnpm-version)" ]]; then
     log "Local pnpm is already the correct version. Reusing it."
   else
-    log_and_run "Installing local pnpm to './.venv'. " "uv run npm install 'pnpm@$(< .pnpm-version)' -g --prefix=.venv"
+    log_and_run "Installing local pnpm to './.venv'. " "uv run npm install 'pnpm@$(< .pnpm-version)' -g --prefix=.venv --allow-scripts=pnpm"
   fi
 }
 
@@ -263,7 +263,7 @@ upgrade-js)
   add_uv_path
 
   # See also https://github.com/nodejs/nodejs-dist-indexer
-  log_and_run "Determining latest Node.js version. " "curl -fsSL https://nodejs.org/download/release/index.tab | sed -n '2s/\t.*//p' > .node-version"
+  log_and_run "Determining latest Node.js version. " "curl -fsSL https://nodejs.org/download/release/index.tab | cut -f1 | grep -ve - | sed -n 2p > .node-version"
 
   # The filename ".pnpm-version" is not standard. Only ./x uses it.
   log_and_run "Determining latest pnpm version. " "./x pnpm view pnpm version > .pnpm-version"

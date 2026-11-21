@@ -74,7 +74,7 @@ class MockRunner:
 
         try:
             time.time = self._mock_time
-            Logger.send_log = self._mock_send_log
+            Logger.send_log = self._mock_send_log  # pyrefly: ignore [instance-var-assign]
             Context.request_http = self._mock_request_http  # pyrefly: ignore [method-assign]
             await body()
         except _FailFast:
@@ -84,7 +84,7 @@ class MockRunner:
                     f"INFO: skipping remaining {count} expected log entries")
         finally:
             time.time = original_time_time
-            Logger.send_log = original_send_log
+            Logger.send_log = original_send_log  # pyrefly: ignore [instance-var-assign]
             Context.request_http = original_request_http  # pyrefly: ignore [method-assign]
 
         if self.ok and self.expected_logs:
